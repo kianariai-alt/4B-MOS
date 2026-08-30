@@ -4,6 +4,12 @@ from backend.app.schemas.patient import (
     PatientUpdate,
 )
 
+from backend.app.schemas.treatment import (
+    TreatmentCreate,
+    TreatmentRead,
+    TreatmentUpdate,
+)
+
 from backend.app.schemas.visit import (
     VisitCreate,
     VisitRead,
@@ -17,4 +23,7 @@ __all__ = [
     "VisitCreate",
     "VisitRead",
     "VisitUpdate",
+    "TreatmentCreate",
+    "TreatmentRead",
+    "TreatmentUpdate",
 ]

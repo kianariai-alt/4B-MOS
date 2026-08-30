@@ -4,6 +4,12 @@ from backend.app.services.patient import (
     PatientService,
 )
 
+from backend.app.services.treatment import (
+    TreatmentNotFoundError,
+    TreatmentService,
+    TreatmentVisitNotFoundError,
+)
+
 from backend.app.services.visit import (
     VisitNotFoundError,
     VisitPatientNotFoundError,
@@ -17,4 +23,7 @@ __all__ = [
     "VisitNotFoundError",
     "VisitPatientNotFoundError",
     "VisitService",
+    "TreatmentNotFoundError",
+    "TreatmentVisitNotFoundError",
+    "TreatmentService",
 ]
