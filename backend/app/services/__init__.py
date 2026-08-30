@@ -4,8 +4,17 @@ from backend.app.services.patient import (
     PatientService,
 )
 
+from backend.app.services.visit import (
+    VisitNotFoundError,
+    VisitPatientNotFoundError,
+    VisitService,
+)
+
 __all__ = [
     "PatientCodeConflictError",
     "PatientNotFoundError",
     "PatientService",
+    "VisitNotFoundError",
+    "VisitPatientNotFoundError",
+    "VisitService",
 ]

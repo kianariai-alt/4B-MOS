@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import uuid
 from datetime import date, datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
+
+if TYPE_CHECKING:
+    from backend.app.models.visit import Visit
 
 
 class Patient(Base):
@@ -55,4 +61,9 @@ class Patient(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    visits: Mapped[list["Visit"]] = relationship(
+        back_populates="patient",
+        cascade="save-update, merge",
     )

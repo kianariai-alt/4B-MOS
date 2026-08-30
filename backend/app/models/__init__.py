@@ -1,4 +1,7 @@
+from backend.app.models.patient import Patient
+from backend.app.models.visit import Visit
 
-from backend.app.repositories.patient import PatientRepository
-
-__all__ = ["PatientRepository"]
+__all__ = [
+    "Patient",
+    "Visit",
+]

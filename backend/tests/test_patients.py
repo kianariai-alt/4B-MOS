@@ -1,45 +1,4 @@
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-
-from backend.app.db.base import Base
-from backend.app.db.session import get_db
-from backend.app.main import app
-
-
-test_engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-
-TestingSessionLocal = sessionmaker(
-    bind=test_engine,
-    autoflush=False,
-    expire_on_commit=False,
-)
-
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-client = TestClient(app)
-
-
-def setup_function():
-    Base.metadata.drop_all(bind=test_engine)
-    Base.metadata.create_all(bind=test_engine)
-
-
-def test_create_patient():
+def test_create_patient(client):
     response = client.post(
         "/api/v1/patients",
         json={
@@ -61,21 +20,28 @@ def test_create_patient():
     assert "id" in data
 
 
-def test_duplicate_patient_code_returns_conflict():
+def test_duplicate_patient_code_returns_conflict(client):
     payload = {
         "patient_code": "PAT-0002",
         "first_name": "Test",
         "last_name": "Patient",
     }
 
-    first_response = client.post("/api/v1/patients", json=payload)
-    second_response = client.post("/api/v1/patients", json=payload)
+    first_response = client.post(
+        "/api/v1/patients",
+        json=payload,
+    )
+
+    second_response = client.post(
+        "/api/v1/patients",
+        json=payload,
+    )
 
     assert first_response.status_code == 201
     assert second_response.status_code == 409
 
 
-def test_get_patient():
+def test_get_patient(client):
     create_response = client.post(
         "/api/v1/patients",
         json={
@@ -84,6 +50,8 @@ def test_get_patient():
             "last_name": "Test",
         },
     )
+
+    assert create_response.status_code == 201
 
     patient_id = create_response.json()["id"]
 
@@ -95,8 +63,8 @@ def test_get_patient():
     assert response.json()["patient_code"] == "PAT-0003"
 
 
-def test_list_patients():
-    client.post(
+def test_list_patients(client):
+    first_response = client.post(
         "/api/v1/patients",
         json={
             "patient_code": "PAT-0004",
@@ -105,7 +73,7 @@ def test_list_patients():
         },
     )
 
-    client.post(
+    second_response = client.post(
         "/api/v1/patients",
         json={
             "patient_code": "PAT-0005",
@@ -114,13 +82,18 @@ def test_list_patients():
         },
     )
 
-    response = client.get("/api/v1/patients")
+    assert first_response.status_code == 201
+    assert second_response.status_code == 201
+
+    response = client.get(
+        "/api/v1/patients"
+    )
 
     assert response.status_code == 200
     assert len(response.json()) == 2
 
 
-def test_update_patient():
+def test_update_patient(client):
     create_response = client.post(
         "/api/v1/patients",
         json={
@@ -130,18 +103,22 @@ def test_update_patient():
         },
     )
 
+    assert create_response.status_code == 201
+
     patient_id = create_response.json()["id"]
 
     response = client.patch(
         f"/api/v1/patients/{patient_id}",
-        json={"first_name": "After"},
+        json={
+            "first_name": "After",
+        },
     )
 
     assert response.status_code == 200
     assert response.json()["first_name"] == "After"
 
 
-def test_deactivate_patient():
+def test_deactivate_patient(client):
     create_response = client.post(
         "/api/v1/patients",
         json={
@@ -150,6 +127,8 @@ def test_deactivate_patient():
             "last_name": "Patient",
         },
     )
+
+    assert create_response.status_code == 201
 
     patient_id = create_response.json()["id"]
 
@@ -161,7 +140,7 @@ def test_deactivate_patient():
     assert response.json()["is_active"] is False
 
 
-def test_missing_patient_returns_404():
+def test_missing_patient_returns_404(client):
     response = client.get(
         "/api/v1/patients/not-a-real-id"
     )
