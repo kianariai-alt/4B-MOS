@@ -49,3 +49,6 @@ temp/
 # OS
 .DS_Store
 Thumbs.db
+# Local SQLite database
+*.db
+*.db-journal
