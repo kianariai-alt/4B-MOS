@@ -1,27 +1,35 @@
 from fastapi import FastAPI
 
-app = FastAPI(
-    title="4B-MOS",
-    description="4B Medical Operating System",
-    version="0.1.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
+from backend.app.api.router import api_router
+from backend.app.core.config import settings
 
 
-@app.get("/")
+def create_application() -> FastAPI:
+    application = FastAPI(
+        title=settings.PROJECT_NAME,
+        description="4B Medical Operating System",
+        version=settings.PROJECT_VERSION,
+        docs_url="/docs",
+        redoc_url="/redoc",
+    )
+
+    application.include_router(
+        api_router,
+        prefix=settings.API_V1_PREFIX,
+    )
+
+    return application
+
+
+app = create_application()
+
+
+@app.get("/", tags=["System"])
 async def root():
     return {
-        "application": "4B-MOS",
-        "name": "4B Medical Operating System",
-        "version": "0.1.0",
+        "application": settings.PROJECT_NAME,
+        "version": settings.PROJECT_VERSION,
         "status": "running",
-    }
-
-
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "service": "4B-MOS Backend",
+        "api": settings.API_V1_PREFIX,
+        "docs": "/docs",
     }
