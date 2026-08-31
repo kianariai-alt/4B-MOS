@@ -4,13 +4,22 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Integer,
+    JSON,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
 
 
 if TYPE_CHECKING:
+    from backend.app.models.protocol import ProtocolTemplate
+    from backend.app.models.treatment_session import TreatmentSession
     from backend.app.models.visit import Visit
 
 
@@ -30,6 +39,16 @@ class Treatment(Base):
             ondelete="CASCADE",
         ),
         nullable=False,
+        index=True,
+    )
+
+    protocol_template_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey(
+            "protocol_templates.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
         index=True,
     )
 
@@ -58,6 +77,21 @@ class Treatment(Base):
 
     protocol_name: Mapped[str | None] = mapped_column(
         String(200),
+        nullable=True,
+    )
+
+    protocol_version: Mapped[str | None] = mapped_column(
+        String(30),
+        nullable=True,
+    )
+
+    protocol_snapshot: Mapped[dict | None] = mapped_column(
+        JSON,
+        nullable=True,
+    )
+
+    execution_parameters: Mapped[dict | None] = mapped_column(
+        JSON,
         nullable=True,
     )
 
@@ -91,4 +125,12 @@ class Treatment(Base):
 
     visit: Mapped["Visit"] = relationship(
         back_populates="treatments",
+    )
+
+    protocol_template: Mapped["ProtocolTemplate | None"] = relationship()
+
+    sessions: Mapped[list["TreatmentSession"]] = relationship(
+        back_populates="treatment",
+        cascade="all, delete-orphan",
+        order_by="TreatmentSession.session_number",
     )

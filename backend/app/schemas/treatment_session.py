@@ -4,16 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
-TreatmentType = Literal[
-    "PRP",
-    "PRGF",
-    "ACS",
-    "PL",
-    "SVF",
-    "EXOSOME",
-]
-
-TreatmentStatus = Literal[
+TreatmentSessionStatus = Literal[
     "planned",
     "in_progress",
     "completed",
@@ -21,15 +12,14 @@ TreatmentStatus = Literal[
 ]
 
 
-class TreatmentCreate(BaseModel):
-    treatment_type: TreatmentType
-
-    protocol_template_id: str | None = None
-
+class TreatmentSessionCreate(BaseModel):
     session_number: int = Field(
-        default=1,
         ge=1,
     )
+
+    status: TreatmentSessionStatus = "planned"
+
+    scheduled_at: datetime | None = None
 
     body_region: str | None = Field(
         default=None,
@@ -43,20 +33,23 @@ class TreatmentCreate(BaseModel):
 
     execution_parameters: dict | None = None
 
-    notes: str | None = Field(
-        default=None,
-        max_length=5000,
-    )
+    outcome_summary: str | None = None
+    adverse_events: str | None = None
+    notes: str | None = None
 
 
-class TreatmentUpdate(BaseModel):
-    status: TreatmentStatus | None = None
-
+class TreatmentSessionUpdate(BaseModel):
     session_number: int | None = Field(
         default=None,
         ge=1,
     )
 
+    status: TreatmentSessionStatus | None = None
+
+    scheduled_at: datetime | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
     body_region: str | None = Field(
         default=None,
         max_length=100,
@@ -69,37 +62,32 @@ class TreatmentUpdate(BaseModel):
 
     execution_parameters: dict | None = None
 
-    notes: str | None = Field(
-        default=None,
-        max_length=5000,
-    )
-
-    performed_at: datetime | None = None
+    outcome_summary: str | None = None
+    adverse_events: str | None = None
+    notes: str | None = None
 
 
-class TreatmentRead(BaseModel):
+class TreatmentSessionRead(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
 
     id: str
-    visit_id: str
-
-    protocol_template_id: str | None
-    protocol_name: str | None
-    protocol_version: str | None
-    protocol_snapshot: dict | None
-
-    treatment_type: str
-    status: str
+    treatment_id: str
     session_number: int
+    status: str
+
+    scheduled_at: datetime | None
+    started_at: datetime | None
+    completed_at: datetime | None
 
     body_region: str | None
     dose_or_volume: str | None
-    execution_parameters: dict | None
-    notes: str | None
 
-    performed_at: datetime | None
+    execution_parameters: dict | None
+    outcome_summary: str | None
+    adverse_events: str | None
+    notes: str | None
 
     created_at: datetime
     updated_at: datetime

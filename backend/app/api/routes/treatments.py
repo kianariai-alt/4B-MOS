@@ -18,6 +18,9 @@ from backend.app.schemas.treatment import (
 
 from backend.app.services.treatment import (
     TreatmentNotFoundError,
+    TreatmentProtocolInactiveError,
+    TreatmentProtocolMismatchError,
+    TreatmentProtocolNotFoundError,
     TreatmentService,
     TreatmentVisitNotFoundError,
 )
@@ -49,9 +52,21 @@ def create_treatment(
             treatment
         )
 
-    except TreatmentVisitNotFoundError as exc:
+    except (
+        TreatmentVisitNotFoundError,
+        TreatmentProtocolNotFoundError,
+    ) as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+
+    except (
+        TreatmentProtocolMismatchError,
+        TreatmentProtocolInactiveError,
+    ) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
             detail=str(exc),
         ) from exc
 
@@ -62,15 +77,8 @@ def create_treatment(
 )
 def list_visit_treatments(
     visit_id: str,
-    skip: int = Query(
-        default=0,
-        ge=0,
-    ),
-    limit: int = Query(
-        default=100,
-        ge=1,
-        le=500,
-    ),
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
     db: Session = Depends(get_db),
 ) -> list[TreatmentRead]:
     try:

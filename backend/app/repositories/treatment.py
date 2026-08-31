@@ -48,10 +48,22 @@ class TreatmentRepository:
         db: Session,
         visit_id: str,
         payload: TreatmentCreate,
+        protocol_name: str | None = None,
+        protocol_version: str | None = None,
+        protocol_snapshot: dict | None = None,
     ) -> Treatment:
         treatment = Treatment(
             visit_id=visit_id,
-            **payload.model_dump(),
+            protocol_template_id=payload.protocol_template_id,
+            protocol_name=protocol_name,
+            protocol_version=protocol_version,
+            protocol_snapshot=protocol_snapshot,
+            treatment_type=payload.treatment_type,
+            session_number=payload.session_number,
+            body_region=payload.body_region,
+            dose_or_volume=payload.dose_or_volume,
+            execution_parameters=payload.execution_parameters,
+            notes=payload.notes,
         )
 
         db.add(treatment)

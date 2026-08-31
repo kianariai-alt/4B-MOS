@@ -2,6 +2,10 @@ from fastapi import APIRouter
 
 from backend.app.api.routes.health import router as health_router
 from backend.app.api.routes.patients import router as patients_router
+from backend.app.api.routes.protocols import router as protocols_router
+from backend.app.api.routes.treatment_sessions import (
+    router as treatment_sessions_router,
+)
 from backend.app.api.routes.treatments import router as treatments_router
 from backend.app.api.routes.visits import router as visits_router
 
@@ -12,3 +16,5 @@ api_router.include_router(health_router)
 api_router.include_router(patients_router)
 api_router.include_router(visits_router)
 api_router.include_router(treatments_router)
+api_router.include_router(protocols_router)
+api_router.include_router(treatment_sessions_router)
