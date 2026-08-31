@@ -1,3 +1,11 @@
+import pytest
+
+
+pytestmark = pytest.mark.usefixtures(
+    "authenticated_admin"
+)
+
+
 def protocol_payload(
     code="PRP-KNEE",
     version="1.0",
@@ -37,7 +45,9 @@ def test_create_protocol(client):
     assert data["is_active"] is True
 
 
-def test_same_code_and_version_returns_409(client):
+def test_same_code_and_version_returns_409(
+    client,
+):
     payload = protocol_payload()
 
     first = client.post(
@@ -54,7 +64,9 @@ def test_same_code_and_version_returns_409(client):
     assert second.status_code == 409
 
 
-def test_same_code_different_version_allowed(client):
+def test_same_code_different_version_allowed(
+    client,
+):
     first = client.post(
         "/api/v1/protocols",
         json=protocol_payload(
@@ -74,10 +86,12 @@ def test_same_code_different_version_allowed(client):
 
 
 def test_list_protocols(client):
-    client.post(
+    create_response = client.post(
         "/api/v1/protocols",
         json=protocol_payload(),
     )
+
+    assert create_response.status_code == 201
 
     response = client.get(
         "/api/v1/protocols"
@@ -87,8 +101,10 @@ def test_list_protocols(client):
     assert len(response.json()) == 1
 
 
-def test_filter_protocols_by_treatment_type(client):
-    client.post(
+def test_filter_protocols_by_treatment_type(
+    client,
+):
+    first = client.post(
         "/api/v1/protocols",
         json=protocol_payload(
             code="PRP-001",
@@ -96,7 +112,9 @@ def test_filter_protocols_by_treatment_type(client):
         ),
     )
 
-    client.post(
+    assert first.status_code == 201
+
+    second = client.post(
         "/api/v1/protocols",
         json=protocol_payload(
             code="ACS-001",
@@ -104,13 +122,22 @@ def test_filter_protocols_by_treatment_type(client):
         ),
     )
 
+    assert second.status_code == 201
+
     response = client.get(
-        "/api/v1/protocols?treatment_type=ACS"
+        "/api/v1/protocols"
+        "?treatment_type=ACS"
     )
 
     assert response.status_code == 200
     assert len(response.json()) == 1
-    assert response.json()[0]["treatment_type"] == "ACS"
+
+    assert (
+        response.json()[0][
+            "treatment_type"
+        ]
+        == "ACS"
+    )
 
 
 def test_deactivate_protocol(client):
@@ -119,11 +146,19 @@ def test_deactivate_protocol(client):
         json=protocol_payload(),
     )
 
-    protocol_id = create_response.json()["id"]
+    assert create_response.status_code == 201
+
+    protocol_id = create_response.json()[
+        "id"
+    ]
 
     response = client.delete(
         f"/api/v1/protocols/{protocol_id}"
     )
 
     assert response.status_code == 200
-    assert response.json()["is_active"] is False
+
+    assert (
+        response.json()["is_active"]
+        is False
+    )

@@ -5,10 +5,11 @@ from fastapi import (
     Query,
     status,
 )
-
 from sqlalchemy.orm import Session
 
+from backend.app.api.dependencies import require_roles
 from backend.app.db.session import get_db
+from backend.app.models.user import User
 from backend.app.schemas.protocol import (
     ProtocolCreate,
     ProtocolRead,
@@ -26,6 +27,21 @@ router = APIRouter(
 )
 
 
+READ_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+    "operator",
+    "viewer",
+)
+
+
+WRITE_ROLES = (
+    "admin",
+    "physician",
+)
+
+
 @router.post(
     "",
     response_model=ProtocolRead,
@@ -33,6 +49,9 @@ router = APIRouter(
 )
 def create_protocol(
     payload: ProtocolCreate,
+    _current_user: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> ProtocolRead:
     try:
@@ -60,6 +79,9 @@ def list_protocols(
     treatment_type: str | None = Query(
         default=None,
     ),
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> list[ProtocolRead]:
     protocols = ProtocolService.list_protocols(
@@ -68,7 +90,9 @@ def list_protocols(
     )
 
     return [
-        ProtocolRead.model_validate(protocol)
+        ProtocolRead.model_validate(
+            protocol
+        )
         for protocol in protocols
     ]
 
@@ -79,6 +103,9 @@ def list_protocols(
 )
 def get_protocol(
     protocol_id: str,
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> ProtocolRead:
     try:
@@ -104,12 +131,17 @@ def get_protocol(
 )
 def deactivate_protocol(
     protocol_id: str,
+    _current_user: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> ProtocolRead:
     try:
-        protocol = ProtocolService.deactivate_protocol(
-            db,
-            protocol_id,
+        protocol = (
+            ProtocolService.deactivate_protocol(
+                db,
+                protocol_id,
+            )
         )
 
         return ProtocolRead.model_validate(

@@ -5,17 +5,16 @@ from fastapi import (
     Query,
     status,
 )
-
 from sqlalchemy.orm import Session
 
+from backend.app.api.dependencies import require_roles
 from backend.app.db.session import get_db
-
+from backend.app.models.user import User
 from backend.app.schemas.treatment import (
     TreatmentCreate,
     TreatmentRead,
     TreatmentUpdate,
 )
-
 from backend.app.services.treatment import (
     TreatmentNotFoundError,
     TreatmentProtocolInactiveError,
@@ -31,6 +30,21 @@ router = APIRouter(
 )
 
 
+READ_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+    "operator",
+    "viewer",
+)
+
+
+WRITE_ROLES = (
+    "admin",
+    "physician",
+)
+
+
 @router.post(
     "/visits/{visit_id}/treatments",
     response_model=TreatmentRead,
@@ -39,6 +53,9 @@ router = APIRouter(
 def create_treatment(
     visit_id: str,
     payload: TreatmentCreate,
+    _current_user: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> TreatmentRead:
     try:
@@ -77,20 +94,34 @@ def create_treatment(
 )
 def list_visit_treatments(
     visit_id: str,
-    skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=100, ge=1, le=500),
+    skip: int = Query(
+        default=0,
+        ge=0,
+    ),
+    limit: int = Query(
+        default=100,
+        ge=1,
+        le=500,
+    ),
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> list[TreatmentRead]:
     try:
-        treatments = TreatmentService.list_visit_treatments(
-            db,
-            visit_id,
-            skip=skip,
-            limit=limit,
+        treatments = (
+            TreatmentService.list_visit_treatments(
+                db,
+                visit_id,
+                skip=skip,
+                limit=limit,
+            )
         )
 
         return [
-            TreatmentRead.model_validate(treatment)
+            TreatmentRead.model_validate(
+                treatment
+            )
             for treatment in treatments
         ]
 
@@ -107,12 +138,17 @@ def list_visit_treatments(
 )
 def get_treatment(
     treatment_id: str,
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> TreatmentRead:
     try:
-        treatment = TreatmentService.get_treatment(
-            db,
-            treatment_id,
+        treatment = (
+            TreatmentService.get_treatment(
+                db,
+                treatment_id,
+            )
         )
 
         return TreatmentRead.model_validate(
@@ -133,13 +169,18 @@ def get_treatment(
 def update_treatment(
     treatment_id: str,
     payload: TreatmentUpdate,
+    _current_user: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> TreatmentRead:
     try:
-        treatment = TreatmentService.update_treatment(
-            db,
-            treatment_id,
-            payload,
+        treatment = (
+            TreatmentService.update_treatment(
+                db,
+                treatment_id,
+                payload,
+            )
         )
 
         return TreatmentRead.model_validate(
