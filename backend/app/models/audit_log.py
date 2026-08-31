@@ -36,6 +36,27 @@ class AuditLog(Base):
         index=True,
     )
 
+    actor_user_id: Mapped[str | None] = mapped_column(
+        String(36),
+        nullable=True,
+        index=True,
+    )
+
+    actor_username: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    actor_display_name: Mapped[str | None] = mapped_column(
+        String(200),
+        nullable=True,
+    )
+
+    actor_role: Mapped[str | None] = mapped_column(
+        String(30),
+        nullable=True,
+    )
+
     from_state: Mapped[str | None] = mapped_column(
         String(30),
         nullable=True,

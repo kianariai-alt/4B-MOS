@@ -6,7 +6,9 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
+from backend.app.api.dependencies import require_roles
 from backend.app.db.session import get_db
+from backend.app.models.user import User
 from backend.app.schemas.audit_log import AuditLogRead
 from backend.app.schemas.treatment_session import (
     TreatmentSessionCreate,
@@ -31,6 +33,22 @@ router = APIRouter(
 )
 
 
+READ_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+    "operator",
+    "viewer",
+)
+
+WRITE_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+    "operator",
+)
+
+
 @router.post(
     "/treatments/{treatment_id}/sessions",
     response_model=TreatmentSessionRead,
@@ -39,6 +57,9 @@ router = APIRouter(
 def create_treatment_session(
     treatment_id: str,
     payload: TreatmentSessionCreate,
+    actor: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> TreatmentSessionRead:
     try:
@@ -47,6 +68,7 @@ def create_treatment_session(
                 db,
                 treatment_id,
                 payload,
+                actor=actor,
             )
         )
 
@@ -73,6 +95,9 @@ def create_treatment_session(
 )
 def list_treatment_sessions(
     treatment_id: str,
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> list[TreatmentSessionRead]:
     try:
@@ -99,6 +124,9 @@ def list_treatment_sessions(
 )
 def get_treatment_session(
     session_id: str,
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> TreatmentSessionRead:
     try:
@@ -127,6 +155,9 @@ def get_treatment_session(
 def update_treatment_session(
     session_id: str,
     payload: TreatmentSessionUpdate,
+    actor: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> TreatmentSessionRead:
     try:
@@ -135,6 +166,7 @@ def update_treatment_session(
                 db,
                 session_id,
                 payload,
+                actor=actor,
             )
         )
 
@@ -164,6 +196,9 @@ def update_treatment_session(
 )
 def list_treatment_session_audit_logs(
     session_id: str,
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> list[AuditLogRead]:
     try:

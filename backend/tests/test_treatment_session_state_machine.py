@@ -1,3 +1,37 @@
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def authenticate_session_tests(client):
+    create_response = client.post(
+        "/api/v1/users",
+        json={
+            "username": "sessiondoctor",
+            "display_name": "Session Doctor",
+            "password": "StrongPass123",
+            "role": "physician",
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": "sessiondoctor",
+            "password": "StrongPass123",
+        },
+    )
+
+    assert login_response.status_code == 200
+
+    token = login_response.json()["access_token"]
+
+    client.headers.update(
+        {
+            "Authorization": f"Bearer {token}",
+        }
+    )
 def create_treatment_with_session(client):
     patient_response = client.post(
         "/api/v1/patients",

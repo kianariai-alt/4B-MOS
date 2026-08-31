@@ -1,8 +1,10 @@
+
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
 from backend.app.models.treatment_session import TreatmentSession
+from backend.app.models.user import User
 from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.treatment import TreatmentRepository
 from backend.app.repositories.treatment_session import (
@@ -46,10 +48,30 @@ class InvalidTreatmentSessionTransitionError(Exception):
 
 class TreatmentSessionService:
     @staticmethod
+    def _actor_data(
+        actor: User | None,
+    ) -> dict:
+        if actor is None:
+            return {
+                "actor_user_id": None,
+                "actor_username": None,
+                "actor_display_name": None,
+                "actor_role": None,
+            }
+
+        return {
+            "actor_user_id": actor.id,
+            "actor_username": actor.username,
+            "actor_display_name": actor.display_name,
+            "actor_role": actor.role,
+        }
+
+    @staticmethod
     def create_session(
         db: Session,
         treatment_id: str,
         payload: TreatmentSessionCreate,
+        actor: User | None = None,
     ) -> TreatmentSession:
         treatment = TreatmentRepository.get_by_id(
             db,
@@ -95,6 +117,9 @@ class TreatmentSessionService:
                 "treatment_id": treatment_id,
                 "session_number": treatment_session.session_number,
             },
+            **TreatmentSessionService._actor_data(
+                actor
+            ),
         )
 
         return treatment_session
@@ -153,7 +178,7 @@ class TreatmentSessionService:
 
         if new_status not in allowed:
             raise InvalidTreatmentSessionTransitionError(
-                f"Invalid treatment session transition: "
+                "Invalid treatment session transition: "
                 f"'{current_status}' -> '{new_status}'."
             )
 
@@ -162,6 +187,7 @@ class TreatmentSessionService:
         db: Session,
         session_id: str,
         payload: TreatmentSessionUpdate,
+        actor: User | None = None,
     ) -> TreatmentSession:
         treatment_session = (
             TreatmentSessionService.get_session(
@@ -208,7 +234,9 @@ class TreatmentSessionService:
         )
 
         if transition_occurred:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(
+                timezone.utc
+            )
 
             if new_status == "in_progress":
                 if update_data.get("started_at") is None:
@@ -246,6 +274,9 @@ class TreatmentSessionService:
                     "session_number": updated_session.session_number,
                     "treatment_id": updated_session.treatment_id,
                 },
+                **TreatmentSessionService._actor_data(
+                    actor
+                ),
             )
 
         return updated_session
