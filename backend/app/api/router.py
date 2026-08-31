@@ -9,6 +9,9 @@ from backend.app.api.routes.auth import (
 from backend.app.api.routes.health import (
     router as health_router,
 )
+from backend.app.api.routes.patient_timeline import (
+    router as patient_timeline_router,
+)
 from backend.app.api.routes.patients import (
     router as patients_router,
 )
@@ -61,6 +64,10 @@ api_router.include_router(
 
 api_router.include_router(
     audit_logs_router
+)
+
+api_router.include_router(
+    patient_timeline_router
 )
 
 api_router.include_router(
