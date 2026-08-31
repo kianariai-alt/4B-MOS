@@ -2,10 +2,12 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.security import (
     create_access_token,
+    hash_password,
     verify_password,
 )
 from backend.app.models.user import User
 from backend.app.repositories.user import UserRepository
+from backend.app.schemas.auth import BootstrapAdminRequest
 
 
 class InvalidCredentialsError(Exception):
@@ -13,6 +15,10 @@ class InvalidCredentialsError(Exception):
 
 
 class InactiveUserError(Exception):
+    pass
+
+
+class BootstrapAlreadyCompletedError(Exception):
     pass
 
 
@@ -55,4 +61,30 @@ class AuthService:
     ) -> str:
         return create_access_token(
             subject=user.id,
+        )
+
+    @staticmethod
+    def bootstrap_admin(
+        db: Session,
+        payload: BootstrapAdminRequest,
+    ) -> User:
+        user_count = UserRepository.count(
+            db
+        )
+
+        if user_count != 0:
+            raise BootstrapAlreadyCompletedError(
+                "System bootstrap has already been completed."
+            )
+
+        hashed_password = hash_password(
+            payload.password
+        )
+
+        return UserRepository.create(
+            db,
+            username=payload.username,
+            display_name=payload.display_name,
+            password_hash=hashed_password,
+            role="admin",
         )

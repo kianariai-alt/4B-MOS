@@ -1,8 +1,20 @@
+import pytest
 from sqlalchemy import select
 
-from backend.app.core.security import verify_password
+from backend.app.core.security import (
+    verify_password,
+)
 from backend.app.models.user import User
 
+
+@pytest.fixture(autouse=True)
+def authenticate_user_tests(
+    client,
+    admin_headers,
+):
+    client.headers.update(
+        admin_headers
+    )
 
 
 def user_payload(
@@ -29,7 +41,12 @@ def test_create_user(client):
     data = response.json()
 
     assert data["username"] == "doctor1"
-    assert data["display_name"] == "Doctor One"
+
+    assert (
+        data["display_name"]
+        == "Doctor One"
+    )
+
     assert data["role"] == "physician"
     assert data["is_active"] is True
 
@@ -37,7 +54,9 @@ def test_create_user(client):
     assert "password_hash" not in data
 
 
-def test_username_is_normalized(client):
+def test_username_is_normalized(
+    client,
+):
     response = client.post(
         "/api/v1/users",
         json=user_payload(
@@ -46,10 +65,16 @@ def test_username_is_normalized(client):
     )
 
     assert response.status_code == 201
-    assert response.json()["username"] == "doctorabc"
+
+    assert (
+        response.json()["username"]
+        == "doctorabc"
+    )
 
 
-def test_duplicate_username_returns_409(client):
+def test_duplicate_username_returns_409(
+    client,
+):
     first = client.post(
         "/api/v1/users",
         json=user_payload(),
@@ -88,7 +113,11 @@ def test_password_is_hashed_in_database(
     )
 
     assert user is not None
-    assert user.password_hash != password
+
+    assert (
+        user.password_hash
+        != password
+    )
 
     assert verify_password(
         password,
@@ -97,14 +126,16 @@ def test_password_is_hashed_in_database(
 
 
 def test_list_users(client):
-    client.post(
+    first = client.post(
         "/api/v1/users",
         json=user_payload(
             username="doctor1",
         ),
     )
 
-    client.post(
+    assert first.status_code == 201
+
+    second = client.post(
         "/api/v1/users",
         json=user_payload(
             username="nurse1",
@@ -112,12 +143,26 @@ def test_list_users(client):
         ),
     )
 
+    assert second.status_code == 201
+
     response = client.get(
         "/api/v1/users"
     )
 
     assert response.status_code == 200
-    assert len(response.json()) == 2
+
+    users = response.json()
+
+    assert len(users) == 3
+
+    usernames = {
+        item["username"]
+        for item in users
+    }
+
+    assert "testadmin" in usernames
+    assert "doctor1" in usernames
+    assert "nurse1" in usernames
 
 
 def test_update_user(client):
@@ -125,6 +170,8 @@ def test_update_user(client):
         "/api/v1/users",
         json=user_payload(),
     )
+
+    assert create_response.status_code == 201
 
     user_id = create_response.json()["id"]
 
@@ -140,8 +187,13 @@ def test_update_user(client):
 
     data = response.json()
 
-    assert data["display_name"] == "Updated Doctor"
+    assert (
+        data["display_name"]
+        == "Updated Doctor"
+    )
+
     assert data["role"] == "admin"
+
 
 def test_update_password_rehashes_password(
     client,
@@ -187,7 +239,9 @@ def test_update_password_rehashes_password(
     )
 
 
-def test_invalid_role_returns_422(client):
+def test_invalid_role_returns_422(
+    client,
+):
     response = client.post(
         "/api/v1/users",
         json=user_payload(
@@ -198,7 +252,9 @@ def test_invalid_role_returns_422(client):
     assert response.status_code == 422
 
 
-def test_short_password_returns_422(client):
+def test_short_password_returns_422(
+    client,
+):
     response = client.post(
         "/api/v1/users",
         json=user_payload(
@@ -209,7 +265,9 @@ def test_short_password_returns_422(client):
     assert response.status_code == 422
 
 
-def test_missing_user_returns_404(client):
+def test_missing_user_returns_404(
+    client,
+):
     response = client.get(
         "/api/v1/users/not-real"
     )

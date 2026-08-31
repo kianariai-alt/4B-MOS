@@ -1,5 +1,6 @@
 def create_user_and_login(
     client,
+    admin_headers,
     *,
     username: str,
     role: str,
@@ -8,6 +9,7 @@ def create_user_and_login(
 
     create_response = client.post(
         "/api/v1/users",
+        headers=admin_headers,
         json={
             "username": username,
             "display_name": username.title(),
@@ -30,7 +32,9 @@ def create_user_and_login(
 
     assert login_response.status_code == 200
 
-    token = login_response.json()["access_token"]
+    token = login_response.json()[
+        "access_token"
+    ]
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -50,6 +54,7 @@ def create_treatment(client) -> dict:
     )
 
     assert patient_response.status_code == 201
+
     patient = patient_response.json()
 
     visit_response = client.post(
@@ -60,6 +65,7 @@ def create_treatment(client) -> dict:
     )
 
     assert visit_response.status_code == 201
+
     visit = visit_response.json()
 
     treatment_response = client.post(
@@ -75,8 +81,12 @@ def create_treatment(client) -> dict:
     return treatment_response.json()
 
 
-def test_session_creation_requires_authentication(client):
-    treatment = create_treatment(client)
+def test_session_creation_requires_authentication(
+    client,
+):
+    treatment = create_treatment(
+        client
+    )
 
     response = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
@@ -88,11 +98,17 @@ def test_session_creation_requires_authentication(client):
     assert response.status_code == 401
 
 
-def test_viewer_cannot_create_session(client):
-    treatment = create_treatment(client)
+def test_viewer_cannot_create_session(
+    client,
+    admin_headers,
+):
+    treatment = create_treatment(
+        client
+    )
 
     _, headers = create_user_and_login(
         client,
+        admin_headers,
         username="viewer1",
         role="viewer",
     )
@@ -108,11 +124,17 @@ def test_viewer_cannot_create_session(client):
     assert response.status_code == 403
 
 
-def test_physician_can_create_session_and_is_audited(client):
-    treatment = create_treatment(client)
+def test_physician_can_create_session_and_is_audited(
+    client,
+    admin_headers,
+):
+    treatment = create_treatment(
+        client
+    )
 
     user, headers = create_user_and_login(
         client,
+        admin_headers,
         username="physician1",
         role="physician",
     )
@@ -127,7 +149,9 @@ def test_physician_can_create_session_and_is_audited(client):
 
     assert create_response.status_code == 201
 
-    session_id = create_response.json()["id"]
+    session_id = create_response.json()[
+        "id"
+    ]
 
     audit_response = client.get(
         f"/api/v1/treatment-sessions/{session_id}/audit-logs",
@@ -142,19 +166,42 @@ def test_physician_can_create_session_and_is_audited(client):
 
     log = logs[0]
 
-    assert log["event_type"] == "session_created"
-    assert log["actor_user_id"] == user["id"]
-    assert log["actor_username"] == "physician1"
-    assert log["actor_role"] == "physician"
+    assert (
+        log["event_type"]
+        == "session_created"
+    )
+
+    assert (
+        log["actor_user_id"]
+        == user["id"]
+    )
+
+    assert (
+        log["actor_username"]
+        == "physician1"
+    )
+
+    assert (
+        log["actor_role"]
+        == "physician"
+    )
 
 
-def test_viewer_can_read_existing_sessions(client):
-    treatment = create_treatment(client)
+def test_viewer_can_read_existing_sessions(
+    client,
+    admin_headers,
+):
+    treatment = create_treatment(
+        client
+    )
 
-    _, physician_headers = create_user_and_login(
-        client,
-        username="physician2",
-        role="physician",
+    _, physician_headers = (
+        create_user_and_login(
+            client,
+            admin_headers,
+            username="physician2",
+            role="physician",
+        )
     )
 
     create_response = client.post(
@@ -167,10 +214,13 @@ def test_viewer_can_read_existing_sessions(client):
 
     assert create_response.status_code == 201
 
-    _, viewer_headers = create_user_and_login(
-        client,
-        username="viewer2",
-        role="viewer",
+    _, viewer_headers = (
+        create_user_and_login(
+            client,
+            admin_headers,
+            username="viewer2",
+            role="viewer",
+        )
     )
 
     response = client.get(
@@ -179,16 +229,27 @@ def test_viewer_can_read_existing_sessions(client):
     )
 
     assert response.status_code == 200
-    assert len(response.json()) == 1
+
+    assert len(
+        response.json()
+    ) == 1
 
 
-def test_operator_transition_is_recorded_in_audit(client):
-    treatment = create_treatment(client)
+def test_operator_transition_is_recorded_in_audit(
+    client,
+    admin_headers,
+):
+    treatment = create_treatment(
+        client
+    )
 
-    _, physician_headers = create_user_and_login(
-        client,
-        username="physician3",
-        role="physician",
+    _, physician_headers = (
+        create_user_and_login(
+            client,
+            admin_headers,
+            username="physician3",
+            role="physician",
+        )
     )
 
     create_response = client.post(
@@ -201,12 +262,17 @@ def test_operator_transition_is_recorded_in_audit(client):
 
     assert create_response.status_code == 201
 
-    session_id = create_response.json()["id"]
+    session_id = create_response.json()[
+        "id"
+    ]
 
-    operator, operator_headers = create_user_and_login(
-        client,
-        username="operator1",
-        role="operator",
+    operator, operator_headers = (
+        create_user_and_login(
+            client,
+            admin_headers,
+            username="operator1",
+            role="operator",
+        )
     )
 
     update_response = client.patch(
@@ -232,10 +298,32 @@ def test_operator_transition_is_recorded_in_audit(client):
 
     transition = logs[1]
 
-    assert transition["event_type"] == "state_transition"
-    assert transition["from_state"] == "planned"
-    assert transition["to_state"] == "in_progress"
+    assert (
+        transition["event_type"]
+        == "state_transition"
+    )
 
-    assert transition["actor_user_id"] == operator["id"]
-    assert transition["actor_username"] == "operator1"
-    assert transition["actor_role"] == "operator"
+    assert (
+        transition["from_state"]
+        == "planned"
+    )
+
+    assert (
+        transition["to_state"]
+        == "in_progress"
+    )
+
+    assert (
+        transition["actor_user_id"]
+        == operator["id"]
+    )
+
+    assert (
+        transition["actor_username"]
+        == "operator1"
+    )
+
+    assert (
+        transition["actor_role"]
+        == "operator"
+    )

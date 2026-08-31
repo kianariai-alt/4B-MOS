@@ -13,9 +13,11 @@ from backend.app.services.treatment_session import (
 def test_session_audit_log_records_actor(
     client,
     db_session,
+    admin_headers,
 ):
     user_response = client.post(
         "/api/v1/users",
+        headers=admin_headers,
         json={
             "username": "auditdoctor",
             "display_name": "Audit Doctor",
@@ -80,17 +82,38 @@ def test_session_audit_log_records_actor(
         )
     )
 
-    logs = AuditLogRepository.list_by_entity(
-        db_session,
-        entity_type="treatment_session",
-        entity_id=treatment_session.id,
+    logs = (
+        AuditLogRepository.list_by_entity(
+            db_session,
+            entity_type=(
+                "treatment_session"
+            ),
+            entity_id=(
+                treatment_session.id
+            ),
+        )
     )
 
     assert len(logs) == 1
 
     audit_log = logs[0]
 
-    assert audit_log.actor_user_id == user.id
-    assert audit_log.actor_username == "auditdoctor"
-    assert audit_log.actor_display_name == "Audit Doctor"
-    assert audit_log.actor_role == "physician"
+    assert (
+        audit_log.actor_user_id
+        == user.id
+    )
+
+    assert (
+        audit_log.actor_username
+        == "auditdoctor"
+    )
+
+    assert (
+        audit_log.actor_display_name
+        == "Audit Doctor"
+    )
+
+    assert (
+        audit_log.actor_role
+        == "physician"
+    )

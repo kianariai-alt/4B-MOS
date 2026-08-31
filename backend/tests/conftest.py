@@ -49,7 +49,9 @@ def override_get_db():
 
 @pytest.fixture(autouse=True)
 def reset_database():
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[
+        get_db
+    ] = override_get_db
 
     Base.metadata.drop_all(
         bind=test_engine
@@ -82,3 +84,35 @@ def db_session():
         yield db
     finally:
         db.close()
+
+
+@pytest.fixture
+def admin_headers(client):
+    bootstrap_response = client.post(
+        "/api/v1/auth/bootstrap-admin",
+        json={
+            "username": "testadmin",
+            "display_name": "Test Administrator",
+            "password": "StrongAdmin123",
+        },
+    )
+
+    assert bootstrap_response.status_code == 201
+
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": "testadmin",
+            "password": "StrongAdmin123",
+        },
+    )
+
+    assert login_response.status_code == 200
+
+    token = login_response.json()[
+        "access_token"
+    ]
+
+    return {
+        "Authorization": f"Bearer {token}",
+    }

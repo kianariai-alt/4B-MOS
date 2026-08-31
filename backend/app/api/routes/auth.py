@@ -11,11 +11,13 @@ from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.auth import (
     AccessTokenResponse,
+    BootstrapAdminRequest,
     LoginRequest,
 )
 from backend.app.schemas.user import UserRead
 from backend.app.services.auth import (
     AuthService,
+    BootstrapAlreadyCompletedError,
     InactiveUserError,
     InvalidCredentialsError,
 )
@@ -25,6 +27,32 @@ router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
 )
+
+
+@router.post(
+    "/bootstrap-admin",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def bootstrap_admin(
+    payload: BootstrapAdminRequest,
+    db: Session = Depends(get_db),
+) -> UserRead:
+    try:
+        user = AuthService.bootstrap_admin(
+            db,
+            payload,
+        )
+
+        return UserRead.model_validate(
+            user
+        )
+
+    except BootstrapAlreadyCompletedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
 
 
 @router.post(

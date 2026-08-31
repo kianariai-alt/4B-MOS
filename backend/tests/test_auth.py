@@ -1,11 +1,13 @@
 def create_user(
     client,
+    admin_headers,
     *,
     username="doctor1",
     password="StrongPass123",
 ):
     response = client.post(
         "/api/v1/users",
+        headers=admin_headers,
         json={
             "username": username,
             "display_name": "Doctor One",
@@ -34,8 +36,14 @@ def login(
     )
 
 
-def test_login_returns_access_token(client):
-    create_user(client)
+def test_login_returns_access_token(
+    client,
+    admin_headers,
+):
+    create_user(
+        client,
+        admin_headers,
+    )
 
     response = login(client)
 
@@ -44,15 +52,25 @@ def test_login_returns_access_token(client):
     data = response.json()
 
     assert data["token_type"] == "bearer"
+
     assert isinstance(
         data["access_token"],
         str,
     )
-    assert len(data["access_token"]) > 20
+
+    assert len(
+        data["access_token"]
+    ) > 20
 
 
-def test_wrong_password_returns_401(client):
-    create_user(client)
+def test_wrong_password_returns_401(
+    client,
+    admin_headers,
+):
+    create_user(
+        client,
+        admin_headers,
+    )
 
     response = login(
         client,
@@ -62,7 +80,9 @@ def test_wrong_password_returns_401(client):
     assert response.status_code == 401
 
 
-def test_unknown_user_returns_401(client):
+def test_unknown_user_returns_401(
+    client,
+):
     response = login(
         client,
         username="missing",
@@ -71,7 +91,9 @@ def test_unknown_user_returns_401(client):
     assert response.status_code == 401
 
 
-def test_auth_me_requires_token(client):
+def test_auth_me_requires_token(
+    client,
+):
     response = client.get(
         "/api/v1/auth/me"
     )
@@ -79,10 +101,18 @@ def test_auth_me_requires_token(client):
     assert response.status_code == 401
 
 
-def test_auth_me_returns_current_user(client):
-    user = create_user(client)
+def test_auth_me_returns_current_user(
+    client,
+    admin_headers,
+):
+    user = create_user(
+        client,
+        admin_headers,
+    )
 
     login_response = login(client)
+
+    assert login_response.status_code == 200
 
     token = login_response.json()[
         "access_token"
@@ -104,11 +134,15 @@ def test_auth_me_returns_current_user(client):
     assert data["role"] == "physician"
 
 
-def test_invalid_token_returns_401(client):
+def test_invalid_token_returns_401(
+    client,
+):
     response = client.get(
         "/api/v1/auth/me",
         headers={
-            "Authorization": "Bearer definitely-not-a-token",
+            "Authorization": (
+                "Bearer definitely-not-a-token"
+            ),
         },
     )
 

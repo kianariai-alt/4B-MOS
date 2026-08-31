@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.app.models.user import User
@@ -27,6 +27,18 @@ class UserRepository:
         )
 
         return db.scalar(statement)
+
+    @staticmethod
+    def count(
+        db: Session,
+    ) -> int:
+        statement = select(
+            func.count(User.id)
+        )
+
+        result = db.scalar(statement)
+
+        return int(result or 0)
 
     @staticmethod
     def list(

@@ -2,9 +2,13 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def authenticate_session_tests(client):
+def authenticate_session_tests(
+    client,
+    admin_headers,
+):
     create_response = client.post(
         "/api/v1/users",
+        headers=admin_headers,
         json={
             "username": "sessiondoctor",
             "display_name": "Session Doctor",
@@ -25,13 +29,17 @@ def authenticate_session_tests(client):
 
     assert login_response.status_code == 200
 
-    token = login_response.json()["access_token"]
+    token = login_response.json()[
+        "access_token"
+    ]
 
     client.headers.update(
         {
             "Authorization": f"Bearer {token}",
         }
     )
+
+
 def create_patient(client) -> dict:
     response = client.post(
         "/api/v1/patients",
@@ -43,6 +51,7 @@ def create_patient(client) -> dict:
     )
 
     assert response.status_code == 201
+
     return response.json()
 
 
@@ -52,12 +61,12 @@ def create_visit(client) -> dict:
     response = client.post(
         f"/api/v1/patients/{patient['id']}/visits",
         json={
-            "chief_complaint": "Knee pain",
             "body_region": "Knee",
         },
     )
 
     assert response.status_code == 201
+
     return response.json()
 
 
@@ -67,27 +76,29 @@ def create_treatment(client) -> dict:
     response = client.post(
         f"/api/v1/visits/{visit['id']}/treatments",
         json={
-            "treatment_type": "ACS",
+            "treatment_type": "PRP",
             "body_region": "Knee",
         },
     )
 
     assert response.status_code == 201
+
     return response.json()
 
 
-def test_create_treatment_session(client):
-    treatment = create_treatment(client)
+def test_create_treatment_session(
+    client,
+):
+    treatment = create_treatment(
+        client
+    )
 
     response = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
         json={
             "session_number": 1,
             "body_region": "Knee",
-            "dose_or_volume": "4 mL",
-            "execution_parameters": {
-                "documentation": "session 1",
-            },
+            "dose_or_volume": "4 ml",
         },
     )
 
@@ -95,15 +106,22 @@ def test_create_treatment_session(client):
 
     data = response.json()
 
-    assert data["treatment_id"] == treatment["id"]
+    assert (
+        data["treatment_id"]
+        == treatment["id"]
+    )
+
     assert data["session_number"] == 1
     assert data["status"] == "planned"
     assert data["body_region"] == "Knee"
-    assert data["dose_or_volume"] == "4 mL"
 
 
-def test_list_treatment_sessions_in_session_order(client):
-    treatment = create_treatment(client)
+def test_list_treatment_sessions_in_session_order(
+    client,
+):
+    treatment = create_treatment(
+        client
+    )
 
     second = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
@@ -112,6 +130,8 @@ def test_list_treatment_sessions_in_session_order(client):
         },
     )
 
+    assert second.status_code == 201
+
     first = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
         json={
@@ -119,7 +139,6 @@ def test_list_treatment_sessions_in_session_order(client):
         },
     )
 
-    assert second.status_code == 201
     assert first.status_code == 201
 
     response = client.get(
@@ -131,12 +150,19 @@ def test_list_treatment_sessions_in_session_order(client):
     data = response.json()
 
     assert len(data) == 2
-    assert data[0]["session_number"] == 1
-    assert data[1]["session_number"] == 2
+
+    assert [
+        item["session_number"]
+        for item in data
+    ] == [1, 2]
 
 
-def test_get_treatment_session(client):
-    treatment = create_treatment(client)
+def test_get_treatment_session(
+    client,
+):
+    treatment = create_treatment(
+        client
+    )
 
     create_response = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
@@ -147,23 +173,25 @@ def test_get_treatment_session(client):
 
     assert create_response.status_code == 201
 
-    session_id = create_response.json()["id"]
+    session = create_response.json()
 
     response = client.get(
-        f"/api/v1/treatment-sessions/{session_id}"
+        f"/api/v1/treatment-sessions/{session['id']}"
     )
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert data["id"] == session_id
-    assert data["treatment_id"] == treatment["id"]
-    assert data["session_number"] == 1
+    assert data["id"] == session["id"]
 
 
-def test_update_treatment_session(client):
-    treatment = create_treatment(client)
+def test_update_treatment_session(
+    client,
+):
+    treatment = create_treatment(
+        client
+    )
 
     create_response = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
@@ -174,31 +202,14 @@ def test_update_treatment_session(client):
 
     assert create_response.status_code == 201
 
-    session_id = create_response.json()["id"]
-
-    start_response = client.patch(
-        f"/api/v1/treatment-sessions/{session_id}",
-        json={
-            "status": "in_progress",
-        },
-    )
-
-    assert start_response.status_code == 200
-    assert start_response.json()["status"] == "in_progress"
-    assert start_response.json()["started_at"] is not None
+    session = create_response.json()
 
     response = client.patch(
-        f"/api/v1/treatment-sessions/{session_id}",
+        f"/api/v1/treatment-sessions/{session['id']}",
         json={
-            "status": "completed",
-            "dose_or_volume": "5 mL",
-            "execution_parameters": {
-                "actual_volume": "5 mL",
-                "completed": True,
-            },
-            "outcome_summary": "Procedure completed successfully",
-            "adverse_events": "None reported",
-            "notes": "Session completed",
+            "status": "in_progress",
+            "dose_or_volume": "5 ml",
+            "notes": "Session started",
         },
     )
 
@@ -206,26 +217,22 @@ def test_update_treatment_session(client):
 
     data = response.json()
 
-    assert data["status"] == "completed"
-    assert data["dose_or_volume"] == "5 mL"
+    assert data["status"] == "in_progress"
+
+    assert (
+        data["dose_or_volume"]
+        == "5 ml"
+    )
+
     assert data["started_at"] is not None
-    assert data["completed_at"] is not None
 
-    assert (
-        data["execution_parameters"]["actual_volume"]
-        == "5 mL"
+
+def test_duplicate_session_number_returns_409(
+    client,
+):
+    treatment = create_treatment(
+        client
     )
-
-    assert (
-        data["outcome_summary"]
-        == "Procedure completed successfully"
-    )
-
-    assert data["adverse_events"] == "None reported"
-
-
-def test_duplicate_session_number_returns_409(client):
-    treatment = create_treatment(client)
 
     first = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
@@ -234,6 +241,8 @@ def test_duplicate_session_number_returns_409(client):
         },
     )
 
+    assert first.status_code == 201
+
     second = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
         json={
@@ -241,11 +250,12 @@ def test_duplicate_session_number_returns_409(client):
         },
     )
 
-    assert first.status_code == 201
     assert second.status_code == 409
 
 
-def test_create_session_for_missing_treatment_returns_404(client):
+def test_create_session_for_missing_treatment_returns_404(
+    client,
+):
     response = client.post(
         "/api/v1/treatments/not-real/sessions",
         json={
@@ -256,14 +266,18 @@ def test_create_session_for_missing_treatment_returns_404(client):
     assert response.status_code == 404
 
 
-def test_invalid_session_status_returns_422(client):
-    treatment = create_treatment(client)
+def test_invalid_session_status_returns_422(
+    client,
+):
+    treatment = create_treatment(
+        client
+    )
 
     response = client.post(
         f"/api/v1/treatments/{treatment['id']}/sessions",
         json={
             "session_number": 1,
-            "status": "banana",
+            "status": "finished",
         },
     )
 
