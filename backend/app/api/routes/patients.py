@@ -52,7 +52,7 @@ WRITE_ROLES = (
 )
 def create_patient(
     payload: PatientCreate,
-    _current_user: User = Depends(
+    current_user: User = Depends(
         require_roles(*WRITE_ROLES)
     ),
     db: Session = Depends(get_db),
@@ -61,6 +61,7 @@ def create_patient(
         patient = PatientService.create_patient(
             db,
             payload,
+            actor=current_user,
         )
 
         return PatientRead.model_validate(
@@ -140,7 +141,7 @@ def get_patient(
 def update_patient(
     patient_id: str,
     payload: PatientUpdate,
-    _current_user: User = Depends(
+    current_user: User = Depends(
         require_roles(*WRITE_ROLES)
     ),
     db: Session = Depends(get_db),
@@ -150,6 +151,7 @@ def update_patient(
             db,
             patient_id,
             payload,
+            actor=current_user,
         )
 
         return PatientRead.model_validate(
@@ -169,15 +171,18 @@ def update_patient(
 )
 def deactivate_patient(
     patient_id: str,
-    _current_user: User = Depends(
+    current_user: User = Depends(
         require_roles("admin")
     ),
     db: Session = Depends(get_db),
 ) -> PatientRead:
     try:
-        patient = PatientService.deactivate_patient(
-            db,
-            patient_id,
+        patient = (
+            PatientService.deactivate_patient(
+                db,
+                patient_id,
+                actor=current_user,
+            )
         )
 
         return PatientRead.model_validate(

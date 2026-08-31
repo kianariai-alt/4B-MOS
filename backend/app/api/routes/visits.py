@@ -59,7 +59,7 @@ UPDATE_ROLES = (
 def create_visit(
     patient_id: str,
     payload: VisitCreate,
-    _current_user: User = Depends(
+    current_user: User = Depends(
         require_roles(*CREATE_ROLES)
     ),
     db: Session = Depends(get_db),
@@ -69,6 +69,7 @@ def create_visit(
             db,
             patient_id,
             payload,
+            actor=current_user,
         )
 
         return VisitRead.model_validate(
@@ -157,7 +158,7 @@ def get_visit(
 def update_visit(
     visit_id: str,
     payload: VisitUpdate,
-    _current_user: User = Depends(
+    current_user: User = Depends(
         require_roles(*UPDATE_ROLES)
     ),
     db: Session = Depends(get_db),
@@ -167,6 +168,7 @@ def update_visit(
             db,
             visit_id,
             payload,
+            actor=current_user,
         )
 
         return VisitRead.model_validate(
