@@ -7,7 +7,9 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from backend.app.api.dependencies import require_roles
+from backend.app.api.dependencies import (
+    require_roles,
+)
 from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.protocol import (
@@ -49,15 +51,18 @@ WRITE_ROLES = (
 )
 def create_protocol(
     payload: ProtocolCreate,
-    _current_user: User = Depends(
+    current_user: User = Depends(
         require_roles(*WRITE_ROLES)
     ),
     db: Session = Depends(get_db),
 ) -> ProtocolRead:
     try:
-        protocol = ProtocolService.create_protocol(
-            db,
-            payload,
+        protocol = (
+            ProtocolService.create_protocol(
+                db,
+                payload,
+                actor=current_user,
+            )
         )
 
         return ProtocolRead.model_validate(
@@ -66,7 +71,9 @@ def create_protocol(
 
     except ProtocolVersionConflictError as exc:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=(
+                status.HTTP_409_CONFLICT
+            ),
             detail=str(exc),
         ) from exc
 
@@ -109,36 +116,8 @@ def get_protocol(
     db: Session = Depends(get_db),
 ) -> ProtocolRead:
     try:
-        protocol = ProtocolService.get_protocol(
-            db,
-            protocol_id,
-        )
-
-        return ProtocolRead.model_validate(
-            protocol
-        )
-
-    except ProtocolNotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(exc),
-        ) from exc
-
-
-@router.delete(
-    "/{protocol_id}",
-    response_model=ProtocolRead,
-)
-def deactivate_protocol(
-    protocol_id: str,
-    _current_user: User = Depends(
-        require_roles(*WRITE_ROLES)
-    ),
-    db: Session = Depends(get_db),
-) -> ProtocolRead:
-    try:
         protocol = (
-            ProtocolService.deactivate_protocol(
+            ProtocolService.get_protocol(
                 db,
                 protocol_id,
             )
@@ -150,6 +129,41 @@ def deactivate_protocol(
 
     except ProtocolNotFoundError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+            ),
+            detail=str(exc),
+        ) from exc
+
+
+@router.delete(
+    "/{protocol_id}",
+    response_model=ProtocolRead,
+)
+def deactivate_protocol(
+    protocol_id: str,
+    current_user: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
+    db: Session = Depends(get_db),
+) -> ProtocolRead:
+    try:
+        protocol = (
+            ProtocolService.deactivate_protocol(
+                db,
+                protocol_id,
+                actor=current_user,
+            )
+        )
+
+        return ProtocolRead.model_validate(
+            protocol
+        )
+
+    except ProtocolNotFoundError as exc:
+        raise HTTPException(
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+            ),
             detail=str(exc),
         ) from exc

@@ -7,7 +7,9 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from backend.app.api.dependencies import require_roles
+from backend.app.api.dependencies import (
+    require_roles,
+)
 from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.treatment import (
@@ -53,16 +55,19 @@ WRITE_ROLES = (
 def create_treatment(
     visit_id: str,
     payload: TreatmentCreate,
-    _current_user: User = Depends(
+    current_user: User = Depends(
         require_roles(*WRITE_ROLES)
     ),
     db: Session = Depends(get_db),
 ) -> TreatmentRead:
     try:
-        treatment = TreatmentService.create_treatment(
-            db,
-            visit_id,
-            payload,
+        treatment = (
+            TreatmentService.create_treatment(
+                db,
+                visit_id,
+                payload,
+                actor=current_user,
+            )
         )
 
         return TreatmentRead.model_validate(
@@ -74,7 +79,9 @@ def create_treatment(
         TreatmentProtocolNotFoundError,
     ) as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+            ),
             detail=str(exc),
         ) from exc
 
@@ -83,7 +90,9 @@ def create_treatment(
         TreatmentProtocolInactiveError,
     ) as exc:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=(
+                status.HTTP_409_CONFLICT
+            ),
             detail=str(exc),
         ) from exc
 
@@ -127,7 +136,9 @@ def list_visit_treatments(
 
     except TreatmentVisitNotFoundError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+            ),
             detail=str(exc),
         ) from exc
 
@@ -157,7 +168,9 @@ def get_treatment(
 
     except TreatmentNotFoundError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+            ),
             detail=str(exc),
         ) from exc
 
@@ -169,7 +182,7 @@ def get_treatment(
 def update_treatment(
     treatment_id: str,
     payload: TreatmentUpdate,
-    _current_user: User = Depends(
+    current_user: User = Depends(
         require_roles(*WRITE_ROLES)
     ),
     db: Session = Depends(get_db),
@@ -180,6 +193,7 @@ def update_treatment(
                 db,
                 treatment_id,
                 payload,
+                actor=current_user,
             )
         )
 
@@ -189,6 +203,8 @@ def update_treatment(
 
     except TreatmentNotFoundError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+            ),
             detail=str(exc),
         ) from exc
