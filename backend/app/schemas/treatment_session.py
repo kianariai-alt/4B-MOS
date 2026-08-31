@@ -17,12 +17,12 @@ TreatmentSessionStatus = Literal[
 
 
 class TreatmentSessionCreate(BaseModel):
-    session_number: int = Field(
-        ge=1,
+    model_config = ConfigDict(
+        extra="forbid",
     )
 
-    status: TreatmentSessionStatus = (
-        "planned"
+    session_number: int = Field(
+        ge=1,
     )
 
     scheduled_at: datetime | None = None

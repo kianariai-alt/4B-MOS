@@ -1,4 +1,4 @@
-from sqlalchemy import select
+﻿from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.app.models.treatment_session import TreatmentSession
@@ -59,9 +59,13 @@ class TreatmentSessionRepository:
         treatment_id: str,
         payload: TreatmentSessionCreate,
     ) -> TreatmentSession:
+        create_data = payload.model_dump()
+
         treatment_session = TreatmentSession(
             treatment_id=treatment_id,
-            **payload.model_dump(),
+            status="planned",
+            operational_status="scheduled",
+            **create_data,
         )
 
         db.add(treatment_session)
