@@ -7,6 +7,7 @@ from backend.app.api.routes.treatment_sessions import (
     router as treatment_sessions_router,
 )
 from backend.app.api.routes.treatments import router as treatments_router
+from backend.app.api.routes.users import router as users_router
 from backend.app.api.routes.visits import router as visits_router
 
 
@@ -18,3 +19,4 @@ api_router.include_router(visits_router)
 api_router.include_router(treatments_router)
 api_router.include_router(protocols_router)
 api_router.include_router(treatment_sessions_router)
+api_router.include_router(users_router)
