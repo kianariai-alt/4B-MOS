@@ -43,9 +43,13 @@ def create_user_and_login(
     return user, headers
 
 
-def create_treatment(client) -> dict:
+def create_treatment(
+    client,
+    admin_headers,
+) -> dict:
     patient_response = client.post(
         "/api/v1/patients",
+        headers=admin_headers,
         json={
             "patient_code": "RBAC-PAT-001",
             "first_name": "RBAC",
@@ -59,6 +63,7 @@ def create_treatment(client) -> dict:
 
     visit_response = client.post(
         f"/api/v1/patients/{patient['id']}/visits",
+        headers=admin_headers,
         json={
             "body_region": "Knee",
         },
@@ -70,6 +75,7 @@ def create_treatment(client) -> dict:
 
     treatment_response = client.post(
         f"/api/v1/visits/{visit['id']}/treatments",
+        headers=admin_headers,
         json={
             "treatment_type": "PRP",
             "body_region": "Knee",
@@ -83,9 +89,11 @@ def create_treatment(client) -> dict:
 
 def test_session_creation_requires_authentication(
     client,
+    admin_headers,
 ):
     treatment = create_treatment(
-        client
+        client,
+        admin_headers,
     )
 
     response = client.post(
@@ -103,7 +111,8 @@ def test_viewer_cannot_create_session(
     admin_headers,
 ):
     treatment = create_treatment(
-        client
+        client,
+        admin_headers,
     )
 
     _, headers = create_user_and_login(
@@ -129,7 +138,8 @@ def test_physician_can_create_session_and_is_audited(
     admin_headers,
 ):
     treatment = create_treatment(
-        client
+        client,
+        admin_headers,
     )
 
     user, headers = create_user_and_login(
@@ -192,7 +202,8 @@ def test_viewer_can_read_existing_sessions(
     admin_headers,
 ):
     treatment = create_treatment(
-        client
+        client,
+        admin_headers,
     )
 
     _, physician_headers = (
@@ -240,7 +251,8 @@ def test_operator_transition_is_recorded_in_audit(
     admin_headers,
 ):
     treatment = create_treatment(
-        client
+        client,
+        admin_headers,
     )
 
     _, physician_headers = (

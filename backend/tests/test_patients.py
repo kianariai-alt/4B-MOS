@@ -1,3 +1,11 @@
+import pytest
+
+
+pytestmark = pytest.mark.usefixtures(
+    "authenticated_admin"
+)
+
+
 def test_create_patient(client):
     response = client.post(
         "/api/v1/patients",
@@ -20,7 +28,9 @@ def test_create_patient(client):
     assert "id" in data
 
 
-def test_duplicate_patient_code_returns_conflict(client):
+def test_duplicate_patient_code_returns_conflict(
+    client,
+):
     payload = {
         "patient_code": "PAT-0002",
         "first_name": "Test",
@@ -60,7 +70,11 @@ def test_get_patient(client):
     )
 
     assert response.status_code == 200
-    assert response.json()["patient_code"] == "PAT-0003"
+
+    assert (
+        response.json()["patient_code"]
+        == "PAT-0003"
+    )
 
 
 def test_list_patients(client):
@@ -115,7 +129,11 @@ def test_update_patient(client):
     )
 
     assert response.status_code == 200
-    assert response.json()["first_name"] == "After"
+
+    assert (
+        response.json()["first_name"]
+        == "After"
+    )
 
 
 def test_deactivate_patient(client):
@@ -137,10 +155,16 @@ def test_deactivate_patient(client):
     )
 
     assert response.status_code == 200
-    assert response.json()["is_active"] is False
+
+    assert (
+        response.json()["is_active"]
+        is False
+    )
 
 
-def test_missing_patient_returns_404(client):
+def test_missing_patient_returns_404(
+    client,
+):
     response = client.get(
         "/api/v1/patients/not-a-real-id"
     )

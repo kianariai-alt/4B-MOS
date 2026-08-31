@@ -1,7 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    status,
+)
 from sqlalchemy.orm import Session
 
+from backend.app.api.dependencies import require_roles
 from backend.app.db.session import get_db
+from backend.app.models.user import User
 from backend.app.schemas.patient import (
     PatientCreate,
     PatientRead,
@@ -20,6 +28,23 @@ router = APIRouter(
 )
 
 
+READ_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+    "operator",
+    "viewer",
+)
+
+
+WRITE_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+    "operator",
+)
+
+
 @router.post(
     "",
     response_model=PatientRead,
@@ -27,6 +52,9 @@ router = APIRouter(
 )
 def create_patient(
     payload: PatientCreate,
+    _current_user: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> PatientRead:
     try:
@@ -35,7 +63,9 @@ def create_patient(
             payload,
         )
 
-        return PatientRead.model_validate(patient)
+        return PatientRead.model_validate(
+            patient
+        )
 
     except PatientCodeConflictError as exc:
         raise HTTPException(
@@ -58,6 +88,9 @@ def list_patients(
         ge=1,
         le=500,
     ),
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> list[PatientRead]:
     patients = PatientService.list_patients(
@@ -78,6 +111,9 @@ def list_patients(
 )
 def get_patient(
     patient_id: str,
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> PatientRead:
     try:
@@ -86,7 +122,9 @@ def get_patient(
             patient_id,
         )
 
-        return PatientRead.model_validate(patient)
+        return PatientRead.model_validate(
+            patient
+        )
 
     except PatientNotFoundError as exc:
         raise HTTPException(
@@ -102,6 +140,9 @@ def get_patient(
 def update_patient(
     patient_id: str,
     payload: PatientUpdate,
+    _current_user: User = Depends(
+        require_roles(*WRITE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> PatientRead:
     try:
@@ -111,7 +152,9 @@ def update_patient(
             payload,
         )
 
-        return PatientRead.model_validate(patient)
+        return PatientRead.model_validate(
+            patient
+        )
 
     except PatientNotFoundError as exc:
         raise HTTPException(
@@ -126,6 +169,9 @@ def update_patient(
 )
 def deactivate_patient(
     patient_id: str,
+    _current_user: User = Depends(
+        require_roles("admin")
+    ),
     db: Session = Depends(get_db),
 ) -> PatientRead:
     try:
@@ -134,7 +180,9 @@ def deactivate_patient(
             patient_id,
         )
 
-        return PatientRead.model_validate(patient)
+        return PatientRead.model_validate(
+            patient
+        )
 
     except PatientNotFoundError as exc:
         raise HTTPException(

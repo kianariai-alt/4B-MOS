@@ -1,3 +1,9 @@
+import pytest
+
+
+pytestmark = pytest.mark.usefixtures(
+    "authenticated_admin"
+)
 from backend.app.models.user import User
 from backend.app.repositories.audit_log import (
     AuditLogRepository,

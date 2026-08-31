@@ -116,3 +116,11 @@ def admin_headers(client):
     return {
         "Authorization": f"Bearer {token}",
     }
+@pytest.fixture
+def authenticated_admin(
+    client,
+    admin_headers,
+):
+    client.headers.update(
+        admin_headers
+    )

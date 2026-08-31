@@ -5,17 +5,16 @@ from fastapi import (
     Query,
     status,
 )
-
 from sqlalchemy.orm import Session
 
+from backend.app.api.dependencies import require_roles
 from backend.app.db.session import get_db
-
+from backend.app.models.user import User
 from backend.app.schemas.visit import (
     VisitCreate,
     VisitRead,
     VisitUpdate,
 )
-
 from backend.app.services.visit import (
     VisitNotFoundError,
     VisitPatientNotFoundError,
@@ -28,6 +27,30 @@ router = APIRouter(
 )
 
 
+READ_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+    "operator",
+    "viewer",
+)
+
+
+CREATE_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+    "operator",
+)
+
+
+UPDATE_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+)
+
+
 @router.post(
     "/patients/{patient_id}/visits",
     response_model=VisitRead,
@@ -36,6 +59,9 @@ router = APIRouter(
 def create_visit(
     patient_id: str,
     payload: VisitCreate,
+    _current_user: User = Depends(
+        require_roles(*CREATE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> VisitRead:
     try:
@@ -71,6 +97,9 @@ def list_patient_visits(
         ge=1,
         le=500,
     ),
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> list[VisitRead]:
     try:
@@ -99,6 +128,9 @@ def list_patient_visits(
 )
 def get_visit(
     visit_id: str,
+    _current_user: User = Depends(
+        require_roles(*READ_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> VisitRead:
     try:
@@ -125,6 +157,9 @@ def get_visit(
 def update_visit(
     visit_id: str,
     payload: VisitUpdate,
+    _current_user: User = Depends(
+        require_roles(*UPDATE_ROLES)
+    ),
     db: Session = Depends(get_db),
 ) -> VisitRead:
     try:

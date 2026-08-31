@@ -1,3 +1,9 @@
+import pytest
+
+
+pytestmark = pytest.mark.usefixtures(
+    "authenticated_admin"
+)
 def create_patient(client) -> dict:
     response = client.post(
         "/api/v1/patients",
