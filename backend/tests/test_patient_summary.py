@@ -526,39 +526,30 @@ def test_last_completed_session(
         session_number=1,
     )
 
-    start_response = client.patch(
-        (
-            "/api/v1/"
-            "treatment-sessions/"
-            f"{session['id']}"
-        ),
-        headers=admin_headers,
-        json={
-            "status": "in_progress",
-        },
-    )
+    for operational_status in (
+        "checked_in",
+        "ready",
+        "in_treatment",
+        "completed",
+    ):
+        transition_response = client.patch(
+            (
+                "/api/v1/"
+                "treatment-sessions/"
+                f"{session['id']}/workflow"
+            ),
+            headers=admin_headers,
+            json={
+                "operational_status": (
+                    operational_status
+                ),
+            },
+        )
 
-    assert (
-        start_response.status_code
-        == 200
-    )
-
-    complete_response = client.patch(
-        (
-            "/api/v1/"
-            "treatment-sessions/"
-            f"{session['id']}"
-        ),
-        headers=admin_headers,
-        json={
-            "status": "completed",
-        },
-    )
-
-    assert (
-        complete_response.status_code
-        == 200
-    )
+        assert (
+            transition_response.status_code
+            == 200
+        )
 
     response = client.get(
         (

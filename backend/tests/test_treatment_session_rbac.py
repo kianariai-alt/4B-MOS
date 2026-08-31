@@ -288,13 +288,18 @@ def test_operator_transition_is_recorded_in_audit(
     )
 
     update_response = client.patch(
-        f"/api/v1/treatment-sessions/{session_id}",
+        (
+            "/api/v1/"
+            "treatment-sessions/"
+            f"{session_id}/workflow"
+        ),
         json={
-            "status": "in_progress",
+            "operational_status": (
+                "checked_in"
+            ),
         },
         headers=operator_headers,
     )
-
     assert update_response.status_code == 200
 
     audit_response = client.get(
@@ -312,17 +317,17 @@ def test_operator_transition_is_recorded_in_audit(
 
     assert (
         transition["event_type"]
-        == "state_transition"
+        == "operational_transition"
     )
 
     assert (
         transition["from_state"]
-        == "planned"
+        == "scheduled"
     )
 
     assert (
         transition["to_state"]
-        == "in_progress"
+        == "checked_in"
     )
 
     assert (

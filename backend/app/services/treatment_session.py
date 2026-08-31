@@ -195,6 +195,33 @@ class TreatmentSessionService:
                 session_id,
             )
         )
+        workflow_managed_fields = {
+            "status",
+            "started_at",
+            "completed_at",
+        }
+
+        requested_workflow_fields = (
+            workflow_managed_fields.intersection(
+                payload.model_fields_set
+            )
+        )
+
+        if requested_workflow_fields:
+            fields = ", ".join(
+                sorted(
+                    requested_workflow_fields
+                )
+            )
+
+            raise (
+                InvalidTreatmentSessionTransitionError(
+                    "Session lifecycle fields "
+                    "must be changed through "
+                    "the operational workflow: "
+                    f"{fields}."
+                )
+            )
 
         if (
             payload.session_number is not None

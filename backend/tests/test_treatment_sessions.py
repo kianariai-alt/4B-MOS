@@ -207,9 +207,8 @@ def test_update_treatment_session(
     response = client.patch(
         f"/api/v1/treatment-sessions/{session['id']}",
         json={
-            "status": "in_progress",
             "dose_or_volume": "5 ml",
-            "notes": "Session started",
+            "notes": "Session documented",
         },
     )
 
@@ -217,14 +216,19 @@ def test_update_treatment_session(
 
     data = response.json()
 
-    assert data["status"] == "in_progress"
+    assert data["status"] == "planned"
 
     assert (
         data["dose_or_volume"]
         == "5 ml"
     )
 
-    assert data["started_at"] is not None
+    assert (
+        data["notes"]
+        == "Session documented"
+    )
+
+    assert data["started_at"] is None
 
 
 def test_duplicate_session_number_returns_409(
