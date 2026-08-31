@@ -142,6 +142,17 @@ def test_update_treatment_session(client):
 
     session_id = create_response.json()["id"]
 
+    start_response = client.patch(
+        f"/api/v1/treatment-sessions/{session_id}",
+        json={
+            "status": "in_progress",
+        },
+    )
+
+    assert start_response.status_code == 200
+    assert start_response.json()["status"] == "in_progress"
+    assert start_response.json()["started_at"] is not None
+
     response = client.patch(
         f"/api/v1/treatment-sessions/{session_id}",
         json={
@@ -154,8 +165,6 @@ def test_update_treatment_session(client):
             "outcome_summary": "Procedure completed successfully",
             "adverse_events": "None reported",
             "notes": "Session completed",
-            "started_at": "2026-08-31T08:00:00Z",
-            "completed_at": "2026-08-31T08:30:00Z",
         },
     )
 
@@ -165,6 +174,8 @@ def test_update_treatment_session(client):
 
     assert data["status"] == "completed"
     assert data["dose_or_volume"] == "5 mL"
+    assert data["started_at"] is not None
+    assert data["completed_at"] is not None
 
     assert (
         data["execution_parameters"]["actual_volume"]
@@ -177,8 +188,6 @@ def test_update_treatment_session(client):
     )
 
     assert data["adverse_events"] == "None reported"
-    assert data["started_at"] is not None
-    assert data["completed_at"] is not None
 
 
 def test_duplicate_session_number_returns_409(client):
