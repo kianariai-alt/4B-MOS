@@ -1,10 +1,29 @@
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
 from backend.app.schemas.session_worklist import (
     SessionWorklistAction,
 )
+
+
+ClinicPriorityLevel = Literal[
+    "normal",
+    "attention",
+    "urgent",
+]
+
+ClinicAlertSeverity = Literal[
+    "attention",
+    "urgent",
+]
+
+
+class ClinicFlowAlert(BaseModel):
+    code: str
+    severity: ClinicAlertSeverity
+    message: str
 
 
 class ClinicLiveFlowItem(BaseModel):
@@ -28,9 +47,17 @@ class ClinicLiveFlowItem(BaseModel):
     started_at: datetime | None
     completed_at: datetime | None
 
+    scheduled_delay_minutes: int | None
     waiting_minutes: int | None
+    ready_wait_minutes: int | None
     treatment_minutes: int | None
     discharge_wait_minutes: int | None
+
+    priority_level: ClinicPriorityLevel
+    priority_score: int
+    is_attention_required: bool
+
+    alerts: list[ClinicFlowAlert]
 
     allowed_actions: list[
         SessionWorklistAction
@@ -48,6 +75,10 @@ class ClinicLiveFlowResponse(BaseModel):
     in_treatment_count: int
     awaiting_discharge_count: int
     active_count: int
+
+    attention_count: int
+    urgent_count: int
+    alert_count: int
 
     scheduled: list[ClinicLiveFlowItem]
     checked_in: list[ClinicLiveFlowItem]
