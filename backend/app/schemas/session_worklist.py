@@ -1,6 +1,24 @@
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel
+
+
+SessionActionCode = Literal[
+    "check_in",
+    "mark_ready",
+    "start_treatment",
+    "complete",
+    "discharge",
+    "cancel",
+]
+
+
+class SessionWorklistAction(BaseModel):
+    code: SessionActionCode
+    target_status: str
+    label: str
+    is_primary: bool
 
 
 class SessionWorklistItem(BaseModel):
@@ -14,7 +32,9 @@ class SessionWorklistItem(BaseModel):
 
     treatment_type: str
     session_number: int
+
     status: str
+    operational_status: str
 
     scheduled_at: datetime | None
 
@@ -23,6 +43,10 @@ class SessionWorklistItem(BaseModel):
 
     is_overdue: bool
     has_documented_adverse_event: bool
+
+    allowed_actions: list[
+        SessionWorklistAction
+    ]
 
 
 class SessionWorklistResponse(BaseModel):

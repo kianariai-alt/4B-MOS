@@ -20,6 +20,9 @@ from backend.app.schemas.session_worklist import (
     SessionWorklistItem,
     SessionWorklistResponse,
 )
+from backend.app.services.session_workflow import (
+    SessionWorkflowService,
+)
 
 
 class SessionWorklistService:
@@ -73,6 +76,9 @@ class SessionWorklistService:
 
         return SessionWorklistItem(
             session_id=session.id,
+                        operational_status=(
+                session.operational_status
+            ),
             treatment_id=treatment.id,
             visit_id=visit.id,
             patient_id=patient.id,
@@ -101,6 +107,12 @@ class SessionWorklistService:
             is_overdue=is_overdue,
             has_documented_adverse_event=(
                 has_adverse_event
+            ),
+                        allowed_actions=(
+                SessionWorkflowService
+                .allowed_actions(
+                    session.operational_status
+                )
             ),
         )
 
