@@ -303,9 +303,9 @@ def test_operator_transition_is_recorded_in_audit(
     assert update_response.status_code == 200
 
     audit_response = client.get(
-        f"/api/v1/treatment-sessions/{session_id}/audit-logs",
-        headers=operator_headers,
-    )
+    f"/api/v1/treatment-sessions/{session_id}/audit-logs",
+    headers=physician_headers,
+)
 
     assert audit_response.status_code == 200
 

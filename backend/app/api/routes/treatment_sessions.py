@@ -47,6 +47,11 @@ WRITE_ROLES = (
     "nurse",
     "operator",
 )
+AUDIT_READ_ROLES = (
+    "admin",
+    "physician",
+    "nurse",
+)
 
 
 @router.post(
@@ -93,6 +98,7 @@ def create_treatment_session(
     "/treatments/{treatment_id}/sessions",
     response_model=list[TreatmentSessionRead],
 )
+
 def list_treatment_sessions(
     treatment_id: str,
     _current_user: User = Depends(
@@ -197,7 +203,7 @@ def update_treatment_session(
 def list_treatment_session_audit_logs(
     session_id: str,
     _current_user: User = Depends(
-        require_roles(*READ_ROLES)
+        require_roles(*AUDIT_READ_ROLES)
     ),
     db: Session = Depends(get_db),
 ) -> list[AuditLogRead]:
