@@ -13,13 +13,19 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    relationship,
+)
 
 from backend.app.db.base import Base
 
 
 if TYPE_CHECKING:
-    from backend.app.models.treatment import Treatment
+    from backend.app.models.treatment import (
+        Treatment,
+    )
 
 
 class TreatmentSession(Base):
@@ -29,14 +35,19 @@ class TreatmentSession(Base):
         UniqueConstraint(
             "treatment_id",
             "session_number",
-            name="uq_treatment_sessions_treatment_number",
+            name=(
+                "uq_treatment_sessions_"
+                "treatment_number"
+            ),
         ),
     )
 
     id: Mapped[str] = mapped_column(
         String(36),
         primary_key=True,
-        default=lambda: str(uuid.uuid4()),
+        default=lambda: str(
+            uuid.uuid4()
+        ),
     )
 
     treatment_id: Mapped[str] = mapped_column(
@@ -60,64 +71,124 @@ class TreatmentSession(Base):
         default="planned",
     )
 
-    scheduled_at: Mapped[datetime | None] = mapped_column(
+    operational_status: Mapped[
+        str
+    ] = mapped_column(
+        String(30),
+        nullable=False,
+        default="scheduled",
+        index=True,
+    )
+
+    scheduled_at: Mapped[
+        datetime | None
+    ] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
 
-    started_at: Mapped[datetime | None] = mapped_column(
+    checked_in_at: Mapped[
+        datetime | None
+    ] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
 
-    completed_at: Mapped[datetime | None] = mapped_column(
+    ready_at: Mapped[
+        datetime | None
+    ] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
 
-    body_region: Mapped[str | None] = mapped_column(
+    started_at: Mapped[
+        datetime | None
+    ] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    completed_at: Mapped[
+        datetime | None
+    ] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    discharged_at: Mapped[
+        datetime | None
+    ] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    body_region: Mapped[
+        str | None
+    ] = mapped_column(
         String(100),
         nullable=True,
     )
 
-    dose_or_volume: Mapped[str | None] = mapped_column(
+    dose_or_volume: Mapped[
+        str | None
+    ] = mapped_column(
         String(100),
         nullable=True,
     )
 
-    execution_parameters: Mapped[dict | None] = mapped_column(
+    execution_parameters: Mapped[
+        dict | None
+    ] = mapped_column(
         JSON,
         nullable=True,
     )
 
-    outcome_summary: Mapped[str | None] = mapped_column(
+    outcome_summary: Mapped[
+        str | None
+    ] = mapped_column(
         Text,
         nullable=True,
     )
 
-    adverse_events: Mapped[str | None] = mapped_column(
+    adverse_events: Mapped[
+        str | None
+    ] = mapped_column(
         Text,
         nullable=True,
     )
 
-    notes: Mapped[str | None] = mapped_column(
+    notes: Mapped[
+        str | None
+    ] = mapped_column(
         Text,
         nullable=True,
     )
 
-    created_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[
+        datetime
+    ] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(
+            timezone.utc
+        ),
     )
 
-    updated_at: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[
+        datetime
+    ] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(
+            timezone.utc
+        ),
+        onupdate=lambda: datetime.now(
+            timezone.utc
+        ),
     )
 
-    treatment: Mapped["Treatment"] = relationship(
+    treatment: Mapped[
+        "Treatment"
+    ] = relationship(
         back_populates="sessions",
     )

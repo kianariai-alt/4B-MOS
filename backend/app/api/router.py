@@ -39,6 +39,9 @@ from backend.app.api.routes.operations_dashboard import (
 from backend.app.api.routes.session_worklist import (
     router as session_worklist_router,
 )
+from backend.app.api.routes.session_workflow import (
+    router as session_workflow_router,
+)
 
 api_router = APIRouter()
 
@@ -86,6 +89,9 @@ api_router.include_router(
 )
 api_router.include_router(
     session_worklist_router
+)
+api_router.include_router(
+    session_workflow_router
 )
 api_router.include_router(
     users_router
