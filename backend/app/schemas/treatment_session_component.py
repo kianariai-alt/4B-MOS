@@ -34,8 +34,7 @@ class TreatmentSessionComponentCreate(
         max_length=36,
     )
 
-    actual_amount: Decimal | None = Field(
-        default=None,
+    actual_amount: Decimal = Field(
         gt=0,
         max_digits=12,
         decimal_places=4,
@@ -287,7 +286,7 @@ class TreatmentSessionComponentUpdate(
         return normalized or None
 
     @model_validator(mode="after")
-    def validate_sequence_not_null(
+    def validate_non_null_updates(
         self,
     ):
         if (
@@ -296,6 +295,15 @@ class TreatmentSessionComponentUpdate(
         ):
             raise ValueError(
                 "sequence cannot be null."
+            )
+
+        if (
+            "actual_amount"
+            in self.model_fields_set
+            and self.actual_amount is None
+        ):
+            raise ValueError(
+                "actual_amount cannot be null."
             )
 
         return self

@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -151,16 +151,18 @@ class TreatmentSessionComponentService:
     def _ensure_mutable(
         treatment_session,
     ) -> None:
-        if treatment_session.status not in {
-            "planned",
-            "in_progress",
-        }:
+        if (
+            treatment_session.status
+            != "in_progress"
+            or treatment_session.operational_status
+            != "in_treatment"
+        ):
             raise (
                 TreatmentSessionComponentLockedError(
-                    "Session administration "
-                    "records cannot be changed "
-                    f"while session status is "
-                    f"'{treatment_session.status}'."
+                    "Actual administration records "
+                    "can only be changed while the "
+                    "session is actively in "
+                    "treatment."
                 )
             )
 

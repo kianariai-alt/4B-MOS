@@ -1,4 +1,4 @@
-﻿from sqlalchemy import select
+from sqlalchemy import select
 
 from backend.app.models.audit_log import (
     AuditLog,
@@ -176,6 +176,75 @@ def create_session(
     return response.json()
 
 
+def ensure_in_treatment(
+    client,
+    headers,
+    session_id: str,
+) -> dict:
+    response = client.get(
+        (
+            "/api/v1/treatment-sessions/"
+            f"{session_id}"
+        ),
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    current = data[
+        "operational_status"
+    ]
+
+    if current in {
+        "in_treatment",
+        "completed",
+        "discharged",
+        "cancelled",
+    }:
+        return data
+
+    transitions = {
+        "scheduled": "checked_in",
+        "checked_in": "ready",
+        "ready": "in_treatment",
+    }
+
+    while current != "in_treatment":
+        target = transitions.get(
+            current
+        )
+
+        if target is None:
+            raise AssertionError(
+                "Session cannot be moved "
+                "to in_treatment from "
+                f"'{current}'."
+            )
+
+        response = client.patch(
+            (
+                "/api/v1/treatment-sessions/"
+                f"{session_id}/workflow"
+            ),
+            headers=headers,
+            json={
+                "operational_status": target,
+            },
+        )
+
+        assert response.status_code == 200
+
+        data = response.json()
+
+        current = data[
+            "operational_status"
+        ]
+
+    return data
+
+
 def add_actual_component(
     client,
     headers,
@@ -188,6 +257,12 @@ def add_actual_component(
     lot_number: str | None = None,
     batch_number: str | None = None,
 ):
+    ensure_in_treatment(
+        client,
+        headers,
+        session_id,
+    )
+
     payload = {
         "material_id": material_id,
         "actual_amount": actual_amount,
@@ -222,34 +297,34 @@ def complete_session(
     headers,
     session_id: str,
 ) -> dict:
-    final_data = None
+    data = ensure_in_treatment(
+        client,
+        headers,
+        session_id,
+    )
 
-    for operational_status in (
-        "checked_in",
-        "ready",
-        "in_treatment",
-        "completed",
+    if (
+        data["operational_status"]
+        == "completed"
     ):
-        response = client.patch(
-            (
-                "/api/v1/treatment-sessions/"
-                f"{session_id}/workflow"
+        return data
+
+    response = client.patch(
+        (
+            "/api/v1/treatment-sessions/"
+            f"{session_id}/workflow"
+        ),
+        headers=headers,
+        json={
+            "operational_status": (
+                "completed"
             ),
-            headers=headers,
-            json={
-                "operational_status": (
-                    operational_status
-                ),
-            },
-        )
+        },
+    )
 
-        assert response.status_code == 200
-        final_data = response.json()
+    assert response.status_code == 200
 
-    assert final_data is not None
-
-    return final_data
-
+    return response.json()
 
 def test_linked_planned_component_is_recorded(
     client,
@@ -872,3 +947,99 @@ def test_session_component_lifecycle_is_audited(
         "session_component_updated",
         "session_component_deleted",
     ]
+
+
+def test_actual_administration_is_rejected_before_treatment_starts(
+    client,
+    admin_headers,
+):
+    treatment = create_treatment(
+        client,
+        admin_headers,
+        suffix="LIFECYCLE-PLANNED",
+    )
+
+    material = create_material(
+        client,
+        admin_headers,
+        code="BMAC",
+        name="Bone Marrow Aspirate Concentrate",
+    )
+
+    session = create_session(
+        client,
+        admin_headers,
+        treatment_id=treatment["id"],
+    )
+
+    response = client.post(
+        (
+            "/api/v1/treatment-sessions/"
+            f"{session['id']}/components"
+        ),
+        headers=admin_headers,
+        json={
+            "material_id": material["id"],
+            "actual_amount": "2.0",
+        },
+    )
+
+    assert response.status_code == 409
+
+    session_response = client.get(
+        (
+            "/api/v1/treatment-sessions/"
+            f"{session['id']}"
+        ),
+        headers=admin_headers,
+    )
+
+    assert session_response.status_code == 200
+
+    assert (
+        session_response.json()["status"]
+        == "planned"
+    )
+
+
+def test_actual_amount_is_required(
+    client,
+    admin_headers,
+):
+    treatment = create_treatment(
+        client,
+        admin_headers,
+        suffix="AMOUNT-REQUIRED",
+    )
+
+    material = create_material(
+        client,
+        admin_headers,
+        code="SVF",
+        name="Stromal Vascular Fraction",
+    )
+
+    session = create_session(
+        client,
+        admin_headers,
+        treatment_id=treatment["id"],
+    )
+
+    ensure_in_treatment(
+        client,
+        admin_headers,
+        session["id"],
+    )
+
+    response = client.post(
+        (
+            "/api/v1/treatment-sessions/"
+            f"{session['id']}/components"
+        ),
+        headers=admin_headers,
+        json={
+            "material_id": material["id"],
+        },
+    )
+
+    assert response.status_code == 422

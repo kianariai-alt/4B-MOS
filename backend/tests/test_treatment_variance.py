@@ -1,4 +1,4 @@
-﻿def create_user_and_login(
+def create_user_and_login(
     client,
     admin_headers,
     *,
@@ -171,6 +171,67 @@ def create_session(
     return response.json()
 
 
+def ensure_in_treatment(
+    client,
+    headers,
+    session_id: str,
+) -> dict:
+    response = client.get(
+        (
+            "/api/v1/treatment-sessions/"
+            f"{session_id}"
+        ),
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    current = data[
+        "operational_status"
+    ]
+
+    transitions = {
+        "scheduled": "checked_in",
+        "checked_in": "ready",
+        "ready": "in_treatment",
+    }
+
+    while current not in {
+        "in_treatment",
+        "completed",
+        "discharged",
+        "cancelled",
+    }:
+        target = transitions.get(
+            current
+        )
+
+        assert target is not None
+
+        response = client.patch(
+            (
+                "/api/v1/treatment-sessions/"
+                f"{session_id}/workflow"
+            ),
+            headers=headers,
+            json={
+                "operational_status": target,
+            },
+        )
+
+        assert response.status_code == 200
+
+        data = response.json()
+
+        current = data[
+            "operational_status"
+        ]
+
+    return data
+
+
 def administer(
     client,
     admin_headers,
@@ -181,6 +242,12 @@ def administer(
     plan_id: str | None = None,
     unit: str | None = None,
 ) -> dict:
+    ensure_in_treatment(
+        client,
+        admin_headers,
+        session_id,
+    )
+
     payload = {
         "material_id": material_id,
     }

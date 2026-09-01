@@ -1,4 +1,4 @@
-﻿from backend.app.models.treatment_session_component import (
+from backend.app.models.treatment_session_component import (
     TreatmentSessionComponent,
 )
 
@@ -145,6 +145,12 @@ def administer(
     plan_id: str | None = None,
     lot_number: str | None = None,
 ):
+    move_to_in_treatment(
+        client,
+        admin_headers,
+        session_id,
+    )
+
     payload = {
         "material_id": material_id,
         "actual_amount": amount,
@@ -193,22 +199,56 @@ def move_to_in_treatment(
     headers,
     session_id: str,
 ):
-    for status in (
-        "checked_in",
-        "ready",
+    response = client.get(
+        (
+            "/api/v1/treatment-sessions/"
+            f"{session_id}"
+        ),
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    current = data[
+        "operational_status"
+    ]
+
+    transitions = {
+        "scheduled": "checked_in",
+        "checked_in": "ready",
+        "ready": "in_treatment",
+    }
+
+    while current not in {
         "in_treatment",
-    ):
+        "completed",
+        "discharged",
+        "cancelled",
+    }:
+        target = transitions.get(
+            current
+        )
+
+        assert target is not None
+
         response = transition(
             client,
             headers,
             session_id,
-            status,
+            target,
         )
 
         assert response.status_code == 200
 
-    return response.json()
+        data = response.json()
 
+        current = data[
+            "operational_status"
+        ]
+
+    return data
 
 def completion_check(
     client,
