@@ -15,6 +15,9 @@ from backend.app.api.routes.patient_summary import (
 from backend.app.api.routes.patient_timeline import (
     router as patient_timeline_router,
 )
+from backend.app.api.routes.orthobiologic_materials import (
+    router as orthobiologic_materials_router,
+)
 from backend.app.api.routes.patients import (
     router as patients_router,
 )
@@ -72,6 +75,11 @@ api_router.include_router(
 api_router.include_router(
     protocols_router
 )
+
+api_router.include_router(
+    orthobiologic_materials_router
+)
+
 
 api_router.include_router(
     treatment_sessions_router
