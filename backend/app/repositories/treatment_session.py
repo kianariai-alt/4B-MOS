@@ -1,4 +1,4 @@
-﻿from sqlalchemy import select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.app.models.treatment_session import TreatmentSession
@@ -51,6 +51,29 @@ class TreatmentSessionRepository:
 
         return list(
             db.scalars(statement).all()
+        )
+
+    @staticmethod
+    def has_started_session_for_treatment(
+        db: Session,
+        treatment_id: str,
+    ) -> bool:
+        statement = (
+            select(
+                TreatmentSession.id
+            )
+            .where(
+                TreatmentSession.treatment_id
+                == treatment_id,
+                TreatmentSession.started_at
+                .is_not(None),
+            )
+            .limit(1)
+        )
+
+        return (
+            db.scalar(statement)
+            is not None
         )
 
     @staticmethod

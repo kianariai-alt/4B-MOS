@@ -16,6 +16,9 @@ from backend.app.repositories.orthobiologic_material import (
 from backend.app.repositories.treatment_component import (
     TreatmentComponentRepository,
 )
+from backend.app.repositories.treatment_session import (
+    TreatmentSessionRepository,
+)
 from backend.app.schemas.treatment_component import (
     TreatmentComponentCreate,
     TreatmentComponentUpdate,
@@ -82,6 +85,7 @@ def _decimal_text(
 class TreatmentComponentService:
     @staticmethod
     def _ensure_mutable(
+        db: Session,
         treatment,
     ) -> None:
         if treatment.status != "planned":
@@ -89,6 +93,21 @@ class TreatmentComponentService:
                 "Treatment combination can only "
                 "be changed while the treatment "
                 "status is 'planned'."
+            )
+
+        has_started_session = (
+            TreatmentSessionRepository
+            .has_started_session_for_treatment(
+                db,
+                treatment.id,
+            )
+        )
+
+        if has_started_session:
+            raise TreatmentComponentLockedError(
+                "Treatment plan is frozen "
+                "because treatment execution "
+                "has already started."
             )
 
     @staticmethod
@@ -129,7 +148,10 @@ class TreatmentComponentService:
 
         (
             TreatmentComponentService
-            ._ensure_mutable(treatment)
+            ._ensure_mutable(
+                db,
+                treatment,
+            )
         )
 
         material = (
@@ -331,7 +353,10 @@ class TreatmentComponentService:
 
         (
             TreatmentComponentService
-            ._ensure_mutable(treatment)
+            ._ensure_mutable(
+                db,
+                treatment,
+            )
         )
 
         component = (
@@ -473,7 +498,10 @@ class TreatmentComponentService:
 
         (
             TreatmentComponentService
-            ._ensure_mutable(treatment)
+            ._ensure_mutable(
+                db,
+                treatment,
+            )
         )
 
         component = (
