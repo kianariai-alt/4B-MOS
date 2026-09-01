@@ -24,6 +24,9 @@ from backend.app.api.routes.patients import (
 from backend.app.api.routes.protocols import (
     router as protocols_router,
 )
+from backend.app.api.routes.treatment_components import (
+    router as treatment_components_router,
+)
 from backend.app.api.routes.treatment_sessions import (
     router as treatment_sessions_router,
 )
@@ -70,6 +73,10 @@ api_router.include_router(
 
 api_router.include_router(
     treatments_router
+)
+
+api_router.include_router(
+    treatment_components_router
 )
 
 api_router.include_router(

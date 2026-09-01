@@ -1,5 +1,6 @@
-﻿import uuid
+import uuid
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
@@ -10,9 +11,16 @@ from sqlalchemy import (
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
+    relationship,
 )
 
 from backend.app.db.base import Base
+
+
+if TYPE_CHECKING:
+    from backend.app.models.treatment_component import (
+        TreatmentComponent,
+    )
 
 
 class OrthobiologicMaterial(Base):
@@ -83,4 +91,8 @@ class OrthobiologicMaterial(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    treatment_components: Mapped[list["TreatmentComponent"]] = relationship(
+        back_populates="material",
     )

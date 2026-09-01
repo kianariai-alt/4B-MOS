@@ -19,6 +19,7 @@ from backend.app.db.base import Base
 
 if TYPE_CHECKING:
     from backend.app.models.protocol import ProtocolTemplate
+    from backend.app.models.treatment_component import TreatmentComponent
     from backend.app.models.treatment_session import TreatmentSession
     from backend.app.models.visit import Visit
 
@@ -128,6 +129,12 @@ class Treatment(Base):
     )
 
     protocol_template: Mapped["ProtocolTemplate | None"] = relationship()
+
+    components: Mapped[list["TreatmentComponent"]] = relationship(
+        back_populates="treatment",
+        cascade="all, delete-orphan",
+        order_by="TreatmentComponent.sequence",
+    )
 
     sessions: Mapped[list["TreatmentSession"]] = relationship(
         back_populates="treatment",
