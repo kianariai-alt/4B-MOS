@@ -9,6 +9,9 @@ from backend.app.repositories.treatment_session import (
     TreatmentSessionRepository,
 )
 from backend.app.services.audit_context import actor_data
+from backend.app.services.treatment_session_completion import (
+    TreatmentSessionCompletionGuardService,
+)
 
 
 WORKFLOW_ACTIONS = {
@@ -185,6 +188,29 @@ class SessionWorkflowService:
                 raise SessionWorkflowConflictError(
                     "Clinical session must be "
                     "'in_progress' before completion."
+                )
+
+            completion_check = (
+                TreatmentSessionCompletionGuardService
+                .evaluate(
+                    db,
+                    session_id,
+                )
+            )
+
+            if not completion_check.can_complete:
+                blocker_codes = ", ".join(
+                    issue.code
+                    for issue
+                    in completion_check.issues
+                    if issue.severity == "blocker"
+                )
+
+                raise SessionWorkflowConflictError(
+                    "Session completion is blocked "
+                    "by unresolved safety or data "
+                    "requirements: "
+                    f"{blocker_codes}."
                 )
 
             treatment_session.status = "completed"
