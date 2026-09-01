@@ -21,6 +21,9 @@ if TYPE_CHECKING:
     from backend.app.models.treatment_component import (
         TreatmentComponent,
     )
+    from backend.app.models.treatment_session_component import (
+        TreatmentSessionComponent,
+    )
 
 
 class OrthobiologicMaterial(Base):
@@ -94,5 +97,9 @@ class OrthobiologicMaterial(Base):
     )
 
     treatment_components: Mapped[list["TreatmentComponent"]] = relationship(
+        back_populates="material",
+    )
+
+    session_components: Mapped[list["TreatmentSessionComponent"]] = relationship(
         back_populates="material",
     )

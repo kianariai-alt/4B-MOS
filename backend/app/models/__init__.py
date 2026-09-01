@@ -19,7 +19,9 @@ from backend.app.models.treatment_session import (
 )
 from backend.app.models.user import User
 from backend.app.models.visit import Visit
-
+from backend.app.models.treatment_session_component import (
+    TreatmentSessionComponent,
+)
 
 __all__ = [
     "AuditLog",
@@ -31,4 +33,5 @@ __all__ = [
     "TreatmentSession",
     "User",
     "Visit",
+    "TreatmentSessionComponent",
 ]

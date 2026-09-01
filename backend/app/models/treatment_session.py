@@ -26,6 +26,9 @@ if TYPE_CHECKING:
     from backend.app.models.treatment import (
         Treatment,
     )
+    from backend.app.models.treatment_session_component import (
+        TreatmentSessionComponent,
+    )
 
 
 class TreatmentSession(Base):
@@ -191,4 +194,10 @@ class TreatmentSession(Base):
         "Treatment"
     ] = relationship(
         back_populates="sessions",
+    )
+
+    components: Mapped[list["TreatmentSessionComponent"]] = relationship(
+        back_populates="treatment_session",
+        cascade="all, delete-orphan",
+        order_by="TreatmentSessionComponent.sequence",
     )
