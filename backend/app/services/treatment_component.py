@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -64,6 +64,12 @@ class TreatmentComponentLockedError(
     pass
 
 
+class TreatmentComponentReferencedError(
+    Exception
+):
+    pass
+
+
 def _decimal_text(
     value: Decimal | None,
 ) -> str | None:
@@ -83,6 +89,28 @@ class TreatmentComponentService:
                 "Treatment combination can only "
                 "be changed while the treatment "
                 "status is 'planned'."
+            )
+
+    @staticmethod
+    def _ensure_not_referenced(
+        db: Session,
+        component: TreatmentComponent,
+    ) -> None:
+        is_referenced = (
+            TreatmentComponentRepository
+            .has_session_component_references(
+                db,
+                component.id,
+            )
+        )
+
+        if is_referenced:
+            raise TreatmentComponentReferencedError(
+                "Treatment component is "
+                "referenced by an actual "
+                "administration record and "
+                "can no longer be changed "
+                "or deleted."
             )
 
     @staticmethod
@@ -322,6 +350,14 @@ class TreatmentComponentService:
         if not update_data:
             return component
 
+        (
+            TreatmentComponentService
+            ._ensure_not_referenced(
+                db,
+                component,
+            )
+        )
+
         if "sequence" in update_data:
             requested_sequence = (
                 update_data["sequence"]
@@ -449,6 +485,14 @@ class TreatmentComponentService:
             )
         )
 
+        (
+            TreatmentComponentService
+            ._ensure_not_referenced(
+                db,
+                component,
+            )
+        )
+
         component_snapshot = {
             "treatment_id": treatment_id,
             "material_id": (
@@ -464,13 +508,24 @@ class TreatmentComponentService:
             "notes": component.notes,
         }
 
-        (
-            TreatmentComponentRepository
-            .delete(
-                db,
-                component,
+        try:
+            (
+                TreatmentComponentRepository
+                .delete(
+                    db,
+                    component,
+                )
             )
-        )
+
+        except IntegrityError as exc:
+            db.rollback()
+
+            raise TreatmentComponentReferencedError(
+                "Treatment component is "
+                "referenced by an actual "
+                "administration record and "
+                "cannot be deleted."
+            ) from exc
 
         AuditLogRepository.create(
             db,

@@ -156,4 +156,5 @@ class TreatmentComponent(Base):
 
     session_components: Mapped[list["TreatmentSessionComponent"]] = relationship(
         back_populates="treatment_component",
+        passive_deletes=True,
     )

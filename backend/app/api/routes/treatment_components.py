@@ -1,4 +1,4 @@
-﻿from fastapi import (
+from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
@@ -26,6 +26,7 @@ from backend.app.services.treatment_component import (
     TreatmentComponentMaterialInactiveError,
     TreatmentComponentMaterialNotFoundError,
     TreatmentComponentNotFoundError,
+    TreatmentComponentReferencedError,
     TreatmentComponentSequenceConflictError,
     TreatmentComponentService,
 )
@@ -96,6 +97,7 @@ def create_treatment_component(
         TreatmentComponentDuplicateMaterialError,
         TreatmentComponentSequenceConflictError,
         TreatmentComponentLockedError,
+        TreatmentComponentReferencedError,
     ) as exc:
         raise HTTPException(
             status_code=(
@@ -229,6 +231,7 @@ def update_treatment_component(
     except (
         TreatmentComponentSequenceConflictError,
         TreatmentComponentLockedError,
+        TreatmentComponentReferencedError,
     ) as exc:
         raise HTTPException(
             status_code=(
@@ -281,7 +284,10 @@ def delete_treatment_component(
             detail=str(exc),
         ) from exc
 
-    except TreatmentComponentLockedError as exc:
+    except (
+        TreatmentComponentLockedError,
+        TreatmentComponentReferencedError,
+    ) as exc:
         raise HTTPException(
             status_code=(
                 status.HTTP_409_CONFLICT

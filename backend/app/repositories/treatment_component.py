@@ -1,4 +1,4 @@
-﻿from sqlalchemy import (
+from sqlalchemy import (
     func,
     select,
 )
@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 
 from backend.app.models.treatment_component import (
     TreatmentComponent,
+)
+from backend.app.models.treatment_session_component import (
+    TreatmentSessionComponent,
 )
 from backend.app.schemas.treatment_component import (
     TreatmentComponentCreate,
@@ -78,6 +81,28 @@ class TreatmentComponentRepository:
         )
 
         return db.scalar(statement)
+
+    @staticmethod
+    def has_session_component_references(
+        db: Session,
+        component_id: str,
+    ) -> bool:
+        statement = (
+            select(
+                TreatmentSessionComponent.id
+            )
+            .where(
+                TreatmentSessionComponent
+                .treatment_component_id
+                == component_id
+            )
+            .limit(1)
+        )
+
+        return (
+            db.scalar(statement)
+            is not None
+        )
 
     @staticmethod
     def next_sequence(
