@@ -33,6 +33,9 @@ from backend.app.api.routes.treatment_session_components import (
 from backend.app.api.routes.treatment_sessions import (
     router as treatment_sessions_router,
 )
+from backend.app.api.routes.treatment_variance import (
+    router as treatment_variance_router,
+)
 from backend.app.api.routes.treatments import (
     router as treatments_router,
 )
@@ -93,6 +96,10 @@ api_router.include_router(
 
 api_router.include_router(
     treatment_sessions_router
+)
+
+api_router.include_router(
+    treatment_variance_router
 )
 
 api_router.include_router(
