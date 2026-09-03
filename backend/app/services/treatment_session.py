@@ -195,6 +195,15 @@ class TreatmentSessionService:
                 session_id,
             )
         )
+        if treatment_session.status in {
+            "completed",
+            "cancelled",
+        }:
+            raise TreatmentSessionConflictError(
+                "Completed or cancelled treatment "
+                "sessions are immutable."
+            )
+
         workflow_managed_fields = {
             "status",
             "started_at",
