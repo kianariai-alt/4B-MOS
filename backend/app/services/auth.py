@@ -72,6 +72,7 @@ class AuthService:
     ) -> str:
         return create_access_token(
             subject=user.id,
+            auth_version=user.auth_version,
         )
 
     @staticmethod

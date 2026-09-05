@@ -61,6 +61,14 @@ paginated. No-op edits and failed writes do not emit success events; historical
 changes are not backfilled. This is not login/failed-attempt monitoring, token
 revocation or a tamper-proof database. No schema change is introduced.
 
+Token-revocation add-on (stage 6): login tokens carry a per-account version.
+Password resets and meaningful role/active-status changes increment that version
+in the same account/audit transaction, invalidating all older tokens for that
+user. Display-name and no-op edits do not revoke sessions. Legacy tokens without
+a version are rejected, so every user must log in again after deployment. This
+is not a token inventory, logout endpoint, refresh-token system, rate limiter or
+replacement for emergency signing-key rotation. Privileged SQL can bypass it.
+
 Account safety add-on: last-active-admin demotion/deactivation is refused with
 409. Account commands share a database lock with bootstrap and hold it through
 commit, refresh cached ORM state and recheck HTTP actors' authority. Tests use
@@ -88,7 +96,7 @@ vulnerability audit or full transitive dependency lock.
    PostgreSQL has not been exercised here. Review database triggers/CDC because
    no-op updates can still invoke them. Model updated_at is explicitly preserved.
    Direct SQL, catalog changes and legacy services are not protected by this
-   service protocol. A rolling deployment with old unlocked workers is unsafe:
+service protocol. A rolling deployment with old unlocked workers is unsafe:
    drain old workers before accepting clinical writes with this version.
 2. Historical evidence next gate: define append-only amendments with original
    evidence reference, author, reason, timestamp and authorized review. No
@@ -107,12 +115,18 @@ vulnerability audit or full transitive dependency lock.
 
 ## Migration cautions
 
-The new head is `a71d92cfe604`, following `c68b24017654`. The new table is empty
-on upgrade; existing sessions and administrations are untouched. Deploy the
-migration before enabling the new completion code, with old writers drained.
+The new head is `b36e7f0a1d42`, following `a71d92cfe604`. It adds non-null
+`users.auth_version` with a zero default; existing clinical records are
+untouched. Drain old workers, upgrade the database, then deploy only new code.
+A mixed-version fleet is unsafe: new code rejects old tokens and old code neither
+mints nor enforces the version claim.
 Back up and rehearse on a disposable copy before any production upgrade.
 
-The new downgrade refuses to run if any finalization evidence exists; offline
+The auth-version downgrade refuses when any account has a non-zero version,
+because removing it could restore revoked sessions under old code. Its offline
+downgrade is also refused. Rotate the signing key and use an approved recovery
+procedure rather than bypassing that guard. The evidence downgrade refuses if
+any finalization evidence exists; offline
 downgrade is also refused because evidence cannot be checked. An empty-table
 downgrade is tested. Do not bypass the guard by deleting evidence. Downgrading
 below `c68b24017654` still deletes administration records. Never use downgrade as

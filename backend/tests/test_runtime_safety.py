@@ -46,10 +46,10 @@ def test_valid_production_configuration_and_hidden_docs(monkeypatch):
             assert client.get(url).status_code == 404
 
 
-@pytest.mark.parametrize("field", ["sub", "iat", "exp"])
+@pytest.mark.parametrize("field", ["sub", "iat", "exp", "ver"])
 def test_signed_token_must_contain_required_claims(field):
     now = datetime.now(timezone.utc)
-    claims = {"sub": "user", "iat": now, "exp": now + timedelta(minutes=1)}
+    claims = {"sub": "user", "iat": now, "exp": now + timedelta(minutes=1), "ver": 0}
     del claims[field]
     token = jwt.encode(claims, settings.SECRET_KEY, algorithm="HS256")
     with pytest.raises(jwt.InvalidTokenError):

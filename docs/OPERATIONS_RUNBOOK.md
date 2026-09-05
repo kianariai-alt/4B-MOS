@@ -38,15 +38,17 @@ turning on production settings. Do not expose the development bootstrap to a
 public network. Production startup requires `ENVIRONMENT=production`,
 `DEBUG=false`, `BOOTSTRAP_ENABLED=false` and a privately generated strong key.
 The sample environment file intentionally contains a rejected placeholder.
-Existing project-generated JWTs contain the now-required `sub`, `iat`, `exp`
-claims. Rotating the signing key invalidates existing tokens.
+New project-generated JWTs contain the required `sub`, `iat`, `exp`, `ver`
+claims. Stage 6 intentionally rejects earlier tokens, requiring every user to
+log in again. Signing-key rotation remains the global emergency invalidation.
 
 Do not send secrets or patient data in screenshots, logs or chat. Production
 must still have HTTPS, restricted database/file access, login rate limiting,
 monitoring, recovery ownership and a reviewed retention policy. These are not
 configured by this package. Disabling API docs is not an authorization control.
-Password changes do not currently revoke already-issued JWTs; token revocation
-remains future security work. Stage 4 refuses disabling/demoting the last active
+Stage 6 revokes already-issued account JWTs after password, role or active-status
+changes. It does not provide refresh tokens, logout, device/session inventory or
+login rate limiting. Stage 4 refuses disabling/demoting the last active
 administrator with HTTP 409. An inactive admin does not count as a successor.
 Create/activate a second administrator before handing off the current account.
 This does not repair a database that already has no active administrators.
@@ -54,8 +56,8 @@ This does not repair a database that already has no active administrators.
 Account creation, updates and bootstrap use the same transaction lock. Mutation
 routes recheck the actor's active-admin status after acquiring it, so a request
 authorized before a concurrent revocation cannot silently retain that authority.
-Explicit null and unknown user-PATCH fields now return 422. No new migration is
-needed; the schema remains `a71d92cfe604`. PostgreSQL account mutations require
+Explicit null and unknown user-PATCH fields now return 422. Stage 4 itself needs
+no migration. PostgreSQL account mutations require
 READ COMMITTED isolation and have not been tested on a live PostgreSQL server.
 Drain older unlocked workers before enabling the new account-write paths.
 Direct SQL and internal repository-only writes can bypass the service guard;
@@ -77,12 +79,20 @@ There is no audit-edit API, but privileged SQL can still modify these records;
 they are not a cryptographic or legally certified audit store. Stage 5 requires
 stage 4's committed output and introduces no new schema migration.
 
+Stage 6 requires stage 5 and migration `b36e7f0a1d42`. Drain every old worker,
+upgrade the database, deploy only the new code, and require fresh login; never
+run a mixed-version deployment. Password, role and active-status changes
+increment `auth_version` atomically and record `sessions_revoked: true` in the
+audit event. Display-name/no-op changes keep tokens. A downgrade is refused once
+any version is non-zero because it could restore a revoked session. Do not zero
+the column to bypass the guard; rotate the signing key and use reviewed recovery.
+
 ## Readiness and migration gate
 
 `GET /api/v1/health` reports process liveness only.
 `GET /api/v1/health/ready` reports 200 only with the expected revision, critical
 tables and (for SQLite) FK enforcement. It returns a redacted 503 otherwise.
-The head is `a71d92cfe604`; upgrade a disposable copy and inspect the result
+The head is `b36e7f0a1d42`; upgrade a disposable copy and inspect the result
 before any production change. Installing code does NOT upgrade the database.
 
 Drain old workers before upgrades; never mix locked and old unlocked clinical

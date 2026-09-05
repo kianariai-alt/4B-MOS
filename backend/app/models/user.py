@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.db.base import Base
@@ -11,6 +11,12 @@ from backend.app.db.base import Base
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint(
+            "auth_version >= 0",
+            name="ck_users_auth_version_nonnegative",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(
         String(36),
@@ -46,6 +52,14 @@ class User(Base):
         Boolean,
         nullable=False,
         default=True,
+    )
+
+    # Incrementing this value invalidates every JWT issued for the account.
+    auth_version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
     )
 
     created_at: Mapped[datetime] = mapped_column(

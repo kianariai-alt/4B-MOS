@@ -30,6 +30,7 @@ def verify_password(
 def create_access_token(
     *,
     subject: str,
+    auth_version: int = 0,
     expires_minutes: int | None = None,
 ) -> str:
     now = datetime.now(timezone.utc)
@@ -45,6 +46,7 @@ def create_access_token(
         "sub": subject,
         "iat": now,
         "exp": expire,
+        "ver": auth_version,
     }
 
     return jwt.encode(
@@ -63,5 +65,5 @@ def decode_access_token(
         algorithms=[
             settings.JWT_ALGORITHM
         ],
-        options={"require": ["sub", "iat", "exp"]},
+        options={"require": ["sub", "iat", "exp", "ver"]},
     )

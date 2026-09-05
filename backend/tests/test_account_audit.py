@@ -43,6 +43,7 @@ def test_account_history_records_changes_without_password_values(client, admin_h
         "before": {"display_name": "Original", "is_active": True, "role": "viewer"},
         "after": {"display_name": "Updated", "is_active": False, "role": "nurse"},
         "password_reset": True,
+        "sessions_revoked": True,
     }
     db_session.expire_all()
     for secret in ["OriginalSecret123", "NewSecret456", old_hash, db_session.get(User, user_id).password_hash, "password_hash"]:
@@ -61,7 +62,7 @@ def test_self_demotion_keeps_pre_change_actor_attribution(client, admin_headers,
     assert event["actor_role"] == "admin"
     assert event["actor_display_name"] == old_name
     assert event["event_data"]["after"]["role"] == "viewer"
-    assert client.get(f"/api/v1/users/{first.id}/audit-logs", headers=admin_headers).status_code == 403
+    assert client.get(f"/api/v1/users/{first.id}/audit-logs", headers=admin_headers).status_code == 401
 
 
 def test_noop_patch_does_not_create_fake_events_or_change_timestamp(client, admin_headers, db_session):
@@ -127,6 +128,7 @@ def test_account_and_audit_roll_back_together(db_session, monkeypatch, operation
         if users:
             assert users[0].display_name == "Before"
             assert users[0].password_hash == original_hash
+            assert users[0].auth_version == 0
 
 
 @pytest.mark.parametrize("role", ["physician", "nurse", "operator", "viewer"])

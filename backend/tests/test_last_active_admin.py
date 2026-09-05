@@ -59,7 +59,7 @@ def test_handover_to_another_active_admin_is_allowed(client, admin_headers, admi
     assert response.status_code == 200
     db_session.expire_all()
     assert db_session.get(User, second).is_active
-    assert client.get("/api/v1/users", headers=admin_headers).status_code == 403
+    assert client.get("/api/v1/users", headers=admin_headers).status_code == 401
 
 
 @pytest.fixture

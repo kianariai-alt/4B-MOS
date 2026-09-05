@@ -151,6 +151,14 @@ class UserService:
                 hash_password(password)
             )
 
+        sessions_revoked = (
+            password_reset
+            or "role" in changed_fields
+            or "is_active" in changed_fields
+        )
+        if sessions_revoked:
+            update_data["auth_version"] = user.auth_version + 1
+
         user = UserRepository.update(
             db,
             user,
@@ -168,6 +176,7 @@ class UserService:
                 "before": {name: before[name] for name in changed_fields},
                 "after": {name: after[name] for name in changed_fields},
                 "password_reset": password_reset,
+                "sessions_revoked": sessions_revoked,
             },
         )
         return user

@@ -51,7 +51,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a71d92cfe604"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b36e7f0a1d42"
     finally:
         engine.dispose()
 
@@ -86,16 +86,56 @@ def test_finalization_migration_preserves_legacy_sessions_and_refuses_evidence_l
         with Session(engine) as db:
             assert db.get(TreatmentSession, session_id).status == "completed"
             assert db.get(SessionFinalization, session_id) is None
-        command.downgrade(config, "c68b24017654")  # empty evidence table is safe
+        command.downgrade(config, "c68b24017654")  # empty evidence/revocation state is safe
         command.upgrade(config, "head")
         with Session(engine) as db:
             db.add(SessionFinalization(session_id=session_id, captured_at=datetime.now(timezone.utc),
                                        payload={"test_fixture": True}, sha256="0" * 64))
             db.commit()
+        # First remove the empty revocation migration so the evidence guard is
+        # the only downgrade step under test.
+        command.downgrade(config, "a71d92cfe604")
         with pytest.raises(RuntimeError, match="evidence exists"):
             command.downgrade(config, "c68b24017654")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT count(*) FROM session_finalizations")) == 1
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a71d92cfe604"
+    finally:
+        engine.dispose()
+
+
+def test_auth_version_migration_preserves_users_and_refuses_revocation_loss(tmp_path, monkeypatch):
+    url = f"sqlite:///{tmp_path / 'auth-version-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "a71d92cfe604")
+    engine = create_engine(url)
+    try:
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, created_at, updated_at) "
+                "VALUES ('legacy-user', 'legacy', 'Legacy User', 'hash', 'viewer', 1, "
+                "'2026-09-01 10:00:00', '2026-09-01 10:00:00')"
+            ))
+        command.upgrade(config, "head")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT auth_version FROM users WHERE id = 'legacy-user'"
+            )) == 0
+        command.downgrade(config, "a71d92cfe604")
+        assert "auth_version" not in {column["name"] for column in inspect(engine).get_columns("users")}
+        command.upgrade(config, "head")
+        with engine.begin() as connection:
+            connection.execute(text(
+                "UPDATE users SET auth_version = 1 WHERE id = 'legacy-user'"
+            ))
+        with pytest.raises(RuntimeError, match="revoked account sessions exist"):
+            command.downgrade(config, "a71d92cfe604")
+        with engine.connect() as connection:
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b36e7f0a1d42"
+            assert connection.scalar(text(
+                "SELECT auth_version FROM users WHERE id = 'legacy-user'"
+            )) == 1
     finally:
         engine.dispose()
