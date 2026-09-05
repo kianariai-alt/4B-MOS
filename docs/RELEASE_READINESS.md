@@ -53,6 +53,14 @@ No production patient database was accessed during this work.
 
 ## Remaining engineering gates
 
+Account audit add-on (stage 5): account creation, initial bootstrap and meaningful
+updates now commit with allowlisted audit events. Password reset events include
+only an action flag and field name, never credentials or hashes. Self-edits keep
+pre-change actor attribution. The new admin-only user-history endpoint is
+paginated. No-op edits and failed writes do not emit success events; historical
+changes are not backfilled. This is not login/failed-attempt monitoring, token
+revocation or a tamper-proof database. No schema change is introduced.
+
 Account safety add-on: last-active-admin demotion/deactivation is refused with
 409. Account commands share a database lock with bootstrap and hold it through
 commit, refresh cached ORM state and recheck HTTP actors' authority. Tests use

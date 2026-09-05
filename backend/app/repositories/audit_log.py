@@ -51,6 +51,8 @@ class AuditLogRepository:
         *,
         entity_type: str,
         entity_id: str,
+        skip: int = 0,
+        limit: int | None = None,
     ) -> list[AuditLog]:
         statement = (
             select(AuditLog)
@@ -63,6 +65,10 @@ class AuditLogRepository:
                 AuditLog.id.asc(),
             )
         )
+
+        statement = statement.offset(skip)
+        if limit is not None:
+            statement = statement.limit(limit)
 
         return list(
             db.scalars(statement).all()

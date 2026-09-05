@@ -7,6 +7,9 @@ from backend.app.db.account_transactions import (
 )
 from backend.app.models.user import User
 from backend.app.repositories.user import UserRepository
+from backend.app.repositories.audit_log import AuditLogRepository
+from backend.app.services.account_audit import account_snapshot
+from backend.app.services.audit_context import actor_data
 from backend.app.schemas.user import (
     UserCreate,
     UserUpdate,
@@ -48,7 +51,8 @@ class UserService:
             payload.password
         )
 
-        return UserRepository.create(
+        attribution = actor_data(actor)
+        user = UserRepository.create(
             db,
             username=payload.username,
             display_name=payload.display_name,
@@ -56,6 +60,14 @@ class UserService:
             role=payload.role,
             commit=False,
         )
+        AuditLogRepository.create(
+            db, commit=False, entity_type="user", entity_id=user.id,
+            event_type="user_created", **attribution,
+            event_data={"schema_version": 1,
+                        "source": "authenticated_admin" if actor is not None else "internal_service",
+                        "after": account_snapshot(user)},
+        )
+        return user
 
     @staticmethod
     def get_user(
@@ -103,6 +115,16 @@ class UserService:
         update_data = payload.model_dump(
             exclude_unset=True,
         )
+        # Capture the acting admin BEFORE a self-rename/demotion changes it.
+        attribution = actor_data(actor)
+        before = account_snapshot(user)
+        changed_fields = sorted(
+            name for name, value in update_data.items()
+            if name != "password" and before[name] != value
+        )
+        password_reset = "password" in update_data
+        if not changed_fields and not password_reset:
+            return user
 
         removes_admin = (
             user.role == "admin" and user.is_active
@@ -129,9 +151,23 @@ class UserService:
                 hash_password(password)
             )
 
-        return UserRepository.update(
+        user = UserRepository.update(
             db,
             user,
             update_data,
             commit=False,
         )
+        after = account_snapshot(user)
+        AuditLogRepository.create(
+            db, commit=False, entity_type="user", entity_id=user.id,
+            event_type="user_updated", **attribution,
+            event_data={
+                "schema_version": 1,
+                "source": "authenticated_admin" if actor is not None else "internal_service",
+                "changed_fields": sorted(changed_fields + (["password"] if password_reset else [])),
+                "before": {name: before[name] for name in changed_fields},
+                "after": {name: after[name] for name in changed_fields},
+                "password_reset": password_reset,
+            },
+        )
+        return user

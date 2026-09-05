@@ -59,7 +59,23 @@ needed; the schema remains `a71d92cfe604`. PostgreSQL account mutations require
 READ COMMITTED isolation and have not been tested on a live PostgreSQL server.
 Drain older unlocked workers before enabling the new account-write paths.
 Direct SQL and internal repository-only writes can bypass the service guard;
-database privileges and dedicated account-audit events remain separate work.
+database privileges remain separate work; dedicated account-audit events are
+provided by the stage-5 add-on below.
+
+Stage 5 adds dedicated `admin_bootstrapped`, `user_created` and `user_updated`
+events, committed in the same transaction as the account changes. An allowlist
+captures only username, display name, role and active status. Password resets
+record an action flag, never the password/hash. Actor attribution is captured
+before self-renames/demotions. No-op edits emit no event. Trusted internal calls
+without an actor and unauthenticated bootstrap are labeled explicitly.
+
+Only active admins may read `GET /api/v1/users/{id}/audit-logs`, with `skip` and
+`limit` pagination (maximum 500). Clinical-audit reader roles do not grant this
+access. Old changes are not reconstructed. Failed attempts and login activity
+are not recorded by these success events; security monitoring remains separate.
+There is no audit-edit API, but privileged SQL can still modify these records;
+they are not a cryptographic or legally certified audit store. Stage 5 requires
+stage 4's committed output and introduces no new schema migration.
 
 ## Readiness and migration gate
 

@@ -12,6 +12,8 @@ from backend.app.core.security import (
 )
 from backend.app.models.user import User
 from backend.app.repositories.user import UserRepository
+from backend.app.repositories.audit_log import AuditLogRepository
+from backend.app.services.account_audit import account_snapshot
 from backend.app.schemas.auth import BootstrapAdminRequest
 
 
@@ -89,6 +91,12 @@ class AuthService:
             )
             db.add(user)
             db.flush()
+            AuditLogRepository.create(
+                db, commit=False, entity_type="user", entity_id=user.id,
+                event_type="admin_bootstrapped",
+                event_data={"schema_version": 1, "source": "unauthenticated_bootstrap",
+                            "after": account_snapshot(user)},
+            )
             db.commit()
             return user
         except AccountWriteConflictError as error:
