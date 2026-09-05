@@ -145,3 +145,11 @@ python -m pytest backend/tests -q
 
 The test suite uses disposable databases. Production migrations and deployments
 are separate controlled operations, not part of the test commands.
+
+Pull requests into `main` and pushes to `main` also run the read-only `Backend
+CI` workflow on Python 3.12 and 3.14. Each matrix job installs the pinned
+requirements, compiles the backend, upgrades a fresh disposable SQLite database,
+runs `alembic check`, and executes the complete backend test suite. The stable
+`Backend CI` summary job succeeds only when every matrix job succeeds and is the
+status check intended for branch protection. The workflow receives no repository
+secrets, has only `contents: read` permission, and never targets production data.

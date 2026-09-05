@@ -89,6 +89,13 @@ the column to bypass the guard; rotate the signing key and use reviewed recovery
 
 ## Readiness and migration gate
 
+The repository's `Backend CI` workflow is the merge gate for pull requests into
+`main`. It verifies Python 3.12 and 3.14 against a new disposable SQLite database
+and the full backend test suite. Configure branch protection to require the
+stable `Backend CI` status after its first successful run. A green CI result is
+an engineering gate only; it does not authorize a production migration or
+replace the PostgreSQL, restore, security and clinical acceptance gates below.
+
 `GET /api/v1/health` reports process liveness only.
 `GET /api/v1/health/ready` reports 200 only with the expected revision, critical
 tables and (for SQLite) FK enforcement. It returns a redacted 503 otherwise.
