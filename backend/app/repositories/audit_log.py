@@ -20,6 +20,7 @@ class AuditLogRepository:
         to_state: str | None = None,
         message: str | None = None,
         event_data: dict | None = None,
+        commit: bool = True,
     ) -> AuditLog:
         audit_log = AuditLog(
             entity_type=entity_type,
@@ -36,7 +37,10 @@ class AuditLogRepository:
         )
 
         db.add(audit_log)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         db.refresh(audit_log)
 
         return audit_log
@@ -47,6 +51,8 @@ class AuditLogRepository:
         *,
         entity_type: str,
         entity_id: str,
+        skip: int = 0,
+        limit: int | None = None,
     ) -> list[AuditLog]:
         statement = (
             select(AuditLog)
@@ -59,6 +65,10 @@ class AuditLogRepository:
                 AuditLog.id.asc(),
             )
         )
+
+        statement = statement.offset(skip)
+        if limit is not None:
+            statement = statement.limit(limit)
 
         return list(
             db.scalars(statement).all()

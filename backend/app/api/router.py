@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from backend.app.api.routes.session_finalization import router as session_finalization_router
 
 from backend.app.api.routes.audit_logs import (
     router as audit_logs_router,
@@ -65,6 +66,7 @@ from backend.app.api.routes.clinic_live_flow import (
 )
 
 api_router = APIRouter()
+api_router.include_router(session_finalization_router)
 
 api_router.include_router(
     health_router

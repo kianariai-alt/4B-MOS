@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
+from backend.app.db.transactions import atomic_write
 
 from backend.app.models.treatment_session import TreatmentSession
 from backend.app.models.user import User
@@ -9,6 +10,7 @@ from backend.app.repositories.treatment_session import (
     TreatmentSessionRepository,
 )
 from backend.app.services.audit_context import actor_data
+from backend.app.services.session_finalization import SessionFinalizationService
 from backend.app.services.treatment_session_completion import (
     TreatmentSessionCompletionGuardService,
 )
@@ -117,6 +119,7 @@ class SessionWorkflowService:
         ]
 
     @staticmethod
+    @atomic_write
     def transition(
         db: Session,
         session_id: str,
@@ -154,6 +157,7 @@ class SessionWorkflowService:
             )
 
         now = datetime.now(timezone.utc)
+        finalization = None
 
         old_clinical_status = (
             treatment_session.status
@@ -190,6 +194,7 @@ class SessionWorkflowService:
                     "'in_progress' before completion."
                 )
 
+            completion_materials = SessionFinalizationService.lock_materials(db, treatment_session)
             completion_check = (
                 TreatmentSessionCompletionGuardService
                 .evaluate(
@@ -254,8 +259,13 @@ class SessionWorkflowService:
         )
 
         db.add(treatment_session)
-        db.commit()
+        db.flush()
         db.refresh(treatment_session)
+
+        if new_status == "completed":
+            finalization = SessionFinalizationService.capture(
+                db, treatment_session, completion_check, completion_materials, actor, now,
+            )
 
         if (
             old_clinical_status
@@ -263,6 +273,7 @@ class SessionWorkflowService:
         ):
             AuditLogRepository.create(
                 db,
+                commit=False,
                 entity_type="treatment_session",
                 entity_id=treatment_session.id,
                 event_type="state_transition",
@@ -274,6 +285,8 @@ class SessionWorkflowService:
                     "workflow."
                 ),
                 event_data={
+                    **({"finalization_sha256": finalization.sha256,
+                        "finalization_session_id": finalization.session_id} if finalization else {}),
                     "treatment_id": (
                         treatment_session.treatment_id
                     ),
@@ -289,6 +302,7 @@ class SessionWorkflowService:
 
         AuditLogRepository.create(
             db,
+            commit=False,
             entity_type="treatment_session",
             entity_id=treatment_session.id,
             event_type="operational_transition",
