@@ -53,6 +53,14 @@ No production patient database was accessed during this work.
 
 ## Remaining engineering gates
 
+Account safety add-on: last-active-admin demotion/deactivation is refused with
+409. Account commands share a database lock with bootstrap and hold it through
+commit, refresh cached ORM state and recheck HTTP actors' authority. Tests use
+independent SQLite connections for competing admin changes, revoked actors and
+commit rollback. Unknown/explicit-null user PATCH fields now return 422. This
+stage adds no migration, token revocation or clinical policy change. Service
+guards do not protect against direct privileged SQL or legacy unlocked workers.
+
 Runtime safety stage: `ENVIRONMENT=production` rejects debug mode, enabled
 public bootstrap and obviously weak/default signing keys. Production disables
 interactive API docs/OpenAPI; this is not a substitute for authorization.

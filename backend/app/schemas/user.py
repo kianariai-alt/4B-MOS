@@ -46,6 +46,15 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("display_name", "password", "role", "is_active")
+    @classmethod
+    def reject_explicit_null(cls, value):
+        if value is None:
+            raise ValueError("Explicit null is not allowed for user updates.")
+        return value
+
     display_name: str | None = Field(
         default=None,
         min_length=1,

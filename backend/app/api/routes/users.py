@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 
 from backend.app.api.dependencies import require_roles
 from backend.app.db.session import get_db
+from backend.app.db.account_transactions import AccountWriteConflictError, AccountAuthorizationError
+from backend.app.models.user import User
 from backend.app.schemas.user import (
     UserCreate,
     UserRead,
@@ -39,19 +41,23 @@ router = APIRouter(
 )
 def create_user(
     payload: UserCreate,
+    actor: User = Depends(require_roles("admin")),
     db: Session = Depends(get_db),
 ) -> UserRead:
     try:
         user = UserService.create_user(
             db,
             payload,
+            actor=actor,
         )
 
         return UserRead.model_validate(
             user
         )
 
-    except UsernameConflictError as exc:
+    except AccountAuthorizationError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except (UsernameConflictError, AccountWriteConflictError) as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(exc),
@@ -118,6 +124,7 @@ def get_user(
 def update_user(
     user_id: str,
     payload: UserUpdate,
+    actor: User = Depends(require_roles("admin")),
     db: Session = Depends(get_db),
 ) -> UserRead:
     try:
@@ -125,12 +132,17 @@ def update_user(
             db,
             user_id,
             payload,
+            actor=actor,
         )
 
         return UserRead.model_validate(
             user
         )
 
+    except AccountAuthorizationError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except AccountWriteConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except UserNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

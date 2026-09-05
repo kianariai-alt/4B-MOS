@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import false, text, update
 from sqlalchemy.exc import OperationalError
 
 from backend.app.core.config import settings
 from backend.app.db.transactions import _is_contention
+from backend.app.db.account_transactions import lock_accounts, AccountWriteConflictError
 
 from backend.app.core.security import (
     create_access_token,
@@ -80,17 +80,7 @@ class AuthService:
         if settings.ENVIRONMENT == "production" or not settings.BOOTSTRAP_ENABLED:
             raise BootstrapDisabledError("Administrator bootstrap is disabled.")
         try:
-            if db.new or db.dirty or db.deleted:
-                raise RuntimeError("Bootstrap requires a clean request Session.")
-            dialect = db.get_bind().dialect.name
-            if dialect == "sqlite":
-                # Even an empty UPDATE obtains SQLite's database writer lock.
-                db.execute(update(User).where(false()).values(updated_at=User.updated_at))
-            elif dialect == "postgresql":
-                # There is no user row to lock on an empty database.
-                db.execute(text("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE"))
-            else:
-                raise BootstrapDisabledError("Bootstrap is unsupported for this database.")
+            lock_accounts(db)
             if UserRepository.count(db) != 0:
                 raise BootstrapAlreadyCompletedError("System bootstrap has already been completed.")
             user = User(
@@ -101,6 +91,9 @@ class AuthService:
             db.flush()
             db.commit()
             return user
+        except AccountWriteConflictError as error:
+            db.rollback()
+            raise BootstrapDisabledError(str(error)) from error
         except OperationalError as error:
             db.rollback()
             if _is_contention(error):

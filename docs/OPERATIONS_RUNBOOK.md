@@ -13,6 +13,10 @@ Stage 3 adds recovery and installation tools. Review and commit each stage befor
 applying the next. The installer checks committed Git **tree** hashes, so your
 local commit messages/IDs may differ without losing the content check.
 
+The separate stage-4 add-on protects the last active administrator. Apply it
+only after all three original stages have been committed. Its manifest checks
+the exact stage-3 output tree and uses the same installer with `--stage 4`.
+
 The installer requires a clean `review/` branch and refuses unrelated changes,
 wrong-order patches and checksum mismatches. It does not commit, push, reset,
 run tests, install packages, create a database, or execute migrations. Patch
@@ -41,8 +45,21 @@ Do not send secrets or patient data in screenshots, logs or chat. Production
 must still have HTTPS, restricted database/file access, login rate limiting,
 monitoring, recovery ownership and a reviewed retention policy. These are not
 configured by this package. Disabling API docs is not an authorization control.
-Password changes do not currently revoke already-issued JWTs; a token-revocation
-design and last-active-admin protection remain future security work.
+Password changes do not currently revoke already-issued JWTs; token revocation
+remains future security work. Stage 4 refuses disabling/demoting the last active
+administrator with HTTP 409. An inactive admin does not count as a successor.
+Create/activate a second administrator before handing off the current account.
+This does not repair a database that already has no active administrators.
+
+Account creation, updates and bootstrap use the same transaction lock. Mutation
+routes recheck the actor's active-admin status after acquiring it, so a request
+authorized before a concurrent revocation cannot silently retain that authority.
+Explicit null and unknown user-PATCH fields now return 422. No new migration is
+needed; the schema remains `a71d92cfe604`. PostgreSQL account mutations require
+READ COMMITTED isolation and have not been tested on a live PostgreSQL server.
+Drain older unlocked workers before enabling the new account-write paths.
+Direct SQL and internal repository-only writes can bypass the service guard;
+database privileges and dedicated account-audit events remain separate work.
 
 ## Readiness and migration gate
 
