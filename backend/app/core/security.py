@@ -36,8 +36,8 @@ def create_access_token(
 
     expire = now + timedelta(
         minutes=(
-            expires_minutes
-            or settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            if expires_minutes is None else expires_minutes
         )
     )
 
@@ -63,4 +63,5 @@ def decode_access_token(
         algorithms=[
             settings.JWT_ALGORITHM
         ],
+        options={"require": ["sub", "iat", "exp"]},
     )

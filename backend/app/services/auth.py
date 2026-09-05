@@ -1,4 +1,9 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import false, text, update
+from sqlalchemy.exc import OperationalError
+
+from backend.app.core.config import settings
+from backend.app.db.transactions import _is_contention
 
 from backend.app.core.security import (
     create_access_token,
@@ -19,6 +24,10 @@ class InactiveUserError(Exception):
 
 
 class BootstrapAlreadyCompletedError(Exception):
+    pass
+
+
+class BootstrapDisabledError(Exception):
     pass
 
 
@@ -68,23 +77,35 @@ class AuthService:
         db: Session,
         payload: BootstrapAdminRequest,
     ) -> User:
-        user_count = UserRepository.count(
-            db
-        )
-
-        if user_count != 0:
-            raise BootstrapAlreadyCompletedError(
-                "System bootstrap has already been completed."
+        if settings.ENVIRONMENT == "production" or not settings.BOOTSTRAP_ENABLED:
+            raise BootstrapDisabledError("Administrator bootstrap is disabled.")
+        try:
+            if db.new or db.dirty or db.deleted:
+                raise RuntimeError("Bootstrap requires a clean request Session.")
+            dialect = db.get_bind().dialect.name
+            if dialect == "sqlite":
+                # Even an empty UPDATE obtains SQLite's database writer lock.
+                db.execute(update(User).where(false()).values(updated_at=User.updated_at))
+            elif dialect == "postgresql":
+                # There is no user row to lock on an empty database.
+                db.execute(text("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE"))
+            else:
+                raise BootstrapDisabledError("Bootstrap is unsupported for this database.")
+            if UserRepository.count(db) != 0:
+                raise BootstrapAlreadyCompletedError("System bootstrap has already been completed.")
+            user = User(
+                username=payload.username, display_name=payload.display_name,
+                password_hash=hash_password(payload.password), role="admin",
             )
-
-        hashed_password = hash_password(
-            payload.password
-        )
-
-        return UserRepository.create(
-            db,
-            username=payload.username,
-            display_name=payload.display_name,
-            password_hash=hashed_password,
-            role="admin",
-        )
+            db.add(user)
+            db.flush()
+            db.commit()
+            return user
+        except OperationalError as error:
+            db.rollback()
+            if _is_contention(error):
+                raise BootstrapAlreadyCompletedError("Bootstrap is busy; reload before retrying.") from error
+            raise
+        except Exception:
+            db.rollback()
+            raise

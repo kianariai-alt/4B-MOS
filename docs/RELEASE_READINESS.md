@@ -53,6 +53,18 @@ No production patient database was accessed during this work.
 
 ## Remaining engineering gates
 
+Runtime safety stage: `ENVIRONMENT=production` rejects debug mode, enabled
+public bootstrap and obviously weak/default signing keys. Production disables
+interactive API docs/OpenAPI; this is not a substitute for authorization.
+Bootstrap is explicitly switchable and SQLite requests are serialized before
+the empty-user check. PostgreSQL uses a table lock for bootstrap but is untested.
+JWTs must contain subject, issuance time and expiry. Existing minted tokens have
+these fields; older externally minted tokens without them are rejected.
+`/health` is liveness only; `/health/ready` checks the expected database revision,
+critical tables and SQLite FK enforcement and returns a redacted 503 on failure.
+The pinned direct dependencies reflect the tested environment, not a completed
+vulnerability audit or full transitive dependency lock.
+
 1. Concurrency deployment gate: test the parent-lock protocol on the intended
    production database, including isolation level, lock timeout and load. The
    SQLite implementation serializes all database writers, even for different
