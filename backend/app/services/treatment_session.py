@@ -1,8 +1,8 @@
 
-from datetime import datetime, timezone
-
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from backend.app.db.transactions import atomic_write
 from backend.app.models.treatment_session import TreatmentSession
 from backend.app.models.user import User
 from backend.app.repositories.audit_log import AuditLogRepository
@@ -12,6 +12,7 @@ from backend.app.repositories.treatment_session import (
 )
 from backend.app.schemas.treatment_session import (
     TreatmentSessionCreate,
+    TreatmentSessionRead,
     TreatmentSessionUpdate,
 )
 
@@ -67,6 +68,7 @@ class TreatmentSessionService:
         }
 
     @staticmethod
+    @atomic_write
     def create_session(
         db: Session,
         treatment_id: str,
@@ -97,16 +99,22 @@ class TreatmentSessionService:
                 f"already exists for treatment '{treatment_id}'."
             )
 
-        treatment_session = (
-            TreatmentSessionRepository.create(
-                db,
-                treatment_id,
-                payload,
+        try:
+            treatment_session = (
+                TreatmentSessionRepository.create(
+                    db,
+                    treatment_id,
+                    payload,
+                )
             )
-        )
+        except IntegrityError as exc:
+            raise TreatmentSessionConflictError(
+                "Session creation conflicts with existing data."
+            ) from exc
 
         AuditLogRepository.create(
             db,
+            commit=False,
             entity_type="treatment_session",
             entity_id=treatment_session.id,
             event_type="session_created",
@@ -183,6 +191,7 @@ class TreatmentSessionService:
             )
 
     @staticmethod
+    @atomic_write
     def update_session(
         db: Session,
         session_id: str,
@@ -251,68 +260,50 @@ class TreatmentSessionService:
                     "already exists for this treatment."
                 )
 
-        old_status = treatment_session.status
-        new_status = payload.status
-
-        if new_status is not None:
-            TreatmentSessionService._validate_transition(
-                old_status,
-                new_status,
-            )
-
         update_data = payload.model_dump(
             exclude_unset=True,
         )
-
-        transition_occurred = (
-            new_status is not None
-            and new_status != old_status
+        changed_fields = sorted(
+            field for field, value in update_data.items()
+            if getattr(treatment_session, field) != value
         )
+        if not changed_fields:
+            return treatment_session
 
-        if transition_occurred:
-            now = datetime.now(
-                timezone.utc
+        before = TreatmentSessionRead.model_validate(
+            treatment_session
+        ).model_dump(mode="json", include=set(changed_fields))
+
+        try:
+            updated_session = TreatmentSessionRepository.update(
+                db, treatment_session, payload,
             )
+        except IntegrityError as exc:
+            raise TreatmentSessionConflictError(
+                "Session update conflicts with existing data."
+            ) from exc
 
-            if new_status == "in_progress":
-                if update_data.get("started_at") is None:
-                    update_data["started_at"] = now
+        after = TreatmentSessionRead.model_validate(
+            updated_session
+        ).model_dump(mode="json", include=set(changed_fields))
 
-            if new_status == "completed":
-                if update_data.get("completed_at") is None:
-                    update_data["completed_at"] = now
-
-        normalized_payload = TreatmentSessionUpdate(
-            **update_data
+        AuditLogRepository.create(
+            db,
+            commit=False,
+            entity_type="treatment_session",
+            entity_id=updated_session.id,
+            event_type="session_updated",
+            from_state=updated_session.status,
+            to_state=updated_session.status,
+            message="Treatment session clinical documentation updated.",
+            event_data={
+                "treatment_id": updated_session.treatment_id,
+                "session_number": updated_session.session_number,
+                "changed_fields": changed_fields,
+                "before": before,
+                "after": after,
+            },
+            **TreatmentSessionService._actor_data(actor),
         )
-
-        updated_session = (
-            TreatmentSessionRepository.update(
-                db,
-                treatment_session,
-                normalized_payload,
-            )
-        )
-
-        if transition_occurred:
-            AuditLogRepository.create(
-                db,
-                entity_type="treatment_session",
-                entity_id=updated_session.id,
-                event_type="state_transition",
-                from_state=old_status,
-                to_state=new_status,
-                message=(
-                    f"Session status changed from "
-                    f"'{old_status}' to '{new_status}'."
-                ),
-                event_data={
-                    "session_number": updated_session.session_number,
-                    "treatment_id": updated_session.treatment_id,
-                },
-                **TreatmentSessionService._actor_data(
-                    actor
-                ),
-            )
 
         return updated_session

@@ -9,6 +9,8 @@ from backend.app.schemas.treatment_session import (
 
 
 class TreatmentSessionRepository:
+    """Flush-only writes; the calling service owns commit and rollback."""
+
     @staticmethod
     def get_by_id(
         db: Session,
@@ -92,7 +94,7 @@ class TreatmentSessionRepository:
         )
 
         db.add(treatment_session)
-        db.commit()
+        db.flush()
         db.refresh(treatment_session)
 
         return treatment_session
@@ -115,7 +117,7 @@ class TreatmentSessionRepository:
             )
 
         db.add(treatment_session)
-        db.commit()
+        db.flush()
         db.refresh(treatment_session)
 
         return treatment_session

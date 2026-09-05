@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
 from backend.app.api.router import api_router
 from backend.app.core.config import settings
+from backend.app.db.transactions import ClinicalWriteConflictError
 
 
 def create_application() -> FastAPI:
@@ -12,6 +14,10 @@ def create_application() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
     )
+
+    @application.exception_handler(ClinicalWriteConflictError)
+    async def clinical_write_conflict(request, error):
+        return JSONResponse(status_code=409, content={"detail": str(error)})
 
     application.include_router(
         api_router,
