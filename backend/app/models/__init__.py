@@ -19,6 +19,10 @@ from backend.app.models.treatment_session import (
 )
 from backend.app.models.user import User
 from backend.app.models.session_finalization import SessionFinalization
+from backend.app.models.session_amendment import (
+    SessionAmendment,
+    SessionAmendmentReview,
+)
 from backend.app.models.visit import Visit
 from backend.app.models.treatment_session_component import (
     TreatmentSessionComponent,
@@ -26,6 +30,8 @@ from backend.app.models.treatment_session_component import (
 
 __all__ = [
     "SessionFinalization",
+    "SessionAmendment",
+    "SessionAmendmentReview",
     "AuditLog",
     "OrthobiologicMaterial",
     "Patient",

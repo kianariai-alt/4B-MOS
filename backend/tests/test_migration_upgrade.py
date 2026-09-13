@@ -16,6 +16,10 @@ from backend.app.models.visit import Visit
 from backend.app.models.treatment import Treatment
 from backend.app.models.treatment_session import TreatmentSession
 from backend.app.models.session_finalization import SessionFinalization
+from backend.app.models.session_amendment import (
+    SessionAmendment,
+    SessionAmendmentReview,
+)
 
 
 def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
@@ -44,6 +48,10 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         assert {fk["options"].get("ondelete") for fk in foreign_keys} == {"CASCADE", "RESTRICT"}
         assert len(inspector.get_check_constraints("treatment_session_components")) == 2
         assert len(inspector.get_unique_constraints("treatment_session_components")) == 1
+        assert "session_amendments" in inspector.get_table_names()
+        assert "session_amendment_reviews" in inspector.get_table_names()
+        assert inspector.get_foreign_keys("session_amendments")[0]["options"]["ondelete"] == "RESTRICT"
+        assert inspector.get_foreign_keys("session_amendment_reviews")[0]["options"]["ondelete"] == "RESTRICT"
 
         # This destructive downgrade is restricted to the disposable test file.
         command.downgrade(config, "6adf71221e0b")
@@ -51,7 +59,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b36e7f0a1d42"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d9a4c7e2f1b6"
     finally:
         engine.dispose()
 
@@ -137,5 +145,81 @@ def test_auth_version_migration_preserves_users_and_refuses_revocation_loss(tmp_
             assert connection.scalar(text(
                 "SELECT auth_version FROM users WHERE id = 'legacy-user'"
             )) == 1
+    finally:
+        engine.dispose()
+
+
+def test_amendment_migration_refuses_loss_of_pending_or_reviewed_history(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'amendment-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        now = datetime.now(timezone.utc)
+        with Session(engine) as db:
+            patient = Patient(
+                patient_code="AMEND-MIG",
+                first_name="Amendment",
+                last_name="Migration",
+            )
+            db.add(patient)
+            db.flush()
+            visit = Visit(patient_id=patient.id)
+            db.add(visit)
+            db.flush()
+            treatment = Treatment(visit_id=visit.id, treatment_type="ACS")
+            db.add(treatment)
+            db.flush()
+            session = TreatmentSession(
+                treatment_id=treatment.id,
+                session_number=1,
+                status="completed",
+                operational_status="completed",
+                completed_at=now,
+            )
+            db.add(session)
+            db.flush()
+            db.add(
+                SessionFinalization(
+                    session_id=session.id,
+                    captured_at=now,
+                    payload={"migration_fixture": True},
+                    sha256="0" * 64,
+                )
+            )
+            db.flush()
+            amendment = SessionAmendment(
+                session_id=session.id,
+                sequence=1,
+                created_at=now,
+                payload={"migration_fixture": True},
+                sha256="1" * 64,
+            )
+            db.add(amendment)
+            db.flush()
+            db.add(
+                SessionAmendmentReview(
+                    amendment_id=amendment.id,
+                    decision="approved",
+                    reviewed_at=now,
+                    payload={"migration_fixture": True},
+                    sha256="2" * 64,
+                )
+            )
+            db.commit()
+
+        with pytest.raises(RuntimeError, match="amendment history exists"):
+            command.downgrade(config, "b36e7f0a1d42")
+        inspector = inspect(engine)
+        assert "session_amendments" in inspector.get_table_names()
+        assert "session_amendment_reviews" in inspector.get_table_names()
+        with engine.connect() as connection:
+            assert connection.scalar(text("SELECT count(*) FROM session_amendments")) == 1
+            assert connection.scalar(text("SELECT count(*) FROM session_amendment_reviews")) == 1
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d9a4c7e2f1b6"
     finally:
         engine.dispose()

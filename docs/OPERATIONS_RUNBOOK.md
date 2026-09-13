@@ -1,8 +1,8 @@
 # Controlled local installation and recovery
 
 This is a backend release candidate, not authorization for production deployment.
-No live clinic database, remote branch, hosted service or external credential was
-changed by the development work. Windows and PostgreSQL remain unverified.
+No live clinic database, hosted service or external credential was changed by the
+development work. Stage 7 Windows validation and PostgreSQL remain unverified.
 
 ## Installation order
 
@@ -87,6 +87,25 @@ audit event. Display-name/no-op changes keep tokens. A downgrade is refused once
 any version is non-zero because it could restore a revoked session. Do not zero
 the column to bypass the guard; rotate the signing key and use reviewed recovery.
 
+Stage 7 requires stage 6 and migration `d9a4c7e2f1b6`. It adds append-only
+session amendments and separate append-only review decisions. It never changes
+the captured finalization payload. Admin, physician and nurse roles may author;
+admin and physician roles may review; only an admin may decide an amendment they
+authored. All existing finalization-read roles may view amendments. Rejections
+require a comment. Every amendment requires one of `data_entry_error`,
+`omitted_information`, `clinical_clarification`, `late_result` or `other`, plus
+a detailed explanation. Types are `correction` and `supplement`.
+
+The API provides `POST` and `GET` on
+`/api/v1/treatment-sessions/{session_id}/amendments`, detail `GET` on
+`/api/v1/treatment-sessions/{session_id}/amendments/{amendment_id}`, and one
+final `POST` to the detail path's `/review` suffix. There are no PATCH or DELETE
+endpoints. A rejected amendment remains part of the record and any subsequent
+correction is a new amendment. Creation/review audit events contain identifiers,
+reason/type and checksums, not duplicated clinical statement text. Sessions
+without captured finalization evidence return 404 and are not reconstructed.
+SHA-256 is corruption detection, not a digital signature.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into
@@ -99,7 +118,7 @@ replace the PostgreSQL, restore, security and clinical acceptance gates below.
 `GET /api/v1/health` reports process liveness only.
 `GET /api/v1/health/ready` reports 200 only with the expected revision, critical
 tables and (for SQLite) FK enforcement. It returns a redacted 503 otherwise.
-The head is `b36e7f0a1d42`; upgrade a disposable copy and inspect the result
+The head is `d9a4c7e2f1b6`; upgrade a disposable copy and inspect the result
 before any production change. Installing code does NOT upgrade the database.
 
 Drain old workers before upgrades; never mix locked and old unlocked clinical
@@ -146,20 +165,21 @@ not been certified. No script deletes old backups automatically.
 
 ## Rollback limitations
 
-Evidence-preserving downgrade refuses populated finalization tables and offline
-downgrade. Never bypass this by deleting reports. Older administration-table
+Evidence-preserving downgrade refuses populated amendment or finalization tables
+and refuses offline downgrade. Never bypass this by deleting reports, amendments
+or review decisions. Older administration-table
 downgrades are destructive. Recoverable source control changes do not imply
 recoverable database changes. Preserve failed rehearsal copies separately; do
 not try repeated upgrades on the only backup.
 
 ## Deferred decisions, not silently enabled features
 
-- Amendments: who may author, approve, reject and view them; reason vocabulary;
-  correction versus supplement; whether original sign-off is legally required.
+- Amendments: whether an independent legal/clinical signature, external timestamp,
+  notifications, escalation or a stricter retention policy is required.
 - Clinical policy: expiry-date boundary/timezone; absent-administration outcomes;
   deviation acknowledgment and override authority. Existing rules are unchanged.
 - Product: mobile clinical UI, deployment host, access boundaries and data retention.
 
 These do not block delivery of the tested technical package, but do block calling
-the whole product production-ready. No clinical sign-off or amendment API is
-enabled merely by installing this release.
+the whole product production-ready. Installing the migration does not constitute
+clinical or legal approval of the amendment policy.
