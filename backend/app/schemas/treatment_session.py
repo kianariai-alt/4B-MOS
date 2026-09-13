@@ -5,6 +5,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    field_validator,
 )
 
 
@@ -47,6 +48,15 @@ class TreatmentSessionCreate(BaseModel):
 
 
 class TreatmentSessionUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("session_number")
+    @classmethod
+    def session_number_must_not_be_null(cls, value):
+        if value is None:
+            raise ValueError("session_number cannot be null.")
+        return value
+
     session_number: int | None = Field(
         default=None,
         ge=1,

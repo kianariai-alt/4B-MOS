@@ -52,3 +52,11 @@ Thumbs.db
 # Local SQLite database
 *.db
 *.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+backups/

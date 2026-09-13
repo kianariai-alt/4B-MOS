@@ -18,12 +18,14 @@ from backend.app.models.treatment_session import (
     TreatmentSession,
 )
 from backend.app.models.user import User
+from backend.app.models.session_finalization import SessionFinalization
 from backend.app.models.visit import Visit
 from backend.app.models.treatment_session_component import (
     TreatmentSessionComponent,
 )
 
 __all__ = [
+    "SessionFinalization",
     "AuditLog",
     "OrthobiologicMaterial",
     "Patient",

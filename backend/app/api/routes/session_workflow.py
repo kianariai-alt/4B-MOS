@@ -11,6 +11,7 @@ from backend.app.api.dependencies import (
 )
 from backend.app.db.session import get_db
 from backend.app.models.user import User
+from backend.app.services.session_finalization import FinalizationIntegrityError
 from backend.app.schemas.session_workflow import (
     SessionWorkflowUpdate,
 )
@@ -80,7 +81,7 @@ def update_session_workflow(
             detail=str(exc),
         ) from exc
 
-    except SessionWorkflowConflictError as exc:
+    except (SessionWorkflowConflictError, FinalizationIntegrityError) as exc:
         raise HTTPException(
             status_code=(
                 status.HTTP_409_CONFLICT

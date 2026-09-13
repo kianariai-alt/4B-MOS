@@ -18,6 +18,7 @@ from backend.app.schemas.user import UserRead
 from backend.app.services.auth import (
     AuthService,
     BootstrapAlreadyCompletedError,
+    BootstrapDisabledError,
     InactiveUserError,
     InvalidCredentialsError,
 )
@@ -48,6 +49,8 @@ def bootstrap_admin(
             user
         )
 
+    except BootstrapDisabledError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     except BootstrapAlreadyCompletedError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

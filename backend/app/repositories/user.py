@@ -67,6 +67,7 @@ class UserRepository:
         display_name: str,
         password_hash: str,
         role: str,
+        commit: bool = True,
     ) -> User:
         user = User(
             username=username,
@@ -76,7 +77,10 @@ class UserRepository:
         )
 
         db.add(user)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         db.refresh(user)
 
         return user
@@ -86,6 +90,8 @@ class UserRepository:
         db: Session,
         user: User,
         update_data: dict,
+        *,
+        commit: bool = True,
     ) -> User:
         for field_name, value in update_data.items():
             setattr(
@@ -95,7 +101,10 @@ class UserRepository:
             )
 
         db.add(user)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         db.refresh(user)
 
         return user

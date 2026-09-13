@@ -43,11 +43,22 @@ def get_current_user(
         )
 
         user_id = payload.get("sub")
+        token_version = payload.get("ver")
 
         if not isinstance(user_id, str):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid access token.",
+            )
+        if (
+            not isinstance(token_version, int)
+            or isinstance(token_version, bool)
+            or token_version < 0
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid access token.",
+                headers={"WWW-Authenticate": "Bearer"},
             )
 
     except jwt.InvalidTokenError as exc:
@@ -68,6 +79,13 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User no longer exists.",
+        )
+
+    if token_version != user.auth_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access token is no longer valid.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     if not user.is_active:

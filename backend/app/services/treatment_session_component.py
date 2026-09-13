@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from backend.app.db.transactions import atomic_write
 
 from backend.app.models.treatment_session_component import (
     TreatmentSessionComponent,
@@ -187,6 +188,7 @@ class TreatmentSessionComponentService:
             )
 
     @staticmethod
+    @atomic_write
     def create_component(
         db: Session,
         session_id: str,
@@ -351,6 +353,7 @@ class TreatmentSessionComponentService:
 
         AuditLogRepository.create(
             db,
+            commit=False,
             entity_type=(
                 "treatment_session_component"
             ),
@@ -428,6 +431,7 @@ class TreatmentSessionComponentService:
         return component
 
     @staticmethod
+    @atomic_write
     def update_component(
         db: Session,
         session_id: str,
@@ -564,6 +568,7 @@ class TreatmentSessionComponentService:
 
         AuditLogRepository.create(
             db,
+            commit=False,
             entity_type=(
                 "treatment_session_component"
             ),
@@ -591,6 +596,7 @@ class TreatmentSessionComponentService:
         return updated_component
 
     @staticmethod
+    @atomic_write
     def delete_component(
         db: Session,
         session_id: str,
@@ -634,6 +640,7 @@ class TreatmentSessionComponentService:
 
         AuditLogRepository.create(
             db,
+            commit=False,
             entity_type=(
                 "treatment_session_component"
             ),
