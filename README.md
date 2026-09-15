@@ -3,6 +3,10 @@
 FastAPI/SQLAlchemy clinic workflow backend. This repository is not yet a complete
 deployed clinic product. Do not expose development defaults to the internet.
 
+Completed-session evidence remains immutable. Any later correction or supplement
+is stored as a separate append-only amendment with an immutable review decision;
+the original finalization record is never rewritten.
+
 Install dependencies in an isolated environment and verify from the repository root:
 
 ```sh

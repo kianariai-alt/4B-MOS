@@ -32,7 +32,15 @@ def readiness(db: Session = Depends(get_db)):
         if revisions != [EXPECTED_DATABASE_REVISION]:
             return JSONResponse(status_code=503, content={"status": "not_ready"})
         tables = set(inspect(db.connection()).get_table_names())
-        required = {"users", "treatments", "treatment_sessions", "treatment_session_components", "session_finalizations"}
+        required = {
+            "users",
+            "treatments",
+            "treatment_sessions",
+            "treatment_session_components",
+            "session_finalizations",
+            "session_amendments",
+            "session_amendment_reviews",
+        }
         if not required <= tables:
             return JSONResponse(status_code=503, content={"status": "not_ready"})
         if db.get_bind().dialect.name == "sqlite" and db.scalar(text("PRAGMA foreign_keys")) != 1:

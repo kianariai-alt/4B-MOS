@@ -50,6 +50,23 @@ No production patient database was accessed during this work.
   evidence. SHA-256 detects accidental/out-of-band changes but is NOT a digital
   signature: privileged SQL can change both data and checksum. No database-wide
   tamper-proof or legal-signature guarantee is claimed.
+- Stage 7 adds migration `d9a4c7e2f1b6` and append-only corrections/supplements
+  linked to the exact finalization checksum. The original completion evidence is
+  never updated. Each amendment contains a standard reason code, required reason
+  detail, statement, optional target reference, author snapshot and checksum.
+- Admins, physicians and nurses may author amendments. Admins and physicians may
+  approve or reject them. Physicians cannot decide their own amendments; admins
+  may self-review as explicitly selected for this deployment. Rejections require
+  a comment. Operator and viewer roles remain read-only and share the existing
+  finalization visibility.
+- Amendment content and its single final review are separate immutable records.
+  A rejected amendment is retained; correction requires another amendment rather
+  than rewriting history. Creation/review and their allowlisted audit events
+  commit atomically under the parent-treatment write lock.
+- Amendment/review checksums detect accidental or one-sided out-of-band edits but
+  are not digital signatures. Privileged SQL can still replace both content and
+  checksum. No independent clinical signature, external timestamp, amendment
+  notification or legally certified audit store is claimed.
 
 ## Remaining engineering gates
 
@@ -98,12 +115,12 @@ vulnerability audit or full transitive dependency lock.
    Direct SQL, catalog changes and legacy services are not protected by this
 service protocol. A rolling deployment with old unlocked workers is unsafe:
    drain old workers before accepting clinical writes with this version.
-2. Historical evidence next gate: define append-only amendments with original
-   evidence reference, author, reason, timestamp and authorized review. No
-   amendment or signature workflow exists yet. Historical sessions are not
-   backfilled because their original completion-time data cannot be proven.
-   Assess database permissions, backups and external integrity anchoring before
-   making stronger immutability/retention claims.
+2. Historical evidence next gate: append-only amendments are implemented, but
+   historical sessions without captured finalization evidence are deliberately
+   not backfilled because their completion-time state cannot be proven. Define
+   independent clinical-signature requirements, notification/escalation rules,
+   retention, database permissions and external integrity anchoring before making
+   stronger legal or tamper-proof claims.
 3. Clinical policy: define no-administration session outcomes, expiry checks,
    deviation acknowledgments and physician override reasons. These policies
    need explicit clinical sign-off before implementation and use.
@@ -115,14 +132,18 @@ service protocol. A rolling deployment with old unlocked workers is unsafe:
 
 ## Migration cautions
 
-The new head is `b36e7f0a1d42`, following `a71d92cfe604`. It adds non-null
-`users.auth_version` with a zero default; existing clinical records are
-untouched. Drain old workers, upgrade the database, then deploy only new code.
+The new head is `d9a4c7e2f1b6`, following `b36e7f0a1d42`. It adds empty
+`session_amendments` and `session_amendment_reviews` tables without reconstructing
+historical records. Existing clinical records are untouched. Drain old workers,
+upgrade the database, then deploy only new code.
 A mixed-version fleet is unsafe: new code rejects old tokens and old code neither
 mints nor enforces the version claim.
 Back up and rehearse on a disposable copy before any production upgrade.
 
-The auth-version downgrade refuses when any account has a non-zero version,
+The amendment downgrade refuses when any pending, approved or rejected amendment
+exists. Its offline downgrade is also refused. Never delete clinical amendment
+history to bypass that guard. The auth-version downgrade refuses when any account
+has a non-zero version,
 because removing it could restore revoked sessions under old code. Its offline
 downgrade is also refused. Rotate the signing key and use an approved recovery
 procedure rather than bypassing that guard. The evidence downgrade refuses if
