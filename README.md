@@ -14,6 +14,10 @@ python -m pip install -r backend/requirements.txt -r backend/requirements-dev.tx
 python -m pytest backend/tests -q
 ```
 
+Pull requests additionally migrate a disposable PostgreSQL 18 database and run
+the PostgreSQL-specific isolation, row/table-lock, timeout, deadlock and amendment
+sequence tests on Python 3.12 and 3.14. No external or production database is used.
+
 See [release readiness](docs/RELEASE_READINESS.md) for clinical limitations and
 [the operations runbook](docs/OPERATIONS_RUNBOOK.md) for staged installation,
 production settings, explicit-path SQLite backups and new-copy upgrade rehearsals.

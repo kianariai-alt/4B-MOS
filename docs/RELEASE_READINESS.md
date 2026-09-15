@@ -67,6 +67,15 @@ No production patient database was accessed during this work.
   are not digital signatures. Privileged SQL can still replace both content and
   checksum. No independent clinical signature, external timestamp, amendment
   notification or legally certified audit store is claimed.
+- Stage 8 adds the pinned Psycopg driver and a separate PostgreSQL 18 CI matrix on
+  Python 3.12 and 3.14. Each job upgrades a fresh disposable database to Alembic
+  head, requires a clean autogeneration check, and exercises real PostgreSQL
+  parent-row locks, independent-treatment concurrency, deadlock recovery,
+  account table locking and amendment sequencing. Test records are synthetic.
+- PostgreSQL connections now set a bounded lock wait through
+  `DATABASE_LOCK_TIMEOUT_MS` (default 5000 ms, allowed range 100-30000 ms).
+  Recognized PostgreSQL lock timeout, deadlock and serialization failures remain
+  controlled conflicts; there is no automatic replay.
 
 ## Remaining engineering gates
 
@@ -98,7 +107,9 @@ Runtime safety stage: `ENVIRONMENT=production` rejects debug mode, enabled
 public bootstrap and obviously weak/default signing keys. Production disables
 interactive API docs/OpenAPI; this is not a substitute for authorization.
 Bootstrap is explicitly switchable and SQLite requests are serialized before
-the empty-user check. PostgreSQL uses a table lock for bootstrap but is untested.
+the empty-user check. PostgreSQL uses the same account table lock for bootstrap.
+That lock primitive is exercised by disposable PostgreSQL CI; concurrent
+bootstrap remains covered separately by the SQLite integration test.
 JWTs must contain subject, issuance time and expiry. Existing minted tokens have
 these fields; older externally minted tokens without them are rejected.
 `/health` is liveness only; `/health/ready` checks the expected database revision,
@@ -106,14 +117,16 @@ critical tables and SQLite FK enforcement and returns a redacted 503 on failure.
 The pinned direct dependencies reflect the tested environment, not a completed
 vulnerability audit or full transitive dependency lock.
 
-1. Concurrency deployment gate: test the parent-lock protocol on the intended
-   production database, including isolation level, lock timeout and load. The
-   SQLite implementation serializes all database writers, even for different
-   treatments. The no-op UPDATE is intended to lock one parent row on PostgreSQL;
-   PostgreSQL has not been exercised here. Review database triggers/CDC because
-   no-op updates can still invoke them. Model updated_at is explicitly preserved.
-   Direct SQL, catalog changes and legacy services are not protected by this
-service protocol. A rolling deployment with old unlocked workers is unsafe:
+1. Concurrency deployment gate: CI now exercises the parent-lock protocol on a
+   disposable PostgreSQL 18 instance at `READ COMMITTED`, including bounded lock
+   waits, a real deadlock, same-parent serialization and unrelated-parent
+   progress. This is not load, failover, connection-pool or managed-service
+   certification; repeat the tests against the intended production topology and
+   reviewed timeout. SQLite still serializes all database writers. Review
+   database triggers/CDC because no-op parent updates can invoke them. Model
+   `updated_at` is explicitly preserved. Direct SQL, catalog changes and legacy
+   services are not protected by this service protocol. A rolling deployment
+   with old unlocked workers is unsafe:
    drain old workers before accepting clinical writes with this version.
 2. Historical evidence next gate: append-only amendments are implemented, but
    historical sessions without captured finalization evidence are deliberately
@@ -151,8 +164,9 @@ any finalization evidence exists; offline
 downgrade is also refused because evidence cannot be checked. An empty-table
 downgrade is tested. Do not bypass the guard by deleting evidence. Downgrading
 below `c68b24017654` still deletes administration records. Never use downgrade as
-a production rollback without an approved recovery plan. SQLite testing is not
-PostgreSQL certification. Session/parent deletion may now fail with an FK
+a production rollback without an approved recovery plan. Ephemeral PostgreSQL
+CI is not certification of a production database service. Session/parent
+deletion may now fail with an FK
 restriction; retention and deletion UX require explicit design.
 
 ## Developer verification
@@ -168,9 +182,10 @@ The test suite uses disposable databases. Production migrations and deployments
 are separate controlled operations, not part of the test commands.
 
 Pull requests into `main` and pushes to `main` also run the read-only `Backend
-CI` workflow on Python 3.12 and 3.14. Each matrix job installs the pinned
-requirements, compiles the backend, upgrades a fresh disposable SQLite database,
-runs `alembic check`, and executes the complete backend test suite. The stable
-`Backend CI` summary job succeeds only when every matrix job succeeds and is the
-status check intended for branch protection. The workflow receives no repository
-secrets, has only `contents: read` permission, and never targets production data.
+CI` workflow on Python 3.12 and 3.14. The SQLite matrix compiles the backend,
+upgrades a fresh database, runs `alembic check`, and executes the complete suite.
+A second matrix upgrades a fresh PostgreSQL 18 database and runs the dedicated
+PostgreSQL integration tests. The stable `Backend CI` summary succeeds only when
+all four matrix jobs succeed and is the status check intended for branch
+protection. The workflow receives no repository secrets, has only `contents:
+read` permission, and never targets production data.

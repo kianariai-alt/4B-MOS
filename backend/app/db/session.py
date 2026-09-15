@@ -10,6 +10,14 @@ connect_args = {}
 
 if settings.DATABASE_URL.startswith("sqlite"):
     connect_args["check_same_thread"] = False
+elif settings.DATABASE_URL.startswith("postgresql"):
+    # Bound waits for PostgreSQL row/table locks so the service-layer
+    # contention handlers can return a controlled conflict instead of leaving
+    # a request blocked indefinitely. ``options`` is a libpq startup option
+    # supported by the pinned Psycopg driver.
+    connect_args["options"] = (
+        f"-c lock_timeout={settings.DATABASE_LOCK_TIMEOUT_MS}ms"
+    )
 
 
 engine = create_engine(

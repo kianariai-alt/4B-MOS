@@ -2,7 +2,8 @@
 
 This is a backend release candidate, not authorization for production deployment.
 No live clinic database, hosted service or external credential was changed by the
-development work. Stage 7 Windows validation and PostgreSQL remain unverified.
+development work. Stage 7 was validated on Windows; Stage 8 adds disposable
+PostgreSQL 18 CI validation. No production PostgreSQL service has been certified.
 
 ## Installation order
 
@@ -58,7 +59,9 @@ routes recheck the actor's active-admin status after acquiring it, so a request
 authorized before a concurrent revocation cannot silently retain that authority.
 Explicit null and unknown user-PATCH fields now return 422. Stage 4 itself needs
 no migration. PostgreSQL account mutations require
-READ COMMITTED isolation and have not been tested on a live PostgreSQL server.
+READ COMMITTED isolation. The locking behavior is exercised against an ephemeral
+PostgreSQL 18 service in CI, but the intended managed/production database still
+requires its own load, failover and connection-pool rehearsal.
 Drain older unlocked workers before enabling the new account-write paths.
 Direct SQL and internal repository-only writes can bypass the service guard;
 database privileges remain separate work; dedicated account-audit events are
@@ -106,14 +109,27 @@ reason/type and checksums, not duplicated clinical statement text. Sessions
 without captured finalization evidence return 404 and are not reconstructed.
 SHA-256 is corruption detection, not a digital signature.
 
+Stage 8 requires the Stage 7 head but introduces no schema migration. It adds
+the pinned PostgreSQL driver, bounded runtime lock waits and an isolated CI job.
+`TEST_POSTGRESQL_URL` is test-only and must always identify a disposable database;
+the test guard requires its database name to end in `_ci` or `_test`. The CI
+workflow supplies its own service and does not read a repository secret.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into
 `main`. It verifies Python 3.12 and 3.14 against a new disposable SQLite database
-and the full backend test suite. Configure branch protection to require the
-stable `Backend CI` status after its first successful run. A green CI result is
-an engineering gate only; it does not authorize a production migration or
-replace the PostgreSQL, restore, security and clinical acceptance gates below.
+and the full backend suite, plus a new disposable PostgreSQL 18 database and the
+PostgreSQL migration/concurrency suite. Configure branch protection to require
+the stable `Backend CI` status after its first successful run. A green CI result
+is an engineering gate only; it does not authorize a production migration or
+replace deployment-specific database, restore, security and clinical acceptance
+gates below.
+
+For PostgreSQL, use a `postgresql+psycopg://...` URL and set
+`DATABASE_LOCK_TIMEOUT_MS` to a reviewed value from 100 through 30000. The
+default is 5000 ms. This timeout bounds waits for participating service locks;
+it is not a general query timeout and does not make direct SQL concurrency-safe.
 
 `GET /api/v1/health` reports process liveness only.
 `GET /api/v1/health/ready` reports 200 only with the expected revision, critical

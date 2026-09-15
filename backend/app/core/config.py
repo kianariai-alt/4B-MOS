@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     DATABASE_URL: str = "sqlite:///./4bmos.db"
+    DATABASE_LOCK_TIMEOUT_MS: int = Field(default=5000, ge=100, le=30000)
 
     SECRET_KEY: str = (
         "4bmos-development-secret-change-before-production"
