@@ -159,6 +159,11 @@ is an engineering gate only; it does not authorize a production migration or
 replace deployment-specific database, restore, security and clinical acceptance
 gates below.
 
+Before a release review, the synthetic cross-module API journey may be isolated
+with `python -m pytest backend/tests/test_release_acceptance.py -q`. Its scope and
+limitations are recorded in `docs/RELEASE_ACCEPTANCE.md`. It never targets a
+production database and does not replace clinician or user-interface acceptance.
+
 For PostgreSQL, use a `postgresql+psycopg://...` URL and set
 `DATABASE_LOCK_TIMEOUT_MS` to a reviewed value from 100 through 30000. The
 default is 5000 ms. This timeout bounds waits for participating service locks;

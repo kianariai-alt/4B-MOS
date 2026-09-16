@@ -27,3 +27,7 @@ See [release readiness](docs/RELEASE_READINESS.md) for clinical limitations and
 [the operations runbook](docs/OPERATIONS_RUNBOOK.md) for staged installation,
 production settings, explicit-path SQLite backups and new-copy upgrade rehearsals.
 No production migration or server deployment is performed by the test command.
+
+The [API release-acceptance gate](docs/RELEASE_ACCEPTANCE.md) exercises one
+synthetic, role-separated journey from registration through finalization,
+append-only amendment review, discharge and audit verification.
