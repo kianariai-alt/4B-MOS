@@ -3,7 +3,8 @@
 This is a backend release candidate, not authorization for production deployment.
 No live clinic database, hosted service or external credential was changed by the
 development work. Stage 7 was validated on Windows; Stage 8 adds disposable
-PostgreSQL 18 CI validation. No production PostgreSQL service has been certified.
+PostgreSQL 18 CI validation and Stage 9 adds persistent known-account login
+throttling. No production PostgreSQL service has been certified.
 
 ## Installation order
 
@@ -44,12 +45,14 @@ claims. Stage 6 intentionally rejects earlier tokens, requiring every user to
 log in again. Signing-key rotation remains the global emergency invalidation.
 
 Do not send secrets or patient data in screenshots, logs or chat. Production
-must still have HTTPS, restricted database/file access, login rate limiting,
-monitoring, recovery ownership and a reviewed retention policy. These are not
-configured by this package. Disabling API docs is not an authorization control.
+must still have HTTPS, restricted database/file access, edge/source login
+throttling, alerting, monitoring, recovery ownership and a reviewed retention
+policy. Account-bound throttling alone does not configure these controls.
+Disabling API docs is not an authorization control.
 Stage 6 revokes already-issued account JWTs after password, role or active-status
-changes. It does not provide refresh tokens, logout, device/session inventory or
-login rate limiting. Stage 4 refuses disabling/demoting the last active
+changes. It does not provide refresh tokens, logout or device/session inventory;
+Stage 9 separately provides account-bound login throttling. Stage 4 refuses
+disabling/demoting the last active
 administrator with HTTP 409. An inactive admin does not count as a successor.
 Create/activate a second administrator before handing off the current account.
 This does not repair a database that already has no active administrators.
@@ -77,7 +80,9 @@ without an actor and unauthenticated bootstrap are labeled explicitly.
 Only active admins may read `GET /api/v1/users/{id}/audit-logs`, with `skip` and
 `limit` pagination (maximum 500). Clinical-audit reader roles do not grant this
 access. Old changes are not reconstructed. Failed attempts and login activity
-are not recorded by these success events; security monitoring remains separate.
+are not recorded by these success events; Stage 9 adds separate future login
+failure/recovery events while alert delivery and security monitoring remain
+deployment responsibilities.
 There is no audit-edit API, but privileged SQL can still modify these records;
 they are not a cryptographic or legally certified audit store. Stage 5 requires
 stage 4's committed output and introduces no new schema migration.
@@ -115,6 +120,34 @@ the pinned PostgreSQL driver, bounded runtime lock waits and an isolated CI job.
 the test guard requires its database name to end in `_ci` or `_test`. The CI
 workflow supplies its own service and does not read a repository secret.
 
+Stage 9 requires Stage 8 and migration `e21f6a9c3b40`. It stores a failure
+counter, observation-window start and temporary-lock expiry on each user. The
+defaults are five failures in 900 seconds and a 300-second lock:
+
+```text
+LOGIN_MAX_FAILURES=5
+LOGIN_FAILURE_WINDOW_SECONDS=900
+LOGIN_LOCKOUT_SECONDS=300
+```
+
+Review all three together; accepted ranges are 2-20 failures, 60-86400 seconds
+for the window and 30-86400 seconds for the lock. Wrong-password, inactive,
+locked and missing-user responses intentionally share one 401 response. Unknown
+usernames still pay password-verification cost but are not retained, so use an
+approved reverse proxy/gateway for source-based spray protection. Active locks
+do not create repeated audit rows or extend themselves. A correct login after
+expiry clears state; an administrator password reset clears it immediately and
+records that recovery in the existing account audit event.
+
+Known failures create allowlisted `login_failed` events, and successful recovery
+after failures creates `login_throttle_cleared`. They contain counts and flags,
+not submitted credentials, hashes, raw usernames or client IPs. This is useful
+account history, not a SIEM, alerting service or approved retention solution.
+PostgreSQL serializes the same account with a row lock while unrelated account
+logins remain independent. SQLite still serializes all writers. A bounded lock
+conflict returns 503 plus `Retry-After: 1`; clients may retry once after waiting
+but must not loop aggressively.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into
@@ -134,7 +167,7 @@ it is not a general query timeout and does not make direct SQL concurrency-safe.
 `GET /api/v1/health` reports process liveness only.
 `GET /api/v1/health/ready` reports 200 only with the expected revision, critical
 tables and (for SQLite) FK enforcement. It returns a redacted 503 otherwise.
-The head is `d9a4c7e2f1b6`; upgrade a disposable copy and inspect the result
+The head is `e21f6a9c3b40`; upgrade a disposable copy and inspect the result
 before any production change. Installing code does NOT upgrade the database.
 
 Drain old workers before upgrades; never mix locked and old unlocked clinical
@@ -187,6 +220,11 @@ or review decisions. Older administration-table
 downgrades are destructive. Recoverable source control changes do not imply
 recoverable database changes. Preserve failed rehearsal copies separately; do
 not try repeated upgrades on the only backup.
+
+The Stage 9 downgrade refuses active login counters/windows/locks and refuses
+offline downgrade. Do not erase that state to force old authentication code back
+into service. A rollback requires a reviewed maintenance window and recovery
+plan; old workers do not enforce the new account locks.
 
 ## Deferred decisions, not silently enabled features
 

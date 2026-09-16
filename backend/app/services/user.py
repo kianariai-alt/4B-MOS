@@ -146,10 +146,21 @@ class UserService:
             None,
         )
 
+        login_throttle_cleared = False
         if password is not None:
+            login_throttle_cleared = (
+                user.failed_login_count != 0
+                or user.failed_login_window_started_at is not None
+                or user.login_locked_until is not None
+            )
             update_data["password_hash"] = (
                 hash_password(password)
             )
+            # A reviewed administrator password reset is the recovery path for
+            # a locked account. Keep it in the same account/audit transaction.
+            update_data["failed_login_count"] = 0
+            update_data["failed_login_window_started_at"] = None
+            update_data["login_locked_until"] = None
 
         sessions_revoked = (
             password_reset
@@ -177,6 +188,7 @@ class UserService:
                 "after": {name: after[name] for name in changed_fields},
                 "password_reset": password_reset,
                 "sessions_revoked": sessions_revoked,
+                "login_throttle_cleared": login_throttle_cleared,
             },
         )
         return user

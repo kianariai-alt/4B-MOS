@@ -7,6 +7,11 @@ Completed-session evidence remains immutable. Any later correction or supplement
 is stored as a separate append-only amendment with an immutable review decision;
 the original finalization record is never rewritten.
 
+Known accounts have persistent, account-bound login throttling. Failed login
+responses do not distinguish a missing, inactive, locked or wrong-password
+account. This backend control does not replace HTTPS, edge/source throttling,
+alerting or a reviewed security-monitoring and retention program.
+
 Install dependencies in an isolated environment and verify from the repository root:
 
 ```sh

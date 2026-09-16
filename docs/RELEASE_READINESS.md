@@ -76,6 +76,21 @@ No production patient database was accessed during this work.
   `DATABASE_LOCK_TIMEOUT_MS` (default 5000 ms, allowed range 100-30000 ms).
   Recognized PostgreSQL lock timeout, deadlock and serialization failures remain
   controlled conflicts; there is no automatic replay.
+- Stage 9 adds migration `e21f6a9c3b40` and persistent login-throttle state on
+  each account. Five failures inside a 15-minute observation window lock the
+  account for five minutes by default. The three settings are validated and may
+  be reviewed per deployment. Correct login or an administrator password reset
+  clears the state; active locks are not extended by repeated requests.
+- Wrong-password, missing-user, inactive-account and locked-account requests all
+  return the same 401 detail. Missing usernames still execute the password hash
+  verifier but are not stored. Known-account failures and recovery are recorded
+  with allowlisted counts/flags only, never the password, hash, submitted
+  username or IP address. Account-lock contention returns a bounded 503 with a
+  short `Retry-After`; it is not mislabeled as invalid credentials.
+- PostgreSQL uses compatible table intent locks plus a per-account row lock, so
+  unrelated logins can progress while same-account counters serialize. SQLite
+  necessarily serializes database writers. CI exercises the PostgreSQL behavior;
+  intended deployment topology and login load still require validation.
 
 ## Remaining engineering gates
 
@@ -84,16 +99,19 @@ updates now commit with allowlisted audit events. Password reset events include
 only an action flag and field name, never credentials or hashes. Self-edits keep
 pre-change actor attribution. The new admin-only user-history endpoint is
 paginated. No-op edits and failed writes do not emit success events; historical
-changes are not backfilled. This is not login/failed-attempt monitoring, token
-revocation or a tamper-proof database. No schema change is introduced.
+changes are not backfilled. Stage 9 adds future known-account login-failure and
+recovery events, but not an alerting pipeline, source/IP telemetry or historical
+reconstruction. This is not a tamper-proof database. Stage 5 itself introduced
+no schema change.
 
 Token-revocation add-on (stage 6): login tokens carry a per-account version.
 Password resets and meaningful role/active-status changes increment that version
 in the same account/audit transaction, invalidating all older tokens for that
 user. Display-name and no-op edits do not revoke sessions. Legacy tokens without
 a version are rejected, so every user must log in again after deployment. This
-is not a token inventory, logout endpoint, refresh-token system, rate limiter or
-replacement for emergency signing-key rotation. Privileged SQL can bypass it.
+is not a token inventory, logout endpoint, refresh-token system or replacement
+for emergency signing-key rotation. Stage 9 separately adds account-bound login
+throttling. Privileged SQL can bypass both controls.
 
 Account safety add-on: last-active-admin demotion/deactivation is refused with
 409. Account commands share a database lock with bootstrap and hold it through
@@ -137,18 +155,24 @@ vulnerability audit or full transitive dependency lock.
 3. Clinical policy: define no-administration session outcomes, expiry checks,
    deviation acknowledgments and physician override reasons. These policies
    need explicit clinical sign-off before implementation and use.
-4. Security/operations: replace development secrets, review authentication and
-   bootstrap exposure, configure HTTPS, backups and restore testing, monitoring,
-   access control and retention policy. Do not expose development defaults.
+4. Security/operations: persistent known-account login throttling is implemented,
+   but source/IP and edge throttling, alert delivery, incident response and audit
+   retention remain deployment responsibilities. Replace development secrets,
+   review authentication/bootstrap exposure, and configure HTTPS, backups,
+   restore testing, monitoring and access control. Do not expose development
+   defaults.
 5. Product scope: define the first release's mobile-friendly user interface,
    roles, deployment environment and acceptance scenarios.
 
 ## Migration cautions
 
-The new head is `d9a4c7e2f1b6`, following `b36e7f0a1d42`. It adds empty
-`session_amendments` and `session_amendment_reviews` tables without reconstructing
-historical records. Existing clinical records are untouched. Drain old workers,
-upgrade the database, then deploy only new code.
+The new head is `e21f6a9c3b40`, following `d9a4c7e2f1b6`. It adds three
+login-throttle columns to `users`; existing accounts start with a zero counter
+and no lock. The preceding migration adds empty `session_amendments` and
+`session_amendment_reviews` tables without reconstructing historical records.
+Existing clinical records are untouched. Drain old workers, upgrade the
+database, then deploy only new code. A mixed-version fleet is unsafe because old
+workers ignore the new lock state.
 A mixed-version fleet is unsafe: new code rejects old tokens and old code neither
 mints nor enforces the version claim.
 Back up and rehearse on a disposable copy before any production upgrade.
@@ -168,6 +192,11 @@ a production rollback without an approved recovery plan. Ephemeral PostgreSQL
 CI is not certification of a production database service. Session/parent
 deletion may now fail with an FK
 restriction; retention and deletion UX require explicit design.
+
+The login-throttle downgrade refuses while any account has a failure counter,
+window or lock timestamp, and refuses offline downgrade because that state cannot
+be checked. Do not clear security state merely to force a downgrade; use the
+reviewed password-reset/recovery path and a controlled deployment plan.
 
 ## Developer verification
 

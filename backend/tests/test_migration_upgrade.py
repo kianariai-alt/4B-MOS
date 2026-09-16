@@ -59,7 +59,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d9a4c7e2f1b6"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e21f6a9c3b40"
     finally:
         engine.dispose()
 
@@ -221,5 +221,61 @@ def test_amendment_migration_refuses_loss_of_pending_or_reviewed_history(
             assert connection.scalar(text("SELECT count(*) FROM session_amendments")) == 1
             assert connection.scalar(text("SELECT count(*) FROM session_amendment_reviews")) == 1
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d9a4c7e2f1b6"
+    finally:
+        engine.dispose()
+
+
+def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'login-throttle-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "d9a4c7e2f1b6")
+    engine = create_engine(url)
+    try:
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, created_at, updated_at) "
+                "VALUES ('legacy-login-user', 'legacy_login', 'Legacy Login', "
+                "'hash', 'viewer', 1, 0, "
+                "'2026-09-01 10:00:00', '2026-09-01 10:00:00')"
+            ))
+
+        command.upgrade(config, "head")
+        with engine.connect() as connection:
+            row = connection.execute(text(
+                "SELECT failed_login_count, failed_login_window_started_at, "
+                "login_locked_until FROM users WHERE id = 'legacy-login-user'"
+            )).one()
+            assert tuple(row) == (0, None, None)
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "e21f6a9c3b40"
+
+        command.downgrade(config, "d9a4c7e2f1b6")
+        columns = {column["name"] for column in inspect(engine).get_columns("users")}
+        assert "failed_login_count" not in columns
+
+        command.upgrade(config, "head")
+        with engine.begin() as connection:
+            connection.execute(text(
+                "UPDATE users SET failed_login_count = 1, "
+                "failed_login_window_started_at = '2026-09-16 12:00:00' "
+                "WHERE id = 'legacy-login-user'"
+            ))
+        with pytest.raises(RuntimeError, match="login throttling state exists"):
+            command.downgrade(config, "d9a4c7e2f1b6")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "e21f6a9c3b40"
+            assert connection.scalar(text(
+                "SELECT failed_login_count FROM users "
+                "WHERE id = 'legacy-login-user'"
+            )) == 1
     finally:
         engine.dispose()
