@@ -16,6 +16,7 @@ from backend.app.schemas.auth import (
 )
 from backend.app.schemas.user import UserRead
 from backend.app.services.auth import (
+    AuthenticationTemporarilyUnavailableError,
     AuthService,
     BootstrapAlreadyCompletedError,
     BootstrapDisabledError,
@@ -80,6 +81,12 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc),
+        ) from exc
+    except AuthenticationTemporarilyUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+            headers={"Retry-After": "1"},
         ) from exc
 
     token = AuthService.create_token(

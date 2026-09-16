@@ -44,6 +44,7 @@ def test_account_history_records_changes_without_password_values(client, admin_h
         "after": {"display_name": "Updated", "is_active": False, "role": "nurse"},
         "password_reset": True,
         "sessions_revoked": True,
+        "login_throttle_cleared": False,
     }
     db_session.expire_all()
     for secret in ["OriginalSecret123", "NewSecret456", old_hash, db_session.get(User, user_id).password_hash, "password_hash"]:

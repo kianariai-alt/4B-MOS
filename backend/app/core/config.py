@@ -28,6 +28,17 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: Literal["HS256"] = "HS256"
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, ge=1, le=1440)
+    LOGIN_MAX_FAILURES: int = Field(default=5, ge=2, le=20)
+    LOGIN_FAILURE_WINDOW_SECONDS: int = Field(
+        default=900,
+        ge=60,
+        le=86400,
+    )
+    LOGIN_LOCKOUT_SECONDS: int = Field(
+        default=300,
+        ge=30,
+        le=86400,
+    )
     CLINIC_TIMEZONE: str = "Asia/Tehran"
 
     @model_validator(mode="after")

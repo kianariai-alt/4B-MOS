@@ -36,7 +36,12 @@ from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.user import UserRepository
 from backend.app.schemas.session_amendment import SessionAmendmentCreate
 from backend.app.schemas.treatment_session import TreatmentSessionUpdate
-from backend.app.schemas.user import UserUpdate
+from backend.app.schemas.user import UserCreate, UserUpdate
+from backend.app.services.auth import (
+    AuthenticationTemporarilyUnavailableError,
+    AuthService,
+    InvalidCredentialsError,
+)
 from backend.app.services.session_amendment import SessionAmendmentService
 from backend.app.services.session_workflow import SessionWorkflowService
 from backend.app.services.treatment_session import TreatmentSessionService
@@ -383,6 +388,112 @@ def test_account_lock_rejects_repeatable_read(postgresql_engine):
         ):
             lock_accounts(db)
         db.rollback()
+
+
+def test_postgresql_login_failures_are_serialized_and_persistent(
+    postgresql_engine,
+    monkeypatch,
+):
+    context = _seed_clinical_context(postgresql_engine, treatment_count=1)
+    actor_id = context["admin_ids"][0]
+    with Session(postgresql_engine) as db:
+        target = UserService.create_user(
+            db,
+            UserCreate(
+                username="postgres_login_target",
+                display_name="PostgreSQL Login Target",
+                password="StrongPassword123",
+                role="viewer",
+            ),
+            actor=db.get(User, actor_id),
+        )
+        target_id = target.id
+        independent = UserService.create_user(
+            db,
+            UserCreate(
+                username="postgres_independent_login",
+                display_name="Independent PostgreSQL Login",
+                password="IndependentPassword123",
+                role="viewer",
+            ),
+            actor=db.get(User, actor_id),
+        )
+        independent_id = independent.id
+
+    monkeypatch.setattr(settings, "LOGIN_MAX_FAILURES", 2)
+    entered = Event()
+    release = Event()
+    original_audit = AuditLogRepository.create
+
+    def pause_first_failure(*args, **kwargs):
+        result = original_audit(*args, **kwargs)
+        if (
+            kwargs.get("entity_id") == target_id
+            and kwargs.get("event_type") == "login_failed"
+            and not entered.is_set()
+        ):
+            entered.set()
+            assert release.wait(10), "test failed to release login writer"
+        return result
+
+    monkeypatch.setattr(
+        AuditLogRepository,
+        "create",
+        staticmethod(pause_first_failure),
+    )
+
+    def fail_login() -> None:
+        with Session(postgresql_engine) as db:
+            with pytest.raises(InvalidCredentialsError):
+                AuthService.authenticate(
+                    db,
+                    username="postgres_login_target",
+                    password="DefinitelyWrong123",
+                )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(fail_login)
+        try:
+            assert entered.wait(10), "login writer did not reach audit"
+            # Account-bound PostgreSQL locks must not block an unrelated login.
+            with Session(postgresql_engine) as db:
+                assert AuthService.authenticate(
+                    db,
+                    username="postgres_independent_login",
+                    password="IndependentPassword123",
+                ).id == independent_id
+            with Session(postgresql_engine) as db:
+                with pytest.raises(
+                    AuthenticationTemporarilyUnavailableError
+                ) as conflict:
+                    AuthService.authenticate(
+                        db,
+                        username="postgres_login_target",
+                        password="DefinitelyWrong123",
+                    )
+                assert _sqlstate(conflict.value) == "55P03"
+        finally:
+            release.set()
+        future.result(timeout=10)
+
+    monkeypatch.setattr(
+        AuditLogRepository,
+        "create",
+        staticmethod(original_audit),
+    )
+    fail_login()
+
+    with Session(postgresql_engine) as observer:
+        target = observer.get(User, target_id)
+        assert target.failed_login_count == 2
+        assert target.login_locked_until is not None
+        failures = observer.scalars(
+            select(AuditLog).where(
+                AuditLog.entity_id == target_id,
+                AuditLog.event_type == "login_failed",
+            )
+        ).all()
+        assert len(failures) == 2
 
 
 def test_concurrent_amendments_keep_stable_postgresql_sequence(

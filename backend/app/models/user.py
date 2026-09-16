@@ -16,6 +16,10 @@ class User(Base):
             "auth_version >= 0",
             name="ck_users_auth_version_nonnegative",
         ),
+        CheckConstraint(
+            "failed_login_count >= 0",
+            name="ck_users_failed_login_count_nonnegative",
+        ),
     )
 
     id: Mapped[str] = mapped_column(
@@ -60,6 +64,25 @@ class User(Base):
         nullable=False,
         default=0,
         server_default="0",
+    )
+
+    # Persistent account-bound throttle state. It is intentionally stored on
+    # the account so process restarts and multiple workers cannot reset it.
+    failed_login_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    failed_login_window_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    login_locked_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(

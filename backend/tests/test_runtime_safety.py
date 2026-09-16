@@ -32,6 +32,10 @@ def production_settings(**overrides):
     {"SECRET_KEY": "x" * 64}, {"SECRET_KEY": "4bmos-development-secret-change-before-production"},
     {"JWT_ALGORITHM": "none"}, {"ACCESS_TOKEN_EXPIRE_MINUTES": 0},
     {"DATABASE_LOCK_TIMEOUT_MS": 99}, {"DATABASE_LOCK_TIMEOUT_MS": 30001},
+    {"LOGIN_MAX_FAILURES": 1}, {"LOGIN_MAX_FAILURES": 21},
+    {"LOGIN_FAILURE_WINDOW_SECONDS": 59},
+    {"LOGIN_FAILURE_WINDOW_SECONDS": 86401},
+    {"LOGIN_LOCKOUT_SECONDS": 29}, {"LOGIN_LOCKOUT_SECONDS": 86401},
 ])
 def test_production_rejects_unsafe_configuration(override):
     with pytest.raises(ValidationError) as result:
