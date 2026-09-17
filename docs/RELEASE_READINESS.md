@@ -99,6 +99,12 @@ No production patient database was accessed during this work.
   history as one coherent journey. A companion OpenAPI contract check protects
   release-critical paths and operation-ID uniqueness. This adds no migration or
   clinical policy and is not production, UI or clinician acceptance testing.
+- Stage 11 adds a redacted, read-only release preflight shared with the HTTP
+  database-readiness definition. It requires production runtime mode, the exact
+  Alembic head and critical tables, enabled SQLite foreign keys when applicable,
+  and at least one active administrator. It returns only fixed result codes and
+  never prints database URLs, exception messages, credentials, identities or
+  clinical records. It performs no migration, account creation or deployment.
 
 ## Remaining engineering gates
 
@@ -219,6 +225,12 @@ python -m pytest backend/tests -q
 The release-critical cross-module scenario can also be run directly with
 `python -m pytest backend/tests/test_release_acceptance.py -q`; see
 `docs/RELEASE_ACCEPTANCE.md` for its coverage and explicit limitations.
+
+After upgrading the selected release database and completing isolated initial
+administrator setup, run `python -m backend.tools.release_preflight` with the
+reviewed private production environment. A zero exit status is a technical
+prerequisite only. See `docs/RELEASE_PREFLIGHT.md` for ordering, fixed result
+codes and limitations.
 
 The test suite uses disposable databases. Production migrations and deployments
 are separate controlled operations, not part of the test commands.

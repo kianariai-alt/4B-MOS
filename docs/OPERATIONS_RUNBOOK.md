@@ -175,6 +175,20 @@ tables and (for SQLite) FK enforcement. It returns a redacted 503 otherwise.
 The head is `e21f6a9c3b40`; upgrade a disposable copy and inspect the result
 before any production change. Installing code does NOT upgrade the database.
 
+After the selected database is upgraded and an active administrator has been
+created through the reviewed isolated setup, load the private production
+environment and run the read-only preflight before starting new workers:
+
+```sh
+python -m backend.tools.release_preflight
+```
+
+Use `--format json` for machine-readable fixed codes. The command exits zero
+only when production runtime settings, schema readiness and active-administrator
+availability all pass. It never migrates, creates users or prints connection
+errors, identities, credentials or clinical data. Preserve the result in the
+release record; see `docs/RELEASE_PREFLIGHT.md` for limitations.
+
 Drain old workers before upgrades; never mix locked and old unlocked clinical
 writers. For a future production change, record the source revision, application
 commit, maintenance window, verified backup hash and recovery destination.
