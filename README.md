@@ -31,3 +31,8 @@ No production migration or server deployment is performed by the test command.
 The [API release-acceptance gate](docs/RELEASE_ACCEPTANCE.md) exercises one
 synthetic, role-separated journey from registration through finalization,
 append-only amendment review, discharge and audit verification.
+
+Before a controlled deployment, the [release preflight](docs/RELEASE_PREFLIGHT.md)
+provides a redacted, read-only check of production runtime settings, database
+schema readiness and active-administrator availability. It does not deploy or
+migrate anything and is not production authorization.
