@@ -36,3 +36,7 @@ Before a controlled deployment, the [release preflight](docs/RELEASE_PREFLIGHT.m
 provides a redacted, read-only check of production runtime settings, database
 schema readiness and active-administrator availability. It does not deploy or
 migrate anything and is not production authorization.
+
+The root [production container artifact](docs/CONTAINER_RELEASE.md) runs as a
+non-root user and is build/smoke-tested by CI with a read-only root filesystem.
+It remains deployment-provider neutral and never migrates on normal startup.
