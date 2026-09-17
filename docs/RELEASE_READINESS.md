@@ -91,6 +91,14 @@ No production patient database was accessed during this work.
   unrelated logins can progress while same-account counters serialize. SQLite
   necessarily serializes database writers. CI exercises the PostgreSQL behavior;
   intended deployment topology and login load still require validation.
+- Stage 10 adds a public-HTTP API acceptance gate using only synthetic records in
+  the disposable test database. Separate operator, physician, nurse, reviewer
+  and viewer credentials exercise registration, protocol-linked planning,
+  administration traceability, completion checks, immutable finalization,
+  append-only amendment approval, discharge, summaries, timeline and audit
+  history as one coherent journey. A companion OpenAPI contract check protects
+  release-critical paths and operation-ID uniqueness. This adds no migration or
+  clinical policy and is not production, UI or clinician acceptance testing.
 
 ## Remaining engineering gates
 
@@ -161,8 +169,9 @@ vulnerability audit or full transitive dependency lock.
    review authentication/bootstrap exposure, and configure HTTPS, backups,
    restore testing, monitoring and access control. Do not expose development
    defaults.
-5. Product scope: define the first release's mobile-friendly user interface,
-   roles, deployment environment and acceptance scenarios.
+5. Product scope: the backend now has a synthetic API-level acceptance scenario;
+   define and validate the first release's mobile-friendly user interface,
+   deployment environment and human acceptance scenarios.
 
 ## Migration cautions
 
@@ -206,6 +215,10 @@ Run from the repository root in an isolated environment:
 python -m pip install -r backend/requirements.txt -r backend/requirements-dev.txt
 python -m pytest backend/tests -q
 ```
+
+The release-critical cross-module scenario can also be run directly with
+`python -m pytest backend/tests/test_release_acceptance.py -q`; see
+`docs/RELEASE_ACCEPTANCE.md` for its coverage and explicit limitations.
 
 The test suite uses disposable databases. Production migrations and deployments
 are separate controlled operations, not part of the test commands.
