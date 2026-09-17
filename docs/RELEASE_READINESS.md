@@ -105,6 +105,13 @@ No production patient database was accessed during this work.
   and at least one active administrator. It returns only fixed result codes and
   never prints database URLs, exception messages, credentials, identities or
   clinical records. It performs no migration, account creation or deployment.
+- Stage 12 adds a minimal backend container image with runtime-only dependencies,
+  a numeric non-root user and a readiness health check. CI migrates a disposable
+  SQLite volume, starts the image in production mode with all capabilities
+  dropped, `no-new-privileges` and a read-only root filesystem, then verifies
+  health/readiness and disabled production docs. Normal image startup never runs
+  migrations. This creates an artifact and smoke gate, not a hosted deployment,
+  registry attestation, vulnerability certification or infrastructure approval.
 
 ## Remaining engineering gates
 
@@ -239,7 +246,9 @@ Pull requests into `main` and pushes to `main` also run the read-only `Backend
 CI` workflow on Python 3.12 and 3.14. The SQLite matrix compiles the backend,
 upgrades a fresh database, runs `alembic check`, and executes the complete suite.
 A second matrix upgrades a fresh PostgreSQL 18 database and runs the dedicated
-PostgreSQL integration tests. The stable `Backend CI` summary succeeds only when
-all four matrix jobs succeed and is the status check intended for branch
-protection. The workflow receives no repository secrets, has only `contents:
-read` permission, and never targets production data.
+PostgreSQL integration tests. A container job also builds and starts the release
+image against a disposable migrated database under the hardened runtime contract.
+The stable `Backend CI` summary succeeds only when all four matrix jobs and the
+container smoke succeed and is the status check intended for branch protection.
+The workflow receives no repository secrets, has only `contents: read`
+permission, and never targets production data.

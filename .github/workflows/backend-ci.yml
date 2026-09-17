@@ -140,12 +140,104 @@ jobs:
       - name: Run PostgreSQL integration tests
         run: python -m pytest backend/tests/test_postgresql_integration.py -q
 
+  container-smoke:
+    name: Production container smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      IMAGE_NAME: 4b-mos-backend:ci
+      CONTAINER_NAME: 4b-mos-api-${{ github.run_id }}-${{ github.run_attempt }}
+      VOLUME_NAME: 4b-mos-data-${{ github.run_id }}-${{ github.run_attempt }}
+      CONTAINER_DATABASE_URL: sqlite:////data/4bmos.db
+      CONTAINER_SECRET_KEY: 4B-MOS-container-CI-only-key-20260917-ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Build production image
+        run: docker build --pull --tag "$IMAGE_NAME" .
+
+      - name: Migrate disposable container database
+        run: |
+          docker volume create "$VOLUME_NAME"
+          docker run --rm \
+            --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --mount "type=volume,source=$VOLUME_NAME,target=/data" \
+            --env ENVIRONMENT=production \
+            --env DEBUG=false \
+            --env BOOTSTRAP_ENABLED=false \
+            --env "SECRET_KEY=$CONTAINER_SECRET_KEY" \
+            --env "DATABASE_URL=$CONTAINER_DATABASE_URL" \
+            "$IMAGE_NAME" \
+            python -m alembic upgrade head
+
+      - name: Start hardened disposable container
+        run: |
+          docker run --detach \
+            --name "$CONTAINER_NAME" \
+            --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            --mount "type=volume,source=$VOLUME_NAME,target=/data" \
+            --publish 127.0.0.1:18000:8000 \
+            --env ENVIRONMENT=production \
+            --env DEBUG=false \
+            --env BOOTSTRAP_ENABLED=false \
+            --env "SECRET_KEY=$CONTAINER_SECRET_KEY" \
+            --env "DATABASE_URL=$CONTAINER_DATABASE_URL" \
+            "$IMAGE_NAME"
+
+      - name: Verify runtime contract
+        run: |
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent \
+              http://127.0.0.1:18000/api/v1/health/ready \
+              > /tmp/4bmos-ready.json; then
+              ready=true
+              break
+            fi
+            if [ "$(docker inspect --format '{{.State.Running}}' "$CONTAINER_NAME")" != "true" ]; then
+              docker logs "$CONTAINER_NAME"
+              exit 1
+            fi
+            sleep 1
+          done
+          test "$ready" = "true"
+          test "$(cat /tmp/4bmos-ready.json)" = '{"status":"ready"}'
+          curl --fail --silent http://127.0.0.1:18000/api/v1/health > /dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            http://127.0.0.1:18000/docs)" = "404"
+          test "$(docker exec "$CONTAINER_NAME" id -u)" = "10001"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' \
+            "$CONTAINER_NAME")" = "true"
+          if docker exec "$CONTAINER_NAME" touch /must-not-write 2>/dev/null; then
+            echo "Container root filesystem unexpectedly accepted a write." >&2
+            exit 1
+          fi
+
+      - name: Show container logs after failure
+        if: ${{ failure() }}
+        run: docker logs "$CONTAINER_NAME" || true
+
+      - name: Remove disposable container resources
+        if: ${{ always() }}
+        run: |
+          docker rm --force "$CONTAINER_NAME" 2>/dev/null || true
+          docker volume rm --force "$VOLUME_NAME" 2>/dev/null || true
+
   backend-ci:
     name: Backend CI
     if: ${{ always() }}
     needs:
       - backend-tests
       - postgresql-tests
+      - container-smoke
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
@@ -153,6 +245,8 @@ jobs:
         env:
           BACKEND_TEST_RESULT: ${{ needs.backend-tests.result }}
           POSTGRESQL_TEST_RESULT: ${{ needs.postgresql-tests.result }}
+          CONTAINER_SMOKE_RESULT: ${{ needs.container-smoke.result }}
         run: |
           test "$BACKEND_TEST_RESULT" = "success"
           test "$POSTGRESQL_TEST_RESULT" = "success"
+          test "$CONTAINER_SMOKE_RESULT" = "success"

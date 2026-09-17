@@ -189,6 +189,15 @@ availability all pass. It never migrates, creates users or prints connection
 errors, identities, credentials or clinical data. Preserve the result in the
 release record; see `docs/RELEASE_PREFLIGHT.md` for limitations.
 
+The root `Dockerfile` is the deployment-neutral backend artifact exercised by
+CI. It runs as UID/GID `10001`, includes no test suite or development dependency,
+and does not run migrations during API startup. Build an immutable release from
+the reviewed commit, pin the approved official base-image digest, perform the
+one-shot migration while old workers remain drained, run the preflight, and
+only then start the new API workers. See `docs/CONTAINER_RELEASE.md` for the
+runtime contract and example ordering. A green container smoke test does not
+configure TLS, secrets, backups, a registry or a production host.
+
 Drain old workers before upgrades; never mix locked and old unlocked clinical
 writers. For a future production change, record the source revision, application
 commit, maintenance window, verified backup hash and recovery destination.
