@@ -118,6 +118,14 @@ No production patient database was accessed during this work.
   restrictive browser headers are applied. CI validates JavaScript syntax and
   loads the console from the hardened container. This adds no clinical policy,
   migration, offline data store, patient portal, deployment or human acceptance.
+- Stage 14 adds migration `f4b14c2d9a01` and a source-linked, versioned medical
+  knowledge registry. Admins and physicians may author drafts; a different active
+  admin or physician must approve or reject them. Approved replacements retire
+  the previous approved version atomically. All reads verify a canonical SHA-256,
+  and lifecycle events are audited. The consumer endpoint exposes only approved,
+  currently valid facts. SHA-256 is integrity detection, not a signature. No
+  publications are bundled, no patient data is converted into knowledge, and no
+  recommendation or autonomous-learning engine is claimed.
 
 ## Remaining engineering gates
 
@@ -195,13 +203,13 @@ vulnerability audit or full transitive dependency lock.
 
 ## Migration cautions
 
-The new head is `e21f6a9c3b40`, following `d9a4c7e2f1b6`. It adds three
-login-throttle columns to `users`; existing accounts start with a zero counter
-and no lock. The preceding migration adds empty `session_amendments` and
-`session_amendment_reviews` tables without reconstructing historical records.
-Existing clinical records are untouched. Drain old workers, upgrade the
-database, then deploy only new code. A mixed-version fleet is unsafe because old
-workers ignore the new lock state.
+The new head is `f4b14c2d9a01`, following `e21f6a9c3b40`. It adds empty
+`medical_knowledge_facts` and `medical_knowledge_sources` tables; no medical
+claims are seeded and existing clinical records are untouched. The preceding
+migrations add persistent login-throttle state and empty amendment history
+tables. Drain old workers, upgrade the database, then deploy only new code. A
+mixed-version fleet is unsafe because old workers neither enforce the registry
+workflow nor expect the new schema revision.
 A mixed-version fleet is unsafe: new code rejects old tokens and old code neither
 mints nor enforces the version claim.
 Back up and rehearse on a disposable copy before any production upgrade.
@@ -226,6 +234,11 @@ The login-throttle downgrade refuses while any account has a failure counter,
 window or lock timestamp, and refuses offline downgrade because that state cannot
 be checked. Do not clear security state merely to force a downgrade; use the
 reviewed password-reset/recovery path and a controlled deployment plan.
+
+The medical-knowledge downgrade refuses if any fact or source exists and refuses
+offline downgrade because registry contents cannot be checked. Never delete or
+rewrite reviewed knowledge merely to force a rollback; restore the reviewed
+release/database pair through the controlled recovery process.
 
 ## Developer verification
 

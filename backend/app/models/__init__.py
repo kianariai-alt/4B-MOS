@@ -27,6 +27,10 @@ from backend.app.models.visit import Visit
 from backend.app.models.treatment_session_component import (
     TreatmentSessionComponent,
 )
+from backend.app.models.medical_knowledge import (
+    MedicalKnowledgeFact,
+    MedicalKnowledgeSource,
+)
 
 __all__ = [
     "SessionFinalization",
@@ -42,4 +46,6 @@ __all__ = [
     "User",
     "Visit",
     "TreatmentSessionComponent",
+    "MedicalKnowledgeFact",
+    "MedicalKnowledgeSource",
 ]
