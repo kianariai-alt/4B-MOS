@@ -198,6 +198,12 @@ only then start the new API workers. See `docs/CONTAINER_RELEASE.md` for the
 runtime contract and example ordering. A green container smoke test does not
 configure TLS, secrets, backups, a registry or a production host.
 
+The same release serves the staff clinical console from `/app/`; see
+`docs/CLINICAL_CONSOLE.md`. It uses memory-only bearer tokens, so a reload or
+browser close intentionally requires a new login. Do not place it behind an
+HTTP endpoint or a proxy that caches authenticated API responses. Before staff
+use, rehearse the supported browsers and roles with synthetic staging records.
+
 Drain old workers before upgrades; never mix locked and old unlocked clinical
 writers. For a future production change, record the source revision, application
 commit, maintenance window, verified backup hash and recovery destination.
@@ -260,7 +266,9 @@ plan; old workers do not enforce the new account locks.
   notifications, escalation or a stricter retention policy is required.
 - Clinical policy: expiry-date boundary/timezone; absent-administration outcomes;
   deviation acknowledgment and override authority. Existing rules are unchanged.
-- Product: mobile clinical UI, deployment host, access boundaries and data retention.
+- Product: the live-flow console is only the first mobile clinical UI slice;
+  broader clinical data-entry screens, deployment host, access boundaries,
+  workstation policy and data retention remain decisions.
 
 These do not block delivery of the tested technical package, but do block calling
 the whole product production-ready. Installing the migration does not constitute

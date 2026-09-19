@@ -80,6 +80,7 @@ Every pull request builds the image, migrates a fresh disposable SQLite volume,
 starts the API in production mode and verifies:
 
 - readiness and liveness responses;
+- the packaged `/app/` clinical console and its no-store asset policy;
 - production documentation is disabled;
 - runtime UID is `10001`;
 - the root filesystem is read-only; and
@@ -93,5 +94,6 @@ database contain no production or patient data.
 
 The smoke gate is not registry signing, SBOM generation, CVE review, penetration
 testing, load/failover validation, TLS or proxy validation, encrypted backup
-validation, monitoring/alerting, managed PostgreSQL certification or a hosting
-approval. Those require separate controls for the selected environment.
+validation, monitoring/alerting, browser penetration testing, managed PostgreSQL
+certification or a hosting approval. Those require separate controls for the
+selected environment.

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#071a2e">
+    <meta
+      name="description"
+      content="کنسول عملیاتی امن و زندهٔ کلینیک 4B"
+    >
+    <title>4B-MOS | جریان زنده کلینیک</title>
+    <link rel="stylesheet" href="/app/app.css">
+    <script src="/app/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
+
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="/app/" aria-label="صفحه اصلی 4B-MOS">
+        <span class="brand-mark" aria-hidden="true">4B</span>
+        <span>
+          <strong>4B-MOS</strong>
+          <small>Clinical Operations</small>
+        </span>
+      </a>
+
+      <div id="identity-area" class="identity" hidden>
+        <div class="identity-copy">
+          <strong id="user-display-name"></strong>
+          <span id="user-role"></span>
+        </div>
+        <button id="logout-button" class="button button-quiet" type="button">
+          خروج امن
+        </button>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section id="login-view" class="login-layout" aria-labelledby="login-title">
+        <div class="login-intro">
+          <p class="eyebrow">جریان کار دقیق، ایمن و قابل پیگیری</p>
+          <h1 id="login-title">مرکز فرمان روزانه کلینیک 4B</h1>
+          <p>
+            وضعیت مراجعان امروز را ببینید و فقط اقدامات مجاز هر مرحله را
+            مستقیماً از همان پرونده اجرا کنید.
+          </p>
+          <div class="trust-row" aria-label="ویژگی‌های امنیتی">
+            <span>دسترسی نقش‌محور</span>
+            <span>بدون ذخیرهٔ توکن</span>
+            <span>ثبت رویداد در backend</span>
+          </div>
+        </div>
+
+        <form id="login-form" class="login-card" novalidate>
+          <div>
+            <p class="card-kicker">ورود کارکنان</p>
+            <h2>خوش آمدید</h2>
+            <p class="muted">از حساب سازمانی فعال خود استفاده کنید.</p>
+          </div>
+
+          <label for="username">نام کاربری</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            minlength="3"
+            maxlength="100"
+            required
+          >
+
+          <label for="password">گذرواژه</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            maxlength="128"
+            required
+          >
+
+          <button id="login-button" class="button button-primary" type="submit">
+            ورود به کنسول
+          </button>
+
+          <p id="login-message" class="form-message" role="alert" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="console-view" class="console" aria-labelledby="console-title" hidden>
+        <div class="console-heading">
+          <div>
+            <p class="eyebrow">نمای عملیاتی امروز</p>
+            <h1 id="console-title">جریان زنده کلینیک</h1>
+            <p id="generated-at" class="muted"></p>
+          </div>
+          <div class="console-controls">
+            <span id="connection-state" class="connection-state">متصل</span>
+            <button id="refresh-button" class="button button-secondary" type="button">
+              تازه‌سازی
+            </button>
+          </div>
+        </div>
+
+        <div id="console-message" class="notice" role="status" aria-live="polite" hidden></div>
+
+        <section class="metrics" aria-label="آمار جریان کلینیک">
+          <article class="metric metric-wide">
+            <span>فعال</span>
+            <strong id="metric-active">۰</strong>
+          </article>
+          <article class="metric">
+            <span>پذیرش‌شده</span>
+            <strong id="metric-checked-in">۰</strong>
+          </article>
+          <article class="metric">
+            <span>آماده</span>
+            <strong id="metric-ready">۰</strong>
+          </article>
+          <article class="metric">
+            <span>درمان</span>
+            <strong id="metric-treatment">۰</strong>
+          </article>
+          <article class="metric metric-alert">
+            <span>نیازمند توجه</span>
+            <strong id="metric-attention">۰</strong>
+          </article>
+        </section>
+
+        <section id="flow-board" class="flow-board" aria-label="مراحل جریان کلینیک"></section>
+      </section>
+    </main>
+
+    <dialog id="action-dialog" class="action-dialog" aria-labelledby="dialog-title">
+      <form method="dialog">
+        <p class="card-kicker">تأیید اقدام</p>
+        <h2 id="dialog-title">تغییر وضعیت جلسه</h2>
+        <p id="dialog-copy"></p>
+        <div class="dialog-actions">
+          <button id="dialog-cancel" class="button button-quiet" value="cancel">
+            انصراف
+          </button>
+          <button id="dialog-confirm" class="button button-primary" value="confirm">
+            تأیید و ثبت
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <noscript>
+      <div class="noscript-message">
+        برای استفاده از کنسول عملیاتی، JavaScript مرورگر باید فعال باشد.
+      </div>
+    </noscript>
+  </body>
+</html>

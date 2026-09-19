@@ -40,3 +40,9 @@ migrate anything and is not production authorization.
 The root [production container artifact](docs/CONTAINER_RELEASE.md) runs as a
 non-root user and is build/smoke-tested by CI with a read-only root filesystem.
 It remains deployment-provider neutral and never migrates on normal startup.
+
+The first [mobile-friendly clinical operations console](docs/CLINICAL_CONSOLE.md)
+is available at `/app/`. It uses the existing role-protected live-flow and
+workflow APIs, keeps its bearer token in memory only and adds no offline patient
+data store. It is a staff workflow foundation, not completed clinician or
+production acceptance.

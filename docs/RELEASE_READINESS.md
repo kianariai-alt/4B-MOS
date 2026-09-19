@@ -112,6 +112,12 @@ No production patient database was accessed during this work.
   health/readiness and disabled production docs. Normal image startup never runs
   migrations. This creates an artifact and smoke gate, not a hosted deployment,
   registry attestation, vulnerability certification or infrastructure approval.
+- Stage 13 adds a Persian, mobile-friendly staff console at `/app/` for the
+  existing login, live-flow projection and backend-authorized workflow actions.
+  Access tokens remain memory-only, assets are same-origin and non-cacheable, and
+  restrictive browser headers are applied. CI validates JavaScript syntax and
+  loads the console from the hardened container. This adds no clinical policy,
+  migration, offline data store, patient portal, deployment or human acceptance.
 
 ## Remaining engineering gates
 
@@ -182,9 +188,10 @@ vulnerability audit or full transitive dependency lock.
    review authentication/bootstrap exposure, and configure HTTPS, backups,
    restore testing, monitoring and access control. Do not expose development
    defaults.
-5. Product scope: the backend now has a synthetic API-level acceptance scenario;
-   define and validate the first release's mobile-friendly user interface,
-   deployment environment and human acceptance scenarios.
+5. Product scope: the backend now has a synthetic API-level acceptance scenario
+   and a first mobile-friendly staff console for live clinic flow. Patient setup,
+   clinical documentation and administration entry still require API use; define
+   the broader UI, deployment environment and human acceptance scenarios.
 
 ## Migration cautions
 
