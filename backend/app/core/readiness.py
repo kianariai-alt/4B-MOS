@@ -30,6 +30,7 @@ REQUIRED_DATABASE_TABLES = frozenset(
         "clinical_safety_rule_knowledge",
         "clinical_safety_evaluations",
         "clinical_safety_findings",
+        "clinical_safety_finding_reviews",
     }
 )
 

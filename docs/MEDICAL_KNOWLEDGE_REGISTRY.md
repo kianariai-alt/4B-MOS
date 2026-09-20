@@ -63,7 +63,7 @@ not a computed appraisal: `high`, `moderate`, `low`, `very_low`, `consensus`, or
    recovery procedure.
 2. Rehearse `alembic upgrade head` on a disposable restored copy. The registry
    revision is `f4b14c2d9a01`; the current application head after the structured
-   clinical-context and safety-rule stages is `c92e4b7a1d30`.
+   clinical-context, safety-rule and review-workflow stages is `d51e7a9b2c64`.
 3. Deploy only the matching application build and run the read-only preflight.
 4. Create content with synthetic/staging data first; verify author/reviewer
    separation, approved filtering, superseding and audit history.

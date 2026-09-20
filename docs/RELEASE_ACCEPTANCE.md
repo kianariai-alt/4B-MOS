@@ -32,7 +32,9 @@ verifies one coherent clinic journey with separate role credentials:
 
 The suite also verifies that release-critical OpenAPI paths remain present and
 that every generated operation ID is unique. This catches accidental router
-omission and operation-name collisions before an API client is generated.
+omission and operation-name collisions before an API client is generated. The
+finding-review create/read endpoints are included in that contract check; the
+journey has no seeded rule and therefore deliberately creates no review event.
 
 ## Run the gate
 
@@ -60,6 +62,9 @@ the database-specific locking and concurrency paths.
   data.
 - It validates the empty-rule safety boundary but does not seed, clinically
   approve or validate a real safety rule or treatment policy.
+- It validates finding-review route availability but cannot exercise a review
+  without fabricating a clinically approved rule; focused synthetic tests cover
+  its state machine, roles, hashes, tamper detection and audit minimization.
 - It does not test browser/mobile presentation, accessibility, device support,
   notification delivery, external identity providers or deployment topology.
 - It is not a load, failover, penetration, backup-restore or managed-database

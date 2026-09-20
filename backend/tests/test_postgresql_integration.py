@@ -29,7 +29,13 @@ from backend.app.db.base import Base
 from backend.app.db.session import engine as application_engine
 from backend.app.db.transactions import ClinicalWriteConflictError, atomic_write
 from backend.app.models.audit_log import AuditLog
-from backend.app.models.clinical_safety import ClinicalSafetyEvaluation
+from backend.app.models.clinical_safety import (
+    ClinicalSafetyEvaluation,
+    ClinicalSafetyRule,
+)
+from backend.app.models.clinical_safety_review import (
+    ClinicalSafetyFindingReview,
+)
 from backend.app.models.clinical_context import ClinicalIntake
 from backend.app.models.patient import Patient
 from backend.app.models.session_amendment import SessionAmendment
@@ -38,10 +44,16 @@ from backend.app.models.treatment_session import TreatmentSession
 from backend.app.models.user import User
 from backend.app.models.visit import Visit
 from backend.app.repositories.audit_log import AuditLogRepository
+from backend.app.repositories.clinical_safety import (
+    ClinicalSafetyEvaluationRepository,
+)
 from backend.app.repositories.user import UserRepository
 from backend.app.schemas.session_amendment import SessionAmendmentCreate
 from backend.app.schemas.clinical_context import ClinicalIntakeCreate
 from backend.app.schemas.clinical_safety import SafetyEvaluationRequest
+from backend.app.schemas.clinical_safety_review import (
+    SafetyFindingReviewCreate,
+)
 from backend.app.schemas.treatment_session import TreatmentSessionUpdate
 from backend.app.schemas.user import UserCreate, UserUpdate
 from backend.app.services.auth import (
@@ -50,7 +62,13 @@ from backend.app.services.auth import (
     InvalidCredentialsError,
 )
 from backend.app.services.clinical_context import ClinicalContextService
-from backend.app.services.clinical_safety import ClinicalSafetyEvaluationService
+from backend.app.services.clinical_safety import (
+    ClinicalSafetyEvaluationService,
+    safety_result_digest,
+)
+from backend.app.services.clinical_safety_review import (
+    ClinicalSafetyFindingReviewService,
+)
 from backend.app.services.session_amendment import SessionAmendmentService
 from backend.app.services.session_workflow import SessionWorkflowService
 from backend.app.services.treatment_session import TreatmentSessionService
@@ -686,3 +704,144 @@ def test_safety_evaluations_share_the_postgresql_visit_lock(
         ).all()
         assert len(evaluations) == 1
         assert evaluations[0].outcome == "no_active_rules"
+
+
+def test_safety_finding_reviews_share_the_postgresql_visit_lock(
+    postgresql_engine,
+    monkeypatch,
+):
+    context = _seed_clinical_context(postgresql_engine, treatment_count=1)
+    visit_id = context["visit_id"]
+    physician_id = _id()
+    rule_id = _id()
+    evaluation_id = _id()
+    context_sha256 = "1" * 64
+    rule_set_sha256 = "2" * 64
+    rule_content_sha256 = "3" * 64
+    finding_payload = {
+        "rule_id": rule_id,
+        "rule_key": "PG-REVIEW-LOCK",
+        "rule_version": 1,
+        "rule_content_sha256": rule_content_sha256,
+        "title": "Synthetic PostgreSQL review-lock finding",
+        "severity": "warning",
+        "action": "review_before_proceeding",
+        "message": "Synthetic finding for PostgreSQL locking only.",
+        "knowledge_fact_ids": [],
+        "condition_trace": [],
+    }
+    result_sha256 = safety_result_digest(
+        evaluation_id=evaluation_id,
+        visit_id=visit_id,
+        intake_id=None,
+        report_ids=[],
+        outcome="alerts_present",
+        evaluated_rule_count=1,
+        triggered_count=1,
+        highest_severity="warning",
+        clinical_context_sha256=context_sha256,
+        rule_set_sha256=rule_set_sha256,
+        evaluated_by_user_id=physician_id,
+        findings=[finding_payload],
+    )
+    with Session(postgresql_engine) as db:
+        db.add(
+            User(
+                id=physician_id,
+                username="postgres_review_physician",
+                display_name="PostgreSQL Review Physician",
+                password_hash="integration-test-password-hash-not-for-login",
+                role="physician",
+            )
+        )
+        db.add(
+            ClinicalSafetyRule(
+                id=rule_id,
+                rule_key="PG-REVIEW-LOCK",
+                version=1,
+                title="Synthetic PostgreSQL review-lock rule",
+                description=(
+                    "Synthetic rule used only to verify PostgreSQL visit locking."
+                ),
+                clinical_domain="integration testing",
+                severity="warning",
+                action="review_before_proceeding",
+                message="Synthetic finding for PostgreSQL locking only.",
+                predicate={"combinator": "all", "conditions": []},
+                status="draft",
+                content_sha256=rule_content_sha256,
+                created_by_user_id=physician_id,
+            )
+        )
+        db.flush()
+        evaluation = ClinicalSafetyEvaluationRepository.create(
+            db,
+            evaluation_id=evaluation_id,
+            visit_id=visit_id,
+            intake_id=None,
+            report_ids=[],
+            engine_version="1.0",
+            outcome="alerts_present",
+            evaluated_rule_count=1,
+            triggered_count=1,
+            highest_severity="warning",
+            clinical_context_sha256=context_sha256,
+            rule_set_sha256=rule_set_sha256,
+            result_sha256=result_sha256,
+            evaluated_by_user_id=physician_id,
+            findings=[finding_payload],
+        )
+        finding_id = evaluation.findings[0].id
+        db.commit()
+
+    entered = Event()
+    release = Event()
+    original_audit = AuditLogRepository.create
+
+    def pause_review_audit(*args, **kwargs):
+        result = original_audit(*args, **kwargs)
+        if kwargs.get("event_type") == "clinical_safety_finding_acknowledged":
+            entered.set()
+            assert release.wait(10), "test failed to release safety finding review"
+        return result
+
+    monkeypatch.setattr(
+        AuditLogRepository,
+        "create",
+        staticmethod(pause_review_audit),
+    )
+    payload = SafetyFindingReviewCreate(
+        action="acknowledged",
+        expected_evaluation_result_sha256=result_sha256,
+    )
+
+    def acknowledge() -> None:
+        with Session(postgresql_engine) as db:
+            ClinicalSafetyFindingReviewService.create(
+                db,
+                visit_id,
+                finding_id,
+                payload,
+                actor=db.get(User, physician_id),
+            )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(acknowledge)
+        try:
+            assert entered.wait(10), "finding review did not reach audit"
+            with pytest.raises(ClinicalRecordWriteConflictError) as conflict:
+                acknowledge()
+            assert _sqlstate(conflict.value) == "55P03"
+        finally:
+            release.set()
+        future.result(timeout=10)
+
+    with Session(postgresql_engine) as observer:
+        reviews = observer.scalars(
+            select(ClinicalSafetyFindingReview).where(
+                ClinicalSafetyFindingReview.finding_id == finding_id
+            )
+        ).all()
+        assert len(reviews) == 1
+        assert reviews[0].sequence == 1
+        assert reviews[0].action == "acknowledged"

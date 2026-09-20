@@ -80,6 +80,11 @@ against the governed evidence.
 | Read evaluations | admin, physician, nurse |
 | Read rule/evaluation audit history | admin, physician, nurse |
 
+Finding acknowledgment, escalation and physician assessment are implemented by
+the separate append-only workflow in
+`docs/CLINICAL_SAFETY_REVIEW_WORKFLOW.md`. Those events never change an
+evaluation result.
+
 ## API
 
 All paths are below `/api/v1` and require authentication.
@@ -111,9 +116,11 @@ Visit-scoped evaluation writes share the existing parent-row locking protocol.
 1. Obtain documented clinical ownership for rule content, severity, action,
    wording, evidence, validity windows, review cadence and retirement criteria.
 2. Drain old workers, create a verified backup and rehearse the upgrade on a
-   disposable restored copy. The expected Alembic head is `c92e4b7a1d30`.
-3. Inspect the four new empty tables and run release preflight. Deploy only the
-   matching application build; never run a mixed-version fleet.
+   disposable restored copy. The engine revision is `c92e4b7a1d30`; the current
+   application head after the review-workflow stage is `d51e7a9b2c64`.
+3. Inspect the four engine tables and the empty finding-review table, then run
+   release preflight. Deploy only the matching application build; never run a
+   mixed-version fleet.
 4. In staging, create rules from reviewed synthetic evidence and verify author /
    reviewer separation, unit mismatch behavior, missing data, supersession,
    expiry/retirement failure and append-only audit history.
@@ -127,7 +134,8 @@ reviewed application/database pair through the controlled recovery process.
 ## Explicitly deferred
 
 - clinician-facing recommendation generation or treatment ranking;
-- override/acknowledgment workflow, escalation delivery and alert-fatigue policy;
+- override authority, escalation delivery and alert-fatigue policy (append-only
+  acknowledgment/escalation recording is implemented separately);
 - terminology-server validation, unit conversion and FHIR import/export;
 - continuous publication ingestion or automatic rule creation;
 - learning from patient outcomes, model training or autonomous knowledge updates;

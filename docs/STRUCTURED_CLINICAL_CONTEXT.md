@@ -119,7 +119,7 @@ ambiguity around clinically meaningful empty lists and nullable fields.
 1. Drain all older workers and make a verified backup using the existing
    recovery procedure.
 2. Rehearse the migration on a disposable restored copy. The expected Alembic
-   head after the safety-rule stage is `c92e4b7a1d30`.
+   head after the safety-rule and review-workflow stages is `d51e7a9b2c64`.
 3. Inspect the three new empty tables: `clinical_intakes`,
    `paraclinical_reports` and `paraclinical_observations`; existing visits are
    not backfilled or inferred.
