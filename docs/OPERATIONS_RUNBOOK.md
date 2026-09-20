@@ -168,6 +168,14 @@ are new versions with a required reason, and the current-context endpoint expose
 only current final versions. Patient content is never copied to the medical
 knowledge registry. This stage records inputs only and makes no recommendation.
 
+Stage 16 requires Stage 15 and migration `c92e4b7a1d30`. It adds the governed,
+deterministic engine described in `docs/CLINICAL_SAFETY_RULE_ENGINE.md`.
+Production rules must link to approved current knowledge and pass independent
+review. Evaluations use only current final context and store append-only hashes,
+citations and condition traces. They may flag a configured need for clinician
+review; they never diagnose, prescribe or clear a patient. Do not create or
+approve production rules without named clinical governance ownership.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into
@@ -192,7 +200,7 @@ it is not a general query timeout and does not make direct SQL concurrency-safe.
 `GET /api/v1/health` reports process liveness only.
 `GET /api/v1/health/ready` reports 200 only with the expected revision, critical
 tables and (for SQLite) FK enforcement. It returns a redacted 503 otherwise.
-The head is `a8c15d3e7b02`; upgrade a disposable copy and inspect the result
+The head is `c92e4b7a1d30`; upgrade a disposable copy and inspect the result
 before any production change. Installing code does NOT upgrade the database.
 
 After the selected database is upgraded and an active administrator has been
@@ -280,15 +288,22 @@ offline downgrade. Do not erase that state to force old authentication code back
 into service. A rollback requires a reviewed maintenance window and recovery
 plan; old workers do not enforce the new account locks.
 
+The Stage 16 downgrade refuses if any governed rule, evidence link, evaluation
+or finding exists and refuses offline downgrade. Do not erase clinical-safety
+history to force older code onto the database. Restore the reviewed release and
+database pair, then reconcile through an approved clinical recovery process.
+
 ## Deferred decisions, not silently enabled features
 
 - Amendments: whether an independent legal/clinical signature, external timestamp,
   notifications, escalation or a stricter retention policy is required.
 - Clinical policy: expiry-date boundary/timezone; absent-administration outcomes;
-  deviation acknowledgment and override authority. Existing rules are unchanged.
+  safety-alert acknowledgment, escalation and override authority. Existing
+  treatment workflow rules are unchanged.
 - Product: the live-flow console is only the first mobile clinical UI slice;
-  broader clinical data-entry screens, deployment host, access boundaries,
-  workstation policy and data retention remain decisions.
+  governed safety rules are API-only, and broader clinical data-entry/advice
+  screens, deployment host, access boundaries, workstation policy and data
+  retention remain decisions.
 
 These do not block delivery of the tested technical package, but do block calling
 the whole product production-ready. Installing the migration does not constitute

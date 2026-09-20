@@ -15,17 +15,19 @@ verifies one coherent clinic journey with separate role credentials:
 3. The operator records a structured intake, a nurse records a typed synthetic
    paraclinical result, a physician finalizes both, and a viewer reads only the
    resulting current final context.
-4. A physician creates a protocol-linked treatment and planned component.
-5. The operator, nurse and physician advance the session through check-in,
+4. A physician records an append-only safety evaluation with no seeded rules;
+   its `no_active_rules` outcome explicitly remains non-clearance.
+5. A physician creates a protocol-linked treatment and planned component.
+6. The operator, nurse and physician advance the session through check-in,
    readiness and active treatment.
-6. The nurse records a plan-linked administration with lot and expiry data.
-7. A viewer reads variance, clinical summary and completion readiness.
-8. The nurse completes the session and the API captures versioned finalization
+7. The nurse records a plan-linked administration with lot and expiry data.
+8. A viewer reads variance, clinical summary and completion readiness.
+9. The nurse completes the session and the API captures versioned finalization
    evidence with a valid SHA-256 integrity checksum.
-9. Direct edits and late administration writes are refused after completion.
-10. The nurse adds an append-only supplement and a different physician approves
+10. Direct edits and late administration writes are refused after completion.
+11. The nurse adds an append-only supplement and a different physician approves
    it without changing the original finalization evidence.
-11. Discharge, patient summary, timeline and session audit history remain
+12. Discharge, patient summary, timeline and session audit history remain
     mutually coherent.
 
 The suite also verifies that release-critical OpenAPI paths remain present and
@@ -56,8 +58,8 @@ the database-specific locking and concurrency paths.
 
 - The journey does not use or connect to production or identifiable patient
   data.
-- It validates the existing clinical rules; it does not introduce or approve
-  new treatment policy.
+- It validates the empty-rule safety boundary but does not seed, clinically
+  approve or validate a real safety rule or treatment policy.
 - It does not test browser/mobile presentation, accessibility, device support,
   notification delivery, external identity providers or deployment topology.
 - It is not a load, failover, penetration, backup-restore or managed-database

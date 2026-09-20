@@ -170,8 +170,19 @@ class MedicalKnowledgeService:
         return KnowledgeFactRead.model_validate(fact)
 
     @staticmethod
-    def _reload(db: Session, fact_id: str) -> MedicalKnowledgeFact:
-        fact = MedicalKnowledgeRepository.get_by_id(db, fact_id)
+    def _reload(
+        db: Session,
+        fact_id: str,
+        *,
+        for_update: bool = False,
+        for_share: bool = False,
+    ) -> MedicalKnowledgeFact:
+        fact = MedicalKnowledgeRepository.get_by_id(
+            db,
+            fact_id,
+            for_update=for_update,
+            for_share=for_share,
+        )
         if fact is None:
             raise MedicalKnowledgeNotFoundError(
                 f"Medical knowledge fact '{fact_id}' was not found."
@@ -266,9 +277,20 @@ class MedicalKnowledgeService:
         )
 
     @staticmethod
-    def get(db: Session, fact_id: str) -> KnowledgeFactRead:
+    def get(
+        db: Session,
+        fact_id: str,
+        *,
+        for_update: bool = False,
+        for_share: bool = False,
+    ) -> KnowledgeFactRead:
         return MedicalKnowledgeService._to_read(
-            MedicalKnowledgeService._reload(db, fact_id)
+            MedicalKnowledgeService._reload(
+                db,
+                fact_id,
+                for_update=for_update,
+                for_share=for_share,
+            )
         )
 
     @staticmethod

@@ -58,3 +58,9 @@ versioned initial intake and typed paraclinical observations. Final records are
 immutable through the API; corrections are linked replacement versions. Patient
 records never become general medical knowledge automatically, and this stage
 still produces no diagnostic or treatment recommendation.
+
+The [clinical safety rule engine](docs/CLINICAL_SAFETY_RULE_ENGINE.md) evaluates
+only approved, source-linked rules against that current final context and stores
+append-only, explainable snapshots. It can flag configured conditions for
+physician review; `no_alerts` is never clearance, and the engine does not
+diagnose, prescribe, rank treatments, or learn automatically from patient data.

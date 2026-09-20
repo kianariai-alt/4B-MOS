@@ -136,6 +136,15 @@ No production patient database was accessed during this work.
   duplicating clinical text or values. The format is FHIR-inspired but not
   FHIR-conformant; submitted terminology and UCUM-style units are not validated
   by a terminology server. No recommendation or autonomous learning is added.
+- Stage 16 adds migration `c92e4b7a1d30`, governed versioned clinical-safety
+  rules linked to approved current medical-knowledge facts, and append-only visit
+  evaluation snapshots. A bounded declarative schema rejects executable or
+  unknown predicates. Independent review controls approval and supersession;
+  evaluations consume only current final context, capture rule/context/result
+  hashes, citations and condition traces, and fail closed when linked evidence
+  becomes unavailable. `no_alerts` and `no_active_rules` explicitly remain
+  non-clearance outcomes. No rule content, diagnosis, prescription, treatment
+  ranking, autonomous learning or clinician-facing advice UI is bundled.
 
 ## Remaining engineering gates
 
@@ -207,14 +216,18 @@ vulnerability audit or full transitive dependency lock.
    restore testing, monitoring and access control. Do not expose development
    defaults.
 5. Product scope: the backend now has a synthetic API-level acceptance scenario,
-   a first mobile-friendly staff console for live clinic flow, and structured
-   intake/paraclinical APIs. Those new records still require API use and do not
-   yet feed a safety-rule or clinician-copilot UI. Define the broader UI,
-   terminology service, deployment environment and human acceptance scenarios.
+   a first mobile-friendly staff console for live clinic flow, structured
+   intake/paraclinical APIs and an API-only deterministic safety-rule engine.
+   Define the clinician alert/acknowledgment UI, terminology service, deployment
+   environment, clinical ownership and human acceptance scenarios before use.
 
 ## Migration cautions
 
-The new head is `a8c15d3e7b02`, following `f4b14c2d9a01`. It adds empty
+The new head is `c92e4b7a1d30`, following `a8c15d3e7b02`. It adds empty
+`clinical_safety_rules`, `clinical_safety_rule_knowledge`,
+`clinical_safety_evaluations` and `clinical_safety_findings` tables. No rules or
+medical claims are seeded and no existing patient record is evaluated during the
+migration. The preceding structured-context revision adds empty
 `clinical_intakes`, `paraclinical_reports` and `paraclinical_observations`
 tables; no record is inferred or backfilled from legacy free text. The preceding
 registry migration adds empty `medical_knowledge_facts` and
@@ -258,6 +271,11 @@ The structured-context downgrade refuses if any intake, report or observation
 exists and refuses offline downgrade because patient content cannot be checked.
 Do not delete patient documentation to force a rollback. Restore the reviewed
 application/database pair and reconcile through an approved recovery process.
+
+The clinical-safety downgrade refuses if any rule, evidence link, evaluation or
+finding exists and refuses offline downgrade. Do not delete governed rule or
+evaluation history to force a rollback. Restore the reviewed application and
+database pair and use the clinical governance recovery process.
 
 ## Developer verification
 

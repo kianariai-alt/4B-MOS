@@ -218,6 +218,17 @@ def test_complete_clinical_journey_is_coherent_and_append_only(
     )
     assert context["intake"]["id"] == intake["id"]
     assert [item["id"] for item in context["reports"]] == [report["id"]]
+    safety_evaluation = assert_status(
+        client.post(
+            f"/api/v1/visits/{visit['id']}/safety-evaluations",
+            headers=physician,
+        ),
+        201,
+    )
+    assert safety_evaluation["outcome"] == "no_active_rules"
+    assert safety_evaluation["evaluated_rule_count"] == 0
+    assert safety_evaluation["findings"] == []
+    assert safety_evaluation["is_clinical_clearance"] is False
     treatment = assert_status(
         client.post(
             f"/api/v1/visits/{visit['id']}/treatments",
@@ -458,6 +469,10 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
         ("/api/v1/visits/{visit_id}/paraclinical-reports", "post"),
         ("/api/v1/paraclinical-reports/{report_id}/finalize", "post"),
         ("/api/v1/visits/{visit_id}/clinical-context", "get"),
+        ("/api/v1/safety/rules", "post"),
+        ("/api/v1/safety/rules/active", "get"),
+        ("/api/v1/visits/{visit_id}/safety-evaluations", "post"),
+        ("/api/v1/safety/evaluations/{evaluation_id}", "get"),
         ("/api/v1/visits/{visit_id}/treatments", "post"),
         ("/api/v1/treatments/{treatment_id}/sessions", "post"),
         ("/api/v1/treatment-sessions/{session_id}/workflow", "patch"),

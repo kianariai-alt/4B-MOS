@@ -29,6 +29,7 @@ from backend.app.db.base import Base
 from backend.app.db.session import engine as application_engine
 from backend.app.db.transactions import ClinicalWriteConflictError, atomic_write
 from backend.app.models.audit_log import AuditLog
+from backend.app.models.clinical_safety import ClinicalSafetyEvaluation
 from backend.app.models.clinical_context import ClinicalIntake
 from backend.app.models.patient import Patient
 from backend.app.models.session_amendment import SessionAmendment
@@ -40,6 +41,7 @@ from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.user import UserRepository
 from backend.app.schemas.session_amendment import SessionAmendmentCreate
 from backend.app.schemas.clinical_context import ClinicalIntakeCreate
+from backend.app.schemas.clinical_safety import SafetyEvaluationRequest
 from backend.app.schemas.treatment_session import TreatmentSessionUpdate
 from backend.app.schemas.user import UserCreate, UserUpdate
 from backend.app.services.auth import (
@@ -48,6 +50,7 @@ from backend.app.services.auth import (
     InvalidCredentialsError,
 )
 from backend.app.services.clinical_context import ClinicalContextService
+from backend.app.services.clinical_safety import ClinicalSafetyEvaluationService
 from backend.app.services.session_amendment import SessionAmendmentService
 from backend.app.services.session_workflow import SessionWorkflowService
 from backend.app.services.treatment_session import TreatmentSessionService
@@ -629,3 +632,57 @@ def test_concurrent_intake_creation_is_serialized_by_visit(
             )
         ).all()
         assert len(events) == 1
+
+
+def test_safety_evaluations_share_the_postgresql_visit_lock(
+    postgresql_engine,
+    monkeypatch,
+):
+    context = _seed_clinical_context(postgresql_engine, treatment_count=1)
+    visit_id = context["visit_id"]
+    actor_id = context["admin_ids"][0]
+    entered = Event()
+    release = Event()
+    original_audit = AuditLogRepository.create
+
+    def pause_evaluation_audit(*args, **kwargs):
+        result = original_audit(*args, **kwargs)
+        if kwargs.get("event_type") == "clinical_safety_evaluation_completed":
+            entered.set()
+            assert release.wait(10), "test failed to release safety evaluation"
+        return result
+
+    monkeypatch.setattr(
+        AuditLogRepository,
+        "create",
+        staticmethod(pause_evaluation_audit),
+    )
+
+    def evaluate() -> None:
+        with Session(postgresql_engine) as db:
+            ClinicalSafetyEvaluationService.evaluate(
+                db,
+                visit_id,
+                SafetyEvaluationRequest(),
+                actor=db.get(User, actor_id),
+            )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(evaluate)
+        try:
+            assert entered.wait(10), "safety evaluation did not reach audit"
+            with pytest.raises(ClinicalRecordWriteConflictError) as conflict:
+                evaluate()
+            assert _sqlstate(conflict.value) == "55P03"
+        finally:
+            release.set()
+        future.result(timeout=10)
+
+    with Session(postgresql_engine) as observer:
+        evaluations = observer.scalars(
+            select(ClinicalSafetyEvaluation).where(
+                ClinicalSafetyEvaluation.visit_id == visit_id
+            )
+        ).all()
+        assert len(evaluations) == 1
+        assert evaluations[0].outcome == "no_active_rules"

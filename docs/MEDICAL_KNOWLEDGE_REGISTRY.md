@@ -63,7 +63,7 @@ not a computed appraisal: `high`, `moderate`, `low`, `very_low`, `consensus`, or
    recovery procedure.
 2. Rehearse `alembic upgrade head` on a disposable restored copy. The registry
    revision is `f4b14c2d9a01`; the current application head after the structured
-   clinical-context stage is `a8c15d3e7b02`.
+   clinical-context and safety-rule stages is `c92e4b7a1d30`.
 3. Deploy only the matching application build and run the read-only preflight.
 4. Create content with synthetic/staging data first; verify author/reviewer
    separation, approved filtering, superseding and audit history.
@@ -78,10 +78,13 @@ reviewed knowledge to bypass this protection.
 
 - terminology validation and standards-conformant clinical exchange (the
   structured intake/observation stage stores codes but does not validate them);
-- deterministic contraindication/red-flag rules;
 - patient-specific recommendation generation with source citations;
 - publication surveillance and proposed knowledge updates;
 - outcome aggregation, bias monitoring and clinician-approved learning.
+
+The governed deterministic safety-rule layer is now implemented separately in
+`docs/CLINICAL_SAFETY_RULE_ENGINE.md`; it consumes approved registry facts but
+does not create recommendations or clinical clearance.
 
 Those stages must consume approved registry content and preserve physician
 control. They must not train on or promote individual patient records by default.

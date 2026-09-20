@@ -36,6 +36,12 @@ from backend.app.models.clinical_context import (
     ParaclinicalObservation,
     ParaclinicalReport,
 )
+from backend.app.models.clinical_safety import (
+    ClinicalSafetyEvaluation,
+    ClinicalSafetyFinding,
+    ClinicalSafetyRule,
+    ClinicalSafetyRuleKnowledge,
+)
 
 __all__ = [
     "SessionFinalization",
@@ -56,4 +62,8 @@ __all__ = [
     "ClinicalIntake",
     "ParaclinicalObservation",
     "ParaclinicalReport",
+    "ClinicalSafetyRule",
+    "ClinicalSafetyRuleKnowledge",
+    "ClinicalSafetyEvaluation",
+    "ClinicalSafetyFinding",
 ]
