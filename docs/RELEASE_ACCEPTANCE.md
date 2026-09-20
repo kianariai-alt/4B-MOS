@@ -12,17 +12,20 @@ verifies one coherent clinic journey with separate role credentials:
 
 1. An administrator creates a versioned ACS protocol and a lot-tracked material.
 2. An operator registers a synthetic patient and opens a visit.
-3. A physician creates a protocol-linked treatment and planned component.
-4. The operator, nurse and physician advance the session through check-in,
+3. The operator records a structured intake, a nurse records a typed synthetic
+   paraclinical result, a physician finalizes both, and a viewer reads only the
+   resulting current final context.
+4. A physician creates a protocol-linked treatment and planned component.
+5. The operator, nurse and physician advance the session through check-in,
    readiness and active treatment.
-5. The nurse records a plan-linked administration with lot and expiry data.
-6. A viewer reads variance, clinical summary and completion readiness.
-7. The nurse completes the session and the API captures versioned finalization
+6. The nurse records a plan-linked administration with lot and expiry data.
+7. A viewer reads variance, clinical summary and completion readiness.
+8. The nurse completes the session and the API captures versioned finalization
    evidence with a valid SHA-256 integrity checksum.
-8. Direct edits and late administration writes are refused after completion.
-9. The nurse adds an append-only supplement and a different physician approves
+9. Direct edits and late administration writes are refused after completion.
+10. The nurse adds an append-only supplement and a different physician approves
    it without changing the original finalization evidence.
-10. Discharge, patient summary, timeline and session audit history remain
+11. Discharge, patient summary, timeline and session audit history remain
     mutually coherent.
 
 The suite also verifies that release-critical OpenAPI paths remain present and

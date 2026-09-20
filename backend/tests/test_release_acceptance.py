@@ -153,6 +153,71 @@ def test_complete_clinical_journey_is_coherent_and_append_only(
         ),
         201,
     )
+    intake = assert_status(
+        client.post(
+            f"/api/v1/visits/{visit['id']}/clinical-intakes",
+            headers=operator,
+            json={
+                "chief_complaint": "Synthetic right knee pain",
+                "history_present_illness": (
+                    "Synthetic acceptance history with gradual symptom onset."
+                ),
+                "body_region": "Knee",
+                "laterality": "right",
+                "pain_score": 6,
+                "functional_limitations": ["Stairs"],
+                "red_flags": [],
+                "clinical_impression": "Synthetic acceptance impression.",
+            },
+        ),
+        201,
+    )
+    assert_status(
+        client.post(
+            f"/api/v1/clinical-intakes/{intake['id']}/finalize",
+            headers=physician,
+        ),
+        200,
+    )
+    report = assert_status(
+        client.post(
+            f"/api/v1/visits/{visit['id']}/paraclinical-reports",
+            headers=nurse,
+            json={
+                "report_key": "acceptance-lab-001",
+                "category": "laboratory",
+                "title": "Synthetic acceptance laboratory report",
+                "conclusion": "Synthetic acceptance result only.",
+                "observations": [
+                    {
+                        "category": "laboratory",
+                        "code_system": "LOCAL",
+                        "code": "ACCEPT-RESULT",
+                        "display_name": "Synthetic acceptance result",
+                        "value_type": "boolean",
+                        "boolean_value": True,
+                    }
+                ],
+            },
+        ),
+        201,
+    )
+    assert_status(
+        client.post(
+            f"/api/v1/paraclinical-reports/{report['id']}/finalize",
+            headers=physician,
+        ),
+        200,
+    )
+    context = assert_status(
+        client.get(
+            f"/api/v1/visits/{visit['id']}/clinical-context",
+            headers=viewer,
+        ),
+        200,
+    )
+    assert context["intake"]["id"] == intake["id"]
+    assert [item["id"] for item in context["reports"]] == [report["id"]]
     treatment = assert_status(
         client.post(
             f"/api/v1/visits/{visit['id']}/treatments",
@@ -388,6 +453,11 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
         ("/api/v1/auth/login", "post"),
         ("/api/v1/patients", "post"),
         ("/api/v1/patients/{patient_id}/visits", "post"),
+        ("/api/v1/visits/{visit_id}/clinical-intakes", "post"),
+        ("/api/v1/clinical-intakes/{intake_id}/finalize", "post"),
+        ("/api/v1/visits/{visit_id}/paraclinical-reports", "post"),
+        ("/api/v1/paraclinical-reports/{report_id}/finalize", "post"),
+        ("/api/v1/visits/{visit_id}/clinical-context", "get"),
         ("/api/v1/visits/{visit_id}/treatments", "post"),
         ("/api/v1/treatments/{treatment_id}/sessions", "post"),
         ("/api/v1/treatment-sessions/{session_id}/workflow", "patch"),

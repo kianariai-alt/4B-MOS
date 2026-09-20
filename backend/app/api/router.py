@@ -68,6 +68,9 @@ from backend.app.api.routes.clinic_live_flow import (
 from backend.app.api.routes.medical_knowledge import (
     router as medical_knowledge_router,
 )
+from backend.app.api.routes.clinical_context import (
+    router as clinical_context_router,
+)
 
 api_router = APIRouter()
 api_router.include_router(session_finalization_router)
@@ -155,4 +158,7 @@ api_router.include_router(
 )
 api_router.include_router(
     medical_knowledge_router
+)
+api_router.include_router(
+    clinical_context_router
 )

@@ -61,8 +61,9 @@ not a computed appraisal: `high`, `moderate`, `low`, `very_low`, `consensus`, or
 
 1. Drain older workers and back up the selected database through the existing
    recovery procedure.
-2. Rehearse `alembic upgrade head` on a disposable restored copy. The expected
-   head is `f4b14c2d9a01`.
+2. Rehearse `alembic upgrade head` on a disposable restored copy. The registry
+   revision is `f4b14c2d9a01`; the current application head after the structured
+   clinical-context stage is `a8c15d3e7b02`.
 3. Deploy only the matching application build and run the read-only preflight.
 4. Create content with synthetic/staging data first; verify author/reviewer
    separation, approved filtering, superseding and audit history.
@@ -75,7 +76,8 @@ reviewed knowledge to bypass this protection.
 
 ## Explicitly deferred
 
-- structured paraclinical intake and normalization;
+- terminology validation and standards-conformant clinical exchange (the
+  structured intake/observation stage stores codes but does not validate them);
 - deterministic contraindication/red-flag rules;
 - patient-specific recommendation generation with source citations;
 - publication surveillance and proposed knowledge updates;

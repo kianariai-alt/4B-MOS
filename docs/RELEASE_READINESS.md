@@ -126,6 +126,16 @@ No production patient database was accessed during this work.
   currently valid facts. SHA-256 is integrity detection, not a signature. No
   publications are bundled, no patient data is converted into knowledge, and no
   recommendation or autonomous-learning engine is claimed.
+- Stage 15 adds migration `a8c15d3e7b02`, a structured clinical-intake lineage
+  per visit and versioned paraclinical-report lineages with typed atomic
+  observations. Only current final records appear in the aggregate clinical
+  context. Final content is immutable through the API; corrections are new
+  reason-linked drafts whose finalization atomically supersedes the prior final.
+  Entered-in-error records remain retained but are excluded from current context.
+  All content reads verify canonical SHA-256 values, and audit metadata avoids
+  duplicating clinical text or values. The format is FHIR-inspired but not
+  FHIR-conformant; submitted terminology and UCUM-style units are not validated
+  by a terminology server. No recommendation or autonomous learning is added.
 
 ## Remaining engineering gates
 
@@ -196,20 +206,24 @@ vulnerability audit or full transitive dependency lock.
    review authentication/bootstrap exposure, and configure HTTPS, backups,
    restore testing, monitoring and access control. Do not expose development
    defaults.
-5. Product scope: the backend now has a synthetic API-level acceptance scenario
-   and a first mobile-friendly staff console for live clinic flow. Patient setup,
-   clinical documentation and administration entry still require API use; define
-   the broader UI, deployment environment and human acceptance scenarios.
+5. Product scope: the backend now has a synthetic API-level acceptance scenario,
+   a first mobile-friendly staff console for live clinic flow, and structured
+   intake/paraclinical APIs. Those new records still require API use and do not
+   yet feed a safety-rule or clinician-copilot UI. Define the broader UI,
+   terminology service, deployment environment and human acceptance scenarios.
 
 ## Migration cautions
 
-The new head is `f4b14c2d9a01`, following `e21f6a9c3b40`. It adds empty
-`medical_knowledge_facts` and `medical_knowledge_sources` tables; no medical
-claims are seeded and existing clinical records are untouched. The preceding
-migrations add persistent login-throttle state and empty amendment history
-tables. Drain old workers, upgrade the database, then deploy only new code. A
-mixed-version fleet is unsafe because old workers neither enforce the registry
-workflow nor expect the new schema revision.
+The new head is `a8c15d3e7b02`, following `f4b14c2d9a01`. It adds empty
+`clinical_intakes`, `paraclinical_reports` and `paraclinical_observations`
+tables; no record is inferred or backfilled from legacy free text. The preceding
+registry migration adds empty `medical_knowledge_facts` and
+`medical_knowledge_sources` tables; no medical claims are seeded and existing
+clinical records are untouched. Earlier migrations add persistent login-throttle
+state and empty amendment history tables. Drain old workers, upgrade the database,
+then deploy only new code. A mixed-version fleet is unsafe because old workers
+neither enforce the registry or structured-record workflows nor expect the new
+schema revision.
 A mixed-version fleet is unsafe: new code rejects old tokens and old code neither
 mints nor enforces the version claim.
 Back up and rehearse on a disposable copy before any production upgrade.
@@ -239,6 +253,11 @@ The medical-knowledge downgrade refuses if any fact or source exists and refuses
 offline downgrade because registry contents cannot be checked. Never delete or
 rewrite reviewed knowledge merely to force a rollback; restore the reviewed
 release/database pair through the controlled recovery process.
+
+The structured-context downgrade refuses if any intake, report or observation
+exists and refuses offline downgrade because patient content cannot be checked.
+Do not delete patient documentation to force a rollback. Restore the reviewed
+application/database pair and reconcile through an approved recovery process.
 
 ## Developer verification
 

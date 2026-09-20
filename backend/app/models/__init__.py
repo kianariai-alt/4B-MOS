@@ -31,6 +31,11 @@ from backend.app.models.medical_knowledge import (
     MedicalKnowledgeFact,
     MedicalKnowledgeSource,
 )
+from backend.app.models.clinical_context import (
+    ClinicalIntake,
+    ParaclinicalObservation,
+    ParaclinicalReport,
+)
 
 __all__ = [
     "SessionFinalization",
@@ -48,4 +53,7 @@ __all__ = [
     "TreatmentSessionComponent",
     "MedicalKnowledgeFact",
     "MedicalKnowledgeSource",
+    "ClinicalIntake",
+    "ParaclinicalObservation",
+    "ParaclinicalReport",
 ]
