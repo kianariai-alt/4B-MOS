@@ -22,10 +22,14 @@ from backend.app.db.account_transactions import (
     AccountWriteConflictError,
     lock_accounts,
 )
+from backend.app.db.clinical_record_transactions import (
+    ClinicalRecordWriteConflictError,
+)
 from backend.app.db.base import Base
 from backend.app.db.session import engine as application_engine
 from backend.app.db.transactions import ClinicalWriteConflictError, atomic_write
 from backend.app.models.audit_log import AuditLog
+from backend.app.models.clinical_context import ClinicalIntake
 from backend.app.models.patient import Patient
 from backend.app.models.session_amendment import SessionAmendment
 from backend.app.models.treatment import Treatment
@@ -35,6 +39,7 @@ from backend.app.models.visit import Visit
 from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.user import UserRepository
 from backend.app.schemas.session_amendment import SessionAmendmentCreate
+from backend.app.schemas.clinical_context import ClinicalIntakeCreate
 from backend.app.schemas.treatment_session import TreatmentSessionUpdate
 from backend.app.schemas.user import UserCreate, UserUpdate
 from backend.app.services.auth import (
@@ -42,6 +47,7 @@ from backend.app.services.auth import (
     AuthService,
     InvalidCredentialsError,
 )
+from backend.app.services.clinical_context import ClinicalContextService
 from backend.app.services.session_amendment import SessionAmendmentService
 from backend.app.services.session_workflow import SessionWorkflowService
 from backend.app.services.treatment_session import TreatmentSessionService
@@ -560,3 +566,66 @@ def test_concurrent_amendments_keep_stable_postgresql_sequence(
             "First PostgreSQL amendment.",
             "Second serialized PostgreSQL amendment.",
         ]
+
+
+def test_concurrent_intake_creation_is_serialized_by_visit(
+    postgresql_engine,
+    monkeypatch,
+):
+    context = _seed_clinical_context(postgresql_engine, treatment_count=1)
+    visit_id = context["visit_id"]
+    actor_id = context["admin_ids"][0]
+    entered = Event()
+    release = Event()
+    original_audit = AuditLogRepository.create
+
+    def pause_intake_audit(*args, **kwargs):
+        result = original_audit(*args, **kwargs)
+        if kwargs.get("event_type") == "clinical_intake_created":
+            entered.set()
+            assert release.wait(10), "test failed to release intake writer"
+        return result
+
+    monkeypatch.setattr(
+        AuditLogRepository,
+        "create",
+        staticmethod(pause_intake_audit),
+    )
+    payload = ClinicalIntakeCreate(
+        chief_complaint="Synthetic PostgreSQL intake complaint.",
+        history_present_illness="Synthetic PostgreSQL intake history.",
+        pain_score=5,
+    )
+
+    def create_intake() -> None:
+        with Session(postgresql_engine) as db:
+            ClinicalContextService.create_intake(
+                db,
+                visit_id,
+                payload,
+                actor=db.get(User, actor_id),
+            )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(create_intake)
+        try:
+            assert entered.wait(10), "intake writer did not reach audit"
+            with pytest.raises(ClinicalRecordWriteConflictError) as conflict:
+                create_intake()
+            assert _sqlstate(conflict.value) == "55P03"
+        finally:
+            release.set()
+        future.result(timeout=10)
+
+    with Session(postgresql_engine) as observer:
+        intakes = observer.scalars(
+            select(ClinicalIntake).where(ClinicalIntake.visit_id == visit_id)
+        ).all()
+        assert len(intakes) == 1
+        events = observer.scalars(
+            select(AuditLog).where(
+                AuditLog.entity_id == intakes[0].id,
+                AuditLog.event_type == "clinical_intake_created",
+            )
+        ).all()
+        assert len(events) == 1

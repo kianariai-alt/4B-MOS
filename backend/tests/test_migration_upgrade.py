@@ -59,7 +59,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e21f6a9c3b40"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a8c15d3e7b02"
     finally:
         engine.dispose()
 
@@ -254,7 +254,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "e21f6a9c3b40"
+            )) == "a8c15d3e7b02"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -276,6 +276,157 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert connection.scalar(text(
                 "SELECT failed_login_count FROM users "
                 "WHERE id = 'legacy-login-user'"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+def test_medical_knowledge_migration_refuses_registry_data_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'medical-knowledge-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "medical_knowledge_facts" in inspector.get_table_names()
+        assert "medical_knowledge_sources" in inspector.get_table_names()
+        assert len(inspector.get_foreign_keys("medical_knowledge_facts")) == 3
+        assert (
+            inspector.get_foreign_keys("medical_knowledge_sources")[0][
+                "options"
+            ]["ondelete"]
+            == "CASCADE"
+        )
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('knowledge-user', 'knowledge_user', 'Knowledge User', "
+                "'hash', 'admin', 1, 0, 0, "
+                "'2026-09-19 10:00:00', '2026-09-19 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO medical_knowledge_facts "
+                "(id, fact_key, version, title, statement, clinical_domain, "
+                "contraindications, evidence_grade, status, content_sha256, "
+                "created_by_user_id, row_version, created_at, updated_at) "
+                "VALUES ('knowledge-fact', 'MIG-FACT-001', 1, 'Migration fact', "
+                "'Synthetic migration statement with sufficient fixture text.', "
+                "'migration', '[]', 'ungraded', 'draft', '" + "0" * 64 + "', "
+                "'knowledge-user', 1, "
+                "'2026-09-19 10:00:00', '2026-09-19 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO medical_knowledge_sources "
+                "(id, fact_id, sort_order, source_type, title, citation, "
+                "accessed_at, created_at) "
+                "VALUES ('knowledge-source', 'knowledge-fact', 1, 'other', "
+                "'Synthetic source', 'Migration-only fixture', "
+                "'2026-09-19', '2026-09-19 10:00:00')"
+            ))
+
+        with pytest.raises(RuntimeError, match="registry contains data"):
+            command.downgrade(config, "e21f6a9c3b40")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "f4b14c2d9a01"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM medical_knowledge_facts"
+            )) == 1
+            assert connection.scalar(text(
+                "SELECT count(*) FROM medical_knowledge_sources"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+def test_structured_clinical_context_migration_refuses_patient_data_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'structured-context-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert {
+            "clinical_intakes",
+            "paraclinical_reports",
+            "paraclinical_observations",
+        } <= set(inspector.get_table_names())
+        assert len(inspector.get_foreign_keys("clinical_intakes")) == 5
+        assert len(inspector.get_foreign_keys("paraclinical_reports")) == 5
+        assert (
+            inspector.get_foreign_keys("paraclinical_observations")[0][
+                "options"
+            ]["ondelete"]
+            == "CASCADE"
+        )
+        observation_checks = {
+            check["name"]
+            for check in inspector.get_check_constraints(
+                "paraclinical_observations"
+            )
+        }
+        assert "ck_paraclinical_observation_value" in observation_checks
+        assert (
+            "ck_paraclinical_observation_quantity_metadata"
+            in observation_checks
+        )
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('context-user', 'context_user', 'Context User', "
+                "'hash', 'physician', 1, 0, 0, "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO patients "
+                "(id, patient_code, first_name, last_name, is_active, "
+                "created_at, updated_at) VALUES "
+                "('context-patient', 'CTX-MIG-001', 'Context', 'Patient', 1, "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO visits "
+                "(id, patient_id, visit_date, status, created_at, updated_at) "
+                "VALUES ('context-visit', 'context-patient', "
+                "'2026-09-20 10:00:00', 'open', "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO clinical_intakes "
+                "(id, visit_id, version, status, chief_complaint, "
+                "history_present_illness, functional_limitations, "
+                "relevant_history, current_medications, allergies, red_flags, "
+                "content_sha256, created_by_user_id, row_version, created_at, "
+                "updated_at) VALUES "
+                "('context-intake', 'context-visit', 1, 'draft', "
+                "'Synthetic complaint', 'Synthetic history', '[]', '[]', "
+                "'[]', '[]', '[]', '" + "0" * 64 + "', 'context-user', 1, "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+
+        with pytest.raises(RuntimeError, match="clinical context contains data"):
+            command.downgrade(config, "f4b14c2d9a01")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "a8c15d3e7b02"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM clinical_intakes"
             )) == 1
     finally:
         engine.dispose()

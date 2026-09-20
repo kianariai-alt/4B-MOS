@@ -148,6 +148,26 @@ logins remain independent. SQLite still serializes all writers. A bounded lock
 conflict returns 503 plus `Retry-After: 1`; clients may retry once after waiting
 but must not loop aggressively.
 
+Stage 14 requires the Stage 13 application tree and migration `f4b14c2d9a01`.
+It adds the source-linked medical knowledge registry described in
+`docs/MEDICAL_KNOWLEDGE_REGISTRY.md`. Create facts as drafts, submit them for
+review, and have a different active admin or physician approve or reject them.
+Only `approved` facts inside their validity window appear at
+`GET /api/v1/knowledge/facts/approved`. Revisions are new superseding versions;
+approval retires the prior approved version atomically. Do not insert fabricated
+citations or copy patient observations into this registry. Importing publications,
+clinical recommendation generation and learning from outcomes remain separate,
+unimplemented controlled stages.
+
+Stage 15 requires Stage 14 and migration `a8c15d3e7b02`. It adds versioned
+clinical-intake and paraclinical-report records as described in
+`docs/STRUCTURED_CLINICAL_CONTEXT.md`. Drafts may be authored by admin,
+physician, nurse and operator roles; only admins and physicians may finalize or
+mark a final record entered in error. Final content cannot be updated. Corrections
+are new versions with a required reason, and the current-context endpoint exposes
+only current final versions. Patient content is never copied to the medical
+knowledge registry. This stage records inputs only and makes no recommendation.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into
@@ -172,7 +192,7 @@ it is not a general query timeout and does not make direct SQL concurrency-safe.
 `GET /api/v1/health` reports process liveness only.
 `GET /api/v1/health/ready` reports 200 only with the expected revision, critical
 tables and (for SQLite) FK enforcement. It returns a redacted 503 otherwise.
-The head is `e21f6a9c3b40`; upgrade a disposable copy and inspect the result
+The head is `a8c15d3e7b02`; upgrade a disposable copy and inspect the result
 before any production change. Installing code does NOT upgrade the database.
 
 After the selected database is upgraded and an active administrator has been

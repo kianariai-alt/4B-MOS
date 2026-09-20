@@ -46,3 +46,15 @@ is available at `/app/`. It uses the existing role-protected live-flow and
 workflow APIs, keeps its bearer token in memory only and adds no offline patient
 data store. It is a staff workflow foundation, not completed clinician or
 production acceptance.
+
+The [medical knowledge registry](docs/MEDICAL_KNOWLEDGE_REGISTRY.md) stores
+source-linked, versioned facts behind an independent clinical review gate.
+Only approved, currently valid versions are exposed to future decision-support
+consumers. It does not learn from patient records, ingest new research, or make
+diagnostic or treatment recommendations by itself.
+
+The [structured clinical context](docs/STRUCTURED_CLINICAL_CONTEXT.md) stores a
+versioned initial intake and typed paraclinical observations. Final records are
+immutable through the API; corrections are linked replacement versions. Patient
+records never become general medical knowledge automatically, and this stage
+still produces no diagnostic or treatment recommendation.

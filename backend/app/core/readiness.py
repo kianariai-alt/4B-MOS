@@ -21,6 +21,11 @@ REQUIRED_DATABASE_TABLES = frozenset(
         "session_finalizations",
         "session_amendments",
         "session_amendment_reviews",
+        "medical_knowledge_facts",
+        "medical_knowledge_sources",
+        "clinical_intakes",
+        "paraclinical_reports",
+        "paraclinical_observations",
     }
 )
 
