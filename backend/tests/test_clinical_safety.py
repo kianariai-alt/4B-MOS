@@ -9,6 +9,9 @@ from backend.app.models.clinical_safety import (
     ClinicalSafetyFinding,
     ClinicalSafetyRule,
 )
+from backend.app.models.clinical_safety_review import (
+    ClinicalSafetyFindingReview,
+)
 from backend.app.models.medical_knowledge import MedicalKnowledgeFact
 from backend.app.repositories.audit_log import AuditLogRepository
 
@@ -655,3 +658,364 @@ def test_patient_records_never_promote_themselves_to_rules_or_knowledge(
     client.post(f"/api/v1/visits/{visit['id']}/safety-evaluations")
     assert db_session.query(ClinicalSafetyRule).count() == 0
     assert db_session.query(MedicalKnowledgeFact).count() == 0
+
+
+def create_reviewable_finding(client, reviewer_headers, visit) -> dict:
+    fact = create_approved_fact(
+        client,
+        reviewer_headers,
+        fact_key=f"SAFETY-REVIEW-{visit['id'][:8]}",
+    )
+    rule = create_rule(
+        client,
+        rule_payload(
+            fact["id"],
+            rule_key=f"REVIEW-{visit['id'][:8]}",
+        ),
+    )
+    approve_rule(client, rule["id"], reviewer_headers)
+    create_context(client, visit["id"])
+    evaluation = client.post(
+        f"/api/v1/visits/{visit['id']}/safety-evaluations"
+    )
+    assert evaluation.status_code == 201, evaluation.text
+    data = evaluation.json()
+    assert data["outcome"] == "alerts_present"
+    return {
+        "evaluation": data,
+        "finding": data["findings"][0],
+    }
+
+
+def test_finding_review_starts_unreviewed_and_is_snapshot_bound(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+):
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    evaluation = reviewable["evaluation"]
+    finding = reviewable["finding"]
+    path = (
+        f"/api/v1/visits/{visit['id']}/safety-findings/"
+        f"{finding['id']}/reviews"
+    )
+
+    initial = client.get(path, headers=nurse_headers)
+    assert initial.status_code == 200, initial.text
+    assert initial.json()["review_status"] == "unreviewed"
+    assert initial.json()["reviews"] == []
+    assert initial.json()["is_clinical_clearance"] is False
+    assert initial.json()["changes_evaluation_result"] is False
+
+    missing_hash = client.post(
+        path,
+        json={"action": "acknowledged"},
+        headers=nurse_headers,
+    )
+    assert missing_hash.status_code == 422
+
+    stale = client.post(
+        path,
+        json={
+            "action": "acknowledged",
+            "expected_evaluation_result_sha256": "0" * 64,
+        },
+        headers=nurse_headers,
+    )
+    assert stale.status_code == 409
+    assert "reload" in stale.json()["detail"]
+
+    recorded = client.post(
+        path,
+        json={
+            "action": "acknowledged",
+            "expected_evaluation_result_sha256": evaluation["result_sha256"],
+        },
+        headers=nurse_headers,
+    )
+    assert recorded.status_code == 201, recorded.text
+    timeline = recorded.json()
+    assert timeline["review_status"] == "acknowledged"
+    assert timeline["is_clinical_clearance"] is False
+    assert timeline["changes_evaluation_result"] is False
+    review = timeline["reviews"][0]
+    assert review["sequence"] == 1
+    assert review["previous_review_sha256"] is None
+    assert review["payload"]["actor"]["actor_role"] == "nurse"
+    assert review["payload"]["evaluation_result_sha256"] == evaluation[
+        "result_sha256"
+    ]
+    assert len(review["sha256"]) == 64
+
+    fetched = client.get(
+        f"/api/v1/safety/finding-reviews/{review['id']}",
+        headers=nurse_headers,
+    )
+    assert fetched.status_code == 200, fetched.text
+    assert fetched.json() == review
+
+
+def test_review_transition_is_append_only_and_assessment_is_physician_only(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+):
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    evaluation = reviewable["evaluation"]
+    finding = reviewable["finding"]
+    path = (
+        f"/api/v1/visits/{visit['id']}/safety-findings/"
+        f"{finding['id']}/reviews"
+    )
+    base = {"expected_evaluation_result_sha256": evaluation["result_sha256"]}
+
+    acknowledged = client.post(
+        path,
+        json={**base, "action": "acknowledged"},
+        headers=nurse_headers,
+    )
+    assert acknowledged.status_code == 201, acknowledged.text
+    first = acknowledged.json()["reviews"][0]
+
+    duplicate = client.post(
+        path,
+        json={**base, "action": "acknowledged"},
+        headers=nurse_headers,
+    )
+    assert duplicate.status_code == 409
+
+    missing_note = client.post(
+        path,
+        json={**base, "action": "escalated"},
+        headers=nurse_headers,
+    )
+    assert missing_note.status_code == 422
+
+    escalated = client.post(
+        path,
+        json={
+            **base,
+            "action": "escalated",
+            "note": "Escalated for prompt physician assessment.",
+        },
+        headers=nurse_headers,
+    )
+    assert escalated.status_code == 201, escalated.text
+    second = escalated.json()["reviews"][1]
+    assert second["sequence"] == 2
+    assert second["previous_review_sha256"] == first["sha256"]
+
+    nurse_assessment = client.post(
+        path,
+        json={
+            **base,
+            "action": "assessed",
+            "disposition": "requires_action",
+            "reason_code": "clinical_context",
+            "note": "Synthetic nurse assessment must be refused.",
+        },
+        headers=nurse_headers,
+    )
+    assert nurse_assessment.status_code == 403
+
+    incomplete_assessment = client.post(
+        path,
+        json={**base, "action": "assessed"},
+        headers=reviewer_headers,
+    )
+    assert incomplete_assessment.status_code == 422
+
+    assessed = client.post(
+        path,
+        json={
+            **base,
+            "action": "assessed",
+            "disposition": "action_documented",
+            "reason_code": "action_taken",
+            "note": (
+                "Synthetic physician assessment documented for workflow testing; "
+                "this does not grant clinical clearance."
+            ),
+        },
+        headers=reviewer_headers,
+    )
+    assert assessed.status_code == 201, assessed.text
+    timeline = assessed.json()
+    assert timeline["review_status"] == "assessed"
+    assert [item["action"] for item in timeline["reviews"]] == [
+        "acknowledged",
+        "escalated",
+        "assessed",
+    ]
+    assert timeline["reviews"][2]["previous_review_sha256"] == second["sha256"]
+    assert timeline["reviews"][2]["is_clinical_clearance"] is False
+
+    terminal = client.post(
+        path,
+        json={
+            **base,
+            "action": "escalated",
+            "note": "A terminal assessment cannot be rewritten.",
+        },
+        headers=nurse_headers,
+    )
+    assert terminal.status_code == 409
+
+
+def test_review_events_are_audited_without_patient_values(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+):
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    evaluation = reviewable["evaluation"]
+    finding = reviewable["finding"]
+    path = (
+        f"/api/v1/visits/{visit['id']}/safety-findings/"
+        f"{finding['id']}"
+    )
+    recorded = client.post(
+        f"{path}/reviews",
+        json={
+            "action": "escalated",
+            "expected_evaluation_result_sha256": evaluation["result_sha256"],
+            "note": "Synthetic escalation without duplicated patient values.",
+        },
+        headers=nurse_headers,
+    )
+    assert recorded.status_code == 201, recorded.text
+
+    events = client.get(f"{path}/audit-logs", headers=nurse_headers)
+    assert events.status_code == 200, events.text
+    event = events.json()[-1]
+    assert event["event_type"] == "clinical_safety_finding_escalated"
+    assert event["to_state"] == "escalated"
+    assert event["event_data"]["is_clinical_clearance"] is False
+    assert "Persistent fever" not in events.text
+    assert "8.500000" not in events.text
+    assert "Synthetic escalation" not in events.text
+
+
+def test_tampered_review_chain_is_rejected(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+    db_session,
+):
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    evaluation = reviewable["evaluation"]
+    finding = reviewable["finding"]
+    path = (
+        f"/api/v1/visits/{visit['id']}/safety-findings/"
+        f"{finding['id']}/reviews"
+    )
+    recorded = client.post(
+        path,
+        json={
+            "action": "acknowledged",
+            "expected_evaluation_result_sha256": evaluation["result_sha256"],
+        },
+        headers=nurse_headers,
+    )
+    assert recorded.status_code == 201, recorded.text
+    review_id = recorded.json()["reviews"][0]["id"]
+
+    db_session.execute(
+        update(ClinicalSafetyFindingReview)
+        .where(ClinicalSafetyFindingReview.id == review_id)
+        .values(payload={"schema_version": 1, "tampered": True})
+    )
+    db_session.commit()
+    response = client.get(path, headers=nurse_headers)
+    assert response.status_code == 409
+    assert "integrity" in response.json()["detail"]
+
+
+def test_finding_review_rows_reject_orm_update_and_delete(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+    db_session,
+):
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    evaluation = reviewable["evaluation"]
+    finding = reviewable["finding"]
+    path = (
+        f"/api/v1/visits/{visit['id']}/safety-findings/"
+        f"{finding['id']}/reviews"
+    )
+    recorded = client.post(
+        path,
+        json={
+            "action": "acknowledged",
+            "expected_evaluation_result_sha256": evaluation["result_sha256"],
+        },
+        headers=nurse_headers,
+    )
+    assert recorded.status_code == 201, recorded.text
+    review_id = recorded.json()["reviews"][0]["id"]
+
+    review = db_session.get(ClinicalSafetyFindingReview, review_id)
+    review.action = "escalated"
+    with pytest.raises(ValueError, match="cannot be updated or deleted"):
+        db_session.commit()
+    db_session.rollback()
+
+    review = db_session.get(ClinicalSafetyFindingReview, review_id)
+    db_session.delete(review)
+    with pytest.raises(ValueError, match="cannot be updated or deleted"):
+        db_session.commit()
+    db_session.rollback()
+
+
+def test_finding_review_access_and_visit_scope(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+):
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    evaluation = reviewable["evaluation"]
+    finding = reviewable["finding"]
+    viewer_headers = create_role_headers(
+        client,
+        username="safety_review_viewer",
+        role="viewer",
+    )
+    path = (
+        f"/api/v1/visits/{visit['id']}/safety-findings/"
+        f"{finding['id']}/reviews"
+    )
+    assert client.get(path, headers=viewer_headers).status_code == 403
+    assert client.get(path).status_code == 200
+    assert client.post(
+        path,
+        json={
+            "action": "acknowledged",
+            "expected_evaluation_result_sha256": evaluation["result_sha256"],
+        },
+    ).status_code == 403
+
+    other_patient = client.post(
+        "/api/v1/patients",
+        json={
+            "patient_code": "SAFETY-OTHER",
+            "first_name": "Other",
+            "last_name": "Visit",
+        },
+    ).json()
+    other_visit = client.post(
+        f"/api/v1/patients/{other_patient['id']}/visits",
+        json={"chief_complaint": "Other synthetic complaint"},
+    ).json()
+    wrong_scope = client.get(
+        f"/api/v1/visits/{other_visit['id']}/safety-findings/"
+        f"{finding['id']}/reviews",
+        headers=nurse_headers,
+    )
+    assert wrong_scope.status_code == 404

@@ -42,6 +42,9 @@ from backend.app.models.clinical_safety import (
     ClinicalSafetyRule,
     ClinicalSafetyRuleKnowledge,
 )
+from backend.app.models.clinical_safety_review import (
+    ClinicalSafetyFindingReview,
+)
 
 __all__ = [
     "SessionFinalization",
@@ -66,4 +69,5 @@ __all__ = [
     "ClinicalSafetyRuleKnowledge",
     "ClinicalSafetyEvaluation",
     "ClinicalSafetyFinding",
+    "ClinicalSafetyFindingReview",
 ]

@@ -145,6 +145,14 @@ No production patient database was accessed during this work.
   becomes unavailable. `no_alerts` and `no_active_rules` explicitly remain
   non-clearance outcomes. No rule content, diagnosis, prescription, treatment
   ranking, autonomous learning or clinician-facing advice UI is bundled.
+- Stage 17 adds migration `d51e7a9b2c64` and append-only, hash-chained review
+  events for safety findings. Physicians and nurses can acknowledge or escalate;
+  only physicians can record a terminal assessment for that immutable snapshot.
+  Optimistic evaluation hashes and the visit lock reject stale or competing
+  writes. Review notes are excluded from minimized audit metadata. Every response
+  remains non-clearance and review events never mutate, dismiss or override the
+  original evaluation. Notification delivery, alert-fatigue policy, override
+  authority and the clinician-facing UI remain unimplemented.
 
 ## Remaining engineering gates
 
@@ -207,8 +215,9 @@ vulnerability audit or full transitive dependency lock.
    retention, database permissions and external integrity anchoring before making
    stronger legal or tamper-proof claims.
 3. Clinical policy: define no-administration session outcomes, expiry checks,
-   deviation acknowledgments and physician override reasons. These policies
-   need explicit clinical sign-off before implementation and use.
+   deviation acknowledgments, safety-alert response times and physician override
+   authority. The append-only finding-review record does not implement an
+   override. These policies need explicit clinical sign-off before use.
 4. Security/operations: persistent known-account login throttling is implemented,
    but source/IP and edge throttling, alert delivery, incident response and audit
    retention remain deployment responsibilities. Replace development secrets,
@@ -217,17 +226,20 @@ vulnerability audit or full transitive dependency lock.
    defaults.
 5. Product scope: the backend now has a synthetic API-level acceptance scenario,
    a first mobile-friendly staff console for live clinic flow, structured
-   intake/paraclinical APIs and an API-only deterministic safety-rule engine.
-   Define the clinician alert/acknowledgment UI, terminology service, deployment
-   environment, clinical ownership and human acceptance scenarios before use.
+   intake/paraclinical APIs, an API-only deterministic safety-rule engine and an
+   API-only finding-review timeline. Define the clinician alert UI, notification
+   service, terminology service, deployment environment, clinical ownership and
+   human acceptance scenarios before use.
 
 ## Migration cautions
 
-The new head is `c92e4b7a1d30`, following `a8c15d3e7b02`. It adds empty
+The new head is `d51e7a9b2c64`, following `c92e4b7a1d30`. It adds an empty
+`clinical_safety_finding_reviews` table and does not create, acknowledge or
+assess any finding. The preceding safety revision adds empty
 `clinical_safety_rules`, `clinical_safety_rule_knowledge`,
 `clinical_safety_evaluations` and `clinical_safety_findings` tables. No rules or
-medical claims are seeded and no existing patient record is evaluated during the
-migration. The preceding structured-context revision adds empty
+medical claims are seeded and no existing patient record is evaluated during
+either migration. The preceding structured-context revision adds empty
 `clinical_intakes`, `paraclinical_reports` and `paraclinical_observations`
 tables; no record is inferred or backfilled from legacy free text. The preceding
 registry migration adds empty `medical_knowledge_facts` and
@@ -276,6 +288,11 @@ The clinical-safety downgrade refuses if any rule, evidence link, evaluation or
 finding exists and refuses offline downgrade. Do not delete governed rule or
 evaluation history to force a rollback. Restore the reviewed application and
 database pair and use the clinical governance recovery process.
+
+The finding-review downgrade refuses if any review event exists and refuses
+offline downgrade. Do not delete review history or break its hash chain to force
+a rollback. Restore the reviewed application/database pair and follow the
+approved clinical governance recovery process.
 
 ## Developer verification
 

@@ -59,7 +59,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "c92e4b7a1d30"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d51e7a9b2c64"
     finally:
         engine.dispose()
 
@@ -254,7 +254,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "c92e4b7a1d30"
+            )) == "d51e7a9b2c64"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -496,6 +496,111 @@ def test_clinical_safety_migration_refuses_governance_data_loss(
             )) == "c92e4b7a1d30"
             assert connection.scalar(text(
                 "SELECT count(*) FROM clinical_safety_rules"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+def test_clinical_safety_review_migration_refuses_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'clinical-safety-review-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "clinical_safety_finding_reviews" in inspector.get_table_names()
+        assert len(
+            inspector.get_foreign_keys("clinical_safety_finding_reviews")
+        ) == 2
+        assert len(
+            inspector.get_check_constraints("clinical_safety_finding_reviews")
+        ) == 9
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('review-user', 'review_user', 'Review User', 'hash', "
+                "'physician', 1, 0, 0, '2026-09-20 10:00:00', "
+                "'2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO patients "
+                "(id, patient_code, first_name, last_name, is_active, "
+                "created_at, updated_at) VALUES "
+                "('review-patient', 'REV-MIG-001', 'Review', 'Patient', 1, "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO visits "
+                "(id, patient_id, visit_date, status, created_at, updated_at) "
+                "VALUES ('review-visit', 'review-patient', "
+                "'2026-09-20 10:00:00', 'open', "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO clinical_safety_rules "
+                "(id, rule_key, version, title, description, clinical_domain, "
+                "severity, action, message, predicate, status, content_sha256, "
+                "created_by_user_id, row_version, created_at, updated_at) "
+                "VALUES ('review-rule', 'REV-RULE-001', 1, 'Review rule', "
+                "'Synthetic migration rule description for review history.', "
+                "'migration', 'warning', 'review_before_proceeding', "
+                "'Synthetic review message.', "
+                "'{\"combinator\":\"all\",\"conditions\":[]}', "
+                "'draft', '" + "1" * 64 + "', 'review-user', 1, "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO clinical_safety_evaluations "
+                "(id, visit_id, report_ids, engine_version, outcome, "
+                "evaluated_rule_count, triggered_count, highest_severity, "
+                "clinical_context_sha256, rule_set_sha256, result_sha256, "
+                "evaluated_by_user_id, created_at) VALUES "
+                "('review-evaluation', 'review-visit', '[]', '1.0', "
+                "'alerts_present', 1, 1, 'warning', '" + "2" * 64 + "', '" +
+                "3" * 64 + "', '" + "4" * 64 + "', 'review-user', "
+                "'2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO clinical_safety_findings "
+                "(id, evaluation_id, sort_order, rule_id, rule_key, "
+                "rule_version, rule_content_sha256, title, severity, action, "
+                "message, knowledge_fact_ids, condition_trace, created_at) "
+                "VALUES ('review-finding', 'review-evaluation', 1, "
+                "'review-rule', 'REV-RULE-001', 1, '" + "1" * 64 + "', "
+                "'Review finding', 'warning', 'review_before_proceeding', "
+                "'Synthetic review message.', '[]', '[]', "
+                "'2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO clinical_safety_finding_reviews "
+                "(id, finding_id, sequence, action, disposition, "
+                "created_by_user_id, evaluation_result_sha256, "
+                "rule_content_sha256, previous_review_sha256, payload, "
+                "sha256, created_at) VALUES "
+                "('review-event', 'review-finding', 1, 'acknowledged', NULL, "
+                "'review-user', '" + "4" * 64 + "', '" + "1" * 64 + "', "
+                "NULL, '{}', '" + "5" * 64 + "', "
+                "'2026-09-20 10:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="safety finding review history exists",
+        ):
+            command.downgrade(config, "c92e4b7a1d30")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "d51e7a9b2c64"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM clinical_safety_finding_reviews"
             )) == 1
     finally:
         engine.dispose()

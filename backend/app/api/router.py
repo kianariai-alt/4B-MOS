@@ -74,6 +74,9 @@ from backend.app.api.routes.clinical_context import (
 from backend.app.api.routes.clinical_safety import (
     router as clinical_safety_router,
 )
+from backend.app.api.routes.clinical_safety_reviews import (
+    router as clinical_safety_reviews_router,
+)
 
 api_router = APIRouter()
 api_router.include_router(session_finalization_router)
@@ -167,4 +170,7 @@ api_router.include_router(
 )
 api_router.include_router(
     clinical_safety_router
+)
+api_router.include_router(
+    clinical_safety_reviews_router
 )

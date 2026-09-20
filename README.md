@@ -64,3 +64,8 @@ only approved, source-linked rules against that current final context and stores
 append-only, explainable snapshots. It can flag configured conditions for
 physician review; `no_alerts` is never clearance, and the engine does not
 diagnose, prescribe, rank treatments, or learn automatically from patient data.
+
+The [clinical safety finding review workflow](docs/CLINICAL_SAFETY_REVIEW_WORKFLOW.md)
+adds hash-chained, append-only acknowledgment, escalation and physician-assessment
+events for those findings. Review events never rewrite an evaluation, suppress a
+finding, grant clearance or update medical knowledge from patient data.
