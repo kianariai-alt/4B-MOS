@@ -26,6 +26,10 @@ REQUIRED_DATABASE_TABLES = frozenset(
         "clinical_intakes",
         "paraclinical_reports",
         "paraclinical_observations",
+        "clinical_safety_rules",
+        "clinical_safety_rule_knowledge",
+        "clinical_safety_evaluations",
+        "clinical_safety_findings",
     }
 )
 

@@ -59,7 +59,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a8c15d3e7b02"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "c92e4b7a1d30"
     finally:
         engine.dispose()
 
@@ -254,7 +254,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "a8c15d3e7b02"
+            )) == "c92e4b7a1d30"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -427,6 +427,75 @@ def test_structured_clinical_context_migration_refuses_patient_data_loss(
             )) == "a8c15d3e7b02"
             assert connection.scalar(text(
                 "SELECT count(*) FROM clinical_intakes"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+def test_clinical_safety_migration_refuses_governance_data_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'clinical-safety-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        expected_tables = {
+            "clinical_safety_rules",
+            "clinical_safety_rule_knowledge",
+            "clinical_safety_evaluations",
+            "clinical_safety_findings",
+        }
+        assert expected_tables <= set(inspector.get_table_names())
+        assert len(inspector.get_foreign_keys("clinical_safety_rules")) == 3
+        assert (
+            inspector.get_foreign_keys("clinical_safety_rule_knowledge")[0][
+                "options"
+            ]["ondelete"]
+            in {"CASCADE", "RESTRICT"}
+        )
+        assert len(
+            inspector.get_check_constraints("clinical_safety_evaluations")
+        ) == 6
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('safety-user', 'safety_user', 'Safety User', "
+                "'hash', 'physician', 1, 0, 0, "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO clinical_safety_rules "
+                "(id, rule_key, version, title, description, clinical_domain, "
+                "severity, action, message, predicate, status, content_sha256, "
+                "created_by_user_id, row_version, created_at, updated_at) "
+                "VALUES ('safety-rule', 'MIG-SAFETY-001', 1, "
+                "'Synthetic migration rule', "
+                "'Synthetic description used only to protect migration data.', "
+                "'migration', 'warning', 'review_before_proceeding', "
+                "'Synthetic clinician review message.', "
+                "'{\"combinator\":\"all\",\"conditions\":[]}', "
+                "'draft', '" + "0" * 64 + "', 'safety-user', 1, "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="clinical safety registry contains data",
+        ):
+            command.downgrade(config, "a8c15d3e7b02")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "c92e4b7a1d30"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM clinical_safety_rules"
             )) == 1
     finally:
         engine.dispose()

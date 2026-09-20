@@ -22,6 +22,7 @@ class MedicalKnowledgeRepository:
         fact_id: str,
         *,
         for_update: bool = False,
+        for_share: bool = False,
     ) -> MedicalKnowledgeFact | None:
         statement = (
             select(MedicalKnowledgeFact)
@@ -30,6 +31,8 @@ class MedicalKnowledgeRepository:
         )
         if for_update:
             statement = statement.with_for_update()
+        elif for_share:
+            statement = statement.with_for_update(read=True)
         return db.scalar(statement)
 
     @staticmethod
