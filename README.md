@@ -69,3 +69,10 @@ The [clinical safety finding review workflow](docs/CLINICAL_SAFETY_REVIEW_WORKFL
 adds hash-chained, append-only acknowledgment, escalation and physician-assessment
 events for those findings. Review events never rewrite an evaluation, suppress a
 finding, grant clearance or update medical knowledge from patient data.
+
+The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
+lets a physician preserve approved, source-linked knowledge beside one exact
+final clinical-context snapshot. Selection is manual and every response remains
+explicitly non-recommendation, non-ranking, non-clearance and subject to
+independent physician review. It does not infer applicability or learn from
+patient records.

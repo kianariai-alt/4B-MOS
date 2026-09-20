@@ -482,6 +482,15 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
             "get",
         ),
         ("/api/v1/safety/finding-reviews/{review_id}", "get"),
+        (
+            "/api/v1/visits/{visit_id}/evidence-briefs",
+            "post",
+        ),
+        (
+            "/api/v1/visits/{visit_id}/evidence-briefs",
+            "get",
+        ),
+        ("/api/v1/evidence-briefs/{brief_id}", "get"),
         ("/api/v1/visits/{visit_id}/treatments", "post"),
         ("/api/v1/treatments/{treatment_id}/sessions", "post"),
         ("/api/v1/treatment-sessions/{session_id}/workflow", "patch"),

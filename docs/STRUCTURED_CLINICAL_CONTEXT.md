@@ -1,7 +1,7 @@
 # Structured clinical context
 
 Stage 15 adds the patient-specific, structured input layer consumed by the
-separate safety-rule stage and needed before a future clinician-copilot stage. It records an initial clinical
+separate safety-rule and physician-selected evidence-brief stages. It records an initial clinical
 intake and paraclinical reports; it does not diagnose, rank treatments, or
 generate recommendations.
 
@@ -119,7 +119,8 @@ ambiguity around clinically meaningful empty lists and nullable fields.
 1. Drain all older workers and make a verified backup using the existing
    recovery procedure.
 2. Rehearse the migration on a disposable restored copy. The expected Alembic
-   head after the safety-rule and review-workflow stages is `d51e7a9b2c64`.
+   head after the safety-rule, review-workflow and evidence-brief stages is
+   `e6b7c8d9a401`.
 3. Inspect the three new empty tables: `clinical_intakes`,
    `paraclinical_reports` and `paraclinical_observations`; existing visits are
    not backfilled or inferred.
@@ -135,10 +136,14 @@ database pair through the controlled recovery process.
 
 - terminology-server validation and FHIR import/export;
 - file/object storage for original laboratory or imaging documents;
-- clinician-facing advice with source citations and explainability;
+- automatic clinician-facing advice or source applicability inference;
 - knowledge-surveillance proposals and independent approval workflow;
 - outcome aggregation, de-identification, bias monitoring and approved learning.
 
 Deterministic, governed safety flags are now implemented separately in
 `docs/CLINICAL_SAFETY_RULE_ENGINE.md`. They do not provide diagnostic or
 treatment advice and never interpret `no_alerts` as clinical clearance.
+
+Physician-selected, source-transparent evidence snapshots are implemented in
+`docs/CLINICAL_EVIDENCE_BRIEFS.md`; they remain explicitly non-recommendation
+outputs and never select evidence automatically.

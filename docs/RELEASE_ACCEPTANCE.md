@@ -33,8 +33,10 @@ verifies one coherent clinic journey with separate role credentials:
 The suite also verifies that release-critical OpenAPI paths remain present and
 that every generated operation ID is unique. This catches accidental router
 omission and operation-name collisions before an API client is generated. The
-finding-review create/read endpoints are included in that contract check; the
-journey has no seeded rule and therefore deliberately creates no review event.
+finding-review and clinician-selected evidence-brief create/read endpoints are
+included in that contract check. The journey has no seeded rule or governed
+knowledge fact and therefore deliberately creates neither a review event nor an
+evidence brief; their safety contracts have focused synthetic tests.
 
 ## Run the gate
 
@@ -65,6 +67,10 @@ the database-specific locking and concurrency paths.
 - It validates finding-review route availability but cannot exercise a review
   without fabricating a clinically approved rule; focused synthetic tests cover
   its state machine, roles, hashes, tamper detection and audit minimization.
+- It validates evidence-brief route availability but does not fabricate an
+  approved medical claim. Focused synthetic tests cover physician selection,
+  stale hashes, immutable snapshots, historical reads and audit minimization;
+  PostgreSQL CI covers same-visit write serialization.
 - It does not test browser/mobile presentation, accessibility, device support,
   notification delivery, external identity providers or deployment topology.
 - It is not a load, failover, penetration, backup-restore or managed-database

@@ -37,6 +37,8 @@ from backend.app.models.clinical_safety_review import (
     ClinicalSafetyFindingReview,
 )
 from backend.app.models.clinical_context import ClinicalIntake
+from backend.app.models.clinical_evidence import ClinicalEvidenceBrief
+from backend.app.models.medical_knowledge import MedicalKnowledgeFact
 from backend.app.models.patient import Patient
 from backend.app.models.session_amendment import SessionAmendment
 from backend.app.models.treatment import Treatment
@@ -47,9 +49,18 @@ from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.clinical_safety import (
     ClinicalSafetyEvaluationRepository,
 )
+from backend.app.repositories.medical_knowledge import MedicalKnowledgeRepository
 from backend.app.repositories.user import UserRepository
 from backend.app.schemas.session_amendment import SessionAmendmentCreate
 from backend.app.schemas.clinical_context import ClinicalIntakeCreate
+from backend.app.schemas.clinical_evidence import (
+    ClinicalEvidenceBriefCreate,
+    EvidenceBriefFactSelection,
+)
+from backend.app.schemas.medical_knowledge import (
+    KnowledgeFactContent,
+    KnowledgeSourceCreate,
+)
 from backend.app.schemas.clinical_safety import SafetyEvaluationRequest
 from backend.app.schemas.clinical_safety_review import (
     SafetyFindingReviewCreate,
@@ -62,8 +73,10 @@ from backend.app.services.auth import (
     InvalidCredentialsError,
 )
 from backend.app.services.clinical_context import ClinicalContextService
+from backend.app.services.clinical_evidence import ClinicalEvidenceBriefService
 from backend.app.services.clinical_safety import (
     ClinicalSafetyEvaluationService,
+    clinical_context_digest,
     safety_result_digest,
 )
 from backend.app.services.clinical_safety_review import (
@@ -73,6 +86,7 @@ from backend.app.services.session_amendment import SessionAmendmentService
 from backend.app.services.session_workflow import SessionWorkflowService
 from backend.app.services.treatment_session import TreatmentSessionService
 from backend.app.services.user import LastActiveAdminError, UserService
+from backend.app.services.medical_knowledge import knowledge_content_digest
 
 
 POSTGRESQL_URL = os.getenv("TEST_POSTGRESQL_URL")
@@ -846,3 +860,148 @@ def test_safety_finding_reviews_share_the_postgresql_visit_lock(
         assert len(reviews) == 1
         assert reviews[0].sequence == 1
         assert reviews[0].action == "acknowledged"
+
+
+def test_clinical_evidence_briefs_share_the_postgresql_visit_lock(
+    postgresql_engine,
+    monkeypatch,
+):
+    context = _seed_clinical_context(postgresql_engine, treatment_count=1)
+    visit_id = context["visit_id"]
+    physician_id = _id()
+
+    with Session(postgresql_engine) as db:
+        db.add(
+            User(
+                id=physician_id,
+                username="postgres_evidence_physician",
+                display_name="PostgreSQL Evidence Physician",
+                password_hash="integration-test-password-hash-not-for-login",
+                role="physician",
+            )
+        )
+        db.commit()
+
+        actor = db.get(User, physician_id)
+        intake = ClinicalContextService.create_intake(
+            db,
+            visit_id,
+            ClinicalIntakeCreate(
+                chief_complaint="Synthetic PostgreSQL evidence complaint.",
+                history_present_illness=(
+                    "Synthetic history used only to verify evidence-brief "
+                    "serialization."
+                ),
+                body_region="knee",
+                laterality="right",
+                pain_score=4,
+            ),
+            actor=actor,
+        )
+        ClinicalContextService.finalize_intake(
+            db,
+            intake.id,
+            actor=db.get(User, physician_id),
+        )
+
+        knowledge_content = KnowledgeFactContent(
+            title="Synthetic PostgreSQL evidence fact",
+            statement=(
+                "This source-linked synthetic statement exists only to verify "
+                "PostgreSQL evidence-brief locking."
+            ),
+            clinical_domain="integration testing",
+            contraindications=[],
+            evidence_grade="ungraded",
+            sources=[
+                KnowledgeSourceCreate(
+                    source_type="guideline",
+                    title="Synthetic PostgreSQL evidence source",
+                    citation="Synthetic citation for integration testing only.",
+                )
+            ],
+        )
+        fact_key = "PG-EVIDENCE-LOCK"
+        fact_sha256 = knowledge_content_digest(
+            fact_key=fact_key,
+            version=1,
+            content=knowledge_content,
+        )
+        fact = MedicalKnowledgeRepository.create(
+            db,
+            fact_key=fact_key,
+            version=1,
+            content=knowledge_content,
+            content_sha256=fact_sha256,
+            created_by_user_id=physician_id,
+        )
+        fact.status = "approved"
+        db.commit()
+
+        current_context = ClinicalContextService.get_current_context(db, visit_id)
+        context_sha256 = clinical_context_digest(current_context)
+        fact_id = fact.id
+
+    entered = Event()
+    release = Event()
+    original_audit = AuditLogRepository.create
+
+    def pause_evidence_audit(*args, **kwargs):
+        result = original_audit(*args, **kwargs)
+        if kwargs.get("event_type") == "clinical_evidence_brief_created":
+            entered.set()
+            assert release.wait(10), "test failed to release evidence-brief writer"
+        return result
+
+    monkeypatch.setattr(
+        AuditLogRepository,
+        "create",
+        staticmethod(pause_evidence_audit),
+    )
+    payload = ClinicalEvidenceBriefCreate(
+        clinical_question=(
+            "Which selected evidence should receive independent physician review?"
+        ),
+        expected_clinical_context_sha256=context_sha256,
+        facts=[
+            EvidenceBriefFactSelection(
+                fact_id=fact_id,
+                expected_content_sha256=fact_sha256,
+            )
+        ],
+    )
+
+    def create_brief() -> None:
+        with Session(postgresql_engine) as db:
+            ClinicalEvidenceBriefService.create(
+                db,
+                visit_id,
+                payload,
+                actor=db.get(User, physician_id),
+            )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(create_brief)
+        try:
+            assert entered.wait(10), "evidence-brief writer did not reach audit"
+            with pytest.raises(ClinicalRecordWriteConflictError) as conflict:
+                create_brief()
+            assert _sqlstate(conflict.value) == "55P03"
+        finally:
+            release.set()
+        future.result(timeout=10)
+
+    with Session(postgresql_engine) as observer:
+        briefs = observer.scalars(
+            select(ClinicalEvidenceBrief).where(
+                ClinicalEvidenceBrief.visit_id == visit_id
+            )
+        ).all()
+        assert len(briefs) == 1
+        assert briefs[0].knowledge_fact_ids == [fact_id]
+        assert briefs[0].clinical_context_sha256 == context_sha256
+        assert observer.scalar(
+            select(MedicalKnowledgeFact).where(
+                MedicalKnowledgeFact.id == fact_id
+            )
+        ).status == "approved"
