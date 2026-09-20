@@ -754,6 +754,7 @@ def test_safety_finding_reviews_share_the_postgresql_visit_lock(
                 role="physician",
             )
         )
+        db.flush()
         db.add(
             ClinicalSafetyRule(
                 id=rule_id,
