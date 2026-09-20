@@ -59,7 +59,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d51e7a9b2c64"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e6b7c8d9a401"
     finally:
         engine.dispose()
 
@@ -254,7 +254,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "d51e7a9b2c64"
+            )) == "e6b7c8d9a401"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -601,6 +601,88 @@ def test_clinical_safety_review_migration_refuses_history_loss(
             )) == "d51e7a9b2c64"
             assert connection.scalar(text(
                 "SELECT count(*) FROM clinical_safety_finding_reviews"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+def test_clinical_evidence_brief_migration_refuses_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'clinical-evidence-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "clinical_evidence_briefs" in inspector.get_table_names()
+        assert len(inspector.get_foreign_keys("clinical_evidence_briefs")) == 3
+        assert len(inspector.get_check_constraints("clinical_evidence_briefs")) == 5
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('evidence-user', 'evidence_user', 'Evidence User', "
+                "'hash', 'physician', 1, 0, 0, '2026-09-20 10:00:00', "
+                "'2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO patients "
+                "(id, patient_code, first_name, last_name, is_active, "
+                "created_at, updated_at) VALUES "
+                "('evidence-patient', 'EVID-MIG-001', 'Evidence', 'Patient', "
+                "1, '2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO visits "
+                "(id, patient_id, visit_date, status, created_at, updated_at) "
+                "VALUES ('evidence-visit', 'evidence-patient', "
+                "'2026-09-20 10:00:00', 'open', "
+                "'2026-09-20 10:00:00', '2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO clinical_intakes "
+                "(id, visit_id, version, status, chief_complaint, "
+                "history_present_illness, functional_limitations, "
+                "relevant_history, current_medications, allergies, "
+                "red_flags, content_sha256, created_by_user_id, "
+                "finalized_by_user_id, finalized_at, row_version, created_at, "
+                "updated_at) VALUES "
+                "('evidence-intake', 'evidence-visit', 1, 'final', "
+                "'Synthetic complaint', 'Synthetic migration history', "
+                "'[]', '[]', '[]', '[]', '[]', '" + "1" * 64 + "', "
+                "'evidence-user', 'evidence-user', "
+                "'2026-09-20 10:00:00', 1, '2026-09-20 10:00:00', "
+                "'2026-09-20 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO clinical_evidence_briefs "
+                "(id, visit_id, intake_id, report_ids, "
+                "clinical_context_sha256, knowledge_fact_ids, "
+                "knowledge_set_sha256, knowledge_as_of, selection_method, "
+                "output_type, created_by_user_id, payload, sha256, created_at) "
+                "VALUES ('evidence-brief', 'evidence-visit', "
+                "'evidence-intake', '[]', '" + "2" * 64 + "', '[]', '" +
+                "3" * 64 + "', '2026-09-20', 'clinician_selected', "
+                "'evidence_summary', 'evidence-user', '{}', '" + "4" * 64 +
+                "', '2026-09-20 10:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="clinical evidence brief history exists",
+        ):
+            command.downgrade(config, "d51e7a9b2c64")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "e6b7c8d9a401"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM clinical_evidence_briefs"
             )) == 1
     finally:
         engine.dispose()

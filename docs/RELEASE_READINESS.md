@@ -153,6 +153,15 @@ No production patient database was accessed during this work.
   remains non-clearance and review events never mutate, dismiss or override the
   original evaluation. Notification delivery, alert-fatigue policy, override
   authority and the clinician-facing UI remain unimplemented.
+- Stage 18 adds migration `e6b7c8d9a401` and immutable, physician-selected
+  evidence briefs linked to one exact final clinical-context snapshot and one
+  through twenty approved current knowledge facts. Context and fact hashes fail
+  stale creation closed; full source/fact snapshots and explicit limitations are
+  retained, while audit metadata excludes the clinical question, patient values
+  and evidence statements. Deterministic fact order is not ranking. Every output
+  remains non-recommendation, non-risk-score, non-clearance, non-time-critical
+  and requires independent physician review. No automatic matching, diagnosis,
+  treatment direction, publication ingestion or learning is added.
 
 ## Remaining engineering gates
 
@@ -227,13 +236,16 @@ vulnerability audit or full transitive dependency lock.
 5. Product scope: the backend now has a synthetic API-level acceptance scenario,
    a first mobile-friendly staff console for live clinic flow, structured
    intake/paraclinical APIs, an API-only deterministic safety-rule engine and an
-   API-only finding-review timeline. Define the clinician alert UI, notification
-   service, terminology service, deployment environment, clinical ownership and
-   human acceptance scenarios before use.
+   API-only finding-review timeline and physician-selected evidence snapshots.
+   Define the clinician alert/advice UI, notification service, terminology
+   service, deployment environment, clinical ownership and human acceptance
+   scenarios before use.
 
 ## Migration cautions
 
-The new head is `d51e7a9b2c64`, following `c92e4b7a1d30`. It adds an empty
+The new head is `e6b7c8d9a401`, following `d51e7a9b2c64`. It adds an empty
+`clinical_evidence_briefs` table and does not select evidence or create a brief
+for any existing visit. The preceding review revision adds an empty
 `clinical_safety_finding_reviews` table and does not create, acknowledge or
 assess any finding. The preceding safety revision adds empty
 `clinical_safety_rules`, `clinical_safety_rule_knowledge`,
@@ -293,6 +305,11 @@ The finding-review downgrade refuses if any review event exists and refuses
 offline downgrade. Do not delete review history or break its hash chain to force
 a rollback. Restore the reviewed application/database pair and follow the
 approved clinical governance recovery process.
+
+The clinical-evidence-brief downgrade refuses if any brief exists and refuses
+offline downgrade. Do not delete physician-selected evidence history to force a
+rollback; restore the reviewed application/database pair through the approved
+clinical governance recovery process.
 
 ## Developer verification
 

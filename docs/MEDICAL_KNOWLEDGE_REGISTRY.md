@@ -63,7 +63,8 @@ not a computed appraisal: `high`, `moderate`, `low`, `very_low`, `consensus`, or
    recovery procedure.
 2. Rehearse `alembic upgrade head` on a disposable restored copy. The registry
    revision is `f4b14c2d9a01`; the current application head after the structured
-   clinical-context, safety-rule and review-workflow stages is `d51e7a9b2c64`.
+   clinical-context, safety-rule, review-workflow and evidence-brief stages is
+   `e6b7c8d9a401`.
 3. Deploy only the matching application build and run the read-only preflight.
 4. Create content with synthetic/staging data first; verify author/reviewer
    separation, approved filtering, superseding and audit history.
@@ -78,13 +79,17 @@ reviewed knowledge to bypass this protection.
 
 - terminology validation and standards-conformant clinical exchange (the
   structured intake/observation stage stores codes but does not validate them);
-- patient-specific recommendation generation with source citations;
+- automatic patient-specific recommendation generation or applicability inference;
 - publication surveillance and proposed knowledge updates;
 - outcome aggregation, bias monitoring and clinician-approved learning.
 
 The governed deterministic safety-rule layer is now implemented separately in
 `docs/CLINICAL_SAFETY_RULE_ENGINE.md`; it consumes approved registry facts but
 does not create recommendations or clinical clearance.
+
+The physician-selected evidence-brief layer is implemented separately in
+`docs/CLINICAL_EVIDENCE_BRIEFS.md`. It snapshots only facts that a physician
+explicitly selects and remains a non-recommendation output.
 
 Those stages must consume approved registry content and preserve physician
 control. They must not train on or promote individual patient records by default.

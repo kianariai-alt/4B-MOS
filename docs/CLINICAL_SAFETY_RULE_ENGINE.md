@@ -117,7 +117,8 @@ Visit-scoped evaluation writes share the existing parent-row locking protocol.
    wording, evidence, validity windows, review cadence and retirement criteria.
 2. Drain old workers, create a verified backup and rehearse the upgrade on a
    disposable restored copy. The engine revision is `c92e4b7a1d30`; the current
-   application head after the review-workflow stage is `d51e7a9b2c64`.
+   application head after the review-workflow and evidence-brief stages is
+   `e6b7c8d9a401`.
 3. Inspect the four engine tables and the empty finding-review table, then run
    release preflight. Deploy only the matching application build; never run a
    mixed-version fleet.

@@ -185,6 +185,15 @@ explicitly does not change that result or grant clearance. Do not treat a review
 event as permission to proceed, and do not deploy before the clinic has approved
 workflow wording, responsibility, response times and downtime procedures.
 
+Stage 18 requires Stage 17 and migration `e6b7c8d9a401`. It adds the immutable,
+physician-selected evidence summary described in
+`docs/CLINICAL_EVIDENCE_BRIEFS.md`. Creation requires the exact current final
+context hash and exact hashes for approved current knowledge facts. It preserves
+source transparency and explicit limitations but never selects evidence,
+diagnoses, ranks or recommends automatically. Do not deploy before clinical
+governance approves intended use, source eligibility, review cadence, wording,
+responsibility and the human-factors workflow.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into
@@ -209,7 +218,7 @@ it is not a general query timeout and does not make direct SQL concurrency-safe.
 `GET /api/v1/health` reports process liveness only.
 `GET /api/v1/health/ready` reports 200 only with the expected revision, critical
 tables and (for SQLite) FK enforcement. It returns a redacted 503 otherwise.
-The head is `d51e7a9b2c64`; upgrade a disposable copy and inspect the result
+The head is `e6b7c8d9a401`; upgrade a disposable copy and inspect the result
 before any production change. Installing code does NOT upgrade the database.
 
 After the selected database is upgraded and an active administrator has been
@@ -307,6 +316,11 @@ offline downgrade. Do not erase acknowledgment, escalation or assessment
 history to force older code onto the database; restore the reviewed release and
 database pair through the clinical governance recovery process.
 
+The Stage 18 downgrade refuses if any evidence brief exists and refuses offline
+downgrade. Do not erase a physician-selected evidence snapshot to force older
+code onto the database; restore the reviewed release and database pair through
+the clinical governance recovery process.
+
 ## Deferred decisions, not silently enabled features
 
 - Amendments: whether an independent legal/clinical signature, external timestamp,
@@ -316,9 +330,9 @@ database pair through the clinical governance recovery process.
   Append-only review recording does not implement those policies, and existing
   treatment workflow rules are unchanged.
 - Product: the live-flow console is only the first mobile clinical UI slice;
-  governed safety rules and finding reviews are API-only, and broader clinical
-  data-entry/advice screens, deployment host, access boundaries, workstation
-  policy and data retention remain decisions.
+  governed safety rules, finding reviews and evidence briefs are API-only, and
+  broader clinical data-entry/advice screens, deployment host, access boundaries,
+  workstation policy and data retention remain decisions.
 
 These do not block delivery of the tested technical package, but do block calling
 the whole product production-ready. Installing the migration does not constitute

@@ -84,7 +84,8 @@ by their own parent locks. SQLite retains its database-writer serialization.
 1. Obtain clinical sign-off for workflow terminology, allowed dispositions,
    required notes, responsibility boundaries and escalation response times.
 2. Drain old workers, take a verified backup and rehearse `alembic upgrade head`
-   on a disposable restored copy. The expected head is `d51e7a9b2c64`.
+   on a disposable restored copy. The expected head after the evidence-brief
+   stage is `e6b7c8d9a401`.
 3. Confirm the new `clinical_safety_finding_reviews` table is empty, run release
    preflight and deploy only the matching application/database pair.
 4. In staging, verify nurse acknowledgment/escalation, physician-only assessment,
