@@ -1,12 +1,12 @@
-# Clinical operations and evidence-review console
+# Clinical operations, evidence-review and safety-inbox console
 
 The mobile-friendly staff interface is served from `/app/` by the same FastAPI
 process as the API. It provides authenticated access to the existing clinic
 live-flow projection, executes only workflow transitions returned by the backend
-and exposes a deliberately narrow evidence-review workspace for authorized
-clinicians.
+and exposes deliberately narrow evidence-review and clinical-safety workspaces
+for authorized clinicians.
 
-Stage 19 adds no clinical policy, database migration, patient-data store,
+Stages 19 and 20 add no clinical policy, database migration, patient-data store,
 offline mode or public patient portal. The API remains the authorization,
 integrity and validation boundary.
 
@@ -54,6 +54,29 @@ infer applicability, issue clearance or time-critical advice, retrieve external
 literature, or learn from patient records. The physician remains responsible for
 source applicability and independent clinical judgment.
 
+## Clinical safety inbox journey
+
+Admins, physicians and nurses can open **صندوق ایمنی بالینی** from the tab or
+from an active visit card. The console loads the latest integrity-checked
+evaluation together with every integrity-checked finding-review timeline.
+
+1. Select an active visit or enter its exact visit ID.
+2. Compare the latest evaluation snapshot with the server-computed hash of the
+   current final clinical context. A mismatch is shown as stale.
+3. Review rule metadata, source-fact identifiers and condition traces. Patient
+   values are not duplicated into the trace.
+4. An admin or physician may explicitly confirm a new deterministic evaluation.
+5. A physician or nurse may append acknowledgment or escalation; only a
+   physician may append a terminal assessment.
+6. Every write sends the exact evaluation-result hash last read, requires a
+   confirmation and then reloads the authoritative timeline. No event can be
+   edited or deleted.
+
+`no_alerts` and `no_active_rules` are never displayed as clearance. The inbox
+does not diagnose, recommend, rank, authorize treatment, suppress findings,
+notify external recipients or learn from patient records. See
+`CLINICAL_SAFETY_INBOX.md` for the complete contract.
+
 ## Role matrix
 
 | Capability | admin | physician | nurse | operator | viewer |
@@ -63,6 +86,10 @@ source applicability and independent clinical judgment.
 | Read evidence briefs in console | yes | yes | yes | no | no |
 | Search approved facts in composer | no | yes | no | no | no |
 | Create immutable evidence brief | no | yes | no | no | no |
+| Read safety inbox | yes | yes | yes | no | no |
+| Run deterministic safety evaluation | yes | yes | no | no | no |
+| Acknowledge or escalate a finding | no | yes | yes | no | no |
+| Record terminal finding assessment | no | yes | no | no | no |
 
 ## Browser security contract
 
@@ -79,8 +106,9 @@ source applicability and independent clinical judgment.
   interpreted as markup.
 - Approved-fact URLs and citations are rendered as inert text. The console does
   not navigate to untrusted source URLs or load third-party content.
-- The server supplies the canonical clinical-context hash used for the guarded
-  create request; the browser does not reimplement clinical canonicalization.
+- The server supplies the canonical clinical-context hash used for guarded
+  evidence and safety requests; the browser does not reimplement clinical
+  canonicalization.
 - The page intentionally has no service worker, offline cache or browser push.
 
 These controls reduce browser exposure but do not replace HTTPS, a reviewed
@@ -89,9 +117,10 @@ screen privacy, staff training or production penetration testing.
 
 ## Verification
 
-The backend suite verifies the shell, evidence-workspace safety copy and
-contracts, same-origin assets, server-computed context digest, security headers,
-absence of persistent browser token storage and continued API authentication.
+The backend suite verifies the shell, evidence- and safety-workspace copy and
+contracts, role boundaries, stale-context detection, same-origin assets,
+server-computed context digest, security headers, absence of persistent browser
+token storage and continued API authentication.
 CI additionally runs JavaScript syntax validation. The hardened container smoke
 loads `/app/` and verifies that the packaged JavaScript is not cacheable.
 
@@ -99,4 +128,5 @@ This is an engineering gate, not clinician acceptance or a regulatory
 determination. Before production use, validate Persian terminology, evidence
 presentation, accessibility, supported browsers, real staff roles, workstation
 handling and both workflows with synthetic data in the selected staging
-environment.
+environment. Safety-alert delivery, response-time policy and clinical
+prioritization remain separate deployment and governance work.

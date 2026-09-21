@@ -687,6 +687,97 @@ def create_reviewable_finding(client, reviewer_headers, visit) -> dict:
     }
 
 
+def test_safety_inbox_exposes_latest_verified_evaluation_and_timeline(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+):
+    path = f"/api/v1/visits/{visit['id']}/safety-inbox"
+    empty = client.get(path, headers=nurse_headers)
+    assert empty.status_code == 200, empty.text
+    assert empty.json()["evaluation"] is None
+    assert empty.json()["evaluation_matches_current_context"] is None
+    assert empty.json()["findings"] == []
+    assert len(empty.json()["current_clinical_context_sha256"]) == 64
+    assert empty.json()["is_clinical_clearance"] is False
+
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    evaluation = reviewable["evaluation"]
+    finding = reviewable["finding"]
+    loaded = client.get(path, headers=nurse_headers)
+    assert loaded.status_code == 200, loaded.text
+    inbox = loaded.json()
+    assert inbox["evaluation"]["id"] == evaluation["id"]
+    assert inbox["evaluation_matches_current_context"] is True
+    assert inbox["is_clinical_clearance"] is False
+    assert len(inbox["findings"]) == 1
+    assert inbox["findings"][0]["finding"]["id"] == finding["id"]
+    assert inbox["findings"][0]["timeline"]["review_status"] == "unreviewed"
+
+    reviewed = client.post(
+        (
+            f"/api/v1/visits/{visit['id']}/safety-findings/"
+            f"{finding['id']}/reviews"
+        ),
+        json={
+            "action": "acknowledged",
+            "expected_evaluation_result_sha256": evaluation["result_sha256"],
+        },
+        headers=nurse_headers,
+    )
+    assert reviewed.status_code == 201, reviewed.text
+
+    refreshed = client.get(path, headers=nurse_headers)
+    assert refreshed.status_code == 200, refreshed.text
+    timeline = refreshed.json()["findings"][0]["timeline"]
+    assert timeline["review_status"] == "acknowledged"
+    assert timeline["reviews"][0]["action"] == "acknowledged"
+    assert timeline["evaluation_result_sha256"] == evaluation["result_sha256"]
+
+
+def test_safety_inbox_reports_staleness_and_enforces_access(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+):
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    path = f"/api/v1/visits/{visit['id']}/safety-inbox"
+
+    extra_report = report_payload()
+    extra_report["report_key"] = "SAFETY-LAB-STALE"
+    extra_report["title"] = "Synthetic report that changes current context"
+    created = client.post(
+        f"/api/v1/visits/{visit['id']}/paraclinical-reports",
+        json=extra_report,
+    )
+    assert created.status_code == 201, created.text
+    finalized = client.post(
+        f"/api/v1/paraclinical-reports/{created.json()['id']}/finalize"
+    )
+    assert finalized.status_code == 200, finalized.text
+
+    response = client.get(path, headers=nurse_headers)
+    assert response.status_code == 200, response.text
+    inbox = response.json()
+    assert inbox["evaluation_matches_current_context"] is False
+    assert inbox["current_clinical_context_sha256"] != reviewable["evaluation"][
+        "clinical_context_sha256"
+    ]
+
+    viewer_headers = create_role_headers(
+        client,
+        username="safety_inbox_viewer",
+        role="viewer",
+    )
+    assert client.get(path, headers=viewer_headers).status_code == 403
+    assert client.get(
+        "/api/v1/visits/missing/safety-inbox",
+        headers=nurse_headers,
+    ).status_code == 404
+
+
 def test_finding_review_starts_unreviewed_and_is_snapshot_bound(
     client,
     visit,
@@ -933,6 +1024,12 @@ def test_tampered_review_chain_is_rejected(
     response = client.get(path, headers=nurse_headers)
     assert response.status_code == 409
     assert "integrity" in response.json()["detail"]
+    inbox = client.get(
+        f"/api/v1/visits/{visit['id']}/safety-inbox",
+        headers=nurse_headers,
+    )
+    assert inbox.status_code == 409
+    assert "integrity" in inbox.json()["detail"]
 
 
 def test_finding_review_rows_reject_orm_update_and_delete(

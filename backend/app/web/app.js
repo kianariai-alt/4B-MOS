@@ -4,6 +4,8 @@ const API_BASE = "/api/v1";
 const REFRESH_INTERVAL_MS = 30_000;
 const MAX_SELECTED_FACTS = 20;
 const EVIDENCE_READ_ROLES = new Set(["admin", "physician", "nurse"]);
+const SAFETY_READ_ROLES = new Set(["admin", "physician", "nurse"]);
+const SAFETY_EVALUATE_ROLES = new Set(["admin", "physician"]);
 
 const roleLabels = Object.freeze({
   admin: "مدیر سامانه",
@@ -56,6 +58,54 @@ const interpretationLabels = Object.freeze({
   indeterminate: "نامعین",
 });
 
+const safetySeverityLabels = Object.freeze({
+  info: "اطلاعاتی",
+  warning: "هشدار",
+  high: "بالا",
+  critical: "بحرانی",
+});
+
+const safetyRequiredActionLabels = Object.freeze({
+  document: "ثبت و مستندسازی",
+  review_before_proceeding: "مرور پیش از ادامه",
+  urgent_clinical_review: "مرور فوری بالینی",
+});
+
+const safetyOutcomeLabels = Object.freeze({
+  alerts_present: "یافته ثبت شده است",
+  no_alerts: "یافته‌ای ثبت نشده است (مجوز بالینی نیست)",
+  no_active_rules: "قاعدهٔ فعال وجود ندارد (مجوز بالینی نیست)",
+});
+
+const safetyReviewStatusLabels = Object.freeze({
+  unreviewed: "مرور نشده",
+  acknowledged: "مشاهده و ثبت شد",
+  escalated: "ارجاع شد",
+  assessed: "ارزیابی پزشک ثبت شد",
+});
+
+const safetyReviewActionLabels = Object.freeze({
+  acknowledged: "ثبت مشاهده",
+  escalated: "ارجاع برای بررسی",
+  assessed: "ثبت ارزیابی پزشک",
+});
+
+const safetyDispositionLabels = Object.freeze({
+  requires_action: "نیازمند اقدام بالینی",
+  not_applicable: "نامرتبط با زمینهٔ فعلی",
+  action_documented: "اقدام جداگانه مستند شده",
+  monitoring: "پایش مستند",
+});
+
+const safetyReasonLabels = Object.freeze({
+  clinical_context: "زمینهٔ بالینی",
+  measurement_quality: "کیفیت اندازه‌گیری",
+  rule_scope: "دامنهٔ قاعده",
+  patient_specific_factor: "عامل مختص بیمار",
+  action_taken: "اقدام انجام‌شده",
+  other: "سایر",
+});
+
 const columns = Object.freeze([
   { key: "scheduled", label: "برنامه‌ریزی‌شده" },
   { key: "checked_in", label: "پذیرش‌شده" },
@@ -82,8 +132,10 @@ const elements = {
   consoleMessage: document.querySelector("#console-message"),
   flowTab: document.querySelector("#flow-tab"),
   evidenceTab: document.querySelector("#evidence-tab"),
+  safetyTab: document.querySelector("#safety-tab"),
   flowWorkspace: document.querySelector("#flow-workspace"),
   evidenceWorkspace: document.querySelector("#evidence-workspace"),
+  safetyWorkspace: document.querySelector("#safety-workspace"),
   flowBoard: document.querySelector("#flow-board"),
   metricActive: document.querySelector("#metric-active"),
   metricCheckedIn: document.querySelector("#metric-checked-in"),
@@ -111,6 +163,15 @@ const elements = {
   evidenceAcknowledgement: document.querySelector("#evidence-acknowledgement"),
   createBriefButton: document.querySelector("#create-brief-button"),
   evidenceBriefs: document.querySelector("#evidence-briefs"),
+  safetyVisitForm: document.querySelector("#safety-visit-form"),
+  safetyVisitId: document.querySelector("#safety-visit-id"),
+  loadSafetyButton: document.querySelector("#load-safety-button"),
+  safetyMessage: document.querySelector("#safety-message"),
+  safetyContent: document.querySelector("#safety-content"),
+  safetyContextHash: document.querySelector("#safety-context-hash"),
+  safetySummary: document.querySelector("#safety-summary"),
+  runSafetyEvaluationButton: document.querySelector("#run-safety-evaluation-button"),
+  safetyFindings: document.querySelector("#safety-findings"),
   actionDialog: document.querySelector("#action-dialog"),
   dialogKicker: document.querySelector("#dialog-kicker"),
   dialogTitle: document.querySelector("#dialog-title"),
@@ -125,11 +186,14 @@ let refreshTimer = null;
 let requestInProgress = false;
 let actionInProgress = false;
 let evidenceRequestInProgress = false;
+let safetyRequestInProgress = false;
 let activeWorkspace = "flow";
 let currentEvidenceVisitId = null;
 let currentClinicalContext = null;
 let currentKnowledgeFacts = [];
 let currentEvidenceBriefs = [];
+let currentSafetyVisitId = null;
+let currentSafetyInbox = null;
 let sessionGeneration = 0;
 const selectedFacts = new Map();
 
@@ -223,6 +287,18 @@ function canCreateEvidence() {
   return Boolean(currentUser && currentUser.role === "physician");
 }
 
+function canReadSafety() {
+  return Boolean(currentUser && SAFETY_READ_ROLES.has(currentUser.role));
+}
+
+function canRunSafetyEvaluation() {
+  return Boolean(currentUser && SAFETY_EVALUATE_ROLES.has(currentUser.role));
+}
+
+function canRecordSafetyReview() {
+  return Boolean(currentUser && ["physician", "nurse"].includes(currentUser.role));
+}
+
 function setConnectionState(connected) {
   elements.connectionState.textContent = connected ? "متصل" : "ارتباط قطع است";
   elements.connectionState.classList.toggle("is-offline", !connected);
@@ -238,6 +314,12 @@ function showEvidenceMessage(message, isError = false) {
   elements.evidenceMessage.textContent = message;
   elements.evidenceMessage.classList.toggle("is-error", isError);
   elements.evidenceMessage.hidden = !message;
+}
+
+function showSafetyMessage(message, isError = false) {
+  elements.safetyMessage.textContent = message;
+  elements.safetyMessage.classList.toggle("is-error", isError);
+  elements.safetyMessage.hidden = !message;
 }
 
 function setLoginBusy(isBusy) {
@@ -264,6 +346,20 @@ function setEvidenceBusy(isBusy, label = "در حال بارگذاری…") {
     : "بارگذاری زمینه و خلاصه‌ها";
 }
 
+function setSafetyBusy(isBusy, label = "در حال بارگذاری…") {
+  safetyRequestInProgress = isBusy;
+  elements.loadSafetyButton.disabled = isBusy;
+  elements.runSafetyEvaluationButton.disabled = isBusy;
+  elements.loadSafetyButton.textContent = isBusy
+    ? label
+    : "بارگذاری صندوق ایمنی";
+  for (const field of elements.safetyFindings.querySelectorAll(
+    "button, select, textarea, input",
+  )) {
+    field.disabled = isBusy;
+  }
+}
+
 function resetEvidenceState() {
   currentEvidenceVisitId = null;
   currentClinicalContext = null;
@@ -283,6 +379,18 @@ function resetEvidenceState() {
   updateSelectedFacts();
 }
 
+function resetSafetyState() {
+  currentSafetyVisitId = null;
+  currentSafetyInbox = null;
+  elements.safetyVisitForm.reset();
+  elements.safetyContent.hidden = true;
+  elements.safetyContextHash.textContent = "";
+  elements.safetySummary.replaceChildren();
+  elements.safetyFindings.replaceChildren();
+  elements.runSafetyEvaluationButton.hidden = true;
+  showSafetyMessage("");
+}
+
 function resetOperationalState() {
   currentFlow = null;
   elements.flowBoard.replaceChildren();
@@ -300,15 +408,23 @@ function setWorkspace(workspace) {
   if (workspace === "evidence" && !canReadEvidence()) {
     return;
   }
+  if (workspace === "safety" && !canReadSafety()) {
+    return;
+  }
 
   activeWorkspace = workspace;
   const isFlow = workspace === "flow";
+  const isEvidence = workspace === "evidence";
+  const isSafety = workspace === "safety";
   elements.flowWorkspace.hidden = !isFlow;
-  elements.evidenceWorkspace.hidden = isFlow;
+  elements.evidenceWorkspace.hidden = !isEvidence;
+  elements.safetyWorkspace.hidden = !isSafety;
   elements.flowTab.setAttribute("aria-selected", String(isFlow));
-  elements.evidenceTab.setAttribute("aria-selected", String(!isFlow));
+  elements.evidenceTab.setAttribute("aria-selected", String(isEvidence));
+  elements.safetyTab.setAttribute("aria-selected", String(isSafety));
   elements.flowTab.tabIndex = isFlow ? 0 : -1;
-  elements.evidenceTab.tabIndex = isFlow ? -1 : 0;
+  elements.evidenceTab.tabIndex = isEvidence ? 0 : -1;
+  elements.safetyTab.tabIndex = isSafety ? 0 : -1;
 
   if (isFlow) {
     startAutoRefresh();
@@ -327,6 +443,7 @@ function showLogin() {
   currentUser = null;
   requestInProgress = false;
   evidenceRequestInProgress = false;
+  safetyRequestInProgress = false;
   actionInProgress = false;
   elements.refreshButton.disabled = false;
   elements.refreshButton.textContent = "تازه‌سازی";
@@ -334,17 +451,25 @@ function showLogin() {
   elements.loadEvidenceButton.textContent = "بارگذاری زمینه و خلاصه‌ها";
   elements.knowledgeSearchButton.disabled = false;
   elements.knowledgeResetButton.disabled = false;
+  elements.loadSafetyButton.disabled = false;
+  elements.loadSafetyButton.textContent = "بارگذاری صندوق ایمنی";
+  elements.runSafetyEvaluationButton.disabled = false;
   elements.dialogConfirm.disabled = false;
   resetOperationalState();
   resetEvidenceState();
+  resetSafetyState();
   activeWorkspace = "flow";
   elements.flowWorkspace.hidden = false;
   elements.evidenceWorkspace.hidden = true;
+  elements.safetyWorkspace.hidden = true;
   elements.flowTab.setAttribute("aria-selected", "true");
   elements.evidenceTab.setAttribute("aria-selected", "false");
+  elements.safetyTab.setAttribute("aria-selected", "false");
   elements.flowTab.tabIndex = 0;
   elements.evidenceTab.tabIndex = -1;
+  elements.safetyTab.tabIndex = -1;
   elements.evidenceTab.hidden = true;
+  elements.safetyTab.hidden = true;
   elements.consoleView.hidden = true;
   elements.identityArea.hidden = true;
   elements.loginView.hidden = false;
@@ -360,7 +485,9 @@ function showConsole() {
   elements.userDisplayName.textContent = currentUser.display_name;
   elements.userRole.textContent = roleLabels[currentUser.role] || currentUser.role;
   elements.evidenceTab.hidden = !canReadEvidence();
+  elements.safetyTab.hidden = !canReadSafety();
   elements.evidenceComposer.hidden = !canCreateEvidence();
+  elements.runSafetyEvaluationButton.hidden = !canRunSafetyEvaluation();
   setWorkspace("flow");
 }
 
@@ -460,6 +587,21 @@ function createSessionCard(item) {
       `مرور شواهد برای ویزیت ${item.patient_name}`,
     );
     card.append(evidenceButton);
+  }
+
+  if (canReadSafety()) {
+    const safetyButton = createTextElement(
+      "button",
+      "button button-safety",
+      "صندوق ایمنی",
+    );
+    safetyButton.type = "button";
+    safetyButton.dataset.safetyVisitId = item.visit_id;
+    safetyButton.setAttribute(
+      "aria-label",
+      `صندوق ایمنی برای ویزیت ${item.patient_name}`,
+    );
+    card.append(safetyButton);
   }
 
   return card;
@@ -1071,6 +1213,532 @@ async function loadEvidenceWorkspace(visitId) {
   }
 }
 
+function createSafetyStatus(value, labels, className = "safety-status") {
+  const status = createTextElement("span", className, labels[value] || value);
+  status.dataset.value = value;
+  return status;
+}
+
+function renderSafetySummary(inbox) {
+  elements.safetyContextHash.textContent = inbox.current_clinical_context_sha256;
+  elements.safetyContextHash.title = "هش دقیق زمینهٔ بالینی فعلی";
+  elements.runSafetyEvaluationButton.hidden = !canRunSafetyEvaluation();
+
+  const fragment = document.createDocumentFragment();
+  if (!inbox.evaluation) {
+    fragment.append(
+      createTextElement(
+        "p",
+        "empty-state",
+        "برای این ویزیت هنوز snapshot ارزیابی ایمنی ثبت نشده است. این وضعیت به‌معنای نبود خطر یا مجوز بالینی نیست.",
+      ),
+    );
+    elements.safetySummary.replaceChildren(fragment);
+    return;
+  }
+
+  const evaluation = inbox.evaluation;
+  const freshness = createTextElement(
+    "p",
+    inbox.evaluation_matches_current_context ? "safety-fresh" : "context-warning",
+    inbox.evaluation_matches_current_context
+      ? "این ارزیابی با زمینهٔ بالینی فعلی منطبق است."
+      : "زمینهٔ بالینی پس از این ارزیابی تغییر کرده است؛ یافته‌ها snapshot قبلی‌اند و باید پیش از اتکا، ارزیابی تازه اجرا شود.",
+  );
+  const summaryCard = document.createElement("article");
+  summaryCard.className = "safety-summary-card";
+  summaryCard.append(
+    createSafetyStatus(evaluation.outcome, safetyOutcomeLabels, "safety-outcome"),
+    createDefinitionGrid([
+      ["زمان ارزیابی", formatDateTime(evaluation.created_at)],
+      ["قواعد ارزیابی‌شده", toPersianNumber(evaluation.evaluated_rule_count)],
+      ["تعداد یافته‌ها", toPersianNumber(evaluation.triggered_count)],
+      [
+        "بالاترین شدت",
+        evaluation.highest_severity
+          ? safetySeverityLabels[evaluation.highest_severity] || evaluation.highest_severity
+          : "—",
+      ],
+      ["نسخهٔ موتور", evaluation.engine_version],
+      ["مجوز بالینی", "خیر"],
+    ], "safety-summary-grid"),
+    createDefinitionGrid([
+      ["هش زمینهٔ snapshot", evaluation.clinical_context_sha256],
+      ["هش مجموعهٔ قواعد", evaluation.rule_set_sha256],
+      ["هش نتیجه", evaluation.result_sha256],
+    ], "brief-hashes"),
+  );
+  fragment.append(freshness, summaryCard);
+  elements.safetySummary.replaceChildren(fragment);
+}
+
+function createSafetyTrace(trace) {
+  const item = document.createElement("li");
+  item.className = "safety-trace";
+  item.dataset.matched = String(trace.matched);
+  const source = trace.source === "intake" ? "شرح حال" : "مشاهدهٔ پاراکلینیکی";
+  const code = [trace.code_system, trace.code].filter(Boolean).join(": ");
+  item.append(
+    createTextElement(
+      "strong",
+      "",
+      `${source} · ${trace.field} · ${trace.operator}`,
+    ),
+    createTextElement(
+      "span",
+      "",
+      trace.matched ? "شرط منطبق شد" : "شرط منطبق نشد",
+    ),
+  );
+  if (code) {
+    item.append(createTextElement("small", "", `کد: ${code}`));
+  }
+  if (trace.matched_record_ids.length) {
+    item.append(createTextElement(
+      "small",
+      "record-meta",
+      `شناسهٔ رکوردهای منطبق: ${trace.matched_record_ids.join("، ")}`,
+    ));
+  }
+  return item;
+}
+
+function createSafetyTimeline(timeline) {
+  const section = document.createElement("section");
+  section.className = "safety-timeline";
+  section.append(createTextElement("h4", "", "زنجیرهٔ پیگیری تغییرناپذیر"));
+  if (!timeline.reviews.length) {
+    section.append(createTextElement(
+      "p",
+      "empty-state",
+      "هنوز رویداد پیگیری برای این یافته ثبت نشده است.",
+    ));
+    return section;
+  }
+
+  const list = document.createElement("ol");
+  for (const review of timeline.reviews) {
+    const item = document.createElement("li");
+    item.className = "safety-review-event";
+    item.append(
+      createTextElement(
+        "strong",
+        "",
+        `${toPersianNumber(review.sequence)}. ${safetyReviewActionLabels[review.action] || review.action}`,
+      ),
+      createTextElement(
+        "span",
+        "",
+        `${review.payload.actor.actor_display_name} · ${roleLabels[review.payload.actor.actor_role] || review.payload.actor.actor_role} · ${formatDateTime(review.created_at)}`,
+      ),
+    );
+    if (review.disposition) {
+      item.append(createTextElement(
+        "span",
+        "",
+        `وضعیت ثبت‌شده: ${safetyDispositionLabels[review.disposition] || review.disposition}`,
+      ));
+    }
+    if (review.payload.reason_code) {
+      item.append(createTextElement(
+        "span",
+        "",
+        `دلیل: ${safetyReasonLabels[review.payload.reason_code] || review.payload.reason_code}`,
+      ));
+    }
+    if (review.payload.note) {
+      item.append(createTextElement("p", "safety-review-note", review.payload.note));
+    }
+    item.append(createTextElement("code", "record-meta", `SHA-256: ${review.sha256}`));
+    list.append(item);
+  }
+  section.append(list);
+  return section;
+}
+
+function allowedSafetyReviewActions(status) {
+  if (!canRecordSafetyReview() || status === "assessed") {
+    return [];
+  }
+  const actions = [];
+  if (status === "unreviewed") {
+    actions.push("acknowledged");
+  }
+  if (["unreviewed", "acknowledged"].includes(status)) {
+    actions.push("escalated");
+  }
+  if (currentUser.role === "physician") {
+    actions.push("assessed");
+  }
+  return actions;
+}
+
+function createLabeledSelect(labelText, name, labels, values) {
+  const label = document.createElement("label");
+  label.append(createTextElement("span", "", labelText));
+  const select = document.createElement("select");
+  select.name = name;
+  const prompt = document.createElement("option");
+  prompt.value = "";
+  prompt.textContent = "انتخاب کنید";
+  select.append(prompt);
+  for (const value of values) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = labels[value] || value;
+    select.append(option);
+  }
+  label.append(select);
+  return { label, select };
+}
+
+function syncSafetyReviewForm(form) {
+  const action = form.elements.action.value;
+  const isAssessment = action === "assessed";
+  const noteRequired = action === "escalated" || isAssessment;
+  const assessmentFields = form.querySelector(".safety-assessment-fields");
+  assessmentFields.hidden = !isAssessment;
+  form.elements.disposition.required = isAssessment;
+  form.elements.reason_code.required = isAssessment;
+  form.elements.note.required = noteRequired;
+  if (!isAssessment) {
+    form.elements.disposition.value = "";
+    form.elements.reason_code.value = "";
+  }
+}
+
+function createSafetyReviewForm(timeline) {
+  const actions = allowedSafetyReviewActions(timeline.review_status);
+  if (!actions.length) {
+    return null;
+  }
+
+  const form = document.createElement("form");
+  form.className = "safety-review-form";
+  form.dataset.findingId = timeline.finding_id;
+  form.dataset.evaluationHash = timeline.evaluation_result_sha256;
+
+  const action = createLabeledSelect(
+    "رویداد جدید",
+    "action",
+    safetyReviewActionLabels,
+    actions,
+  );
+  action.select.required = true;
+  action.select.className = "safety-review-action";
+
+  const assessmentFields = document.createElement("div");
+  assessmentFields.className = "safety-assessment-fields";
+  assessmentFields.hidden = true;
+  const disposition = createLabeledSelect(
+    "وضعیت ثبت‌شده توسط پزشک",
+    "disposition",
+    safetyDispositionLabels,
+    Object.keys(safetyDispositionLabels),
+  );
+  const reason = createLabeledSelect(
+    "دلیل ثبت‌شده",
+    "reason_code",
+    safetyReasonLabels,
+    Object.keys(safetyReasonLabels),
+  );
+  assessmentFields.append(disposition.label, reason.label);
+
+  const noteLabel = document.createElement("label");
+  noteLabel.append(createTextElement("span", "", "یادداشت پیگیری"));
+  const note = document.createElement("textarea");
+  note.name = "note";
+  note.maxLength = 5000;
+  note.rows = 4;
+  noteLabel.append(note);
+
+  const acknowledgement = document.createElement("label");
+  acknowledgement.className = "acknowledgement";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.name = "acknowledgement";
+  checkbox.required = true;
+  acknowledgement.append(
+    checkbox,
+    createTextElement(
+      "span",
+      "",
+      "می‌دانم این رویداد فقط مستندسازی پیگیری است، نتیجهٔ ارزیابی را تغییر نمی‌دهد و مجوز بالینی ایجاد نمی‌کند.",
+    ),
+  );
+
+  const submit = createTextElement("button", "button button-primary", "ثبت رویداد");
+  submit.type = "submit";
+  form.append(action.label, assessmentFields, noteLabel, acknowledgement, submit);
+  return form;
+}
+
+function renderSafetyFindings(inbox) {
+  const fragment = document.createDocumentFragment();
+  if (!inbox.evaluation) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "تا پیش از ثبت یک ارزیابی، یافته‌ای برای نمایش وجود ندارد.",
+    ));
+  } else if (!inbox.findings.length) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "در این snapshot یافته‌ای ثبت نشده است؛ این نتیجه مجوز بالینی یا تأیید نبود خطر نیست.",
+    ));
+  }
+
+  for (const entry of inbox.findings) {
+    const { finding, timeline } = entry;
+    const card = document.createElement("article");
+    card.className = "safety-finding-card";
+    card.dataset.severity = finding.severity;
+
+    const heading = document.createElement("div");
+    heading.className = "safety-finding-heading";
+    heading.append(
+      createTextElement("h4", "", finding.title),
+      createSafetyStatus(finding.severity, safetySeverityLabels, "safety-severity"),
+      createSafetyStatus(
+        timeline.review_status,
+        safetyReviewStatusLabels,
+        "safety-review-status",
+      ),
+    );
+    const traces = document.createElement("ul");
+    traces.className = "safety-traces";
+    for (const trace of finding.condition_trace) {
+      traces.append(createSafetyTrace(trace));
+    }
+
+    card.append(
+      heading,
+      createTextElement("p", "safety-finding-message", finding.message),
+      createDefinitionGrid([
+        ["اقدام مقرر در قاعده", safetyRequiredActionLabels[finding.action] || finding.action],
+        ["کلید و نسخهٔ قاعده", `${finding.rule_key} · ${finding.rule_version}`],
+        ["منابع دانشی", finding.knowledge_fact_ids],
+        ["مجوز بالینی", "خیر"],
+      ], "fact-meta"),
+      createTextElement("h5", "", "ردیابی شرایط بدون نمایش مقدار بیمار"),
+      traces,
+      createSafetyTimeline(timeline),
+    );
+    const reviewForm = createSafetyReviewForm(timeline);
+    if (reviewForm) {
+      card.append(reviewForm);
+    }
+    fragment.append(card);
+  }
+  elements.safetyFindings.replaceChildren(fragment);
+}
+
+function renderSafetyInbox(inbox) {
+  currentSafetyInbox = inbox;
+  renderSafetySummary(inbox);
+  renderSafetyFindings(inbox);
+  elements.safetyContent.hidden = false;
+}
+
+async function loadSafetyWorkspace(visitId) {
+  const normalizedVisitId = visitId.trim();
+  if (!canReadSafety() || !normalizedVisitId || safetyRequestInProgress) {
+    return;
+  }
+
+  const requestGeneration = sessionGeneration;
+  currentSafetyVisitId = normalizedVisitId;
+  currentSafetyInbox = null;
+  elements.safetyVisitId.value = normalizedVisitId;
+  elements.safetyContent.hidden = true;
+  elements.safetySummary.replaceChildren();
+  elements.safetyFindings.replaceChildren();
+  showSafetyMessage("در حال دریافت آخرین snapshot و زنجیره‌های پیگیری…");
+  setSafetyBusy(true);
+
+  try {
+    const inbox = await apiRequest(
+      `/visits/${encodeURIComponent(normalizedVisitId)}/safety-inbox`,
+    );
+    if (!accessToken || requestGeneration !== sessionGeneration) {
+      return;
+    }
+    renderSafetyInbox(inbox);
+    if (!inbox.evaluation) {
+      showSafetyMessage(
+        canRunSafetyEvaluation()
+          ? "ارزیابی ثبت نشده است؛ اجرای ارزیابی فقط snapshot قواعد و زمینهٔ فعلی را ثبت می‌کند."
+          : "ارزیابی ثبت نشده است؛ برای اجرا با مدیر یا پزشک هماهنگ کنید.",
+      );
+    } else if (!inbox.evaluation_matches_current_context) {
+      showSafetyMessage(
+        "این ارزیابی قدیمی است چون زمینهٔ بالینی تغییر کرده؛ snapshot تازه لازم است.",
+        true,
+      );
+    } else {
+      showSafetyMessage("آخرین snapshot و تمام رویدادهای پیگیریِ قابل‌اعتبار بارگذاری شد.");
+    }
+    setConnectionState(true);
+  } catch (error) {
+    elements.safetyContent.hidden = true;
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      elements.loginMessage.textContent = "نشست شما پایان یافته است؛ دوباره وارد شوید.";
+      return;
+    }
+    if (error instanceof ApiError && error.status === 404) {
+      showSafetyMessage("ویزیت موردنظر پیدا نشد.", true);
+    } else if (error instanceof ApiError && error.status === 403) {
+      showSafetyMessage("نقش کاربری شما اجازهٔ مشاهدهٔ صندوق ایمنی را ندارد.", true);
+    } else if (error instanceof ApiError && error.status === 409) {
+      showSafetyMessage("اعتبار یکی از رکوردهای ذخیره‌شده تأیید نشد.", true);
+    } else {
+      showSafetyMessage("دریافت صندوق ایمنی ممکن نشد؛ دوباره تلاش کنید.", true);
+    }
+    setConnectionState(false);
+  } finally {
+    if (requestGeneration === sessionGeneration) {
+      setSafetyBusy(false);
+    }
+  }
+}
+
+async function runSafetyEvaluation() {
+  if (
+    !canRunSafetyEvaluation()
+    || !currentSafetyVisitId
+    || !currentSafetyInbox
+    || safetyRequestInProgress
+  ) {
+    return;
+  }
+  const confirmed = await requestConfirmation({
+    kicker: "ثبت snapshot جدید",
+    title: "اجرای قواعد ایمنی مصوب",
+    copy: (
+      "قواعد فعال روی زمینهٔ بالینی فعلی اجرا و نتیجه به‌صورت تغییرناپذیر ثبت می‌شود. "
+      + "خروجی تشخیص، توصیهٔ درمانی یا مجوز بالینی نیست. ادامه می‌دهید؟"
+    ),
+  });
+  if (!confirmed) {
+    return;
+  }
+
+  const requestGeneration = sessionGeneration;
+  setSafetyBusy(true, "در حال ارزیابی…");
+  showSafetyMessage("در حال اعتبارسنجی زمینه و اجرای قواعد مصوب در backend…");
+  try {
+    await apiRequest(
+      `/visits/${encodeURIComponent(currentSafetyVisitId)}/safety-evaluations`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_clinical_context_sha256: (
+            currentSafetyInbox.current_clinical_context_sha256
+          ),
+        }),
+      },
+    );
+    const inbox = await apiRequest(
+      `/visits/${encodeURIComponent(currentSafetyVisitId)}/safety-inbox`,
+    );
+    if (!accessToken || requestGeneration !== sessionGeneration) {
+      return;
+    }
+    renderSafetyInbox(inbox);
+    showSafetyMessage(
+      "snapshot جدید ثبت شد؛ نتیجه همچنان مجوز بالینی یا جایگزین قضاوت پزشک نیست.",
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      elements.loginMessage.textContent = "نشست شما پایان یافته است؛ دوباره وارد شوید.";
+      return;
+    }
+    if (error instanceof ApiError && error.status === 409) {
+      showSafetyMessage(
+        "زمینه یا قواعد تغییر کرده است؛ صندوق را دوباره بارگذاری و سپس ارزیابی کنید.",
+        true,
+      );
+    } else if (error instanceof ApiError && error.status === 403) {
+      showSafetyMessage("اجرای ارزیابی فقط برای مدیر یا پزشک فعال مجاز است.", true);
+    } else {
+      showSafetyMessage("اجرای ارزیابی ممکن نشد؛ دوباره تلاش کنید.", true);
+    }
+  } finally {
+    if (requestGeneration === sessionGeneration) {
+      setSafetyBusy(false);
+    }
+  }
+}
+
+async function recordSafetyReview(form) {
+  if (!canRecordSafetyReview() || safetyRequestInProgress || !form.reportValidity()) {
+    return;
+  }
+  const action = form.elements.action.value;
+  const confirmed = await requestConfirmation({
+    kicker: "ثبت تغییرناپذیر",
+    title: safetyReviewActionLabels[action] || "ثبت رویداد پیگیری",
+    copy: (
+      "این رویداد به زنجیرهٔ پیگیری همان snapshot افزوده می‌شود و قابل ویرایش "
+      + "یا حذف نیست. نتیجهٔ ارزیابی را تغییر نمی‌دهد و مجوز بالینی ایجاد نمی‌کند."
+    ),
+  });
+  if (!confirmed) {
+    return;
+  }
+
+  const payload = {
+    action,
+    expected_evaluation_result_sha256: form.dataset.evaluationHash,
+    note: form.elements.note.value.trim() || null,
+  };
+  if (action === "assessed") {
+    payload.disposition = form.elements.disposition.value;
+    payload.reason_code = form.elements.reason_code.value;
+  }
+
+  const requestGeneration = sessionGeneration;
+  setSafetyBusy(true, "در حال ثبت…");
+  showSafetyMessage("در حال ثبت رویداد در زنجیرهٔ تغییرناپذیر…");
+  try {
+    await apiRequest(
+      `/visits/${encodeURIComponent(currentSafetyVisitId)}/safety-findings/${encodeURIComponent(form.dataset.findingId)}/reviews`,
+      { method: "POST", body: JSON.stringify(payload) },
+    );
+    const inbox = await apiRequest(
+      `/visits/${encodeURIComponent(currentSafetyVisitId)}/safety-inbox`,
+    );
+    if (!accessToken || requestGeneration !== sessionGeneration) {
+      return;
+    }
+    renderSafetyInbox(inbox);
+    showSafetyMessage("رویداد پیگیری ثبت شد؛ نتیجهٔ ارزیابی بدون تغییر باقی ماند.");
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      elements.loginMessage.textContent = "نشست شما پایان یافته است؛ دوباره وارد شوید.";
+      return;
+    }
+    if (error instanceof ApiError && error.status === 409) {
+      showSafetyMessage(
+        "زنجیره یا snapshot تغییر کرده است؛ صندوق را دوباره بارگذاری کنید.",
+        true,
+      );
+    } else if (error instanceof ApiError && error.status === 403) {
+      showSafetyMessage("نقش شما اجازهٔ ثبت این نوع رویداد را ندارد.", true);
+    } else {
+      showSafetyMessage("ثبت رویداد ممکن نشد؛ ورودی‌ها را بررسی کنید.", true);
+    }
+  } finally {
+    if (requestGeneration === sessionGeneration) {
+      setSafetyBusy(false);
+    }
+  }
+}
+
 function requestConfirmation({ kicker, title, copy }) {
   return new Promise((resolve) => {
     elements.dialogKicker.textContent = kicker;
@@ -1278,33 +1946,52 @@ function stopAutoRefresh() {
   }
 }
 
+function availableWorkspaceTabs() {
+  return [
+    { workspace: "flow", tab: elements.flowTab },
+    { workspace: "evidence", tab: elements.evidenceTab },
+    { workspace: "safety", tab: elements.safetyTab },
+  ].filter((entry) => !entry.tab.hidden);
+}
+
 elements.loginForm.addEventListener("submit", handleLogin);
 elements.logoutButton.addEventListener("click", showLogin);
 elements.refreshButton.addEventListener("click", () => {
   if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
     loadEvidenceWorkspace(currentEvidenceVisitId);
+  } else if (activeWorkspace === "safety" && currentSafetyVisitId) {
+    loadSafetyWorkspace(currentSafetyVisitId);
   } else {
     loadFlow();
   }
 });
 elements.flowTab.addEventListener("click", () => setWorkspace("flow"));
 elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
-for (const tab of [elements.flowTab, elements.evidenceTab]) {
+elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
+for (const tab of [elements.flowTab, elements.evidenceTab, elements.safetyTab]) {
   tab.addEventListener("keydown", (event) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
       return;
     }
     event.preventDefault();
-    const targetWorkspace = event.key === "Home"
-      ? "flow"
-      : event.key === "End"
-        ? "evidence"
-        : activeWorkspace === "flow" ? "evidence" : "flow";
-    if (targetWorkspace === "evidence" && !canReadEvidence()) {
-      return;
+    const entries = availableWorkspaceTabs();
+    const currentIndex = Math.max(
+      0,
+      entries.findIndex((entry) => entry.workspace === activeWorkspace),
+    );
+    let targetIndex = currentIndex;
+    if (event.key === "Home") {
+      targetIndex = 0;
+    } else if (event.key === "End") {
+      targetIndex = entries.length - 1;
+    } else if (event.key === "ArrowLeft") {
+      targetIndex = (currentIndex + 1) % entries.length;
+    } else {
+      targetIndex = (currentIndex - 1 + entries.length) % entries.length;
     }
-    setWorkspace(targetWorkspace);
-    (targetWorkspace === "flow" ? elements.flowTab : elements.evidenceTab).focus();
+    const target = entries[targetIndex];
+    setWorkspace(target.workspace);
+    target.tab.focus();
   });
 }
 elements.evidenceVisitForm.addEventListener("submit", (event) => {
@@ -1351,8 +2038,39 @@ elements.knowledgeFacts.addEventListener("change", (event) => {
 elements.clinicalQuestion.addEventListener("input", updateCreateButton);
 elements.evidenceAcknowledgement.addEventListener("change", updateCreateButton);
 elements.evidenceBriefForm.addEventListener("submit", createEvidenceBrief);
+elements.safetyVisitForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (elements.safetyVisitForm.reportValidity()) {
+    loadSafetyWorkspace(elements.safetyVisitId.value);
+  }
+});
+elements.runSafetyEvaluationButton.addEventListener("click", runSafetyEvaluation);
+elements.safetyFindings.addEventListener("change", (event) => {
+  if (!event.target.matches("select[name='action']")) {
+    return;
+  }
+  const form = event.target.closest("form.safety-review-form");
+  if (form) {
+    syncSafetyReviewForm(form);
+  }
+});
+elements.safetyFindings.addEventListener("submit", async (event) => {
+  const form = event.target.closest("form.safety-review-form");
+  if (!form) {
+    return;
+  }
+  event.preventDefault();
+  await recordSafetyReview(form);
+});
 
 elements.flowBoard.addEventListener("click", async (event) => {
+  const safetyButton = event.target.closest("button[data-safety-visit-id]");
+  if (safetyButton && canReadSafety() && !safetyRequestInProgress) {
+    setWorkspace("safety");
+    await loadSafetyWorkspace(safetyButton.dataset.safetyVisitId);
+    return;
+  }
+
   const evidenceButton = event.target.closest("button[data-evidence-visit-id]");
   if (evidenceButton && canReadEvidence() && !evidenceRequestInProgress) {
     setWorkspace("evidence");
@@ -1400,8 +2118,10 @@ window.addEventListener("online", () => {
   setConnectionState(true);
   if (activeWorkspace === "flow") {
     loadFlow({ quiet: true });
-  } else if (currentEvidenceVisitId) {
+  } else if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
     loadEvidenceWorkspace(currentEvidenceVisitId);
+  } else if (activeWorkspace === "safety" && currentSafetyVisitId) {
+    loadSafetyWorkspace(currentSafetyVisitId);
   }
 });
 

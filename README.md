@@ -42,11 +42,12 @@ non-root user and is build/smoke-tested by CI with a read-only root filesystem.
 It remains deployment-provider neutral and never migrates on normal startup.
 
 The [mobile-friendly clinical console](docs/CLINICAL_CONSOLE.md) is available at
-`/app/`. It uses the existing role-protected live-flow and workflow APIs and now
-gives physicians a manual evidence-review workspace over the immutable clinical
-evidence-brief API. It keeps its bearer token in memory only, preselects no
-evidence and adds no offline patient-data store. It remains subject to clinician,
-accessibility and production acceptance.
+`/app/`. It uses the existing role-protected live-flow and workflow APIs, gives
+physicians a manual evidence-review workspace, and exposes the existing
+deterministic safety findings through a role-gated
+[clinical safety inbox](docs/CLINICAL_SAFETY_INBOX.md). It keeps its bearer token
+in memory only, preselects no evidence and adds no offline patient-data store.
+It remains subject to clinician, accessibility and production acceptance.
 
 The [medical knowledge registry](docs/MEDICAL_KNOWLEDGE_REGISTRY.md) stores
 source-linked, versioned facts behind an independent clinical review gate.
@@ -70,6 +71,8 @@ The [clinical safety finding review workflow](docs/CLINICAL_SAFETY_REVIEW_WORKFL
 adds hash-chained, append-only acknowledgment, escalation and physician-assessment
 events for those findings. Review events never rewrite an evaluation, suppress a
 finding, grant clearance or update medical knowledge from patient data.
+The console inbox preserves those same hashes, roles and append-only transitions;
+it is a workflow surface, not a diagnostic or recommendation engine.
 
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact

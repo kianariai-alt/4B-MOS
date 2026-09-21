@@ -9,6 +9,7 @@ from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.audit_log import AuditLogRead
 from backend.app.schemas.clinical_safety_review import (
+    SafetyInboxRead,
     SafetyFindingReviewCreate,
     SafetyFindingReviewRead,
     SafetyFindingReviewTimelineRead,
@@ -54,6 +55,21 @@ REVIEW_ERRORS = (
     ClinicalSafetyIntegrityError,
     ClinicalRecordWriteConflictError,
 )
+
+
+@router.get(
+    "/visits/{visit_id}/safety-inbox",
+    response_model=SafetyInboxRead,
+)
+def get_safety_inbox(
+    visit_id: str,
+    _actor: User = Depends(require_roles(*READ_REVIEW_ROLES)),
+    db: Session = Depends(get_db),
+) -> SafetyInboxRead:
+    try:
+        return ClinicalSafetyFindingReviewService.get_inbox(db, visit_id)
+    except REVIEW_ERRORS as error:
+        _translate_error(error)
 
 
 @router.post(

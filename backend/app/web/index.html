@@ -132,7 +132,21 @@
           >
             مرور شواهد پزشک
           </button>
+          <button
+            id="safety-tab"
+            class="workspace-tab"
+            type="button"
+            role="tab"
+            aria-controls="safety-workspace"
+            aria-selected="false"
+            tabindex="-1"
+            hidden
+          >
+            صندوق ایمنی بالینی
+          </button>
         </nav>
+
+        <datalist id="active-visits"></datalist>
 
         <section
           id="flow-workspace"
@@ -209,7 +223,6 @@
                 autocomplete="off"
                 required
               >
-              <datalist id="active-visits"></datalist>
             </div>
             <button id="load-evidence-button" class="button button-secondary" type="submit">
               بارگذاری زمینه و خلاصه‌ها
@@ -312,6 +325,99 @@
                 </div>
               </div>
               <div id="evidence-briefs" class="evidence-briefs"></div>
+            </section>
+          </div>
+        </section>
+
+        <section
+          id="safety-workspace"
+          class="workspace-panel safety-workspace"
+          role="tabpanel"
+          aria-labelledby="safety-tab"
+          tabindex="0"
+          hidden
+        >
+          <header class="workspace-intro">
+            <div>
+              <p class="card-kicker">قواعد مصوب، پیگیری تغییرناپذیر</p>
+              <h2>صندوق ایمنی بالینی</h2>
+            </div>
+            <p>
+              این بخش یافته‌های موتور قطعیِ قواعد مصوب را همراه با زنجیرهٔ
+              پیگیری کارکنان نمایش می‌دهد. ترتیب نمایش به‌معنای اولویت درمانی
+              نیست و هر ثبت پیگیری به snapshot همان ارزیابی متصل می‌ماند.
+            </p>
+          </header>
+
+          <aside class="safety-boundary" role="note" aria-label="مرز ایمنی">
+            <strong>مرز ایمنی</strong>
+            <span>
+              وجود نداشتن یافته، مجوز بالینی نیست. این سامانه تشخیص، توصیهٔ
+              درمانی، رتبه‌بندی درمان، اجازهٔ شروع یا ادامهٔ درمان، یا جایگزین
+              قضاوت مستقل پزشک ارائه نمی‌کند.
+            </span>
+          </aside>
+
+          <form id="safety-visit-form" class="visit-loader">
+            <div class="field-group">
+              <label for="safety-visit-id">شناسهٔ ویزیت</label>
+              <input
+                id="safety-visit-id"
+                name="visit_id"
+                type="text"
+                inputmode="text"
+                dir="ltr"
+                maxlength="36"
+                list="active-visits"
+                autocomplete="off"
+                required
+              >
+            </div>
+            <button id="load-safety-button" class="button button-secondary" type="submit">
+              بارگذاری صندوق ایمنی
+            </button>
+          </form>
+
+          <p
+            id="safety-message"
+            class="notice"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+
+          <div id="safety-content" class="safety-content" hidden>
+            <section class="evidence-section" aria-labelledby="safety-summary-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">آخرین snapshot ثبت‌شده</p>
+                  <h3 id="safety-summary-heading">خلاصهٔ ارزیابی ایمنی</h3>
+                </div>
+                <button
+                  id="run-safety-evaluation-button"
+                  class="button button-primary"
+                  type="button"
+                  hidden
+                >
+                  اجرای ارزیابی جدید
+                </button>
+              </div>
+              <code id="safety-context-hash" class="hash-value" dir="ltr"></code>
+              <div id="safety-summary" class="safety-summary"></div>
+            </section>
+
+            <section class="evidence-section" aria-labelledby="safety-findings-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">ثبت رویداد، بدون بازنویسی</p>
+                  <h3 id="safety-findings-heading">یافته‌ها و پیگیری‌ها</h3>
+                </div>
+              </div>
+              <p class="ordering-note">
+                یافته‌ها با ترتیب ثابت snapshot نمایش داده می‌شوند؛ این ترتیب
+                رتبه‌بندی، تشخیص یا پیشنهاد اقدام درمانی نیست.
+              </p>
+              <div id="safety-findings" class="safety-findings"></div>
             </section>
           </div>
         </section>

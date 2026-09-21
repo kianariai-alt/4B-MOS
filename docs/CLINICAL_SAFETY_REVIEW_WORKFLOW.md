@@ -73,11 +73,15 @@ All paths are below `/api/v1` and require authentication.
 | `GET /visits/{visit_id}/safety-findings/{finding_id}/reviews` | Read and integrity-check the full timeline |
 | `GET /visits/{visit_id}/safety-findings/{finding_id}/audit-logs` | Read allowlisted workflow audit history |
 | `GET /safety/finding-reviews/{review_id}` | Read one event after verifying its complete preceding hash chain |
+| `GET /visits/{visit_id}/safety-inbox` | Read the latest evaluation and every verified finding timeline with context freshness |
 
 The create operation shares the visit-level clinical-record lock used by intake,
 reports and safety evaluations. PostgreSQL CI verifies a competing same-visit
 writer receives the bounded lock conflict while unrelated visits remain governed
 by their own parent locks. SQLite retains its database-writer serialization.
+The role-gated console surface is documented in
+`docs/CLINICAL_SAFETY_INBOX.md`; it does not add a new transition or weaken this
+state machine.
 
 ## Controlled deployment
 
@@ -91,8 +95,9 @@ by their own parent locks. SQLite retains its database-writer serialization.
 4. In staging, verify nurse acknowledgment/escalation, physician-only assessment,
    invalid transition refusal, stale-hash conflict, tamper detection, audit
    minimization and same-visit concurrency using synthetic records.
-5. Validate notification delivery, staffing, downtime procedures and the future
-   clinician UI separately before clinical use.
+5. Validate notification delivery, staffing and downtime procedures separately;
+   validate the Stage 20 console inbox with the human-factors checks in
+   `docs/CLINICAL_SAFETY_INBOX.md` before clinical use.
 
 Downgrade is refused while any review event exists and offline downgrade is
 refused because history cannot be checked. Never delete review history to force
