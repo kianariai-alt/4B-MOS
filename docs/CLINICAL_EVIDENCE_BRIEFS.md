@@ -55,6 +55,21 @@ and one through twenty fact IDs with their expected hashes. There are no update
 or delete endpoints. If context or evidence changes, the physician must review
 the new state and create another brief.
 
+## Console workflow
+
+Stage 19 exposes the same contract in `/app/`. The server includes the canonical
+`clinical_context_sha256` in the current-context response so the browser does not
+duplicate canonicalization logic. The physician must open a visit, review its
+final context, search approved knowledge, manually select every fact and accept
+the immutable non-recommendation statement. No fact is preselected or matched to
+patient data. Admins and nurses can read historical briefs but cannot see the
+composer; operators and viewers cannot enter the evidence workspace.
+
+Source URLs are displayed as inert text, all API-derived values are inserted via
+DOM text nodes, and the memory-only authentication/no-cache console controls
+remain unchanged. See `docs/CLINICAL_CONSOLE.md` for the complete browser and
+role contract.
+
 ## Integrity and concurrency
 
 Creation shares the visit-level clinical-record write lock used by intake,

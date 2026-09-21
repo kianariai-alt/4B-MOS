@@ -424,3 +424,16 @@ class ClinicalContextRead(BaseModel):
     generated_at: datetime
     intake: ClinicalIntakeRead | None
     reports: list[ParaclinicalReportRead]
+
+
+class ClinicalContextSnapshotRead(ClinicalContextRead):
+    """Current context plus the canonical digest used for guarded writes."""
+
+    clinical_context_sha256: Annotated[
+        str,
+        Field(
+            min_length=64,
+            max_length=64,
+            pattern=r"^[0-9a-f]{64}$",
+        ),
+    ]

@@ -39,8 +39,12 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
 
     html = response.text
     assert '<html lang="fa" dir="rtl">' in html
-    assert "4B-MOS | جریان زنده کلینیک" in html
+    assert "4B-MOS | کنسول بالینی" in html
     assert 'id="login-form"' in html
+    assert 'id="evidence-workspace"' in html
+    assert 'id="evidence-brief-form"' in html
+    assert "هیچ موردی از پیش انتخاب نمی‌شود" in html
+    assert "جایگزین قضاوت مستقل پزشک نمی‌شود" in html
     assert 'src="/app/app.js"' in html
     assert 'href="/app/app.css"' in html
     assert "patient_name" not in html
@@ -68,8 +72,19 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert 'apiRequest("/auth/login"' in source
     assert 'apiRequest("/auth/me")' in source
     assert 'apiRequest("/dashboard/live-flow")' in source
+    assert "/clinical-context`" in source
+    assert "/evidence-briefs`" in source
+    assert 'apiRequest("/knowledge/facts/approved?limit=100")' in source
+    assert "expected_clinical_context_sha256" in source
+    assert "expected_content_sha256" in source
+    assert "selectedFacts.clear()" in source
+    assert "MAX_SELECTED_FACTS = 20" in source
+    assert "resetOperationalState()" in source
+    assert "sessionGeneration" in source
+    assert "fact.checked = true" not in source
     assert "/workflow`" in source
     assert "textContent" in source
+    assert "innerHTML" not in source
 
     for forbidden_storage in (
         "localStorage",

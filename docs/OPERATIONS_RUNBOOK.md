@@ -194,6 +194,15 @@ diagnoses, ranks or recommends automatically. Do not deploy before clinical
 governance approves intended use, source eligibility, review cadence, wording,
 responsibility and the human-factors workflow.
 
+Stage 19 requires the Stage 18 application/database pair and introduces no
+migration. It adds the clinician evidence-review workspace to `/app/` and adds a
+server-computed `clinical_context_sha256` to the current-context response. In
+staging, verify the physician-only composer, admin/nurse read-only view, empty
+final-context guard, manual zero-preselection behavior, 20-fact ceiling, stale
+context/fact conflict reload and absence of edit/delete controls. A functional UI
+does not authorize clinical use; complete human-factors, accessibility, source
+policy and clinician acceptance separately.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into
@@ -249,6 +258,8 @@ The same release serves the staff clinical console from `/app/`; see
 browser close intentionally requires a new login. Do not place it behind an
 HTTP endpoint or a proxy that caches authenticated API responses. Before staff
 use, rehearse the supported browsers and roles with synthetic staging records.
+Do not treat a rendered evidence brief as a recommendation or clinical
+clearance.
 
 Drain old workers before upgrades; never mix locked and old unlocked clinical
 writers. For a future production change, record the source revision, application
@@ -329,8 +340,8 @@ the clinical governance recovery process.
   safety-alert delivery deadlines, alert-fatigue controls and override authority.
   Append-only review recording does not implement those policies, and existing
   treatment workflow rules are unchanged.
-- Product: the live-flow console is only the first mobile clinical UI slice;
-  governed safety rules, finding reviews and evidence briefs are API-only, and
+- Product: the console covers live flow and manually selected evidence briefs;
+  governed safety rules and finding reviews remain API-only, and
   broader clinical data-entry/advice screens, deployment host, access boundaries,
   workstation policy and data retention remain decisions.
 

@@ -9,7 +9,7 @@ from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.audit_log import AuditLogRead
 from backend.app.schemas.clinical_context import (
-    ClinicalContextRead,
+    ClinicalContextSnapshotRead,
     ClinicalIntakeContent,
     ClinicalIntakeCreate,
     ClinicalIntakeRead,
@@ -27,6 +27,7 @@ from backend.app.services.clinical_context import (
     ClinicalContextNotFoundError,
     ClinicalContextService,
 )
+from backend.app.services.clinical_safety import clinical_context_digest
 
 
 router = APIRouter(tags=["Structured Clinical Context"])
@@ -101,15 +102,19 @@ def list_clinical_intakes(
 
 @router.get(
     "/visits/{visit_id}/clinical-context",
-    response_model=ClinicalContextRead,
+    response_model=ClinicalContextSnapshotRead,
 )
 def get_current_clinical_context(
     visit_id: str,
     _actor: User = Depends(require_roles(*READ_ROLES)),
     db: Session = Depends(get_db),
-) -> ClinicalContextRead:
+) -> ClinicalContextSnapshotRead:
     try:
-        return ClinicalContextService.get_current_context(db, visit_id)
+        context = ClinicalContextService.get_current_context(db, visit_id)
+        return ClinicalContextSnapshotRead(
+            **context.model_dump(),
+            clinical_context_sha256=clinical_context_digest(context),
+        )
     except CLINICAL_ERRORS as error:
         _translate_error(error)
 
