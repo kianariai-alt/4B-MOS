@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from backend.app.api.dependencies import require_roles
@@ -9,6 +9,7 @@ from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.audit_log import AuditLogRead
 from backend.app.schemas.clinical_safety_review import (
+    SafetyEscalationQueueRead,
     SafetyInboxRead,
     SafetyFindingReviewCreate,
     SafetyFindingReviewRead,
@@ -55,6 +56,26 @@ REVIEW_ERRORS = (
     ClinicalSafetyIntegrityError,
     ClinicalRecordWriteConflictError,
 )
+
+
+@router.get(
+    "/safety/escalations",
+    response_model=SafetyEscalationQueueRead,
+)
+def list_open_safety_escalations(
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=100),
+    _actor: User = Depends(require_roles(*READ_REVIEW_ROLES)),
+    db: Session = Depends(get_db),
+) -> SafetyEscalationQueueRead:
+    try:
+        return ClinicalSafetyFindingReviewService.list_open_escalations(
+            db,
+            offset=offset,
+            limit=limit,
+        )
+    except REVIEW_ERRORS as error:
+        _translate_error(error)
 
 
 @router.get(

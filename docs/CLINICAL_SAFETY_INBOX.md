@@ -30,20 +30,22 @@ clinical-clearance decision, notification service or automatic learning.
 ## Staff journey
 
 1. Sign in to `/app/` with an active authorized account.
-2. Open **صندوق ایمنی بالینی** from a live-flow visit card or enter an exact
-   visit ID.
-3. Review the current-context hash and the latest verified evaluation snapshot.
+2. Open **صندوق ایمنی بالینی**. Stage 21 first exposes the minimal verified
+   cross-visit escalation queue; selecting an item opens its exact visit without
+   exposing review notes in the aggregate list.
+3. Alternatively, open a visit from a live-flow card or enter an exact visit ID.
+4. Review the current-context hash and the latest verified evaluation snapshot.
    If the context changed, the console marks the snapshot stale.
-4. An admin or physician may confirm and run a new evaluation against the exact
+5. An admin or physician may confirm and run a new evaluation against the exact
    current-context hash. A conflict requires reloading rather than evaluating
    unexpected input.
-5. Review each finding, governed-rule metadata, evidence identifiers and the
+6. Review each finding, governed-rule metadata, evidence identifiers and the
    condition trace. The trace contains condition metadata and matched record IDs,
    not duplicated patient values.
-6. A physician or nurse may append an acknowledgment or escalation. Escalation
+7. A physician or nurse may append an acknowledgment or escalation. Escalation
    requires a note. Only a physician may append the terminal assessment with an
    allowlisted disposition, reason and note.
-7. Confirm the immutable event. The browser submits the exact evaluation-result
+8. Confirm the immutable event. The browser submits the exact evaluation-result
    hash, reloads the verified aggregate and exposes no edit or delete control.
 
 ## Roles
@@ -54,6 +56,7 @@ clinical-clearance decision, notification service or automatic learning.
 | Run a new deterministic evaluation | yes | yes | no | no | no |
 | Record acknowledgment or escalation | no | yes | yes | no | no |
 | Record terminal assessment | no | yes | no | no | no |
+| Read cross-visit open-escalation queue | yes | yes | yes | no | no |
 
 The browser hides unavailable actions for usability. API authorization remains
 the security boundary and independently enforces every row in this table.
@@ -76,6 +79,11 @@ The aggregate endpoint performs no writes. Evaluation and review writes continue
 to use the existing endpoints and optimistic hashes documented in
 `CLINICAL_SAFETY_RULE_ENGINE.md` and
 `CLINICAL_SAFETY_REVIEW_WORKFLOW.md`.
+
+`GET /safety/escalations` exposes only minimal routing metadata for verified open
+escalations. It omits review notes and condition traces, preserves stale-context
+visibility and explicitly states that its oldest-first order is not clinical
+priority. See `CLINICAL_SAFETY_ESCALATION_QUEUE.md`.
 
 ## Browser and concurrency controls
 
@@ -111,7 +119,7 @@ acceptance, clinical validation, regulatory approval or production authorization
 
 ## Explicitly deferred
 
-- paging, messaging, delivery deadlines and escalation-service monitoring;
+- external messaging, delivery deadlines and escalation-service monitoring;
 - alert-fatigue policy, clinical prioritization and override authority;
 - terminology-service validation, unit conversion and external FHIR exchange;
 - diagnosis, treatment selection, recommendation or autonomous clearance;

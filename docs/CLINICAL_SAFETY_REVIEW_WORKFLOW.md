@@ -74,14 +74,16 @@ All paths are below `/api/v1` and require authentication.
 | `GET /visits/{visit_id}/safety-findings/{finding_id}/audit-logs` | Read allowlisted workflow audit history |
 | `GET /safety/finding-reviews/{review_id}` | Read one event after verifying its complete preceding hash chain |
 | `GET /visits/{visit_id}/safety-inbox` | Read the latest evaluation and every verified finding timeline with context freshness |
+| `GET /safety/escalations` | Read a bounded, minimized cross-visit list whose latest verified event is escalation |
 
 The create operation shares the visit-level clinical-record lock used by intake,
 reports and safety evaluations. PostgreSQL CI verifies a competing same-visit
 writer receives the bounded lock conflict while unrelated visits remain governed
 by their own parent locks. SQLite retains its database-writer serialization.
-The role-gated console surface is documented in
-`docs/CLINICAL_SAFETY_INBOX.md`; it does not add a new transition or weaken this
-state machine.
+The role-gated console surfaces are documented in
+`docs/CLINICAL_SAFETY_INBOX.md` and
+`docs/CLINICAL_SAFETY_ESCALATION_QUEUE.md`; they do not add a new transition or
+weaken this state machine.
 
 ## Controlled deployment
 
@@ -97,7 +99,8 @@ state machine.
    minimization and same-visit concurrency using synthetic records.
 5. Validate notification delivery, staffing and downtime procedures separately;
    validate the Stage 20 console inbox with the human-factors checks in
-   `docs/CLINICAL_SAFETY_INBOX.md` before clinical use.
+   `docs/CLINICAL_SAFETY_INBOX.md` and the Stage 21 derived queue in
+   `docs/CLINICAL_SAFETY_ESCALATION_QUEUE.md` before clinical use.
 
 Downgrade is refused while any review event exists and offline downgrade is
 refused because history cannot be checked. Never delete review history to force
@@ -105,7 +108,8 @@ older code onto the database; restore the reviewed application/database pair.
 
 ## Explicitly deferred
 
-- notification or paging delivery, deadlines and escalation-service monitoring;
+- external notification or paging delivery, deadlines and escalation-service
+  monitoring; Stage 21 adds only a same-origin derived queue;
 - alert-fatigue analytics and clinically approved prioritization policy;
 - override authority or any state that suppresses a finding;
 - clinician-facing recommendation generation or treatment ranking;

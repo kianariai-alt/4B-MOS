@@ -229,6 +229,17 @@ def test_complete_clinical_journey_is_coherent_and_append_only(
     assert safety_evaluation["evaluated_rule_count"] == 0
     assert safety_evaluation["findings"] == []
     assert safety_evaluation["is_clinical_clearance"] is False
+    escalation_queue = assert_status(
+        client.get(
+            "/api/v1/safety/escalations?limit=50",
+            headers=nurse,
+        ),
+        200,
+    )
+    assert escalation_queue["total"] == 0
+    assert escalation_queue["items"] == []
+    assert escalation_queue["is_clinical_priority_order"] is False
+    assert escalation_queue["is_clinical_clearance"] is False
     treatment = assert_status(
         client.post(
             f"/api/v1/visits/{visit['id']}/treatments",
@@ -473,6 +484,7 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
         ("/api/v1/safety/rules/active", "get"),
         ("/api/v1/visits/{visit_id}/safety-evaluations", "post"),
         ("/api/v1/safety/evaluations/{evaluation_id}", "get"),
+        ("/api/v1/safety/escalations", "get"),
         (
             "/api/v1/visits/{visit_id}/safety-findings/{finding_id}/reviews",
             "post",

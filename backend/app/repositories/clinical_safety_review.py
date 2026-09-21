@@ -53,6 +53,26 @@ class ClinicalSafetyFindingReviewRepository:
         )
 
     @staticmethod
+    def list_all(
+        db: Session,
+    ) -> list[ClinicalSafetyFindingReview]:
+        """Return every review row in deterministic chain order.
+
+        The escalation queue validates complete chains before deciding whether a
+        finding is open. It intentionally does not filter on mutable action
+        columns in SQL, because doing so could hide a one-sided corrupt row.
+        """
+
+        return list(
+            db.scalars(
+                select(ClinicalSafetyFindingReview).order_by(
+                    ClinicalSafetyFindingReview.finding_id.asc(),
+                    ClinicalSafetyFindingReview.sequence.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
     def get_by_id(
         db: Session,
         review_id: str,

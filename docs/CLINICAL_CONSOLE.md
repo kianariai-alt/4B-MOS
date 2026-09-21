@@ -6,7 +6,7 @@ live-flow projection, executes only workflow transitions returned by the backend
 and exposes deliberately narrow evidence-review and clinical-safety workspaces
 for authorized clinicians.
 
-Stages 19 and 20 add no clinical policy, database migration, patient-data store,
+Stages 19–21 add no clinical policy, database migration, patient-data store,
 offline mode or public patient portal. The API remains the authorization,
 integrity and validation boundary.
 
@@ -60,22 +60,25 @@ Admins, physicians and nurses can open **صندوق ایمنی بالینی** fr
 from an active visit card. The console loads the latest integrity-checked
 evaluation together with every integrity-checked finding-review timeline.
 
-1. Select an active visit or enter its exact visit ID.
-2. Compare the latest evaluation snapshot with the server-computed hash of the
+1. Review the minimal cross-visit open-escalation queue or select an active visit
+   / enter its exact visit ID. Queue rows omit notes and patient values.
+2. Open an escalation to read its exact visit-level verified timeline.
+3. Compare the latest evaluation snapshot with the server-computed hash of the
    current final clinical context. A mismatch is shown as stale.
-3. Review rule metadata, source-fact identifiers and condition traces. Patient
+4. Review rule metadata, source-fact identifiers and condition traces. Patient
    values are not duplicated into the trace.
-4. An admin or physician may explicitly confirm a new deterministic evaluation.
-5. A physician or nurse may append acknowledgment or escalation; only a
+5. An admin or physician may explicitly confirm a new deterministic evaluation.
+6. A physician or nurse may append acknowledgment or escalation; only a
    physician may append a terminal assessment.
-6. Every write sends the exact evaluation-result hash last read, requires a
+7. Every write sends the exact evaluation-result hash last read, requires a
    confirmation and then reloads the authoritative timeline. No event can be
    edited or deleted.
 
 `no_alerts` and `no_active_rules` are never displayed as clearance. The inbox
 does not diagnose, recommend, rank, authorize treatment, suppress findings,
 notify external recipients or learn from patient records. See
-`CLINICAL_SAFETY_INBOX.md` for the complete contract.
+`CLINICAL_SAFETY_INBOX.md` and `CLINICAL_SAFETY_ESCALATION_QUEUE.md` for the
+complete contracts. Chronological queue order is not clinical priority.
 
 ## Role matrix
 
@@ -90,6 +93,7 @@ notify external recipients or learn from patient records. See
 | Run deterministic safety evaluation | yes | yes | no | no | no |
 | Acknowledge or escalate a finding | no | yes | yes | no | no |
 | Record terminal finding assessment | no | yes | no | no | no |
+| Read open-escalation queue | yes | yes | yes | no | no |
 
 ## Browser security contract
 
@@ -118,9 +122,9 @@ screen privacy, staff training or production penetration testing.
 ## Verification
 
 The backend suite verifies the shell, evidence- and safety-workspace copy and
-contracts, role boundaries, stale-context detection, same-origin assets,
-server-computed context digest, security headers, absence of persistent browser
-token storage and continued API authentication.
+contracts, escalation lifecycle and minimization, role boundaries, stale-context
+detection, same-origin assets, server-computed context digest, security headers,
+absence of persistent browser token storage and continued API authentication.
 CI additionally runs JavaScript syntax validation. The hardened container smoke
 loads `/app/` and verifies that the packaged JavaScript is not cacheable.
 

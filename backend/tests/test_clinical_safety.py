@@ -687,6 +687,203 @@ def create_reviewable_finding(client, reviewer_headers, visit) -> dict:
     }
 
 
+def escalate_reviewable_finding(
+    client,
+    nurse_headers,
+    visit,
+    reviewable,
+    *,
+    note: str,
+) -> dict:
+    response = client.post(
+        (
+            f"/api/v1/visits/{visit['id']}/safety-findings/"
+            f"{reviewable['finding']['id']}/reviews"
+        ),
+        json={
+            "action": "escalated",
+            "expected_evaluation_result_sha256": reviewable["evaluation"][
+                "result_sha256"
+            ],
+            "note": note,
+        },
+        headers=nurse_headers,
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def test_open_escalation_queue_tracks_verified_lifecycle_without_ranking(
+    client,
+    visit,
+    admin_headers,
+    reviewer_headers,
+    nurse_headers,
+):
+    path = "/api/v1/safety/escalations"
+    empty = client.get(path, headers=nurse_headers)
+    assert empty.status_code == 200, empty.text
+    assert empty.json() == {
+        "offset": 0,
+        "limit": 50,
+        "total": 0,
+        "ordering": "escalated_at_ascending",
+        "open_escalation_definition": "latest_verified_review_is_escalated",
+        "items": [],
+        "is_clinical_priority_order": False,
+        "is_clinical_clearance": False,
+    }
+
+    first = create_reviewable_finding(client, reviewer_headers, visit)
+    escalate_reviewable_finding(
+        client,
+        nurse_headers,
+        visit,
+        first,
+        note="Synthetic first escalation for queue testing.",
+    )
+
+    other_patient = client.post(
+        "/api/v1/patients",
+        json={
+            "patient_code": "SAFETY-QUEUE-002",
+            "first_name": "Queue",
+            "last_name": "Second",
+        },
+    ).json()
+    other_visit = client.post(
+        f"/api/v1/patients/{other_patient['id']}/visits",
+        json={"chief_complaint": "Second synthetic safety queue visit"},
+    ).json()
+    second = create_reviewable_finding(client, reviewer_headers, other_visit)
+    escalate_reviewable_finding(
+        client,
+        nurse_headers,
+        other_visit,
+        second,
+        note="Synthetic second escalation for pagination testing.",
+    )
+
+    first_page = client.get(f"{path}?limit=1", headers=nurse_headers)
+    second_page = client.get(f"{path}?limit=1&offset=1", headers=nurse_headers)
+    assert first_page.status_code == 200, first_page.text
+    assert second_page.status_code == 200, second_page.text
+    assert first_page.json()["total"] == 2
+    assert second_page.json()["total"] == 2
+    queue_items = first_page.json()["items"] + second_page.json()["items"]
+    assert queue_items == sorted(
+        queue_items,
+        key=lambda item: (item["escalated_at"], item["finding_id"]),
+    )
+    assert {item["visit_id"] for item in queue_items} == {
+        visit["id"],
+        other_visit["id"],
+    }
+    for item in queue_items:
+        assert item["review_status"] == "escalated"
+        assert item["evaluation_matches_current_context"] is True
+        assert item["is_clinical_priority"] is False
+        assert item["is_clinical_clearance"] is False
+        assert len(item["current_clinical_context_sha256"]) == 64
+        assert len(item["latest_review_sha256"]) == 64
+        assert "timeline" not in item
+        assert "note" not in str(item)
+
+    extra_report = report_payload()
+    extra_report["report_key"] = "SAFETY-QUEUE-STALE"
+    extra_report["title"] = "Synthetic context change after escalation"
+    created = client.post(
+        f"/api/v1/visits/{visit['id']}/paraclinical-reports",
+        json=extra_report,
+    )
+    assert created.status_code == 201, created.text
+    finalized = client.post(
+        f"/api/v1/paraclinical-reports/{created.json()['id']}/finalize"
+    )
+    assert finalized.status_code == 200, finalized.text
+    refreshed = client.get(path, headers=nurse_headers)
+    stale_item = next(
+        item
+        for item in refreshed.json()["items"]
+        if item["visit_id"] == visit["id"]
+    )
+    assert stale_item["evaluation_matches_current_context"] is False
+
+    assessment = client.post(
+        (
+            f"/api/v1/visits/{visit['id']}/safety-findings/"
+            f"{first['finding']['id']}/reviews"
+        ),
+        json={
+            "action": "assessed",
+            "expected_evaluation_result_sha256": first["evaluation"][
+                "result_sha256"
+            ],
+            "disposition": "requires_action",
+            "reason_code": "clinical_context",
+            "note": "Synthetic physician assessment closes only this queue item.",
+        },
+        headers=reviewer_headers,
+    )
+    assert assessment.status_code == 201, assessment.text
+    remaining = client.get(path, headers=nurse_headers).json()
+    assert remaining["total"] == 1
+    assert remaining["items"][0]["visit_id"] == other_visit["id"]
+
+    assert client.get(path, headers=admin_headers).status_code == 200
+    assert client.get(path, headers=reviewer_headers).status_code == 200
+    operator_headers = create_role_headers(
+        client,
+        username="safety_queue_operator",
+        role="operator",
+    )
+    viewer_headers = create_role_headers(
+        client,
+        username="safety_queue_viewer",
+        role="viewer",
+    )
+    assert client.get(path, headers=operator_headers).status_code == 403
+    assert client.get(path, headers=viewer_headers).status_code == 403
+    assert client.get(f"{path}?limit=0", headers=nurse_headers).status_code == 422
+    assert client.get(f"{path}?limit=101", headers=nurse_headers).status_code == 422
+    assert client.get(f"{path}?offset=-1", headers=nurse_headers).status_code == 422
+
+
+def test_escalation_queue_fails_closed_on_hidden_chain_tampering(
+    client,
+    visit,
+    reviewer_headers,
+    nurse_headers,
+    db_session,
+):
+    reviewable = create_reviewable_finding(client, reviewer_headers, visit)
+    recorded = client.post(
+        (
+            f"/api/v1/visits/{visit['id']}/safety-findings/"
+            f"{reviewable['finding']['id']}/reviews"
+        ),
+        json={
+            "action": "acknowledged",
+            "expected_evaluation_result_sha256": reviewable["evaluation"][
+                "result_sha256"
+            ],
+        },
+        headers=nurse_headers,
+    )
+    assert recorded.status_code == 201, recorded.text
+    review_id = recorded.json()["reviews"][0]["id"]
+    db_session.execute(
+        update(ClinicalSafetyFindingReview)
+        .where(ClinicalSafetyFindingReview.id == review_id)
+        .values(action="escalated")
+    )
+    db_session.commit()
+
+    response = client.get("/api/v1/safety/escalations", headers=nurse_headers)
+    assert response.status_code == 409
+    assert "integrity" in response.json()["detail"]
+
+
 def test_safety_inbox_exposes_latest_verified_evaluation_and_timeline(
     client,
     visit,

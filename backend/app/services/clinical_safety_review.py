@@ -23,6 +23,8 @@ from backend.app.repositories.clinical_safety_review import (
 from backend.app.repositories.visit import VisitRepository
 from backend.app.schemas.clinical_safety import SafetyFindingRead
 from backend.app.schemas.clinical_safety_review import (
+    SafetyEscalationQueueItemRead,
+    SafetyEscalationQueueRead,
     SafetyInboxFindingRead,
     SafetyInboxRead,
     SafetyFindingReviewCreate,
@@ -188,6 +190,16 @@ class ClinicalSafetyFindingReviewService:
             db,
             finding.id,
         )
+        return ClinicalSafetyFindingReviewService._timeline_from_reviews(
+            finding,
+            reviews,
+        )
+
+    @staticmethod
+    def _timeline_from_reviews(
+        finding: ClinicalSafetyFinding,
+        reviews: list[ClinicalSafetyFindingReview],
+    ) -> SafetyFindingReviewTimelineRead:
         validated = ClinicalSafetyFindingReviewService._validate_chain(
             reviews,
             finding=finding,
@@ -250,6 +262,91 @@ class ClinicalSafetyFindingReviewService:
             ),
             evaluation=evaluation_read,
             findings=findings,
+        )
+
+    @staticmethod
+    def list_open_escalations(
+        db: Session,
+        *,
+        offset: int,
+        limit: int,
+    ) -> SafetyEscalationQueueRead:
+        grouped: dict[str, list[ClinicalSafetyFindingReview]] = {}
+        for review in ClinicalSafetyFindingReviewRepository.list_all(db):
+            grouped.setdefault(review.finding_id, []).append(review)
+
+        context_hashes: dict[str, str] = {}
+        items: list[SafetyEscalationQueueItemRead] = []
+        for finding_id, reviews in grouped.items():
+            finding = ClinicalSafetyFindingReviewRepository.get_finding(
+                db,
+                finding_id,
+            )
+            if finding is None:
+                raise ClinicalSafetyIntegrityError(
+                    "Stored clinical safety finding review has no finding."
+                )
+            ClinicalSafetyEvaluationService._verify(finding.evaluation)
+            timeline = ClinicalSafetyFindingReviewService._timeline_from_reviews(
+                finding,
+                reviews,
+            )
+            if timeline.review_status != "escalated":
+                continue
+
+            evaluation = finding.evaluation
+            if evaluation.visit_id not in context_hashes:
+                if VisitRepository.get_by_id(db, evaluation.visit_id) is None:
+                    raise ClinicalSafetyIntegrityError(
+                        "Stored clinical safety evaluation has no visit."
+                    )
+                context = ClinicalContextService.get_current_context(
+                    db,
+                    evaluation.visit_id,
+                )
+                context_hashes[evaluation.visit_id] = clinical_context_digest(
+                    context
+                )
+            current_context_sha256 = context_hashes[evaluation.visit_id]
+            items.append(
+                SafetyEscalationQueueItemRead(
+                    visit_id=evaluation.visit_id,
+                    evaluation_id=evaluation.id,
+                    evaluation_result_sha256=evaluation.result_sha256,
+                    evaluation_created_at=evaluation.created_at,
+                    current_clinical_context_sha256=current_context_sha256,
+                    evaluation_matches_current_context=(
+                        evaluation.clinical_context_sha256
+                        == current_context_sha256
+                    ),
+                    escalated_at=timeline.reviews[-1].created_at,
+                    finding_id=finding.id,
+                    rule_id=finding.rule_id,
+                    rule_key=finding.rule_key,
+                    rule_version=finding.rule_version,
+                    title=finding.title,
+                    severity=finding.severity,
+                    required_action=finding.action,
+                    latest_review_id=timeline.reviews[-1].id,
+                    latest_review_sha256=timeline.reviews[-1].sha256,
+                )
+            )
+
+        def sort_key(item: SafetyEscalationQueueItemRead) -> tuple[float, str]:
+            value = item.escalated_at
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=timezone.utc)
+            else:
+                value = value.astimezone(timezone.utc)
+            return value.timestamp(), item.finding_id
+
+        items.sort(key=sort_key)
+        total = len(items)
+        return SafetyEscalationQueueRead(
+            offset=offset,
+            limit=limit,
+            total=total,
+            items=items[offset : offset + limit],
         )
 
     @staticmethod

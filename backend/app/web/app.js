@@ -172,6 +172,13 @@ const elements = {
   safetySummary: document.querySelector("#safety-summary"),
   runSafetyEvaluationButton: document.querySelector("#run-safety-evaluation-button"),
   safetyFindings: document.querySelector("#safety-findings"),
+  loadSafetyEscalationsButton: document.querySelector(
+    "#load-safety-escalations-button",
+  ),
+  safetyEscalationsMessage: document.querySelector(
+    "#safety-escalations-message",
+  ),
+  safetyEscalations: document.querySelector("#safety-escalations"),
   actionDialog: document.querySelector("#action-dialog"),
   dialogKicker: document.querySelector("#dialog-kicker"),
   dialogTitle: document.querySelector("#dialog-title"),
@@ -187,6 +194,7 @@ let requestInProgress = false;
 let actionInProgress = false;
 let evidenceRequestInProgress = false;
 let safetyRequestInProgress = false;
+let safetyEscalationRequestInProgress = false;
 let activeWorkspace = "flow";
 let currentEvidenceVisitId = null;
 let currentClinicalContext = null;
@@ -194,6 +202,7 @@ let currentKnowledgeFacts = [];
 let currentEvidenceBriefs = [];
 let currentSafetyVisitId = null;
 let currentSafetyInbox = null;
+let currentSafetyEscalations = null;
 let sessionGeneration = 0;
 const selectedFacts = new Map();
 
@@ -322,6 +331,12 @@ function showSafetyMessage(message, isError = false) {
   elements.safetyMessage.hidden = !message;
 }
 
+function showSafetyEscalationsMessage(message, isError = false) {
+  elements.safetyEscalationsMessage.textContent = message;
+  elements.safetyEscalationsMessage.classList.toggle("is-error", isError);
+  elements.safetyEscalationsMessage.hidden = !message;
+}
+
 function setLoginBusy(isBusy) {
   elements.loginButton.disabled = isBusy;
   elements.username.disabled = isBusy;
@@ -360,6 +375,14 @@ function setSafetyBusy(isBusy, label = "در حال بارگذاری…") {
   }
 }
 
+function setSafetyEscalationsBusy(isBusy) {
+  safetyEscalationRequestInProgress = isBusy;
+  elements.loadSafetyEscalationsButton.disabled = isBusy;
+  elements.loadSafetyEscalationsButton.textContent = isBusy
+    ? "در حال دریافت…"
+    : "تازه‌سازی صف";
+}
+
 function resetEvidenceState() {
   currentEvidenceVisitId = null;
   currentClinicalContext = null;
@@ -382,13 +405,16 @@ function resetEvidenceState() {
 function resetSafetyState() {
   currentSafetyVisitId = null;
   currentSafetyInbox = null;
+  currentSafetyEscalations = null;
   elements.safetyVisitForm.reset();
   elements.safetyContent.hidden = true;
   elements.safetyContextHash.textContent = "";
   elements.safetySummary.replaceChildren();
   elements.safetyFindings.replaceChildren();
+  elements.safetyEscalations.replaceChildren();
   elements.runSafetyEvaluationButton.hidden = true;
   showSafetyMessage("");
+  showSafetyEscalationsMessage("");
 }
 
 function resetOperationalState() {
@@ -434,6 +460,14 @@ function setWorkspace(workspace) {
   } else {
     stopAutoRefresh();
   }
+  if (
+    isSafety
+    && accessToken
+    && currentSafetyEscalations === null
+    && !safetyEscalationRequestInProgress
+  ) {
+    loadSafetyEscalations({ quiet: true });
+  }
 }
 
 function showLogin() {
@@ -444,6 +478,7 @@ function showLogin() {
   requestInProgress = false;
   evidenceRequestInProgress = false;
   safetyRequestInProgress = false;
+  safetyEscalationRequestInProgress = false;
   actionInProgress = false;
   elements.refreshButton.disabled = false;
   elements.refreshButton.textContent = "تازه‌سازی";
@@ -454,6 +489,8 @@ function showLogin() {
   elements.loadSafetyButton.disabled = false;
   elements.loadSafetyButton.textContent = "بارگذاری صندوق ایمنی";
   elements.runSafetyEvaluationButton.disabled = false;
+  elements.loadSafetyEscalationsButton.disabled = false;
+  elements.loadSafetyEscalationsButton.textContent = "تازه‌سازی صف";
   elements.dialogConfirm.disabled = false;
   resetOperationalState();
   resetEvidenceState();
@@ -1219,6 +1256,129 @@ function createSafetyStatus(value, labels, className = "safety-status") {
   return status;
 }
 
+function renderSafetyEscalations(queue) {
+  currentSafetyEscalations = queue;
+  const fragment = document.createDocumentFragment();
+  if (!queue.items.length) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "در حال حاضر ارجاع بازی با آخرین وضعیت معتبر «ارجاع‌شده» وجود ندارد. این نتیجه مجوز بالینی یا تأیید نبود خطر نیست.",
+    ));
+  }
+
+  for (const item of queue.items) {
+    const card = document.createElement("article");
+    card.className = "safety-escalation-card";
+    card.dataset.severity = item.severity;
+
+    const heading = document.createElement("div");
+    heading.className = "safety-finding-heading";
+    heading.append(
+      createTextElement("h4", "", item.title),
+      createSafetyStatus(
+        item.severity,
+        safetySeverityLabels,
+        "safety-severity",
+      ),
+      createSafetyStatus(
+        item.review_status,
+        safetyReviewStatusLabels,
+        "safety-review-status",
+      ),
+    );
+
+    const freshness = createTextElement(
+      "p",
+      item.evaluation_matches_current_context ? "queue-current" : "context-warning",
+      item.evaluation_matches_current_context
+        ? "snapshot با زمینهٔ بالینی فعلی منطبق است."
+        : "زمینهٔ بالینی تغییر کرده است؛ این ارجاع به snapshot قبلی متصل می‌ماند.",
+    );
+    const openButton = createTextElement(
+      "button",
+      "button button-secondary",
+      "باز کردن جزئیات ارجاع",
+    );
+    openButton.type = "button";
+    openButton.dataset.escalationVisitId = item.visit_id;
+
+    card.append(
+      heading,
+      freshness,
+      createDefinitionGrid([
+        ["شناسهٔ ویزیت", item.visit_id],
+        ["زمان ثبت ارجاع", formatDateTime(item.escalated_at)],
+        ["کلید و نسخهٔ قاعده", `${item.rule_key} · ${item.rule_version}`],
+        ["اقدام مقرر در قاعده", safetyRequiredActionLabels[item.required_action] || item.required_action],
+        ["ترتیب بالینی", "ندارد"],
+        ["مجوز بالینی", "خیر"],
+      ], "safety-summary-grid"),
+      openButton,
+    );
+    fragment.append(card);
+  }
+  elements.safetyEscalations.replaceChildren(fragment);
+}
+
+async function loadSafetyEscalations({ quiet = false } = {}) {
+  if (!canReadSafety() || safetyEscalationRequestInProgress) {
+    return;
+  }
+
+  const requestGeneration = sessionGeneration;
+  setSafetyEscalationsBusy(true);
+  if (!quiet) {
+    showSafetyEscalationsMessage("در حال اعتبارسنجی زنجیره‌ها و دریافت ارجاع‌های باز…");
+  }
+  try {
+    const queue = await apiRequest("/safety/escalations?limit=50");
+    if (!accessToken || requestGeneration !== sessionGeneration) {
+      return;
+    }
+    if (
+      queue.is_clinical_priority_order !== false
+      || queue.is_clinical_clearance !== false
+      || queue.items.some(
+        (item) => (
+          item.is_clinical_priority !== false
+          || item.is_clinical_clearance !== false
+          || item.review_status !== "escalated"
+        ),
+      )
+    ) {
+      throw new ApiError(409, "Unexpected safety escalation queue contract.");
+    }
+    renderSafetyEscalations(queue);
+    showSafetyEscalationsMessage(
+      queue.total
+        ? `${toPersianNumber(queue.total)} ارجاع باز با ترتیب زمانی، بدون اولویت‌بندی پزشکی، بارگذاری شد.`
+        : "ارجاع بازی ثبت نشده است؛ این وضعیت مجوز بالینی یا تأیید نبود خطر نیست.",
+    );
+    setConnectionState(true);
+  } catch (error) {
+    currentSafetyEscalations = null;
+    elements.safetyEscalations.replaceChildren();
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      elements.loginMessage.textContent = "نشست شما پایان یافته است؛ دوباره وارد شوید.";
+      return;
+    }
+    if (error instanceof ApiError && error.status === 403) {
+      showSafetyEscalationsMessage("نقش شما اجازهٔ مشاهدهٔ صف ارجاع‌ها را ندارد.", true);
+    } else if (error instanceof ApiError && error.status === 409) {
+      showSafetyEscalationsMessage("اعتبار یکی از زنجیره‌های پیگیری تأیید نشد.", true);
+    } else {
+      showSafetyEscalationsMessage("دریافت صف ارجاع‌ها ممکن نشد؛ دوباره تلاش کنید.", true);
+    }
+    setConnectionState(false);
+  } finally {
+    if (requestGeneration === sessionGeneration) {
+      setSafetyEscalationsBusy(false);
+    }
+  }
+}
+
 function renderSafetySummary(inbox) {
   elements.safetyContextHash.textContent = inbox.current_clinical_context_sha256;
   elements.safetyContextHash.title = "هش دقیق زمینهٔ بالینی فعلی";
@@ -1715,6 +1875,7 @@ async function recordSafetyReview(form) {
       return;
     }
     renderSafetyInbox(inbox);
+    await loadSafetyEscalations({ quiet: true });
     showSafetyMessage("رویداد پیگیری ثبت شد؛ نتیجهٔ ارزیابی بدون تغییر باقی ماند.");
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
@@ -1960,7 +2121,10 @@ elements.refreshButton.addEventListener("click", () => {
   if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
     loadEvidenceWorkspace(currentEvidenceVisitId);
   } else if (activeWorkspace === "safety" && currentSafetyVisitId) {
+    loadSafetyEscalations({ quiet: true });
     loadSafetyWorkspace(currentSafetyVisitId);
+  } else if (activeWorkspace === "safety") {
+    loadSafetyEscalations();
   } else {
     loadFlow();
   }
@@ -2045,6 +2209,16 @@ elements.safetyVisitForm.addEventListener("submit", (event) => {
   }
 });
 elements.runSafetyEvaluationButton.addEventListener("click", runSafetyEvaluation);
+elements.loadSafetyEscalationsButton.addEventListener("click", () => {
+  loadSafetyEscalations();
+});
+elements.safetyEscalations.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-escalation-visit-id]");
+  if (!button || safetyRequestInProgress) {
+    return;
+  }
+  await loadSafetyWorkspace(button.dataset.escalationVisitId);
+});
 elements.safetyFindings.addEventListener("change", (event) => {
   if (!event.target.matches("select[name='action']")) {
     return;
@@ -2121,7 +2295,10 @@ window.addEventListener("online", () => {
   } else if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
     loadEvidenceWorkspace(currentEvidenceVisitId);
   } else if (activeWorkspace === "safety" && currentSafetyVisitId) {
+    loadSafetyEscalations({ quiet: true });
     loadSafetyWorkspace(currentSafetyVisitId);
+  } else if (activeWorkspace === "safety") {
+    loadSafetyEscalations({ quiet: true });
   }
 });
 
