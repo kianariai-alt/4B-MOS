@@ -7,9 +7,9 @@
     <meta name="theme-color" content="#071a2e">
     <meta
       name="description"
-      content="کنسول عملیاتی امن و زندهٔ کلینیک 4B"
+      content="کنسول امن عملیات و مرور شواهد بالینی 4B"
     >
-    <title>4B-MOS | جریان زنده کلینیک</title>
+    <title>4B-MOS | کنسول بالینی</title>
     <link rel="stylesheet" href="/app/app.css">
     <script src="/app/app.js" defer></script>
   </head>
@@ -94,8 +94,8 @@
       <section id="console-view" class="console" aria-labelledby="console-title" hidden>
         <div class="console-heading">
           <div>
-            <p class="eyebrow">نمای عملیاتی امروز</p>
-            <h1 id="console-title">جریان زنده کلینیک</h1>
+            <p class="eyebrow">محیط نقش‌محور کارکنان</p>
+            <h1 id="console-title">کنسول بالینی 4B</h1>
             <p id="generated-at" class="muted"></p>
           </div>
           <div class="console-controls">
@@ -108,36 +108,219 @@
 
         <div id="console-message" class="notice" role="status" aria-live="polite" hidden></div>
 
-        <section class="metrics" aria-label="آمار جریان کلینیک">
-          <article class="metric metric-wide">
-            <span>فعال</span>
-            <strong id="metric-active">۰</strong>
-          </article>
-          <article class="metric">
-            <span>پذیرش‌شده</span>
-            <strong id="metric-checked-in">۰</strong>
-          </article>
-          <article class="metric">
-            <span>آماده</span>
-            <strong id="metric-ready">۰</strong>
-          </article>
-          <article class="metric">
-            <span>درمان</span>
-            <strong id="metric-treatment">۰</strong>
-          </article>
-          <article class="metric metric-alert">
-            <span>نیازمند توجه</span>
-            <strong id="metric-attention">۰</strong>
-          </article>
+        <nav class="workspace-tabs" role="tablist" aria-label="بخش‌های کنسول">
+          <button
+            id="flow-tab"
+            class="workspace-tab"
+            type="button"
+            role="tab"
+            aria-controls="flow-workspace"
+            aria-selected="true"
+            tabindex="0"
+          >
+            جریان زنده
+          </button>
+          <button
+            id="evidence-tab"
+            class="workspace-tab"
+            type="button"
+            role="tab"
+            aria-controls="evidence-workspace"
+            aria-selected="false"
+            tabindex="-1"
+            hidden
+          >
+            مرور شواهد پزشک
+          </button>
+        </nav>
+
+        <section
+          id="flow-workspace"
+          class="workspace-panel"
+          role="tabpanel"
+          aria-labelledby="flow-tab"
+          tabindex="0"
+        >
+          <section class="metrics" aria-label="آمار جریان کلینیک">
+            <article class="metric metric-wide">
+              <span>فعال</span>
+              <strong id="metric-active">۰</strong>
+            </article>
+            <article class="metric">
+              <span>پذیرش‌شده</span>
+              <strong id="metric-checked-in">۰</strong>
+            </article>
+            <article class="metric">
+              <span>آماده</span>
+              <strong id="metric-ready">۰</strong>
+            </article>
+            <article class="metric">
+              <span>درمان</span>
+              <strong id="metric-treatment">۰</strong>
+            </article>
+            <article class="metric metric-alert">
+              <span>نیازمند توجه</span>
+              <strong id="metric-attention">۰</strong>
+            </article>
+          </section>
+
+          <section id="flow-board" class="flow-board" aria-label="مراحل جریان کلینیک"></section>
         </section>
 
-        <section id="flow-board" class="flow-board" aria-label="مراحل جریان کلینیک"></section>
+        <section
+          id="evidence-workspace"
+          class="workspace-panel evidence-workspace"
+          role="tabpanel"
+          aria-labelledby="evidence-tab"
+          tabindex="0"
+          hidden
+        >
+          <header class="workspace-intro">
+            <div>
+              <p class="card-kicker">انتخاب انسانی، ثبت تغییرناپذیر</p>
+              <h2>مرور شواهد برای پزشک</h2>
+            </div>
+            <p>
+              این بخش فقط منابعی را که پزشک شخصاً انتخاب می‌کند کنار زمینهٔ
+              بالینی نهایی ثبت می‌کند. سامانه تطبیق، رتبه‌بندی یا توصیهٔ درمانی
+              خودکار انجام نمی‌دهد.
+            </p>
+          </header>
+
+          <aside class="safety-boundary" role="note" aria-label="مرز ایمنی">
+            <strong>مرز ایمنی</strong>
+            <span>
+              خروجی تصمیم، تشخیص، دوز، نمرهٔ خطر، مجوز بالینی یا هشدار
+              زمان‌حساس نیست و جایگزین قضاوت مستقل پزشک نمی‌شود.
+            </span>
+          </aside>
+
+          <form id="evidence-visit-form" class="visit-loader">
+            <div class="field-group">
+              <label for="evidence-visit-id">شناسهٔ ویزیت</label>
+              <input
+                id="evidence-visit-id"
+                name="visit_id"
+                type="text"
+                inputmode="text"
+                dir="ltr"
+                maxlength="36"
+                list="active-visits"
+                autocomplete="off"
+                required
+              >
+              <datalist id="active-visits"></datalist>
+            </div>
+            <button id="load-evidence-button" class="button button-secondary" type="submit">
+              بارگذاری زمینه و خلاصه‌ها
+            </button>
+          </form>
+
+          <p
+            id="evidence-message"
+            class="notice"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+
+          <div id="evidence-content" class="evidence-content" hidden>
+            <section class="evidence-section" aria-labelledby="context-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">Snapshot فعلی</p>
+                  <h3 id="context-heading">زمینهٔ بالینی نهایی</h3>
+                </div>
+                <code id="context-hash" class="hash-value" dir="ltr"></code>
+              </div>
+              <div id="clinical-context" class="clinical-context"></div>
+            </section>
+
+            <section
+              id="evidence-composer"
+              class="evidence-section"
+              aria-labelledby="composer-heading"
+              hidden
+            >
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">فقط برای پزشک</p>
+                  <h3 id="composer-heading">ساخت خلاصهٔ شواهد</h3>
+                </div>
+                <span id="selected-fact-count" class="count-pill">۰ از ۲۰</span>
+              </div>
+
+              <form id="knowledge-search-form" class="knowledge-search">
+                <div class="field-group">
+                  <label for="knowledge-search">جست‌وجو در منابع تأییدشده</label>
+                  <input
+                    id="knowledge-search"
+                    type="search"
+                    minlength="2"
+                    maxlength="200"
+                    autocomplete="off"
+                    placeholder="عنوان، کلید یا متن منبع"
+                  >
+                </div>
+                <button id="knowledge-search-button" class="button button-quiet" type="submit">
+                  جست‌وجو
+                </button>
+                <button id="knowledge-reset-button" class="button button-quiet" type="button">
+                  نمایش همه
+                </button>
+              </form>
+
+              <p class="ordering-note">
+                ترتیب نمایش صرفاً بر پایهٔ کلید منبع است و نشان‌دهندهٔ ارتباط،
+                اولویت یا قوت درمانی نیست. هیچ موردی از پیش انتخاب نمی‌شود.
+              </p>
+              <div id="knowledge-facts" class="knowledge-facts" aria-live="polite"></div>
+
+              <form id="evidence-brief-form" class="brief-form">
+                <div id="selected-facts" class="selected-facts" aria-live="polite"></div>
+
+                <label for="clinical-question">پرسش بالینی پزشک</label>
+                <textarea
+                  id="clinical-question"
+                  name="clinical_question"
+                  minlength="5"
+                  maxlength="2000"
+                  rows="5"
+                  required
+                ></textarea>
+
+                <label class="acknowledgement" for="evidence-acknowledgement">
+                  <input id="evidence-acknowledgement" type="checkbox" required>
+                  <span>
+                    زمینه و تمام منابع انتخاب‌شده را شخصاً مرور کرده‌ام و می‌دانم
+                    این خلاصه توصیه یا مجوز بالینی نیست و پس از ثبت قابل ویرایش
+                    یا حذف نخواهد بود.
+                  </span>
+                </label>
+
+                <button id="create-brief-button" class="button button-primary" type="submit">
+                  ثبت خلاصهٔ تغییرناپذیر
+                </button>
+              </form>
+            </section>
+
+            <section class="evidence-section" aria-labelledby="briefs-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">سابقهٔ قابل پیگیری</p>
+                  <h3 id="briefs-heading">خلاصه‌های ثبت‌شده</h3>
+                </div>
+              </div>
+              <div id="evidence-briefs" class="evidence-briefs"></div>
+            </section>
+          </div>
+        </section>
       </section>
     </main>
 
     <dialog id="action-dialog" class="action-dialog" aria-labelledby="dialog-title">
       <form method="dialog">
-        <p class="card-kicker">تأیید اقدام</p>
+        <p id="dialog-kicker" class="card-kicker">تأیید اقدام</p>
         <h2 id="dialog-title">تغییر وضعیت جلسه</h2>
         <p id="dialog-copy"></p>
         <div class="dialog-actions">

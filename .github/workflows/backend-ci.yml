@@ -221,7 +221,7 @@ jobs:
             http://127.0.0.1:18000/app/ \
             > /tmp/4bmos-console.html
           grep --fixed-strings \
-            '<title>4B-MOS | جریان زنده کلینیک</title>' \
+            '<title>4B-MOS | کنسول بالینی</title>' \
             /tmp/4bmos-console.html
           curl --fail --silent --head \
             http://127.0.0.1:18000/app/app.js \

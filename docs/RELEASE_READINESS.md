@@ -162,6 +162,15 @@ No production patient database was accessed during this work.
   remains non-recommendation, non-risk-score, non-clearance, non-time-critical
   and requires independent physician review. No automatic matching, diagnosis,
   treatment direction, publication ingestion or learning is added.
+- Stage 19 adds no migration. It extends the same-origin Persian console with a
+  role-gated evidence workspace: admins and nurses can read, while only an active
+  physician can manually select one through twenty approved facts and create a
+  brief. The current-context response now includes the server-calculated digest
+  used by the existing optimistic create guard. The browser preselects nothing,
+  treats fact-key order as non-ranking, renders source URLs as inert text, stores
+  no token or patient data offline and exposes no edit/delete path. This is a UI
+  engineering gate, not clinician acceptance, recommendation logic or a
+  regulatory determination.
 
 ## Remaining engineering gates
 

@@ -41,11 +41,12 @@ The root [production container artifact](docs/CONTAINER_RELEASE.md) runs as a
 non-root user and is build/smoke-tested by CI with a read-only root filesystem.
 It remains deployment-provider neutral and never migrates on normal startup.
 
-The first [mobile-friendly clinical operations console](docs/CLINICAL_CONSOLE.md)
-is available at `/app/`. It uses the existing role-protected live-flow and
-workflow APIs, keeps its bearer token in memory only and adds no offline patient
-data store. It is a staff workflow foundation, not completed clinician or
-production acceptance.
+The [mobile-friendly clinical console](docs/CLINICAL_CONSOLE.md) is available at
+`/app/`. It uses the existing role-protected live-flow and workflow APIs and now
+gives physicians a manual evidence-review workspace over the immutable clinical
+evidence-brief API. It keeps its bearer token in memory only, preselects no
+evidence and adds no offline patient-data store. It remains subject to clinician,
+accessibility and production acceptance.
 
 The [medical knowledge registry](docs/MEDICAL_KNOWLEDGE_REGISTRY.md) stores
 source-linked, versioned facts behind an independent clinical review gate.
@@ -75,4 +76,5 @@ lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains
 explicitly non-recommendation, non-ranking, non-clearance and subject to
 independent physician review. It does not infer applicability or learn from
-patient records.
+patient records. The clinical console exposes this workflow without weakening
+the same role, hash, immutability or independent-review controls.

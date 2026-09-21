@@ -193,7 +193,10 @@ def create_approved_fact(
 def current_context_hash(client, visit_id: str) -> str:
     response = client.get(f"/api/v1/visits/{visit_id}/clinical-context")
     assert response.status_code == 200, response.text
-    return clinical_context_digest(ClinicalContextRead.model_validate(response.json()))
+    payload = response.json()
+    calculated = clinical_context_digest(ClinicalContextRead.model_validate(payload))
+    assert payload["clinical_context_sha256"] == calculated
+    return payload["clinical_context_sha256"]
 
 
 def brief_payload(client, visit_id: str, facts: list[dict]) -> dict:

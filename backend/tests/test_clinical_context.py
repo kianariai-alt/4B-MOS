@@ -11,6 +11,8 @@ from backend.app.models.clinical_context import (
 )
 from backend.app.models.medical_knowledge import MedicalKnowledgeFact
 from backend.app.repositories.audit_log import AuditLogRepository
+from backend.app.schemas.clinical_context import ClinicalContextRead
+from backend.app.services.clinical_safety import clinical_context_digest
 
 
 pytestmark = pytest.mark.usefixtures("authenticated_admin")
@@ -132,6 +134,34 @@ def create_report(client, visit_id: str, **overrides) -> dict:
     )
     assert response.status_code == 201, response.text
     return response.json()
+
+
+def test_current_context_exposes_canonical_guard_digest(client, visit):
+    empty_response = client.get(
+        f"/api/v1/visits/{visit['id']}/clinical-context"
+    )
+    assert empty_response.status_code == 200, empty_response.text
+    empty_payload = empty_response.json()
+    empty_context = ClinicalContextRead.model_validate(empty_payload)
+    assert empty_payload["clinical_context_sha256"] == clinical_context_digest(
+        empty_context
+    )
+
+    intake = create_intake(client, visit["id"])
+    assert client.post(
+        f"/api/v1/clinical-intakes/{intake['id']}/finalize"
+    ).status_code == 200
+
+    final_payload = client.get(
+        f"/api/v1/visits/{visit['id']}/clinical-context"
+    ).json()
+    final_context = ClinicalContextRead.model_validate(final_payload)
+    assert final_payload["clinical_context_sha256"] == clinical_context_digest(
+        final_context
+    )
+    assert final_payload["clinical_context_sha256"] != empty_payload[
+        "clinical_context_sha256"
+    ]
 
 
 def test_intake_is_structured_deduplicated_and_hashed(client, visit):
