@@ -14,10 +14,17 @@ from backend.app.models.clinical_safety import ClinicalSafetyFinding
 from backend.app.models.clinical_safety_review import ClinicalSafetyFindingReview
 from backend.app.models.user import User
 from backend.app.repositories.audit_log import AuditLogRepository
+from backend.app.repositories.clinical_safety import (
+    ClinicalSafetyEvaluationRepository,
+)
 from backend.app.repositories.clinical_safety_review import (
     ClinicalSafetyFindingReviewRepository,
 )
+from backend.app.repositories.visit import VisitRepository
+from backend.app.schemas.clinical_safety import SafetyFindingRead
 from backend.app.schemas.clinical_safety_review import (
+    SafetyInboxFindingRead,
+    SafetyInboxRead,
     SafetyFindingReviewCreate,
     SafetyFindingReviewPayloadRead,
     SafetyFindingReviewRead,
@@ -30,7 +37,9 @@ from backend.app.services.clinical_safety import (
     ClinicalSafetyEvaluationService,
     ClinicalSafetyIntegrityError,
     ClinicalSafetyNotFoundError,
+    clinical_context_digest,
 )
+from backend.app.services.clinical_context import ClinicalContextService
 from backend.app.services.session_finalization import evidence_digest
 
 
@@ -195,6 +204,52 @@ class ClinicalSafetyFindingReviewService:
             required_action=finding.action,
             review_status=(validated[-1].action if validated else "unreviewed"),
             reviews=validated,
+        )
+
+    @staticmethod
+    def get_inbox(db: Session, visit_id: str) -> SafetyInboxRead:
+        if VisitRepository.get_by_id(db, visit_id) is None:
+            raise ClinicalSafetyNotFoundError(
+                f"Visit '{visit_id}' was not found."
+            )
+
+        context = ClinicalContextService.get_current_context(db, visit_id)
+        current_context_sha256 = clinical_context_digest(context)
+        evaluation = ClinicalSafetyEvaluationRepository.get_latest_by_visit(
+            db,
+            visit_id,
+        )
+        if evaluation is None:
+            return SafetyInboxRead(
+                visit_id=visit_id,
+                current_clinical_context_sha256=current_context_sha256,
+                evaluation_matches_current_context=None,
+                evaluation=None,
+                findings=[],
+            )
+
+        evaluation_read = ClinicalSafetyEvaluationService._to_read(evaluation)
+        findings = [
+            SafetyInboxFindingRead(
+                finding=SafetyFindingRead.model_validate(finding),
+                timeline=ClinicalSafetyFindingReviewService._timeline(
+                    db,
+                    finding,
+                ),
+            )
+            for finding in sorted(
+                evaluation.findings,
+                key=lambda item: item.sort_order,
+            )
+        ]
+        return SafetyInboxRead(
+            visit_id=visit_id,
+            current_clinical_context_sha256=current_context_sha256,
+            evaluation_matches_current_context=(
+                evaluation.clinical_context_sha256 == current_context_sha256
+            ),
+            evaluation=evaluation_read,
+            findings=findings,
         )
 
     @staticmethod

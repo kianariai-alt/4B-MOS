@@ -104,12 +104,15 @@ All paths are below `/api/v1` and require authentication.
 | `POST /visits/{visit_id}/safety-evaluations` | Evaluate and append a snapshot |
 | `GET /visits/{visit_id}/safety-evaluations` | List visit snapshots |
 | `GET /visits/{visit_id}/safety-evaluations/latest` | Read the latest snapshot |
+| `GET /visits/{visit_id}/safety-inbox` | Read the latest snapshot with verified finding-review timelines and context freshness |
 | `GET /safety/evaluations/{id}` | Read and integrity-check a snapshot |
 | `GET /safety/evaluations/{id}/audit-logs` | Read evaluation audit history |
 
 The optional evaluation request can include the context and rule-set hashes last
 seen by a client. A mismatch returns conflict instead of evaluating stale input.
 Visit-scoped evaluation writes share the existing parent-row locking protocol.
+The clinician-facing display and its explicit limitations are documented in
+`docs/CLINICAL_SAFETY_INBOX.md`.
 
 ## Controlled deployment
 

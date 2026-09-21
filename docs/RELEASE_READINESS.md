@@ -152,7 +152,8 @@ No production patient database was accessed during this work.
   writes. Review notes are excluded from minimized audit metadata. Every response
   remains non-clearance and review events never mutate, dismiss or override the
   original evaluation. Notification delivery, alert-fatigue policy, override
-  authority and the clinician-facing UI remain unimplemented.
+  authority and the clinician-facing UI were not part of that stage; Stage 20
+  now adds only the bounded workflow surface while the other items remain open.
 - Stage 18 adds migration `e6b7c8d9a401` and immutable, physician-selected
   evidence briefs linked to one exact final clinical-context snapshot and one
   through twenty approved current knowledge facts. Context and fact hashes fail
@@ -171,6 +172,14 @@ No production patient database was accessed during this work.
   no token or patient data offline and exposes no edit/delete path. This is a UI
   engineering gate, not clinician acceptance, recommendation logic or a
   regulatory determination.
+- Stage 20 adds no migration. It adds a role-gated clinical safety inbox to the
+  same-origin console and a read-only aggregate endpoint for the latest verified
+  evaluation, context freshness and verified finding-review timelines. Admins,
+  physicians and nurses can read; admins/physicians can run an evaluation;
+  physicians/nurses can acknowledge or escalate; only physicians can assess.
+  Optimistic hashes, append-only history and backend roles remain authoritative.
+  The UI has no dismiss, override, delete, clearance or treatment-authorization
+  action and adds no recommendation, notification or automatic learning.
 
 ## Remaining engineering gates
 
@@ -243,12 +252,11 @@ vulnerability audit or full transitive dependency lock.
    restore testing, monitoring and access control. Do not expose development
    defaults.
 5. Product scope: the backend now has a synthetic API-level acceptance scenario,
-   a first mobile-friendly staff console for live clinic flow, structured
-   intake/paraclinical APIs, an API-only deterministic safety-rule engine and an
-   API-only finding-review timeline and physician-selected evidence snapshots.
-   Define the clinician alert/advice UI, notification service, terminology
-   service, deployment environment, clinical ownership and human acceptance
-   scenarios before use.
+   a mobile-friendly staff console for live clinic flow, physician-selected
+   evidence snapshots and the existing deterministic safety/review workflow.
+   Define notification delivery, response-time/alert-fatigue policy, broader
+   clinical advice scope, terminology service, deployment environment, clinical
+   ownership and human acceptance scenarios before use.
 
 ## Migration cautions
 

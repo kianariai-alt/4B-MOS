@@ -3,6 +3,11 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from backend.app.schemas.clinical_safety import (
+    SafetyEvaluationRead,
+    SafetyFindingRead,
+)
+
 
 SafetyFindingReviewAction = Literal["acknowledged", "escalated", "assessed"]
 SafetyFindingReviewDisposition = Literal[
@@ -131,4 +136,22 @@ class SafetyFindingReviewTimelineRead(BaseModel):
     review_status: SafetyFindingReviewStatus
     reviews: list[SafetyFindingReviewRead]
     changes_evaluation_result: Literal[False] = False
+    is_clinical_clearance: Literal[False] = False
+
+
+class SafetyInboxFindingRead(BaseModel):
+    finding: SafetyFindingRead
+    timeline: SafetyFindingReviewTimelineRead
+
+
+class SafetyInboxRead(BaseModel):
+    visit_id: str
+    current_clinical_context_sha256: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    evaluation_matches_current_context: bool | None
+    evaluation: SafetyEvaluationRead | None
+    findings: list[SafetyInboxFindingRead]
     is_clinical_clearance: Literal[False] = False

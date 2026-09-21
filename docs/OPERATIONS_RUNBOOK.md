@@ -203,6 +203,17 @@ context/fact conflict reload and absence of edit/delete controls. A functional U
 does not authorize clinical use; complete human-factors, accessibility, source
 policy and clinician acceptance separately.
 
+Stage 20 requires Stage 19 and introduces no migration. It adds the
+role-protected clinical safety inbox described in
+`docs/CLINICAL_SAFETY_INBOX.md` plus a read-only aggregate endpoint. Admins,
+physicians and nurses may read verified evaluation/review data; admins and
+physicians may run a new deterministic snapshot; physicians and nurses may
+acknowledge or escalate; only physicians may assess. Verify stale-context
+warnings, optimistic-hash conflicts, terminal history and the absence of
+dismiss/override/clearance controls with synthetic staging data. The UI does not
+provide alert delivery, response-time enforcement, treatment authorization,
+clinical prioritization, recommendations or production acceptance.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into
@@ -258,8 +269,8 @@ The same release serves the staff clinical console from `/app/`; see
 browser close intentionally requires a new login. Do not place it behind an
 HTTP endpoint or a proxy that caches authenticated API responses. Before staff
 use, rehearse the supported browsers and roles with synthetic staging records.
-Do not treat a rendered evidence brief as a recommendation or clinical
-clearance.
+Do not treat a rendered evidence brief, a safety finding, or a `no_alerts` /
+`no_active_rules` result as a recommendation or clinical clearance.
 
 Drain old workers before upgrades; never mix locked and old unlocked clinical
 writers. For a future production change, record the source revision, application
@@ -340,9 +351,9 @@ the clinical governance recovery process.
   safety-alert delivery deadlines, alert-fatigue controls and override authority.
   Append-only review recording does not implement those policies, and existing
   treatment workflow rules are unchanged.
-- Product: the console covers live flow and manually selected evidence briefs;
-  governed safety rules and finding reviews remain API-only, and
-  broader clinical data-entry/advice screens, deployment host, access boundaries,
+- Product: the console covers live flow, manually selected evidence briefs and
+  the existing governed safety evaluation/review workflow. Broader clinical
+  data-entry/advice screens, alert delivery, deployment host, access boundaries,
   workstation policy and data retention remain decisions.
 
 These do not block delivery of the tested technical package, but do block calling
