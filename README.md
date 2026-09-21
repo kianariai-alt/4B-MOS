@@ -73,6 +73,10 @@ events for those findings. Review events never rewrite an evaluation, suppress a
 finding, grant clearance or update medical knowledge from patient data.
 The console inbox preserves those same hashes, roles and append-only transitions;
 it is a workflow surface, not a diagnostic or recommendation engine.
+The [clinical safety escalation queue](docs/CLINICAL_SAFETY_ESCALATION_QUEUE.md)
+adds a minimal cross-visit view of findings whose latest verified event is an
+escalation. Its oldest-first order is administrative, not clinical prioritization,
+and it sends no external notification or response-time promise.
 
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact

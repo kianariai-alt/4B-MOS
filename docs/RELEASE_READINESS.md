@@ -180,6 +180,14 @@ No production patient database was accessed during this work.
   Optimistic hashes, append-only history and backend roles remain authoritative.
   The UI has no dismiss, override, delete, clearance or treatment-authorization
   action and adds no recommendation, notification or automatic learning.
+- Stage 21 adds no migration. It adds a role-gated cross-visit queue derived from
+  complete, verified finding-review chains whose latest event is `escalated`.
+  The bounded response exposes minimum routing metadata, omits notes and
+  condition traces, preserves stale-context visibility and fails the entire read
+  closed if any stored chain is corrupt. Physician assessment removes an item
+  from the open view without deleting history. Oldest-first ordering is
+  administrative, not clinical priority. No external delivery, assignment,
+  response-time enforcement, recommendation, clearance or learning is added.
 
 ## Remaining engineering gates
 
@@ -243,8 +251,9 @@ vulnerability audit or full transitive dependency lock.
    stronger legal or tamper-proof claims.
 3. Clinical policy: define no-administration session outcomes, expiry checks,
    deviation acknowledgments, safety-alert response times and physician override
-   authority. The append-only finding-review record does not implement an
-   override. These policies need explicit clinical sign-off before use.
+   authority. The append-only finding-review record and Stage 21 chronological
+   queue do not implement priority, deadlines or an override. These policies need
+   explicit clinical sign-off before use.
 4. Security/operations: persistent known-account login throttling is implemented,
    but source/IP and edge throttling, alert delivery, incident response and audit
    retention remain deployment responsibilities. Replace development secrets,
@@ -253,8 +262,9 @@ vulnerability audit or full transitive dependency lock.
    defaults.
 5. Product scope: the backend now has a synthetic API-level acceptance scenario,
    a mobile-friendly staff console for live clinic flow, physician-selected
-   evidence snapshots and the existing deterministic safety/review workflow.
-   Define notification delivery, response-time/alert-fatigue policy, broader
+   evidence snapshots and the deterministic safety/review workflow, including a
+   same-origin open-escalation queue. Define external notification delivery,
+   response-time/alert-fatigue policy, broader
    clinical advice scope, terminology service, deployment environment, clinical
    ownership and human acceptance scenarios before use.
 

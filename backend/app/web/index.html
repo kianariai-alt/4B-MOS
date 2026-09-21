@@ -358,6 +358,41 @@
             </span>
           </aside>
 
+          <section
+            class="evidence-section safety-escalation-section"
+            aria-labelledby="safety-escalations-heading"
+          >
+            <div class="section-heading">
+              <div>
+                <p class="card-kicker">ارجاع ثبت‌شده، پیگیری باز</p>
+                <h3 id="safety-escalations-heading">صف ارجاع‌های باز</h3>
+              </div>
+              <button
+                id="load-safety-escalations-button"
+                class="button button-secondary"
+                type="button"
+              >
+                تازه‌سازی صف
+              </button>
+            </div>
+            <p class="ordering-note">
+              فقط یافته‌هایی نمایش داده می‌شوند که آخرین رویداد معتبر آن‌ها
+              «ارجاع» است. ترتیب بر اساس زمان ثبت ارجاع، از قدیمی‌تر به جدیدتر
+              است و اولویت یا فوریت پزشکی ایجاد نمی‌کند.
+            </p>
+            <p
+              id="safety-escalations-message"
+              class="notice"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></p>
+            <div
+              id="safety-escalations"
+              class="safety-escalation-list"
+            ></div>
+          </section>
+
           <form id="safety-visit-form" class="visit-loader">
             <div class="field-group">
               <label for="safety-visit-id">شناسهٔ ویزیت</label>

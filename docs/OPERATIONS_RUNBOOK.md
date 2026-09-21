@@ -214,6 +214,16 @@ dismiss/override/clearance controls with synthetic staging data. The UI does not
 provide alert delivery, response-time enforcement, treatment authorization,
 clinical prioritization, recommendations or production acceptance.
 
+Stage 21 requires Stage 20 and introduces no migration. It adds the derived
+cross-visit escalation queue described in
+`docs/CLINICAL_SAFETY_ESCALATION_QUEUE.md`. The API and console validate complete
+review chains before showing findings whose latest event is `escalated`, expose
+only minimal routing metadata and retain stale-context warnings. The oldest-first
+order is not clinical priority. Rehearse appearance, physician assessment
+removal, corruption refusal, pagination and role denial with synthetic records.
+This stage does not send email/SMS/push, assign staff, enforce response times or
+authorize treatment.
+
 ## Readiness and migration gate
 
 The repository's `Backend CI` workflow is the merge gate for pull requests into

@@ -46,6 +46,8 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
     assert 'id="safety-workspace"' in html
     assert 'id="safety-visit-form"' in html
     assert 'id="run-safety-evaluation-button"' in html
+    assert 'id="safety-escalations"' in html
+    assert 'id="load-safety-escalations-button"' in html
     assert "هیچ موردی از پیش انتخاب نمی‌شود" in html
     assert "جایگزین قضاوت مستقل پزشک نمی‌شود" in html
     assert "وجود نداشتن یافته، مجوز بالینی نیست" in html
@@ -81,6 +83,7 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "/safety-inbox`" in source
     assert "/safety-evaluations`" in source
     assert "/safety-findings/${encodeURIComponent" in source
+    assert 'apiRequest("/safety/escalations?limit=50")' in source
     assert 'apiRequest("/knowledge/facts/approved?limit=100")' in source
     assert "expected_clinical_context_sha256" in source
     assert "expected_content_sha256" in source
@@ -91,6 +94,7 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "sessionGeneration" in source
     assert "expected_evaluation_result_sha256" in source
     assert "evaluation_matches_current_context" in source
+    assert "is_clinical_priority" in source
     assert "fact.checked = true" not in source
     assert "/workflow`" in source
     assert "textContent" in source

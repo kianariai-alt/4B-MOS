@@ -155,3 +155,54 @@ class SafetyInboxRead(BaseModel):
     evaluation: SafetyEvaluationRead | None
     findings: list[SafetyInboxFindingRead]
     is_clinical_clearance: Literal[False] = False
+
+
+class SafetyEscalationQueueItemRead(BaseModel):
+    visit_id: str
+    evaluation_id: str
+    evaluation_result_sha256: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    evaluation_created_at: datetime
+    current_clinical_context_sha256: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    evaluation_matches_current_context: bool
+    escalated_at: datetime
+    finding_id: str
+    rule_id: str
+    rule_key: str
+    rule_version: int
+    title: str
+    severity: Literal["info", "warning", "high", "critical"]
+    required_action: Literal[
+        "document",
+        "review_before_proceeding",
+        "urgent_clinical_review",
+    ]
+    review_status: Literal["escalated"] = "escalated"
+    latest_review_id: str
+    latest_review_sha256: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    is_clinical_priority: Literal[False] = False
+    is_clinical_clearance: Literal[False] = False
+
+
+class SafetyEscalationQueueRead(BaseModel):
+    offset: int
+    limit: int
+    total: int
+    ordering: Literal["escalated_at_ascending"] = "escalated_at_ascending"
+    open_escalation_definition: Literal[
+        "latest_verified_review_is_escalated"
+    ] = "latest_verified_review_is_escalated"
+    items: list[SafetyEscalationQueueItemRead]
+    is_clinical_priority_order: Literal[False] = False
+    is_clinical_clearance: Literal[False] = False

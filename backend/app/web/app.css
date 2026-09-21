@@ -814,7 +814,8 @@ textarea:focus {
 }
 
 .safety-summary-card,
-.safety-finding-card {
+.safety-finding-card,
+.safety-escalation-card {
   min-width: 0;
   padding: 1rem;
   border: 1px solid rgba(188, 213, 232, 0.16);
@@ -859,17 +860,36 @@ textarea:focus {
   font-weight: 800;
 }
 
-.safety-findings {
+.safety-findings,
+.safety-escalation-list {
   display: grid;
   gap: 0.85rem;
 }
 
-.safety-finding-card[data-severity="warning"] {
+.safety-escalation-section {
+  border-color: rgba(255, 125, 128, 0.2);
+}
+
+.safety-escalation-card .button {
+  width: 100%;
+  margin-top: 0.9rem;
+}
+
+.queue-current {
+  margin: 0 0 0.8rem;
+  color: var(--aqua-300);
+  line-height: 1.8;
+}
+
+.safety-finding-card[data-severity="warning"],
+.safety-escalation-card[data-severity="warning"] {
   border-color: rgba(242, 194, 102, 0.32);
 }
 
 .safety-finding-card[data-severity="high"],
-.safety-finding-card[data-severity="critical"] {
+.safety-finding-card[data-severity="critical"],
+.safety-escalation-card[data-severity="high"],
+.safety-escalation-card[data-severity="critical"] {
   border-color: rgba(255, 125, 128, 0.42);
 }
 
