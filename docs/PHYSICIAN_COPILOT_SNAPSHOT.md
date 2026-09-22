@@ -60,3 +60,18 @@ in this per-visit field.
 
 A missing safety finding, a matching context hash, or an empty escalation list
 must never be interpreted as proof that care is safe or appropriate.
+
+
+## Companion treatment-options roadmap
+
+The clinical console may load a separate read-only endpoint,
+`GET /api/v1/visits/{visit_id}/treatment-options-roadmap`, beside the copilot
+snapshot. The roadmap is intentionally separate from the immutable copilot
+manifest because it is an aggregate decision-support calculation over local
+outcome history rather than part of the visit's stored evidence manifest.
+
+When its safety and minimum-cohort gates are satisfied, it can show multiple
+active-protocol options using a predefined similar-patient cohort and explicitly
+descriptive local outcome statistics. Options are not ranked or selected.
+
+See [Similar-Patient Treatment Options Roadmap](SIMILAR_PATIENT_TREATMENT_ROADMAP.md).

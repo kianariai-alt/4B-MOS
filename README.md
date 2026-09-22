@@ -92,6 +92,14 @@ the registry is explicitly observational rather than causal evidence. These
 records are also visible in the physician copilot as longitudinal follow-up
 history. The registry itself does not learn or recommend treatment.
 
+The [similar-patient treatment options roadmap](docs/SIMILAR_PATIENT_TREATMENT_ROADMAP.md)
+uses those immutable outcomes to build a transparent local cohort for a current
+visit after the current safety workflow is satisfied. It can expose multiple
+reviewable active-protocol options with sample size, follow-up windows, observed
+outcomes, separate patient/physician ratings and uncertainty. It does not rank,
+select, prescribe or grant clinical clearance, and local observations are not
+treated as causal evidence.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains
