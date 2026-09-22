@@ -99,3 +99,13 @@ This workflow intentionally separates:
 The system does not infer a protocol parameter change, does not automatically
 promote or demote a protocol, and does not treat local observations as causal
 evidence.
+
+
+## Governed release
+
+Stage 23 adds the explicit release step after a case reaches
+`approved_for_manual_action`. See
+[Governed Protocol Release](GOVERNED_PROTOCOL_RELEASE.md).
+
+A release is a separate administrator action and is never implied by clinical or
+operational approval alone.
