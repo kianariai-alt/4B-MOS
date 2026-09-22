@@ -3,6 +3,7 @@
 const API_BASE = "/api/v1";
 const REFRESH_INTERVAL_MS = 30_000;
 const MAX_SELECTED_FACTS = 20;
+const COPILOT_READ_ROLES = new Set(["admin", "physician"]);
 const EVIDENCE_READ_ROLES = new Set(["admin", "physician", "nurse"]);
 const SAFETY_READ_ROLES = new Set(["admin", "physician", "nurse"]);
 const SAFETY_EVALUATE_ROLES = new Set(["admin", "physician"]);
@@ -131,9 +132,11 @@ const elements = {
   connectionState: document.querySelector("#connection-state"),
   consoleMessage: document.querySelector("#console-message"),
   flowTab: document.querySelector("#flow-tab"),
+  copilotTab: document.querySelector("#copilot-tab"),
   evidenceTab: document.querySelector("#evidence-tab"),
   safetyTab: document.querySelector("#safety-tab"),
   flowWorkspace: document.querySelector("#flow-workspace"),
+  copilotWorkspace: document.querySelector("#copilot-workspace"),
   evidenceWorkspace: document.querySelector("#evidence-workspace"),
   safetyWorkspace: document.querySelector("#safety-workspace"),
   flowBoard: document.querySelector("#flow-board"),
@@ -142,6 +145,14 @@ const elements = {
   metricReady: document.querySelector("#metric-ready"),
   metricTreatment: document.querySelector("#metric-treatment"),
   metricAttention: document.querySelector("#metric-attention"),
+  copilotVisitForm: document.querySelector("#copilot-visit-form"),
+  copilotVisitId: document.querySelector("#copilot-visit-id"),
+  loadCopilotButton: document.querySelector("#load-copilot-button"),
+  copilotMessage: document.querySelector("#copilot-message"),
+  copilotContent: document.querySelector("#copilot-content"),
+  copilotSummary: document.querySelector("#copilot-summary"),
+  copilotEscalations: document.querySelector("#copilot-escalations"),
+  copilotEvidence: document.querySelector("#copilot-evidence"),
   evidenceVisitForm: document.querySelector("#evidence-visit-form"),
   evidenceVisitId: document.querySelector("#evidence-visit-id"),
   activeVisits: document.querySelector("#active-visits"),
@@ -192,10 +203,13 @@ let currentFlow = null;
 let refreshTimer = null;
 let requestInProgress = false;
 let actionInProgress = false;
+let copilotRequestInProgress = false;
 let evidenceRequestInProgress = false;
 let safetyRequestInProgress = false;
 let safetyEscalationRequestInProgress = false;
 let activeWorkspace = "flow";
+let currentCopilotVisitId = null;
+let currentCopilotSnapshot = null;
 let currentEvidenceVisitId = null;
 let currentClinicalContext = null;
 let currentKnowledgeFacts = [];
@@ -288,6 +302,10 @@ function displayValue(value) {
   return String(value);
 }
 
+function canReadCopilot() {
+  return Boolean(currentUser && COPILOT_READ_ROLES.has(currentUser.role));
+}
+
 function canReadEvidence() {
   return Boolean(currentUser && EVIDENCE_READ_ROLES.has(currentUser.role));
 }
@@ -317,6 +335,12 @@ function showConsoleMessage(message, isError = false) {
   elements.consoleMessage.textContent = message;
   elements.consoleMessage.classList.toggle("is-error", isError);
   elements.consoleMessage.hidden = !message;
+}
+
+function showCopilotMessage(message, isError = false) {
+  elements.copilotMessage.textContent = message;
+  elements.copilotMessage.classList.toggle("is-error", isError);
+  elements.copilotMessage.hidden = !message;
 }
 
 function showEvidenceMessage(message, isError = false) {
@@ -350,6 +374,14 @@ function setRefreshBusy(isBusy) {
   elements.refreshButton.textContent = isBusy ? "در حال دریافت…" : "تازه‌سازی";
 }
 
+function setCopilotBusy(isBusy) {
+  copilotRequestInProgress = isBusy;
+  elements.loadCopilotButton.disabled = isBusy;
+  elements.loadCopilotButton.textContent = isBusy
+    ? "در حال دریافت…"
+    : "بارگذاری snapshot پزشک‌یار";
+}
+
 function setEvidenceBusy(isBusy, label = "در حال بارگذاری…") {
   evidenceRequestInProgress = isBusy;
   elements.loadEvidenceButton.disabled = isBusy;
@@ -381,6 +413,17 @@ function setSafetyEscalationsBusy(isBusy) {
   elements.loadSafetyEscalationsButton.textContent = isBusy
     ? "در حال دریافت…"
     : "تازه‌سازی صف";
+}
+
+function resetCopilotState() {
+  currentCopilotVisitId = null;
+  currentCopilotSnapshot = null;
+  elements.copilotVisitForm.reset();
+  elements.copilotContent.hidden = true;
+  elements.copilotSummary.replaceChildren();
+  elements.copilotEscalations.replaceChildren();
+  elements.copilotEvidence.replaceChildren();
+  showCopilotMessage("");
 }
 
 function resetEvidenceState() {
@@ -431,6 +474,9 @@ function resetOperationalState() {
 }
 
 function setWorkspace(workspace) {
+  if (workspace === "copilot" && !canReadCopilot()) {
+    return;
+  }
   if (workspace === "evidence" && !canReadEvidence()) {
     return;
   }
@@ -440,15 +486,19 @@ function setWorkspace(workspace) {
 
   activeWorkspace = workspace;
   const isFlow = workspace === "flow";
+  const isCopilot = workspace === "copilot";
   const isEvidence = workspace === "evidence";
   const isSafety = workspace === "safety";
   elements.flowWorkspace.hidden = !isFlow;
+  elements.copilotWorkspace.hidden = !isCopilot;
   elements.evidenceWorkspace.hidden = !isEvidence;
   elements.safetyWorkspace.hidden = !isSafety;
   elements.flowTab.setAttribute("aria-selected", String(isFlow));
+  elements.copilotTab.setAttribute("aria-selected", String(isCopilot));
   elements.evidenceTab.setAttribute("aria-selected", String(isEvidence));
   elements.safetyTab.setAttribute("aria-selected", String(isSafety));
   elements.flowTab.tabIndex = isFlow ? 0 : -1;
+  elements.copilotTab.tabIndex = isCopilot ? 0 : -1;
   elements.evidenceTab.tabIndex = isEvidence ? 0 : -1;
   elements.safetyTab.tabIndex = isSafety ? 0 : -1;
 
@@ -476,12 +526,15 @@ function showLogin() {
   accessToken = null;
   currentUser = null;
   requestInProgress = false;
+  copilotRequestInProgress = false;
   evidenceRequestInProgress = false;
   safetyRequestInProgress = false;
   safetyEscalationRequestInProgress = false;
   actionInProgress = false;
   elements.refreshButton.disabled = false;
   elements.refreshButton.textContent = "تازه‌سازی";
+  elements.loadCopilotButton.disabled = false;
+  elements.loadCopilotButton.textContent = "بارگذاری snapshot پزشک‌یار";
   elements.loadEvidenceButton.disabled = false;
   elements.loadEvidenceButton.textContent = "بارگذاری زمینه و خلاصه‌ها";
   elements.knowledgeSearchButton.disabled = false;
@@ -493,18 +546,23 @@ function showLogin() {
   elements.loadSafetyEscalationsButton.textContent = "تازه‌سازی صف";
   elements.dialogConfirm.disabled = false;
   resetOperationalState();
+  resetCopilotState();
   resetEvidenceState();
   resetSafetyState();
   activeWorkspace = "flow";
   elements.flowWorkspace.hidden = false;
+  elements.copilotWorkspace.hidden = true;
   elements.evidenceWorkspace.hidden = true;
   elements.safetyWorkspace.hidden = true;
   elements.flowTab.setAttribute("aria-selected", "true");
+  elements.copilotTab.setAttribute("aria-selected", "false");
   elements.evidenceTab.setAttribute("aria-selected", "false");
   elements.safetyTab.setAttribute("aria-selected", "false");
   elements.flowTab.tabIndex = 0;
+  elements.copilotTab.tabIndex = -1;
   elements.evidenceTab.tabIndex = -1;
   elements.safetyTab.tabIndex = -1;
+  elements.copilotTab.hidden = true;
   elements.evidenceTab.hidden = true;
   elements.safetyTab.hidden = true;
   elements.consoleView.hidden = true;
@@ -521,6 +579,7 @@ function showConsole() {
   elements.identityArea.hidden = false;
   elements.userDisplayName.textContent = currentUser.display_name;
   elements.userRole.textContent = roleLabels[currentUser.role] || currentUser.role;
+  elements.copilotTab.hidden = !canReadCopilot();
   elements.evidenceTab.hidden = !canReadEvidence();
   elements.safetyTab.hidden = !canReadSafety();
   elements.evidenceComposer.hidden = !canCreateEvidence();
@@ -609,6 +668,21 @@ function createSessionCard(item) {
     }
 
     card.append(actions);
+  }
+
+  if (canReadCopilot()) {
+    const copilotButton = createTextElement(
+      "button",
+      "button button-secondary",
+      "پزشک‌یار",
+    );
+    copilotButton.type = "button";
+    copilotButton.dataset.copilotVisitId = item.visit_id;
+    copilotButton.setAttribute(
+      "aria-label",
+      `پزشک‌یار برای ویزیت ${item.patient_name}`,
+    );
+    card.append(copilotButton);
   }
 
   if (canReadEvidence()) {
@@ -1246,6 +1320,169 @@ async function loadEvidenceWorkspace(visitId) {
     if (requestGeneration === sessionGeneration) {
       setEvidenceBusy(false);
       updateCreateButton();
+    }
+  }
+}
+
+
+function renderCopilotSnapshot(snapshot) {
+  currentCopilotSnapshot = snapshot;
+  const context = snapshot.clinical_context;
+  const safety = snapshot.safety_inbox;
+
+  const summaryCard = document.createElement("article");
+  summaryCard.className = "context-card context-intake";
+  summaryCard.append(
+    createTextElement("h4", "", "Snapshot یکپارچهٔ پزشک‌یار"),
+    createDefinitionGrid([
+      ["زمان تولید", formatDateTime(snapshot.generated_at)],
+      ["SHA-256 snapshot", snapshot.snapshot_sha256],
+      ["SHA-256 زمینهٔ بالینی", context.clinical_context_sha256],
+      ["شرح حال نهایی فعال", context.intake ? "بله" : "خیر"],
+      ["گزارش‌های پاراکلینیک", toPersianNumber(context.reports.length)],
+      ["ارزیابی ایمنی", safety.evaluation ? "ثبت شده" : "ثبت نشده"],
+      [
+        "انطباق ارزیابی با زمینهٔ فعلی",
+        safety.evaluation_matches_current_context === null
+          ? "ارزیابی وجود ندارد"
+          : (safety.evaluation_matches_current_context ? "بله" : "خیر"),
+      ],
+      ["یافته‌های آخرین ارزیابی", toPersianNumber(safety.findings.length)],
+      ["ارجاع باز در آخرین ارزیابی", toPersianNumber(snapshot.open_escalations.length)],
+      [
+        "خلاصهٔ شواهد منطبق با زمینهٔ فعلی",
+        toPersianNumber(snapshot.current_context_evidence_briefs.length),
+      ],
+      ["کل خلاصه‌های شواهد ویزیت", toPersianNumber(snapshot.evidence_briefs.length)],
+      ["مجوز بالینی", "خیر"],
+    ], "safety-summary-grid"),
+  );
+
+  const summaryFragment = document.createDocumentFragment();
+  if (safety.evaluation_matches_current_context === false) {
+    summaryFragment.append(createTextElement(
+      "p",
+      "context-warning",
+      "ارزیابی ایمنی موجود به زمینهٔ بالینی فعلی متصل نیست؛ پیش از اتکا، ارزیابی فعلی باید مستقل بررسی شود.",
+    ));
+  }
+  summaryFragment.append(summaryCard);
+  elements.copilotSummary.replaceChildren(summaryFragment);
+
+  const escalationFragment = document.createDocumentFragment();
+  if (!snapshot.open_escalations.length) {
+    escalationFragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "در آخرین ارزیابی ایمنی این ویزیت ارجاع بازی وجود ندارد. این وضعیت مجوز بالینی نیست.",
+    ));
+  }
+  for (const item of snapshot.open_escalations) {
+    const card = document.createElement("article");
+    card.className = "safety-finding-card";
+    card.dataset.severity = item.finding.severity;
+    card.append(
+      createTextElement("h4", "", item.finding.title),
+      createDefinitionGrid([
+        ["شدت ثبت‌شده", safetySeverityLabels[item.finding.severity] || item.finding.severity],
+        [
+          "اقدام مقرر در قاعده",
+          safetyRequiredActionLabels[item.finding.action] || item.finding.action,
+        ],
+        ["وضعیت پیگیری", safetyReviewStatusLabels[item.timeline.review_status] || item.timeline.review_status],
+        [
+          "آخرین ثبت پیگیری",
+          item.timeline.reviews.length
+            ? formatDateTime(item.timeline.reviews[item.timeline.reviews.length - 1].created_at)
+            : "—",
+        ],
+      ], "safety-summary-grid"),
+    );
+    escalationFragment.append(card);
+  }
+  elements.copilotEscalations.replaceChildren(escalationFragment);
+
+  const evidenceFragment = document.createDocumentFragment();
+  if (!snapshot.evidence_briefs.length) {
+    evidenceFragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "برای این ویزیت هنوز خلاصهٔ شواهد ثبت‌شده‌ای وجود ندارد.",
+    ));
+  }
+  for (const brief of snapshot.evidence_briefs) {
+    const isCurrent = brief.clinical_context_sha256 === context.clinical_context_sha256;
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement("h4", "", brief.payload.clinical_question),
+      createTextElement(
+        "p",
+        isCurrent ? "queue-current" : "context-warning",
+        isCurrent
+          ? "این خلاصه به زمینهٔ بالینی فعلی متصل است."
+          : "این خلاصه تاریخی است و به snapshot قبلی زمینهٔ بالینی متصل می‌ماند.",
+      ),
+      createDefinitionGrid([
+        ["زمان ثبت", formatDateTime(brief.created_at)],
+        ["تعداد منابع انتخاب‌شده", toPersianNumber(brief.knowledge_fact_ids.length)],
+        ["SHA-256 خلاصه", brief.sha256],
+        ["روش انتخاب", "انتخاب دستی پزشک"],
+      ]),
+    );
+    evidenceFragment.append(card);
+  }
+  elements.copilotEvidence.replaceChildren(evidenceFragment);
+  elements.copilotContent.hidden = false;
+}
+
+async function loadCopilotWorkspace(visitId) {
+  const normalizedVisitId = visitId.trim();
+  if (!canReadCopilot() || !normalizedVisitId || copilotRequestInProgress) {
+    return;
+  }
+
+  const requestGeneration = sessionGeneration;
+  currentCopilotVisitId = normalizedVisitId;
+  currentCopilotSnapshot = null;
+  elements.copilotVisitId.value = normalizedVisitId;
+  elements.copilotContent.hidden = true;
+  elements.copilotSummary.replaceChildren();
+  elements.copilotEscalations.replaceChildren();
+  elements.copilotEvidence.replaceChildren();
+  showCopilotMessage("در حال دریافت snapshot یکپارچهٔ ویزیت…");
+  setCopilotBusy(true);
+
+  try {
+    const snapshot = await apiRequest(
+      `/visits/${encodeURIComponent(normalizedVisitId)}/physician-copilot`,
+    );
+    if (!accessToken || requestGeneration !== sessionGeneration) {
+      return;
+    }
+    renderCopilotSnapshot(snapshot);
+    showCopilotMessage(
+      "Snapshot فقط‌خواندنی بارگذاری شد؛ تفسیر و تصمیم بالینی بر عهدهٔ پزشک است.",
+    );
+    setConnectionState(true);
+  } catch (error) {
+    elements.copilotContent.hidden = true;
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      elements.loginMessage.textContent = "نشست شما پایان یافته است؛ دوباره وارد شوید.";
+      return;
+    }
+    if (error instanceof ApiError && error.status === 404) {
+      showCopilotMessage("ویزیت موردنظر پیدا نشد.", true);
+    } else if (error instanceof ApiError && error.status === 403) {
+      showCopilotMessage("نقش کاربری شما اجازهٔ مشاهدهٔ پزشک‌یار را ندارد.", true);
+    } else {
+      showCopilotMessage("دریافت snapshot پزشک‌یار ممکن نشد؛ دوباره تلاش کنید.", true);
+    }
+    setConnectionState(false);
+  } finally {
+    if (requestGeneration === sessionGeneration) {
+      setCopilotBusy(false);
     }
   }
 }
@@ -2110,6 +2347,7 @@ function stopAutoRefresh() {
 function availableWorkspaceTabs() {
   return [
     { workspace: "flow", tab: elements.flowTab },
+    { workspace: "copilot", tab: elements.copilotTab },
     { workspace: "evidence", tab: elements.evidenceTab },
     { workspace: "safety", tab: elements.safetyTab },
   ].filter((entry) => !entry.tab.hidden);
@@ -2118,7 +2356,9 @@ function availableWorkspaceTabs() {
 elements.loginForm.addEventListener("submit", handleLogin);
 elements.logoutButton.addEventListener("click", showLogin);
 elements.refreshButton.addEventListener("click", () => {
-  if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
+  if (activeWorkspace === "copilot" && currentCopilotVisitId) {
+    loadCopilotWorkspace(currentCopilotVisitId);
+  } else if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
     loadEvidenceWorkspace(currentEvidenceVisitId);
   } else if (activeWorkspace === "safety" && currentSafetyVisitId) {
     loadSafetyEscalations({ quiet: true });
@@ -2130,9 +2370,15 @@ elements.refreshButton.addEventListener("click", () => {
   }
 });
 elements.flowTab.addEventListener("click", () => setWorkspace("flow"));
+elements.copilotTab.addEventListener("click", () => setWorkspace("copilot"));
 elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
 elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
-for (const tab of [elements.flowTab, elements.evidenceTab, elements.safetyTab]) {
+for (const tab of [
+  elements.flowTab,
+  elements.copilotTab,
+  elements.evidenceTab,
+  elements.safetyTab,
+]) {
   tab.addEventListener("keydown", (event) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
       return;
@@ -2158,6 +2404,12 @@ for (const tab of [elements.flowTab, elements.evidenceTab, elements.safetyTab]) 
     target.tab.focus();
   });
 }
+elements.copilotVisitForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (elements.copilotVisitForm.reportValidity()) {
+    loadCopilotWorkspace(elements.copilotVisitId.value);
+  }
+});
 elements.evidenceVisitForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (elements.evidenceVisitForm.reportValidity()) {
@@ -2238,6 +2490,13 @@ elements.safetyFindings.addEventListener("submit", async (event) => {
 });
 
 elements.flowBoard.addEventListener("click", async (event) => {
+  const copilotButton = event.target.closest("button[data-copilot-visit-id]");
+  if (copilotButton && canReadCopilot() && !copilotRequestInProgress) {
+    setWorkspace("copilot");
+    await loadCopilotWorkspace(copilotButton.dataset.copilotVisitId);
+    return;
+  }
+
   const safetyButton = event.target.closest("button[data-safety-visit-id]");
   if (safetyButton && canReadSafety() && !safetyRequestInProgress) {
     setWorkspace("safety");
@@ -2292,6 +2551,8 @@ window.addEventListener("online", () => {
   setConnectionState(true);
   if (activeWorkspace === "flow") {
     loadFlow({ quiet: true });
+  } else if (activeWorkspace === "copilot" && currentCopilotVisitId) {
+    loadCopilotWorkspace(currentCopilotVisitId);
   } else if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
     loadEvidenceWorkspace(currentEvidenceVisitId);
   } else if (activeWorkspace === "safety" && currentSafetyVisitId) {
