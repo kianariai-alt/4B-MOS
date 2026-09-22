@@ -394,6 +394,7 @@ function canReviewGovernanceClinically(caseItem) {
     && currentUser.role === "physician"
     && currentUser.id !== caseItem.created_by_user_id
     && !caseItem.release
+    && !caseItem.recovery
   );
 }
 
@@ -686,6 +687,7 @@ const governanceStatusLabels = Object.freeze({
   operational_hold: "توقف عملیاتی",
   approved_for_manual_action: "تأییدشده برای اقدام دستی",
   released: "منتشرشده / اجراشده",
+  recovered: "Recovery اجراشده",
 });
 
 const governanceCaseTypeLabels = Object.freeze({
@@ -693,6 +695,8 @@ const governanceCaseTypeLabels = Object.freeze({
   monitor_no_change: "پایش بدون تغییر",
   revision_candidate: "نامزد بازنگری نسخه",
   deactivation_candidate: "نامزد غیرفعال‌سازی",
+  reactivation_candidate: "نامزد فعال‌سازی مجدد",
+  rollback_revision_candidate: "نامزد بازگشت Governed به نسخه قبلی",
 });
 
 function appendGovernanceField(form, labelText, field) {
@@ -827,6 +831,11 @@ function renderGovernanceSignals(signals) {
 function renderGovernanceCases(cases) {
   currentGovernanceCases = cases;
   const fragment = document.createDocumentFragment();
+  const recoverySourceReleaseIds = new Set(
+    cases
+      .filter((item) => item.source_release_id)
+      .map((item) => item.source_release_id),
+  );
 
   if (!cases.length) {
     fragment.append(createTextElement(
@@ -901,6 +910,68 @@ function renderGovernanceCases(cases) {
           `یادداشت اجرا: ${item.release.execution_note}`,
         ),
       );
+
+      if (
+        canCreateGovernanceCase()
+        && !recoverySourceReleaseIds.has(item.release.id)
+      ) {
+        const recoveryCaseForm = document.createElement("form");
+        recoveryCaseForm.className = "brief-form governance-recovery-case-form";
+        recoveryCaseForm.dataset.releaseId = item.release.id;
+        recoveryCaseForm.dataset.releaseSha256 = item.release.sha256;
+        appendGovernanceField(
+          recoveryCaseForm,
+          "دلیل پزشک برای باز کردن Recovery Case",
+          governanceTextarea({
+            name: "rationale",
+            minLength: 20,
+            maxLength: 5000,
+            rows: 4,
+          }),
+        );
+        appendGovernanceField(
+          recoveryCaseForm,
+          "داده/شواهد موردنیاز، هر مورد در یک خط",
+          governanceTextarea({
+            name: "evidence_needed",
+            maxLength: 3000,
+            rows: 3,
+          }),
+        );
+        recoveryCaseForm.append(
+          governanceSubmitButton("باز کردن Governed Recovery Case"),
+        );
+        card.append(recoveryCaseForm);
+      }
+    }
+
+    if (item.recovery) {
+      card.append(
+        createTextElement("h5", "context-subheading", "Governed Recovery"),
+        createDefinitionGrid([
+          ["Action", item.recovery.action],
+          ["زمان اجرا", formatDateTime(item.recovery.created_at)],
+          ["Recovery ID", item.recovery.id],
+          ["Source Release ID", item.recovery.source_release_id],
+          ["SHA-256 Recovery", item.recovery.sha256],
+          [
+            "نسخه فعال‌شده",
+            item.recovery.after_snapshots.reactivated_protocol.version,
+          ],
+          [
+            "نسخه غیرفعال‌شده",
+            item.recovery.after_snapshots.deactivated_protocol
+              ? item.recovery.after_snapshots.deactivated_protocol.version
+              : "—",
+          ],
+          ["حفظ تاریخچه", item.recovery.preserves_history ? "بله" : "خیر"],
+        ], "safety-summary-grid"),
+        createTextElement(
+          "p",
+          "ordering-note",
+          `یادداشت Recovery: ${item.recovery.execution_note}`,
+        ),
+      );
     }
 
     if (
@@ -927,6 +998,35 @@ function renderGovernanceCases(cases) {
         governanceSubmitButton("اجرای Governed Release"),
       );
       card.append(releaseForm);
+    }
+
+    if (
+      canReviewGovernanceOperationally()
+      && item.status === "approved_for_manual_action"
+      && !item.recovery
+      && [
+        "reactivation_candidate",
+        "rollback_revision_candidate",
+      ].includes(item.case_type)
+    ) {
+      const recoveryForm = document.createElement("form");
+      recoveryForm.className = "brief-form governance-recovery-execute-form";
+      recoveryForm.dataset.caseId = item.id;
+      recoveryForm.dataset.caseSha256 = item.sha256;
+      appendGovernanceField(
+        recoveryForm,
+        "یادداشت اجرای Recovery",
+        governanceTextarea({
+          name: "execution_note",
+          minLength: 10,
+          maxLength: 5000,
+          rows: 3,
+        }),
+      );
+      recoveryForm.append(
+        governanceSubmitButton("اجرای Governed Recovery"),
+      );
+      card.append(recoveryForm);
     }
 
     if (canReviewGovernanceClinically(item)) {
@@ -1091,6 +1191,91 @@ async function reviewGovernanceCase(form) {
       error instanceof ApiError && error.status === 403
         ? "این نقش یا این کاربر اجازهٔ انجام این Review را ندارد."
         : "ثبت Review Governance ممکن نشد.",
+      true,
+    );
+  } finally {
+    governanceRequestInProgress = false;
+  }
+}
+
+async function createGovernanceRecoveryCase(form) {
+  if (
+    !canCreateGovernanceCase()
+    || governanceRequestInProgress
+    || !currentLearningReview
+  ) {
+    return;
+  }
+  if (!form.reportValidity()) {
+    return;
+  }
+  governanceRequestInProgress = true;
+  showGovernanceMessage("در حال ثبت Governed Recovery Case…");
+  const evidenceNeeded = form.elements.evidence_needed.value
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  try {
+    await apiRequest(
+      `/protocol-governance/releases/${encodeURIComponent(form.dataset.releaseId)}/recovery-cases`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_release_sha256: form.dataset.releaseSha256,
+          expected_learning_review_sha256: currentLearningReview.review_sha256,
+          rationale: form.elements.rationale.value.trim(),
+          evidence_needed: evidenceNeeded,
+        }),
+      },
+    );
+    await loadProtocolGovernance();
+    showGovernanceMessage(
+      "Recovery Case ثبت شد؛ هیچ وضعیت پروتکلی هنوز تغییر نکرده است.",
+    );
+  } catch (error) {
+    showGovernanceMessage(
+      error instanceof ApiError && error.status === 409
+        ? "Release یا Learning Review تغییر کرده است؛ پیش از ادامه صفحه را تازه‌سازی کنید."
+        : "ثبت Governed Recovery Case ممکن نشد.",
+      true,
+    );
+  } finally {
+    governanceRequestInProgress = false;
+  }
+}
+
+async function executeGovernanceRecovery(form) {
+  if (
+    !canReviewGovernanceOperationally()
+    || governanceRequestInProgress
+  ) {
+    return;
+  }
+  if (!form.reportValidity()) {
+    return;
+  }
+  governanceRequestInProgress = true;
+  showGovernanceMessage("در حال اجرای Governed Protocol Recovery…");
+  try {
+    await apiRequest(
+      `/protocol-governance/cases/${encodeURIComponent(form.dataset.caseId)}/recovery`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_case_sha256: form.dataset.caseSha256,
+          execution_note: form.elements.execution_note.value.trim(),
+        }),
+      },
+    );
+    await loadProtocolGovernance();
+    showGovernanceMessage(
+      "Recovery اجرا شد؛ release قبلی حفظ و recovery جدید به lineage افزوده شد.",
+    );
+  } catch (error) {
+    showGovernanceMessage(
+      error instanceof ApiError && error.status === 409
+        ? "پرونده دیگر قابل Recovery نیست یا lineage تغییر کرده است؛ صفحه را تازه‌سازی کنید."
+        : "اجرای Governed Recovery ممکن نشد.",
       true,
     );
   } finally {
@@ -3653,6 +3838,22 @@ elements.learningGovernanceSignals.addEventListener("submit", async (event) => {
   await createGovernanceCase(form);
 });
 elements.learningGovernanceCases.addEventListener("submit", async (event) => {
+  const recoveryCaseForm = event.target.closest(
+    "form.governance-recovery-case-form",
+  );
+  if (recoveryCaseForm) {
+    event.preventDefault();
+    await createGovernanceRecoveryCase(recoveryCaseForm);
+    return;
+  }
+  const recoveryForm = event.target.closest(
+    "form.governance-recovery-execute-form",
+  );
+  if (recoveryForm) {
+    event.preventDefault();
+    await executeGovernanceRecovery(recoveryForm);
+    return;
+  }
   const releaseForm = event.target.closest("form.governance-release-form");
   if (releaseForm) {
     event.preventDefault();
