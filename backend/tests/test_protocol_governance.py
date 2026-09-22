@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import update
 
 from backend.app.models.protocol_governance import ProtocolGovernanceCase
+from backend.app.repositories.audit_log import AuditLogRepository
 from backend.tests.test_protocols import protocol_payload
 from backend.tests.test_treatment_options_roadmap import create_role_headers
 
@@ -62,6 +63,7 @@ def test_revision_case_requires_independent_clinical_and_admin_review(
     client,
     author_headers,
     reviewer_headers,
+    db_session,
 ):
     source = client.post(
         "/api/v1/protocols",
@@ -195,6 +197,29 @@ def test_revision_case_requires_independent_clinical_and_admin_review(
     assert (
         by_version["2.0"]["source_governance_case_sha256"]
         == case["sha256"]
+    )
+
+    source_logs = AuditLogRepository.list_by_entity(
+        db_session,
+        entity_type="protocol",
+        entity_id=by_version["1.0"]["id"],
+    )
+    assert source_logs[-1].event_type == "protocol_superseded"
+    released_logs = AuditLogRepository.list_by_entity(
+        db_session,
+        entity_type="protocol",
+        entity_id=by_version["2.0"]["id"],
+    )
+    assert released_logs[-1].event_type == "protocol_revision_published"
+    release_logs = AuditLogRepository.list_by_entity(
+        db_session,
+        entity_type="protocol_governance_release",
+        entity_id=release["id"],
+    )
+    assert len(release_logs) == 1
+    assert (
+        release_logs[0].event_type
+        == "governed_protocol_release_executed"
     )
 
     duplicate = client.post(
@@ -340,6 +365,7 @@ def test_release_requires_completed_governance_and_admin_role(
     client,
     author_headers,
     reviewer_headers,
+    db_session,
 ):
     created = client.post(
         "/api/v1/protocols",
@@ -440,6 +466,23 @@ def test_release_requires_completed_governance_and_admin_role(
     )
     assert protocol.status_code == 200
     assert protocol.json()["is_active"] is False
+
+    source_logs = AuditLogRepository.list_by_entity(
+        db_session,
+        entity_type="protocol",
+        entity_id=created.json()["id"],
+    )
+    assert source_logs[-1].event_type == "protocol_governance_deactivated"
+    release_logs = AuditLogRepository.list_by_entity(
+        db_session,
+        entity_type="protocol_governance_release",
+        entity_id=body["release"]["id"],
+    )
+    assert len(release_logs) == 1
+    assert (
+        release_logs[0].event_type
+        == "governed_protocol_release_executed"
+    )
 
 
 def test_non_release_governance_case_cannot_execute_release(
