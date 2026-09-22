@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from datetime import datetime, timezone
+import uuid
 
 import pytest
 
@@ -78,11 +79,25 @@ def test_finalization_migration_preserves_legacy_sessions_and_refuses_evidence_l
             visit = Visit(patient_id=patient.id)
             db.add(visit)
             db.flush()
-            treatment = Treatment(visit_id=visit.id, treatment_type="ACS")
-            db.add(treatment)
-            db.flush()
-            session = TreatmentSession(treatment_id=treatment.id, session_number=1, status="completed",
-                                       operational_status="completed", completed_at=datetime.now(timezone.utc))
+            treatment_id = str(uuid.uuid4())
+            now = datetime.now(timezone.utc)
+            db.execute(
+                text(
+                    "INSERT INTO treatments "
+                    "(id, visit_id, treatment_type, status, session_number, "
+                    "created_at, updated_at) "
+                    "VALUES (:id, :visit_id, 'ACS', 'planned', 1, "
+                    ":created_at, :updated_at)"
+                ),
+                {
+                    "id": treatment_id,
+                    "visit_id": visit.id,
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
+            session = TreatmentSession(treatment_id=treatment_id, session_number=1, status="completed",
+                                       operational_status="completed", completed_at=now)
             db.add(session)
             db.flush()
             session_id = session.id
@@ -796,7 +811,11 @@ def test_treatment_decision_migration_refuses_decision_history_loss(
         assert "source_treatment_decision_id" in treatment_columns
         assert "source_treatment_decision_sha256" in treatment_columns
         decision_fks = inspector.get_foreign_keys("treatment_decisions")
-        assert len(decision_fks) == 3
+        assert len(decision_fks) == 2
+        assert {
+            tuple(item["constrained_columns"])
+            for item in decision_fks
+        } == {("visit_id",), ("decided_by_user_id",)}
         treatment_fk_names = {
             item["name"]
             for item in inspector.get_foreign_keys("treatments")
