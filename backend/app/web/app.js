@@ -693,6 +693,34 @@ const governanceCaseTypeLabels = Object.freeze({
   deactivation_candidate: "نامزد غیرفعال‌سازی",
 });
 
+function appendGovernanceField(form, labelText, field) {
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  form.append(label, field);
+}
+
+function governanceTextarea({ name, minLength = 0, maxLength = 5000, rows = 3 }) {
+  const field = document.createElement("textarea");
+  field.name = name;
+  field.rows = rows;
+  field.maxLength = maxLength;
+  if (minLength) {
+    field.minLength = minLength;
+    field.required = true;
+  }
+  return field;
+}
+
+function governanceSubmitButton(label) {
+  const button = createTextElement(
+    "button",
+    "button button-secondary",
+    label,
+  );
+  button.type = "submit";
+  return button;
+}
+
 function renderGovernanceSignals(signals) {
   currentGovernanceSignals = signals;
   const fragment = document.createDocumentFragment();
@@ -745,19 +773,47 @@ function renderGovernanceSignals(signals) {
       form.className = "brief-form governance-case-form";
       form.dataset.protocolCode = item.protocol_code;
       form.dataset.protocolVersion = item.protocol_version;
-      form.innerHTML = `
-        <label>نوع پرونده</label>
-        <select name="case_type" required>
-          <option value="collect_more_data">جمع‌آوری دادهٔ بیشتر</option>
-          <option value="monitor_no_change">پایش بدون تغییر</option>
-          ${item.is_active ? '<option value="deactivation_candidate">نامزد غیرفعال‌سازی</option>' : ''}
-        </select>
-        <label>دلیل پزشک</label>
-        <textarea name="rationale" minlength="20" maxlength="5000" rows="4" required></textarea>
-        <label>داده/شواهد موردنیاز، هر مورد در یک خط</label>
-        <textarea name="evidence_needed" maxlength="3000" rows="3"></textarea>
-        <button class="button button-secondary" type="submit">باز کردن پرونده Governance</button>
-      `;
+
+      const caseType = document.createElement("select");
+      caseType.name = "case_type";
+      caseType.required = true;
+      const caseOptions = [
+        ["collect_more_data", "جمع‌آوری دادهٔ بیشتر"],
+        ["monitor_no_change", "پایش بدون تغییر"],
+      ];
+      if (item.is_active) {
+        caseOptions.push([
+          "deactivation_candidate",
+          "نامزد غیرفعال‌سازی",
+        ]);
+      }
+      for (const [value, labelText] of caseOptions) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = labelText;
+        caseType.append(option);
+      }
+      appendGovernanceField(form, "نوع پرونده", caseType);
+      appendGovernanceField(
+        form,
+        "دلیل پزشک",
+        governanceTextarea({
+          name: "rationale",
+          minLength: 20,
+          maxLength: 5000,
+          rows: 4,
+        }),
+      );
+      appendGovernanceField(
+        form,
+        "داده/شواهد موردنیاز، هر مورد در یک خط",
+        governanceTextarea({
+          name: "evidence_needed",
+          maxLength: 3000,
+          rows: 3,
+        }),
+      );
+      form.append(governanceSubmitButton("باز کردن پرونده Governance"));
       card.append(form);
     }
     fragment.append(card);
@@ -826,16 +882,32 @@ function renderGovernanceCases(cases) {
       form.className = "brief-form governance-review-form";
       form.dataset.caseId = item.id;
       form.dataset.caseSha256 = item.sha256;
-      form.innerHTML = `
-        <label>مرور بالینی مستقل</label>
-        <select name="action" required>
-          <option value="clinical_approve">تأیید بالینی برای ادامه Governance</option>
-          <option value="request_changes">درخواست اصلاح</option>
-          <option value="clinical_reject">رد بالینی</option>
-        </select>
-        <textarea name="rationale" minlength="10" maxlength="5000" rows="3" required></textarea>
-        <button class="button button-secondary" type="submit">ثبت Review بالینی</button>
-      `;
+
+      const action = document.createElement("select");
+      action.name = "action";
+      action.required = true;
+      for (const [value, labelText] of [
+        ["clinical_approve", "تأیید بالینی برای ادامه Governance"],
+        ["request_changes", "درخواست اصلاح"],
+        ["clinical_reject", "رد بالینی"],
+      ]) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = labelText;
+        action.append(option);
+      }
+      appendGovernanceField(form, "مرور بالینی مستقل", action);
+      appendGovernanceField(
+        form,
+        "دلیل Review",
+        governanceTextarea({
+          name: "rationale",
+          minLength: 10,
+          maxLength: 5000,
+          rows: 3,
+        }),
+      );
+      form.append(governanceSubmitButton("ثبت Review بالینی"));
       card.append(form);
     }
 
@@ -847,15 +919,31 @@ function renderGovernanceCases(cases) {
       form.className = "brief-form governance-review-form";
       form.dataset.caseId = item.id;
       form.dataset.caseSha256 = item.sha256;
-      form.innerHTML = `
-        <label>مرور عملیاتی</label>
-        <select name="action" required>
-          <option value="operational_acknowledge">تأیید آمادگی برای اقدام دستی</option>
-          <option value="operational_hold">توقف عملیاتی</option>
-        </select>
-        <textarea name="rationale" minlength="10" maxlength="5000" rows="3" required></textarea>
-        <button class="button button-secondary" type="submit">ثبت Review عملیاتی</button>
-      `;
+
+      const action = document.createElement("select");
+      action.name = "action";
+      action.required = true;
+      for (const [value, labelText] of [
+        ["operational_acknowledge", "تأیید آمادگی برای اقدام دستی"],
+        ["operational_hold", "توقف عملیاتی"],
+      ]) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = labelText;
+        action.append(option);
+      }
+      appendGovernanceField(form, "مرور عملیاتی", action);
+      appendGovernanceField(
+        form,
+        "دلیل Review",
+        governanceTextarea({
+          name: "rationale",
+          minLength: 10,
+          maxLength: 5000,
+          rows: 3,
+        }),
+      );
+      form.append(governanceSubmitButton("ثبت Review عملیاتی"));
       card.append(form);
     }
 
