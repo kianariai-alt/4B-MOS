@@ -57,11 +57,6 @@ def upgrade():
             ondelete="RESTRICT",
         ),
         sa.ForeignKeyConstraint(
-            ["supersedes_decision_id"],
-            ["treatment_decisions.id"],
-            ondelete="RESTRICT",
-        ),
-        sa.ForeignKeyConstraint(
             ["decided_by_user_id"],
             ["users.id"],
             ondelete="RESTRICT",
