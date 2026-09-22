@@ -7,6 +7,8 @@ from backend.app.models.user import User
 from backend.app.schemas.protocol_governance import (
     ProtocolGovernanceCaseCreate,
     ProtocolGovernanceCaseRead,
+    ProtocolGovernanceReleaseExecute,
+    ProtocolGovernanceReleaseRead,
     ProtocolGovernanceReviewCreate,
     ProtocolGovernanceSignalRead,
 )
@@ -128,4 +130,45 @@ def review_protocol_governance_case(
         ProtocolGovernanceIntegrityError,
         ProtocolGovernanceNotFoundError,
     ) as error:
+        _translate(error)
+
+
+
+@router.post(
+    "/protocol-governance/cases/{case_id}/release",
+    response_model=ProtocolGovernanceCaseRead,
+)
+def execute_protocol_governance_release(
+    case_id: str,
+    payload: ProtocolGovernanceReleaseExecute,
+    actor: User = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return ProtocolGovernanceService.execute_release(
+            db,
+            case_id,
+            payload,
+            actor=actor,
+        )
+    except (
+        ProtocolGovernanceAuthorizationError,
+        ProtocolGovernanceConflictError,
+        ProtocolGovernanceIntegrityError,
+        ProtocolGovernanceNotFoundError,
+    ) as error:
+        _translate(error)
+
+
+@router.get(
+    "/protocol-governance/releases",
+    response_model=list[ProtocolGovernanceReleaseRead],
+)
+def list_protocol_governance_releases(
+    _actor: User = Depends(require_roles(*READ_ROLES)),
+    db: Session = Depends(get_db),
+):
+    try:
+        return ProtocolGovernanceService.list_releases(db)
+    except ProtocolGovernanceIntegrityError as error:
         _translate(error)
