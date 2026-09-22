@@ -488,6 +488,11 @@ class ProtocolGovernanceService:
                 f"Protocol governance case '{case_id}' was not found."
             )
         ProtocolGovernanceService._validate_case_record(db, record)
+        if ProtocolGovernanceRepository.get_release_by_case(db, case_id):
+            raise ProtocolGovernanceConflictError(
+                "A released governance case is terminal and cannot accept "
+                "additional reviews."
+            )
         if payload.expected_case_sha256 != record.sha256:
             raise ProtocolGovernanceConflictError(
                 "The governance case hash changed; reload before reviewing."
