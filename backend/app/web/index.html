@@ -285,6 +285,88 @@
               <div id="copilot-roadmap" class="evidence-briefs"></div>
             </section>
 
+            <section
+              id="copilot-decision-section"
+              class="evidence-section"
+              aria-labelledby="copilot-decision-heading"
+              hidden
+            >
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">تصمیم انسانی، زنجیرهٔ تغییرناپذیر</p>
+                  <h3 id="copilot-decision-heading">ثبت تصمیم پزشک</h3>
+                </div>
+              </div>
+              <p class="ordering-note">
+                گزینه‌ها توسط سامانه رتبه‌بندی نشده‌اند. تصمیم، اصلاح، ترکیب،
+                تعویق یا عدم درمان فقط با ثبت صریح پزشک وارد پرونده می‌شود.
+              </p>
+
+              <form id="copilot-decision-form" class="brief-form">
+                <label for="copilot-decision-type">نوع تصمیم</label>
+                <select id="copilot-decision-type" required>
+                  <option value="select_option">انتخاب یک گزینهٔ Roadmap</option>
+                  <option value="modify_option">اصلاح یک گزینهٔ Roadmap</option>
+                  <option value="combine_options">ترکیب چند گزینهٔ Roadmap</option>
+                  <option value="defer">تعویق تصمیم درمانی</option>
+                  <option value="no_treatment">عدم انتخاب درمان در این مرحله</option>
+                </select>
+
+                <div>
+                  <p class="card-kicker">گزینه‌های انتخاب‌شده</p>
+                  <div id="copilot-decision-options" class="selected-facts"></div>
+                </div>
+
+                <label for="copilot-decision-rationale">منطق و دلیل بالینی پزشک</label>
+                <textarea
+                  id="copilot-decision-rationale"
+                  minlength="10"
+                  maxlength="5000"
+                  rows="5"
+                  required
+                ></textarea>
+
+                <label for="copilot-decision-modification">شرح اصلاح یا ترکیب</label>
+                <textarea
+                  id="copilot-decision-modification"
+                  maxlength="5000"
+                  rows="4"
+                  placeholder="برای تصمیم اصلاح یا ترکیب الزامی است."
+                ></textarea>
+
+                <label for="copilot-patient-preference">ترجیح و گفت‌وگوی ثبت‌شده با بیمار</label>
+                <textarea
+                  id="copilot-patient-preference"
+                  maxlength="5000"
+                  rows="4"
+                ></textarea>
+
+                <button
+                  id="create-treatment-decision-button"
+                  class="button button-primary"
+                  type="submit"
+                >
+                  ثبت تصمیم تغییرناپذیر پزشک
+                </button>
+              </form>
+
+              <p
+                id="copilot-decision-message"
+                class="notice"
+                role="status"
+                aria-live="polite"
+                hidden
+              ></p>
+
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">Decision lineage</p>
+                  <h4>تاریخچهٔ تصمیم‌ها</h4>
+                </div>
+              </div>
+              <div id="copilot-decision-history" class="evidence-briefs"></div>
+            </section>
+
             <section class="evidence-section" aria-labelledby="copilot-outcomes-heading">
               <div class="section-heading">
                 <div>
