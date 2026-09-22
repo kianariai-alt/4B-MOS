@@ -170,6 +170,8 @@ def test_revision_case_requires_independent_clinical_and_admin_review(
     )
     assert released.status_code == 200, released.text
     released_case = released.json()
+    assert released_case["status"] == "released"
+    assert released_case["requires_manual_protocol_action"] is False
     assert released_case["release"] is not None
     release = released_case["release"]
     assert release["action"] == "publish_revision"
