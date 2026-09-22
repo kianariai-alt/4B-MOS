@@ -182,6 +182,16 @@ const elements = {
   copilotSummary: document.querySelector("#copilot-summary"),
   copilotEscalations: document.querySelector("#copilot-escalations"),
   copilotRoadmap: document.querySelector("#copilot-roadmap"),
+  copilotDecisionSection: document.querySelector("#copilot-decision-section"),
+  copilotDecisionForm: document.querySelector("#copilot-decision-form"),
+  copilotDecisionType: document.querySelector("#copilot-decision-type"),
+  copilotDecisionOptions: document.querySelector("#copilot-decision-options"),
+  copilotDecisionRationale: document.querySelector("#copilot-decision-rationale"),
+  copilotDecisionModification: document.querySelector("#copilot-decision-modification"),
+  copilotPatientPreference: document.querySelector("#copilot-patient-preference"),
+  createTreatmentDecisionButton: document.querySelector("#create-treatment-decision-button"),
+  copilotDecisionMessage: document.querySelector("#copilot-decision-message"),
+  copilotDecisionHistory: document.querySelector("#copilot-decision-history"),
   copilotOutcomes: document.querySelector("#copilot-outcomes"),
   copilotEvidence: document.querySelector("#copilot-evidence"),
   evidenceVisitForm: document.querySelector("#evidence-visit-form"),
@@ -235,6 +245,7 @@ let refreshTimer = null;
 let requestInProgress = false;
 let actionInProgress = false;
 let copilotRequestInProgress = false;
+let decisionRequestInProgress = false;
 let evidenceRequestInProgress = false;
 let safetyRequestInProgress = false;
 let safetyEscalationRequestInProgress = false;
@@ -242,6 +253,7 @@ let activeWorkspace = "flow";
 let currentCopilotVisitId = null;
 let currentCopilotSnapshot = null;
 let currentTreatmentRoadmap = null;
+let currentTreatmentDecisions = [];
 let currentEvidenceVisitId = null;
 let currentClinicalContext = null;
 let currentKnowledgeFacts = [];
@@ -251,6 +263,7 @@ let currentSafetyInbox = null;
 let currentSafetyEscalations = null;
 let sessionGeneration = 0;
 const selectedFacts = new Map();
+const selectedDecisionProtocols = new Set();
 
 class ApiError extends Error {
   constructor(status, detail) {
@@ -338,6 +351,10 @@ function canReadCopilot() {
   return Boolean(currentUser && COPILOT_READ_ROLES.has(currentUser.role));
 }
 
+function canCreateTreatmentDecision() {
+  return Boolean(currentUser && currentUser.role === "physician");
+}
+
 function canReadEvidence() {
   return Boolean(currentUser && EVIDENCE_READ_ROLES.has(currentUser.role));
 }
@@ -373,6 +390,12 @@ function showCopilotMessage(message, isError = false) {
   elements.copilotMessage.textContent = message;
   elements.copilotMessage.classList.toggle("is-error", isError);
   elements.copilotMessage.hidden = !message;
+}
+
+function showDecisionMessage(message, isError = false) {
+  elements.copilotDecisionMessage.textContent = message;
+  elements.copilotDecisionMessage.classList.toggle("is-error", isError);
+  elements.copilotDecisionMessage.hidden = !message;
 }
 
 function showEvidenceMessage(message, isError = false) {
@@ -451,14 +474,21 @@ function resetCopilotState() {
   currentCopilotVisitId = null;
   currentCopilotSnapshot = null;
   currentTreatmentRoadmap = null;
+  currentTreatmentDecisions = [];
+  selectedDecisionProtocols.clear();
   elements.copilotVisitForm.reset();
+  elements.copilotDecisionForm.reset();
+  elements.copilotDecisionSection.hidden = true;
   elements.copilotContent.hidden = true;
   elements.copilotSummary.replaceChildren();
   elements.copilotEscalations.replaceChildren();
   elements.copilotRoadmap.replaceChildren();
+  elements.copilotDecisionOptions.replaceChildren();
+  elements.copilotDecisionHistory.replaceChildren();
   elements.copilotOutcomes.replaceChildren();
   elements.copilotEvidence.replaceChildren();
   showCopilotMessage("");
+  showDecisionMessage("");
 }
 
 function resetEvidenceState() {
@@ -562,6 +592,7 @@ function showLogin() {
   currentUser = null;
   requestInProgress = false;
   copilotRequestInProgress = false;
+  decisionRequestInProgress = false;
   evidenceRequestInProgress = false;
   safetyRequestInProgress = false;
   safetyEscalationRequestInProgress = false;
@@ -1386,6 +1417,232 @@ function roadmapMetricText(metric, formatter = formatRoadmapNumber) {
   return `${formatter(metric.value)} · n=${toPersianNumber(metric.denominator)}`;
 }
 
+function decisionProtocolKey(option) {
+  return [
+    option.protocol_code,
+    option.protocol_version,
+    option.treatment_type,
+  ].join("@@");
+}
+
+function selectedDecisionReferences() {
+  if (!currentTreatmentRoadmap) {
+    return [];
+  }
+  return currentTreatmentRoadmap.options
+    .filter((option) => selectedDecisionProtocols.has(decisionProtocolKey(option)))
+    .map((option) => ({
+      protocol_code: option.protocol_code,
+      protocol_version: option.protocol_version,
+      treatment_type: option.treatment_type,
+      source: "roadmap_option",
+    }));
+}
+
+function renderSelectedDecisionProtocols() {
+  const fragment = document.createDocumentFragment();
+  const selected = selectedDecisionReferences();
+  if (!selected.length) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "هنوز گزینه‌ای برای این تصمیم انتخاب نشده است.",
+    ));
+  }
+  for (const item of selected) {
+    fragment.append(createTextElement(
+      "span",
+      "count-pill",
+      `${item.protocol_code} · ${item.protocol_version} · ${item.treatment_type}`,
+    ));
+  }
+  elements.copilotDecisionOptions.replaceChildren(fragment);
+}
+
+function syncDecisionForm() {
+  const type = elements.copilotDecisionType.value;
+  const needsModification = ["modify_option", "combine_options"].includes(type);
+  const ignoresOptions = ["defer", "no_treatment"].includes(type);
+  elements.copilotDecisionModification.required = needsModification;
+  elements.copilotDecisionModification.disabled = ignoresOptions;
+  if (ignoresOptions) {
+    elements.copilotDecisionModification.value = "";
+  }
+  for (const checkbox of elements.copilotRoadmap.querySelectorAll(
+    "input[data-decision-protocol-key]",
+  )) {
+    checkbox.disabled = ignoresOptions || !canCreateTreatmentDecision();
+  }
+  renderSelectedDecisionProtocols();
+}
+
+function renderTreatmentDecisionHistory(decisions) {
+  currentTreatmentDecisions = decisions;
+  const fragment = document.createDocumentFragment();
+  if (!decisions.length) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "هنوز تصمیم تغییرناپذیری برای این ویزیت ثبت نشده است.",
+    ));
+  }
+  const labels = {
+    select_option: "انتخاب یک گزینه",
+    modify_option: "اصلاح یک گزینه",
+    combine_options: "ترکیب چند گزینه",
+    choose_outside_roadmap: "پروتکل خارج از Roadmap",
+    defer: "تعویق تصمیم",
+    no_treatment: "عدم درمان در این مرحله",
+  };
+  for (const decision of [...decisions].reverse()) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    const protocolText = decision.selected_protocols.length
+      ? decision.selected_protocols
+        .map((item) => `${item.protocol_code} · ${item.protocol_version}`)
+        .join("، ")
+      : "بدون انتخاب پروتکل";
+    card.append(
+      createTextElement(
+        "h4",
+        "",
+        `${labels[decision.decision_type] || decision.decision_type}${decision.is_current_decision ? " · تصمیم فعلی" : ""}`,
+      ),
+      createDefinitionGrid([
+        ["زمان", formatDateTime(decision.decided_at)],
+        ["پروتکل‌ها", protocolText],
+        ["Treatment متصل", toPersianNumber(decision.linked_treatment_ids.length)],
+        ["Outcome متصل", toPersianNumber(decision.linked_outcome_ids.length)],
+        ["SHA-256 تصمیم", decision.sha256],
+        ["تصمیم سیستم", "خیر"],
+      ]),
+      createTextElement("p", "", decision.rationale),
+    );
+    if (decision.modification_summary) {
+      card.append(createTextElement(
+        "p",
+        "ordering-note",
+        `شرح اصلاح/ترکیب: ${decision.modification_summary}`,
+      ));
+    }
+    if (decision.patient_preference_summary) {
+      card.append(createTextElement(
+        "p",
+        "ordering-note",
+        `ترجیح بیمار: ${decision.patient_preference_summary}`,
+      ));
+    }
+    fragment.append(card);
+  }
+  elements.copilotDecisionHistory.replaceChildren(fragment);
+}
+
+async function loadTreatmentDecisions(visitId) {
+  const decisions = await apiRequest(
+    `/visits/${encodeURIComponent(visitId)}/treatment-decisions`,
+  );
+  renderTreatmentDecisionHistory(decisions);
+  return decisions;
+}
+
+async function createTreatmentDecision(event) {
+  event.preventDefault();
+  if (
+    !canCreateTreatmentDecision()
+    || decisionRequestInProgress
+    || !currentTreatmentRoadmap
+    || !currentCopilotVisitId
+  ) {
+    return;
+  }
+  if (!elements.copilotDecisionForm.reportValidity()) {
+    return;
+  }
+
+  const decisionType = elements.copilotDecisionType.value;
+  const selected = selectedDecisionReferences();
+  if (
+    ["select_option", "modify_option"].includes(decisionType)
+    && selected.length !== 1
+  ) {
+    showDecisionMessage("برای این نوع تصمیم دقیقاً یک گزینه را انتخاب کنید.", true);
+    return;
+  }
+  if (decisionType === "combine_options" && selected.length < 2) {
+    showDecisionMessage("برای تصمیم ترکیبی حداقل دو گزینه را انتخاب کنید.", true);
+    return;
+  }
+  if (["defer", "no_treatment"].includes(decisionType) && selected.length) {
+    showDecisionMessage("برای تعویق یا عدم درمان، گزینه‌های Roadmap را از حالت انتخاب خارج کنید.", true);
+    return;
+  }
+
+  const previous = currentTreatmentDecisions.length
+    ? currentTreatmentDecisions[currentTreatmentDecisions.length - 1]
+    : null;
+  decisionRequestInProgress = true;
+  elements.createTreatmentDecisionButton.disabled = true;
+  showDecisionMessage("در حال ثبت تصمیم تغییرناپذیر پزشک…");
+
+  try {
+    await apiRequest(
+      `/visits/${encodeURIComponent(currentCopilotVisitId)}/treatment-decisions`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_clinical_context_sha256: (
+            currentTreatmentRoadmap.target_profile.clinical_context_sha256
+          ),
+          expected_roadmap_sha256: currentTreatmentRoadmap.roadmap_sha256,
+          expected_previous_decision_sha256: previous ? previous.sha256 : null,
+          decision_type: decisionType,
+          selected_protocols: ["defer", "no_treatment"].includes(decisionType)
+            ? []
+            : selected,
+          rationale: elements.copilotDecisionRationale.value.trim(),
+          modification_summary: ["modify_option", "combine_options"].includes(decisionType)
+            ? elements.copilotDecisionModification.value.trim()
+            : null,
+          patient_preference_summary: (
+            elements.copilotPatientPreference.value.trim() || null
+          ),
+          evidence_brief_ids: [],
+        }),
+      },
+    );
+    await loadTreatmentDecisions(currentCopilotVisitId);
+    selectedDecisionProtocols.clear();
+    elements.copilotDecisionForm.reset();
+    for (const checkbox of elements.copilotRoadmap.querySelectorAll(
+      "input[data-decision-protocol-key]",
+    )) {
+      checkbox.checked = false;
+    }
+    syncDecisionForm();
+    showDecisionMessage(
+      "تصمیم پزشک به‌صورت append-only ثبت شد و برای Treatment و Outcome قابل ردیابی است.",
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      return;
+    }
+    if (error instanceof ApiError && error.status === 409) {
+      showDecisionMessage(
+        "زمینه، Roadmap یا تصمیم قبلی تغییر کرده است؛ پزشک‌یار را تازه‌سازی کنید.",
+        true,
+      );
+    } else if (error instanceof ApiError && error.status === 403) {
+      showDecisionMessage("فقط پزشک می‌تواند تصمیم درمانی ثبت کند.", true);
+    } else {
+      showDecisionMessage("ثبت تصمیم ممکن نشد؛ دوباره تلاش کنید.", true);
+    }
+  } finally {
+    decisionRequestInProgress = false;
+    elements.createTreatmentDecisionButton.disabled = false;
+  }
+}
+
 function renderTreatmentRoadmap(roadmap) {
   currentTreatmentRoadmap = roadmap;
   const fragment = document.createDocumentFragment();
@@ -1438,6 +1695,21 @@ function renderTreatmentRoadmap(roadmap) {
   for (const option of roadmap.options) {
     const card = document.createElement("article");
     card.className = "evidence-brief-card";
+    if (canCreateTreatmentDecision() && roadmap.roadmap_status === "options_available") {
+      const chooser = document.createElement("label");
+      chooser.className = "acknowledgement";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.dataset.decisionProtocolKey = decisionProtocolKey(option);
+      checkbox.checked = selectedDecisionProtocols.has(
+        checkbox.dataset.decisionProtocolKey,
+      );
+      chooser.append(
+        checkbox,
+        createTextElement("span", "", "افزودن این گزینه به تصمیم پزشک"),
+      );
+      card.append(chooser);
+    }
     card.append(
       createTextElement(
         "h4",
@@ -1503,6 +1775,9 @@ function renderTreatmentRoadmap(roadmap) {
     "این تحلیل فقط دادهٔ مشاهده‌ای محلی را خلاصه می‌کند. شواهد علمی بیرونی، منع مصرف‌ها و شرایط اختصاصی بیمار باید مستقل توسط پزشک بررسی شوند.",
   ));
   elements.copilotRoadmap.replaceChildren(fragment);
+  elements.copilotDecisionSection.hidden = false;
+  elements.copilotDecisionForm.hidden = !canCreateTreatmentDecision();
+  syncDecisionForm();
 }
 
 function renderCopilotSnapshot(snapshot) {
@@ -1663,11 +1938,16 @@ async function loadCopilotWorkspace(visitId) {
   currentCopilotVisitId = normalizedVisitId;
   currentCopilotSnapshot = null;
   currentTreatmentRoadmap = null;
+  currentTreatmentDecisions = [];
+  selectedDecisionProtocols.clear();
   elements.copilotVisitId.value = normalizedVisitId;
   elements.copilotContent.hidden = true;
   elements.copilotSummary.replaceChildren();
   elements.copilotEscalations.replaceChildren();
   elements.copilotRoadmap.replaceChildren();
+  elements.copilotDecisionOptions.replaceChildren();
+  elements.copilotDecisionHistory.replaceChildren();
+  elements.copilotDecisionSection.hidden = true;
   elements.copilotOutcomes.replaceChildren();
   elements.copilotEvidence.replaceChildren();
   showCopilotMessage("در حال دریافت snapshot یکپارچهٔ ویزیت…");
@@ -1689,6 +1969,7 @@ async function loadCopilotWorkspace(visitId) {
         return;
       }
       renderTreatmentRoadmap(roadmap);
+      await loadTreatmentDecisions(normalizedVisitId);
       showCopilotMessage(
         roadmap.roadmap_status === "options_available"
           ? "Snapshot و گزینه‌های چندگانهٔ قابل بررسی بارگذاری شد؛ هیچ گزینه‌ای رتبه‌بندی یا انتخاب نشده است."
@@ -2653,6 +2934,20 @@ for (const tab of [
     target.tab.focus();
   });
 }
+elements.copilotRoadmap.addEventListener("change", (event) => {
+  const checkbox = event.target.closest("input[data-decision-protocol-key]");
+  if (!checkbox || !canCreateTreatmentDecision()) {
+    return;
+  }
+  if (checkbox.checked) {
+    selectedDecisionProtocols.add(checkbox.dataset.decisionProtocolKey);
+  } else {
+    selectedDecisionProtocols.delete(checkbox.dataset.decisionProtocolKey);
+  }
+  renderSelectedDecisionProtocols();
+});
+elements.copilotDecisionType.addEventListener("change", syncDecisionForm);
+elements.copilotDecisionForm.addEventListener("submit", createTreatmentDecision);
 elements.copilotVisitForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (elements.copilotVisitForm.reportValidity()) {
