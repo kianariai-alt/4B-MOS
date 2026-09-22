@@ -13,11 +13,10 @@ DataVolume = Literal[
 ]
 
 
-class LearningMetricRead(BaseModel):
-    value: float | None
-    denominator: int
-    minimum_denominator: int
-    suppressed_for_small_n: bool
+class FieldCoverageRead(BaseModel):
+    present_count: int
+    total_count: int
+    proportion: float | None
 
 
 class LearningFollowUpCountsRead(BaseModel):
@@ -25,14 +24,6 @@ class LearningFollowUpCountsRead(BaseModel):
     intermediate_71_to_180_days: int = 0
     long_term_181_to_365_days: int = 0
     outside_standard_windows: int = 0
-
-
-class LearningOutcomeDistributionRead(BaseModel):
-    improved: int = 0
-    unchanged: int = 0
-    worsened: int = 0
-    mixed: int = 0
-    unknown: int = 0
 
 
 class LearningDataQualityRead(BaseModel):
@@ -43,10 +34,10 @@ class LearningDataQualityRead(BaseModel):
     legacy_or_unlinked_treatment_count: int
     treatment_with_outcome_count: int
     outcome_record_count: int
-    outcome_with_patient_rating_count: int
-    outcome_with_physician_rating_count: int
-    outcome_with_pain_score_count: int
-    outcome_with_function_score_count: int
+    patient_rating_coverage: FieldCoverageRead
+    physician_rating_coverage: FieldCoverageRead
+    pain_score_coverage: FieldCoverageRead
+    function_score_coverage: FieldCoverageRead
     outcome_with_documented_adverse_event_count: int
 
 
@@ -64,16 +55,11 @@ class ProtocolLearningReviewRead(BaseModel):
     outcome_record_count: int
     follow_up_counts: LearningFollowUpCountsRead
     data_volume: DataVolume
-    outcome_distribution: LearningOutcomeDistributionRead | None
-    median_patient_rating: LearningMetricRead
-    median_physician_rating: LearningMetricRead
-    median_follow_up_pain_score: LearningMetricRead
-    median_function_score: LearningMetricRead
-    documented_adverse_event_proportion: LearningMetricRead
-    missing_patient_rating_count: int
-    missing_physician_rating_count: int
-    missing_pain_score_count: int
-    missing_function_score_count: int
+    patient_rating_coverage: FieldCoverageRead
+    physician_rating_coverage: FieldCoverageRead
+    pain_score_coverage: FieldCoverageRead
+    function_score_coverage: FieldCoverageRead
+    outcome_with_documented_adverse_event_count: int
     data_quality_flags: list[
         Literal[
             "fewer_than_5_treatments_with_outcomes",
@@ -108,7 +94,7 @@ class ClinicalLearningReviewRead(BaseModel):
         "protocol_code_then_version"
     ] = "protocol_code_then_version"
     local_data_are_observational: Literal[True] = True
-    is_cross_protocol_comparison: Literal[False] = False
+    is_cross_protocol_effectiveness_comparison: Literal[False] = False
     ranks_treatments: Literal[False] = False
     produces_learning_score: Literal[False] = False
     automatically_changes_protocols: Literal[False] = False
