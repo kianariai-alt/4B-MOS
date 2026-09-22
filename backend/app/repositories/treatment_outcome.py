@@ -34,6 +34,22 @@ class TreatmentOutcomeRepository:
         )
 
     @staticmethod
+    def list_by_visit(
+        db: Session,
+        visit_id: str,
+    ) -> list[TreatmentOutcome]:
+        return list(
+            db.scalars(
+                select(TreatmentOutcome)
+                .where(TreatmentOutcome.visit_id == visit_id)
+                .order_by(
+                    TreatmentOutcome.recorded_at.asc(),
+                    TreatmentOutcome.id.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
     def create(
         db: Session,
         *,
