@@ -5,6 +5,7 @@ from backend.app.models.protocol_governance import (
     ProtocolGovernanceCase,
     ProtocolGovernanceReview,
     ProtocolGovernanceRelease,
+    ProtocolGovernanceRecovery,
 )
 
 
@@ -34,6 +35,13 @@ class ProtocolGovernanceRepository:
         ).all())
 
     @staticmethod
+    def get_release(
+        db: Session,
+        release_id: str,
+    ) -> ProtocolGovernanceRelease | None:
+        return db.get(ProtocolGovernanceRelease, release_id)
+
+    @staticmethod
     def get_release_by_case(
         db: Session,
         case_id: str,
@@ -61,6 +69,53 @@ class ProtocolGovernanceRepository:
         **kwargs,
     ) -> ProtocolGovernanceRelease:
         record = ProtocolGovernanceRelease(**kwargs)
+        db.add(record)
+        db.flush()
+        db.refresh(record)
+        return record
+
+    @staticmethod
+    def get_recovery_by_case(
+        db: Session,
+        case_id: str,
+    ) -> ProtocolGovernanceRecovery | None:
+        return db.scalar(
+            select(ProtocolGovernanceRecovery)
+            .where(ProtocolGovernanceRecovery.case_id == case_id)
+            .limit(1)
+        )
+
+    @staticmethod
+    def get_recovery_by_source_release(
+        db: Session,
+        source_release_id: str,
+    ) -> ProtocolGovernanceRecovery | None:
+        return db.scalar(
+            select(ProtocolGovernanceRecovery)
+            .where(
+                ProtocolGovernanceRecovery.source_release_id
+                == source_release_id
+            )
+            .limit(1)
+        )
+
+    @staticmethod
+    def list_recoveries(db: Session) -> list[ProtocolGovernanceRecovery]:
+        return list(
+            db.scalars(
+                select(ProtocolGovernanceRecovery).order_by(
+                    ProtocolGovernanceRecovery.created_at.desc(),
+                    ProtocolGovernanceRecovery.id.desc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
+    def create_recovery(
+        db: Session,
+        **kwargs,
+    ) -> ProtocolGovernanceRecovery:
+        record = ProtocolGovernanceRecovery(**kwargs)
         db.add(record)
         db.flush()
         db.refresh(record)
