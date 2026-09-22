@@ -80,6 +80,9 @@ from backend.app.api.routes.clinical_safety_reviews import (
 from backend.app.api.routes.clinical_evidence import (
     router as clinical_evidence_router,
 )
+from backend.app.api.routes.physician_copilot import (
+    router as physician_copilot_router,
+)
 
 api_router = APIRouter()
 api_router.include_router(session_finalization_router)
@@ -179,4 +182,7 @@ api_router.include_router(
 )
 api_router.include_router(
     clinical_evidence_router
+)
+api_router.include_router(
+    physician_copilot_router
 )

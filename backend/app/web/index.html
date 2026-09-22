@@ -121,6 +121,18 @@
             جریان زنده
           </button>
           <button
+            id="copilot-tab"
+            class="workspace-tab"
+            type="button"
+            role="tab"
+            aria-controls="copilot-workspace"
+            aria-selected="false"
+            tabindex="-1"
+            hidden
+          >
+            پزشک‌یار
+          </button>
+          <button
             id="evidence-tab"
             class="workspace-tab"
             type="button"
@@ -179,6 +191,94 @@
           </section>
 
           <section id="flow-board" class="flow-board" aria-label="مراحل جریان کلینیک"></section>
+        </section>
+
+        <section
+          id="copilot-workspace"
+          class="workspace-panel evidence-workspace"
+          role="tabpanel"
+          aria-labelledby="copilot-tab"
+          tabindex="0"
+          hidden
+        >
+          <header class="workspace-intro">
+            <div>
+              <p class="card-kicker">نمای واحد، دادهٔ قابل ردیابی</p>
+              <h2>پزشک‌یار 4B-MOS</h2>
+            </div>
+            <p>
+              زمینهٔ بالینی فعلی، صندوق ایمنی و خلاصه‌های شواهد ثبت‌شده را
+              در یک snapshot فقط‌خواندنی کنار هم می‌گذارد.
+            </p>
+          </header>
+
+          <aside class="safety-boundary" role="note" aria-label="مرز ایمنی پزشک‌یار">
+            <strong>مرز ایمنی</strong>
+            <span>
+              این نما تشخیص، پیشنهاد یا رتبه‌بندی درمان، نمرهٔ خطر یا مجوز
+              بالینی تولید نمی‌کند و جایگزین بررسی مستقل پزشک نیست.
+            </span>
+          </aside>
+
+          <form id="copilot-visit-form" class="visit-loader">
+            <div class="field-group">
+              <label for="copilot-visit-id">شناسهٔ ویزیت</label>
+              <input
+                id="copilot-visit-id"
+                name="visit_id"
+                type="text"
+                inputmode="text"
+                dir="ltr"
+                maxlength="36"
+                list="active-visits"
+                autocomplete="off"
+                required
+              >
+            </div>
+            <button id="load-copilot-button" class="button button-secondary" type="submit">
+              بارگذاری snapshot پزشک‌یار
+            </button>
+          </form>
+
+          <p
+            id="copilot-message"
+            class="notice"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+
+          <div id="copilot-content" hidden>
+            <section class="evidence-section" aria-labelledby="copilot-summary-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">هش‌محور و فقط‌خواندنی</p>
+                  <h3 id="copilot-summary-heading">وضعیت یکپارچهٔ ویزیت</h3>
+                </div>
+              </div>
+              <div id="copilot-summary"></div>
+            </section>
+
+            <section class="evidence-section" aria-labelledby="copilot-escalations-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">پیگیری ایمنی</p>
+                  <h3 id="copilot-escalations-heading">ارجاع‌های باز در آخرین ارزیابی</h3>
+                </div>
+              </div>
+              <div id="copilot-escalations" class="safety-findings"></div>
+            </section>
+
+            <section class="evidence-section" aria-labelledby="copilot-evidence-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="card-kicker">انتخاب انسانی</p>
+                  <h3 id="copilot-evidence-heading">خلاصه‌های شواهد ثبت‌شده</h3>
+                </div>
+              </div>
+              <div id="copilot-evidence" class="evidence-briefs"></div>
+            </section>
+          </div>
         </section>
 
         <section
