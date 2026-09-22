@@ -211,6 +211,9 @@ const elements = {
   learningReviewHash: document.querySelector("#learning-review-hash"),
   learningSummary: document.querySelector("#learning-summary"),
   learningProtocols: document.querySelector("#learning-protocols"),
+  learningGovernanceSignals: document.querySelector("#learning-governance-signals"),
+  learningGovernanceCases: document.querySelector("#learning-governance-cases"),
+  learningGovernanceMessage: document.querySelector("#learning-governance-message"),
   evidenceVisitForm: document.querySelector("#evidence-visit-form"),
   evidenceVisitId: document.querySelector("#evidence-visit-id"),
   activeVisits: document.querySelector("#active-visits"),
@@ -264,6 +267,7 @@ let actionInProgress = false;
 let copilotRequestInProgress = false;
 let decisionRequestInProgress = false;
 let learningRequestInProgress = false;
+let governanceRequestInProgress = false;
 let evidenceRequestInProgress = false;
 let safetyRequestInProgress = false;
 let safetyEscalationRequestInProgress = false;
@@ -273,6 +277,8 @@ let currentCopilotSnapshot = null;
 let currentTreatmentRoadmap = null;
 let currentTreatmentDecisions = [];
 let currentLearningReview = null;
+let currentGovernanceSignals = [];
+let currentGovernanceCases = [];
 let currentEvidenceVisitId = null;
 let currentClinicalContext = null;
 let currentKnowledgeFacts = [];
@@ -378,6 +384,22 @@ function canReadLearning() {
   return Boolean(currentUser && LEARNING_READ_ROLES.has(currentUser.role));
 }
 
+function canCreateGovernanceCase() {
+  return Boolean(currentUser && currentUser.role === "physician");
+}
+
+function canReviewGovernanceClinically(caseItem) {
+  return Boolean(
+    currentUser
+    && currentUser.role === "physician"
+    && currentUser.id !== caseItem.created_by_user_id
+  );
+}
+
+function canReviewGovernanceOperationally() {
+  return Boolean(currentUser && currentUser.role === "admin");
+}
+
 function canReadEvidence() {
   return Boolean(currentUser && EVIDENCE_READ_ROLES.has(currentUser.role));
 }
@@ -425,6 +447,12 @@ function showLearningMessage(message, isError = false) {
   elements.learningMessage.textContent = message;
   elements.learningMessage.classList.toggle("is-error", isError);
   elements.learningMessage.hidden = !message;
+}
+
+function showGovernanceMessage(message, isError = false) {
+  elements.learningGovernanceMessage.textContent = message;
+  elements.learningGovernanceMessage.classList.toggle("is-error", isError);
+  elements.learningGovernanceMessage.hidden = !message;
 }
 
 function showEvidenceMessage(message, isError = false) {
@@ -635,6 +663,301 @@ function renderClinicalLearningReview(review) {
   elements.learningProtocols.replaceChildren(fragment);
 }
 
+const governanceSignalLabels = Object.freeze({
+  insufficient_outcome_volume: "حجم outcome برای تحلیل انسانی کافی نیست",
+  limited_outcome_volume: "حجم outcome هنوز محدود است",
+  no_decision_linked_treatments: "Treatment متصل به Decision ثبت نشده است",
+  patient_rating_incomplete: "امتیاز بیمار ناقص است",
+  physician_rating_incomplete: "امتیاز پزشک ناقص است",
+  pain_score_incomplete: "Pain score ناقص است",
+  function_score_incomplete: "Function score ناقص است",
+  early_followup_gap: "شکاف follow-up زودهنگام",
+  intermediate_followup_gap: "شکاف follow-up میان‌مدت",
+  long_term_followup_gap: "شکاف follow-up بلندمدت",
+  eligible_for_human_pattern_review: "داده برای مرور الگو توسط انسان بالغ‌تر شده است",
+});
+
+const governanceStatusLabels = Object.freeze({
+  awaiting_clinical_review: "در انتظار مرور بالینی مستقل",
+  changes_requested: "نیازمند اصلاح",
+  clinically_rejected: "رد بالینی",
+  awaiting_operational_review: "در انتظار مرور عملیاتی",
+  operational_hold: "توقف عملیاتی",
+  approved_for_manual_action: "تأییدشده برای اقدام دستی",
+});
+
+const governanceCaseTypeLabels = Object.freeze({
+  collect_more_data: "جمع‌آوری دادهٔ بیشتر",
+  monitor_no_change: "پایش بدون تغییر",
+  revision_candidate: "نامزد بازنگری نسخه",
+  deactivation_candidate: "نامزد غیرفعال‌سازی",
+});
+
+function renderGovernanceSignals(signals) {
+  currentGovernanceSignals = signals;
+  const fragment = document.createDocumentFragment();
+
+  if (!signals.length) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "هنوز پروتکلی برای Governance review ثبت نشده است.",
+    ));
+  }
+
+  for (const item of signals) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement(
+        "h4",
+        "",
+        `${item.protocol_name} · ${item.protocol_code} · نسخه ${item.protocol_version}`,
+      ),
+      createDefinitionGrid([
+        ["نوع درمان", item.treatment_type],
+        ["حجم داده", item.data_volume],
+        ["فعال", item.is_active ? "بله" : "خیر"],
+        ["تغییر پیشنهادی سیستم", "خیر"],
+      ]),
+    );
+
+    const list = document.createElement("ul");
+    if (!item.signals.length) {
+      list.append(createTextElement(
+        "li",
+        "",
+        "Signal داده‌ای خاصی در مرور فعلی ثبت نشده است.",
+      ));
+    } else {
+      for (const signal of item.signals) {
+        list.append(createTextElement(
+          "li",
+          "",
+          governanceSignalLabels[signal] || signal,
+        ));
+      }
+    }
+    card.append(list);
+
+    if (canCreateGovernanceCase()) {
+      const form = document.createElement("form");
+      form.className = "brief-form governance-case-form";
+      form.dataset.protocolCode = item.protocol_code;
+      form.dataset.protocolVersion = item.protocol_version;
+      form.innerHTML = `
+        <label>نوع پرونده</label>
+        <select name="case_type" required>
+          <option value="collect_more_data">جمع‌آوری دادهٔ بیشتر</option>
+          <option value="monitor_no_change">پایش بدون تغییر</option>
+          ${item.is_active ? '<option value="deactivation_candidate">نامزد غیرفعال‌سازی</option>' : ''}
+        </select>
+        <label>دلیل پزشک</label>
+        <textarea name="rationale" minlength="20" maxlength="5000" rows="4" required></textarea>
+        <label>داده/شواهد موردنیاز، هر مورد در یک خط</label>
+        <textarea name="evidence_needed" maxlength="3000" rows="3"></textarea>
+        <button class="button button-secondary" type="submit">باز کردن پرونده Governance</button>
+      `;
+      card.append(form);
+    }
+    fragment.append(card);
+  }
+
+  elements.learningGovernanceSignals.replaceChildren(fragment);
+}
+
+function renderGovernanceCases(cases) {
+  currentGovernanceCases = cases;
+  const fragment = document.createDocumentFragment();
+
+  if (!cases.length) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "هنوز پرونده Governance ثبت نشده است.",
+    ));
+  }
+
+  for (const item of cases) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement(
+        "h4",
+        "",
+        `${item.protocol_code} · ${item.protocol_version} · ${governanceCaseTypeLabels[item.case_type] || item.case_type}`,
+      ),
+      createDefinitionGrid([
+        ["وضعیت", governanceStatusLabels[item.status] || item.status],
+        ["زمان ایجاد", formatDateTime(item.created_at)],
+        ["Reviewها", toPersianNumber(item.reviews.length)],
+        ["SHA-256 پرونده", item.sha256],
+        ["تغییر خودکار پروتکل", "خیر"],
+      ]),
+      createTextElement("p", "", item.rationale),
+    );
+
+    if (item.evidence_needed.length) {
+      card.append(createTextElement(
+        "p",
+        "ordering-note",
+        `نیاز داده/شواهد: ${item.evidence_needed.join("، ")}`,
+      ));
+    }
+
+    if (item.proposed_protocol) {
+      card.append(createTextElement(
+        "p",
+        "ordering-note",
+        `نسخه پیشنهادی: ${item.proposed_protocol.version} · فقط برای اقدام دستی پس از Governance`,
+      ));
+    }
+
+    for (const review of item.reviews) {
+      card.append(createTextElement(
+        "p",
+        "ordering-note",
+        `${review.action} · ${formatDateTime(review.created_at)} · ${review.rationale}`,
+      ));
+    }
+
+    if (canReviewGovernanceClinically(item)) {
+      const form = document.createElement("form");
+      form.className = "brief-form governance-review-form";
+      form.dataset.caseId = item.id;
+      form.dataset.caseSha256 = item.sha256;
+      form.innerHTML = `
+        <label>مرور بالینی مستقل</label>
+        <select name="action" required>
+          <option value="clinical_approve">تأیید بالینی برای ادامه Governance</option>
+          <option value="request_changes">درخواست اصلاح</option>
+          <option value="clinical_reject">رد بالینی</option>
+        </select>
+        <textarea name="rationale" minlength="10" maxlength="5000" rows="3" required></textarea>
+        <button class="button button-secondary" type="submit">ثبت Review بالینی</button>
+      `;
+      card.append(form);
+    }
+
+    if (
+      canReviewGovernanceOperationally()
+      && ["awaiting_operational_review", "operational_hold"].includes(item.status)
+    ) {
+      const form = document.createElement("form");
+      form.className = "brief-form governance-review-form";
+      form.dataset.caseId = item.id;
+      form.dataset.caseSha256 = item.sha256;
+      form.innerHTML = `
+        <label>مرور عملیاتی</label>
+        <select name="action" required>
+          <option value="operational_acknowledge">تأیید آمادگی برای اقدام دستی</option>
+          <option value="operational_hold">توقف عملیاتی</option>
+        </select>
+        <textarea name="rationale" minlength="10" maxlength="5000" rows="3" required></textarea>
+        <button class="button button-secondary" type="submit">ثبت Review عملیاتی</button>
+      `;
+      card.append(form);
+    }
+
+    fragment.append(card);
+  }
+
+  elements.learningGovernanceCases.replaceChildren(fragment);
+}
+
+async function loadProtocolGovernance() {
+  const [signals, cases] = await Promise.all([
+    apiRequest("/learning/governance/signals"),
+    apiRequest("/protocol-governance/cases"),
+  ]);
+  renderGovernanceSignals(signals);
+  renderGovernanceCases(cases);
+}
+
+async function createGovernanceCase(form) {
+  if (
+    !canCreateGovernanceCase()
+    || governanceRequestInProgress
+    || !currentLearningReview
+  ) {
+    return;
+  }
+  if (!form.reportValidity()) {
+    return;
+  }
+  governanceRequestInProgress = true;
+  showGovernanceMessage("در حال ثبت پرونده Governance…");
+  const evidenceNeeded = form.elements.evidence_needed.value
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  try {
+    await apiRequest("/protocol-governance/cases", {
+      method: "POST",
+      body: JSON.stringify({
+        protocol_code: form.dataset.protocolCode,
+        protocol_version: form.dataset.protocolVersion,
+        source_learning_review_sha256: currentLearningReview.review_sha256,
+        case_type: form.elements.case_type.value,
+        rationale: form.elements.rationale.value.trim(),
+        evidence_needed: evidenceNeeded,
+      }),
+    });
+    form.reset();
+    await loadProtocolGovernance();
+    showGovernanceMessage(
+      "پرونده Governance ثبت شد؛ هیچ تغییری در پروتکل اعمال نشده است.",
+    );
+  } catch (error) {
+    showGovernanceMessage(
+      error instanceof ApiError && error.status === 409
+        ? "Learning Review تغییر کرده است یا پرونده با وضعیت فعلی سازگار نیست؛ صفحه را تازه‌سازی کنید."
+        : "ثبت پرونده Governance ممکن نشد.",
+      true,
+    );
+  } finally {
+    governanceRequestInProgress = false;
+  }
+}
+
+async function reviewGovernanceCase(form) {
+  if (governanceRequestInProgress) {
+    return;
+  }
+  if (!form.reportValidity()) {
+    return;
+  }
+  governanceRequestInProgress = true;
+  showGovernanceMessage("در حال ثبت Review تغییرناپذیر…");
+  try {
+    await apiRequest(
+      `/protocol-governance/cases/${encodeURIComponent(form.dataset.caseId)}/reviews`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_case_sha256: form.dataset.caseSha256,
+          action: form.elements.action.value,
+          rationale: form.elements.rationale.value.trim(),
+        }),
+      },
+    );
+    await loadProtocolGovernance();
+    showGovernanceMessage(
+      "Review ثبت شد؛ وضعیت Governance به‌روزرسانی شد و پروتکل همچنان بدون تغییر است.",
+    );
+  } catch (error) {
+    showGovernanceMessage(
+      error instanceof ApiError && error.status === 403
+        ? "این نقش یا این کاربر اجازهٔ انجام این Review را ندارد."
+        : "ثبت Review Governance ممکن نشد.",
+      true,
+    );
+  } finally {
+    governanceRequestInProgress = false;
+  }
+}
+
 async function loadClinicalLearningReview({ quiet = false } = {}) {
   if (!canReadLearning() || learningRequestInProgress) {
     return;
@@ -658,6 +981,7 @@ async function loadClinicalLearningReview({ quiet = false } = {}) {
       throw new ApiError(409, "Unexpected clinical learning contract.");
     }
     renderClinicalLearningReview(review);
+    await loadProtocolGovernance();
     showLearningMessage(
       "مرور کیفیت داده بارگذاری شد؛ این نما درمان‌ها را رتبه‌بندی نمی‌کند.",
     );
@@ -667,6 +991,8 @@ async function loadClinicalLearningReview({ quiet = false } = {}) {
     elements.learningReviewHash.textContent = "";
     elements.learningSummary.replaceChildren();
     elements.learningProtocols.replaceChildren();
+    elements.learningGovernanceSignals.replaceChildren();
+    elements.learningGovernanceCases.replaceChildren();
     if (error instanceof ApiError && error.status === 401) {
       showLogin();
       return;
@@ -688,10 +1014,15 @@ async function loadClinicalLearningReview({ quiet = false } = {}) {
 
 function resetLearningState() {
   currentLearningReview = null;
+  currentGovernanceSignals = [];
+  currentGovernanceCases = [];
   elements.learningReviewHash.textContent = "";
   elements.learningSummary.replaceChildren();
   elements.learningProtocols.replaceChildren();
+  elements.learningGovernanceSignals.replaceChildren();
+  elements.learningGovernanceCases.replaceChildren();
   showLearningMessage("");
+  showGovernanceMessage("");
 }
 
 function resetEvidenceState() {
@@ -812,6 +1143,7 @@ function showLogin() {
   copilotRequestInProgress = false;
   decisionRequestInProgress = false;
   learningRequestInProgress = false;
+  governanceRequestInProgress = false;
   evidenceRequestInProgress = false;
   safetyRequestInProgress = false;
   safetyEscalationRequestInProgress = false;
@@ -3133,6 +3465,22 @@ elements.flowTab.addEventListener("click", () => setWorkspace("flow"));
 elements.copilotTab.addEventListener("click", () => setWorkspace("copilot"));
 elements.learningTab.addEventListener("click", () => setWorkspace("learning"));
 elements.loadLearningButton.addEventListener("click", () => loadClinicalLearningReview());
+elements.learningGovernanceSignals.addEventListener("submit", async (event) => {
+  const form = event.target.closest("form.governance-case-form");
+  if (!form) {
+    return;
+  }
+  event.preventDefault();
+  await createGovernanceCase(form);
+});
+elements.learningGovernanceCases.addEventListener("submit", async (event) => {
+  const form = event.target.closest("form.governance-review-form");
+  if (!form) {
+    return;
+  }
+  event.preventDefault();
+  await reviewGovernanceCase(form);
+});
 elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
 elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
 for (const tab of [
