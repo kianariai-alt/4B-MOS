@@ -419,6 +419,13 @@ class ProtocolGovernanceService:
             raise ProtocolGovernanceAuthorizationError(
                 "Only an active physician may open a protocol governance case."
             )
+        if payload.case_type in {
+            "reactivation_candidate",
+            "rollback_revision_candidate",
+        }:
+            raise ProtocolGovernanceConflictError(
+                "Recovery cases must originate from a governed release."
+            )
         try:
             learning = ClinicalLearningReviewService.get_review(db)
         except ClinicalLearningIntegrityError as error:
