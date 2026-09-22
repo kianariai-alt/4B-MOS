@@ -61,12 +61,7 @@ class TreatmentOutcomeRepository:
         """
         return list(
             db.scalars(
-                select(TreatmentOutcome)
-                .where(
-                    TreatmentOutcome.follow_up_day >= 28,
-                    TreatmentOutcome.follow_up_day <= 365,
-                )
-                .order_by(
+                select(TreatmentOutcome).order_by(
                     TreatmentOutcome.recorded_at.asc(),
                     TreatmentOutcome.id.asc(),
                 )
