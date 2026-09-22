@@ -9,6 +9,7 @@ from backend.app.schemas.clinical_safety_review import (
     SafetyInboxFindingRead,
     SafetyInboxRead,
 )
+from backend.app.schemas.treatment_outcome import TreatmentOutcomeRead
 
 
 class PhysicianCopilotManifestRead(BaseModel):
@@ -25,6 +26,7 @@ class PhysicianCopilotManifestRead(BaseModel):
     )
     open_escalation_review_sha256s: list[str]
     evidence_brief_sha256s: list[str]
+    treatment_outcome_sha256s: list[str]
 
 
 class PhysicianCopilotSnapshotRead(BaseModel):
@@ -35,6 +37,7 @@ class PhysicianCopilotSnapshotRead(BaseModel):
     open_escalations: list[SafetyInboxFindingRead]
     evidence_briefs: list[ClinicalEvidenceBriefRead]
     current_context_evidence_briefs: list[ClinicalEvidenceBriefRead]
+    treatment_outcomes: list[TreatmentOutcomeRead]
     manifest: PhysicianCopilotManifestRead
     snapshot_sha256: str = Field(
         min_length=64,
