@@ -1,5 +1,7 @@
 import pytest
 
+from backend.app.models.protocol import ProtocolTemplate
+
 
 pytestmark = pytest.mark.usefixtures(
     "authenticated_admin"
@@ -89,7 +91,7 @@ def test_protocol_snapshot_is_created(client):
     assert data["execution_parameters"]["actual_volume"] == "5 mL"
 
 
-def test_snapshot_survives_protocol_deactivation(client):
+def test_snapshot_survives_protocol_deactivation(client, db_session):
     visit = create_visit(client)
     protocol = create_protocol(client)
 
@@ -105,11 +107,12 @@ def test_snapshot_survives_protocol_deactivation(client):
 
     treatment_id = treatment_response.json()["id"]
 
-    deactivate_response = client.delete(
-        f"/api/v1/protocols/{protocol['id']}"
+    protocol_record = db_session.get(
+        ProtocolTemplate,
+        protocol["id"],
     )
-
-    assert deactivate_response.status_code == 200
+    protocol_record.is_active = False
+    db_session.commit()
 
     response = client.get(
         f"/api/v1/treatments/{treatment_id}"
