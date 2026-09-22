@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b7d4e6f8c230"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "c8e5f7a9d341"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "b7d4e6f8c230"
+            )) == "c8e5f7a9d341"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -923,6 +923,91 @@ def test_protocol_governance_migration_refuses_history_loss(
             )) == "b7d4e6f8c230"
             assert connection.scalar(text(
                 "SELECT count(*) FROM protocol_governance_cases"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_governed_protocol_release_migration_refuses_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'governed-release-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "protocol_governance_releases" in inspector.get_table_names()
+        protocol_columns = {
+            item["name"]
+            for item in inspector.get_columns("protocol_templates")
+        }
+        assert {
+            "supersedes_protocol_id",
+            "source_governance_case_id",
+            "source_governance_case_sha256",
+        } <= protocol_columns
+        assert len(
+            inspector.get_foreign_keys("protocol_governance_releases")
+        ) == 4
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('release-admin', 'release_admin', 'Release Admin', "
+                "'hash', 'admin', 1, 0, 0, "
+                "'2026-09-22 19:00:00', '2026-09-22 19:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_templates "
+                "(id, code, name, treatment_type, version, is_active, "
+                "created_at, updated_at) VALUES "
+                "('release-source', 'REL-MIG', 'Release Migration', 'ACS', "
+                "'1.0', 0, '2026-09-22 19:00:00', "
+                "'2026-09-22 19:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_governance_cases "
+                "(id, protocol_code, protocol_version, treatment_type, "
+                "case_type, source_learning_review_sha256, protocol_snapshot, "
+                "learning_snapshot, proposed_protocol, rationale, "
+                "evidence_needed, created_by_user_id, payload, sha256, "
+                "created_at) VALUES "
+                "('release-case', 'REL-MIG', '1.0', 'ACS', "
+                "'deactivation_candidate', '" + "1" * 64 + "', '{}', '{}', "
+                "NULL, 'Synthetic release migration governance rationale.', "
+                "'[]', 'release-admin', '{}', '" + "2" * 64 + "', "
+                "'2026-09-22 19:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_governance_releases "
+                "(id, case_id, case_sha256, action, source_protocol_id, "
+                "released_protocol_id, source_protocol_before, "
+                "source_protocol_after, released_protocol_snapshot, "
+                "executed_by_user_id, execution_note, payload, sha256, "
+                "created_at) VALUES "
+                "('release-record', 'release-case', '" + "2" * 64 + "', "
+                "'deactivate', 'release-source', NULL, '{}', '{}', NULL, "
+                "'release-admin', 'Synthetic governed release execution.', "
+                "'{}', '" + "3" * 64 + "', '2026-09-22 19:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="governed protocol release history exists",
+        ):
+            command.downgrade(config, "b7d4e6f8c230")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "c8e5f7a9d341"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM protocol_governance_releases"
             )) == 1
     finally:
         engine.dispose()
