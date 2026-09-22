@@ -90,6 +90,35 @@ class ProtocolGovernanceReviewRead(BaseModel):
     created_at: datetime
 
 
+class ProtocolGovernanceReleaseExecute(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    expected_case_sha256: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    execution_note: str = Field(min_length=10, max_length=5000)
+
+
+class ProtocolGovernanceReleaseRead(BaseModel):
+    id: str
+    case_id: str
+    case_sha256: str
+    action: Literal["publish_revision", "deactivate"]
+    source_protocol_id: str
+    released_protocol_id: str | None
+    source_protocol_before: dict
+    source_protocol_after: dict
+    released_protocol_snapshot: dict | None
+    executed_by_user_id: str
+    execution_note: str
+    sha256: str
+    created_at: datetime
+    is_rollback: Literal[False] = False
+    preserves_history: Literal[True] = True
+
+
 class ProtocolGovernanceCaseRead(BaseModel):
     id: str
     protocol_code: str
@@ -106,6 +135,7 @@ class ProtocolGovernanceCaseRead(BaseModel):
     sha256: str
     created_at: datetime
     reviews: list[ProtocolGovernanceReviewRead]
+    release: ProtocolGovernanceReleaseRead | None = None
     status: Literal[
         "awaiting_clinical_review",
         "changes_requested",
