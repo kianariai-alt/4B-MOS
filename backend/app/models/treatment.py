@@ -43,6 +43,21 @@ class Treatment(Base):
         index=True,
     )
 
+    source_treatment_decision_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey(
+            "treatment_decisions.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    source_treatment_decision_sha256: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
+    )
+
     protocol_template_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey(
