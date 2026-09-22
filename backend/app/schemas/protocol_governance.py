@@ -64,6 +64,13 @@ class ProtocolGovernanceCaseCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_case(self):
+        if self.case_type in {
+            "reactivation_candidate",
+            "rollback_revision_candidate",
+        }:
+            raise ValueError(
+                "Recovery candidates must be opened from a governed release."
+            )
         if self.case_type == "revision_candidate" and self.proposed_protocol is None:
             raise ValueError("revision_candidate requires proposed_protocol.")
         if self.case_type != "revision_candidate" and self.proposed_protocol is not None:
