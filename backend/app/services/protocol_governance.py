@@ -310,7 +310,18 @@ class ProtocolGovernanceService:
             created_at=record.created_at,
             reviews=review_reads,
             release=release,
-            status=ProtocolGovernanceService._case_status(review_reads),
+            status=(
+                "released"
+                if release is not None
+                else ProtocolGovernanceService._case_status(review_reads)
+            ),
+            requires_manual_protocol_action=(
+                record.case_type in {
+                    "revision_candidate",
+                    "deactivation_candidate",
+                }
+                and release is None
+            ),
         )
 
     @staticmethod
