@@ -218,7 +218,7 @@ def test_physician_records_immutable_traceable_outcome(
     assert outcome["pain_score"] == 3
     assert outcome["function_score"] == 78
     assert len(outcome["finalization_sha256s"]) == 1
-    assert outcome["payload"]["patient_rating_source"] == "patient_reported"
+    assert outcome["payload"]["patient_rating_source"] == "clinician_documented_patient_report"
     assert outcome["payload"]["treatment_snapshot"]["id"] == treatment["id"]
     assert (
         evidence_digest(outcome["payload"]["treatment_snapshot"])
