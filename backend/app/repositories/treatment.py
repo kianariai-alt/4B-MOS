@@ -44,6 +44,19 @@ class TreatmentRepository:
         )
 
     @staticmethod
+    def list_all(
+        db: Session,
+    ) -> list[Treatment]:
+        return list(
+            db.scalars(
+                select(Treatment).order_by(
+                    Treatment.created_at.asc(),
+                    Treatment.id.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
     def create(
         db: Session,
         visit_id: str,
