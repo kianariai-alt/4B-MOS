@@ -78,6 +78,12 @@ adds a minimal cross-visit view of findings whose latest verified event is an
 escalation. Its oldest-first order is administrative, not clinical prioritization,
 and it sends no external notification or response-time promise.
 
+The [physician copilot snapshot](docs/PHYSICIAN_COPILOT_SNAPSHOT.md) assembles
+the current structured context, latest safety inbox, current-evaluation
+escalations and immutable clinician-selected evidence briefs into one read-only,
+hash-bound physician view. It does not diagnose, recommend, rank treatments,
+calculate a patient risk score or grant clinical clearance.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains
