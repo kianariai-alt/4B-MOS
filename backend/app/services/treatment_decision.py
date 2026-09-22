@@ -32,12 +32,6 @@ from backend.app.services.clinical_evidence import (
 )
 from backend.app.services.clinical_safety import clinical_context_digest
 from backend.app.services.session_finalization import evidence_digest
-from backend.app.services.treatment_options_roadmap import (
-    TreatmentOptionsRoadmapService,
-    TreatmentRoadmapConflictError,
-    TreatmentRoadmapIntegrityError,
-    TreatmentRoadmapNotFoundError,
-)
 
 
 class TreatmentDecisionNotFoundError(Exception):
@@ -345,6 +339,13 @@ class TreatmentDecisionService:
                 "The clinical context changed; reload the physician copilot "
                 "before recording a decision."
             )
+
+        from backend.app.services.treatment_options_roadmap import (
+            TreatmentOptionsRoadmapService,
+            TreatmentRoadmapConflictError,
+            TreatmentRoadmapIntegrityError,
+            TreatmentRoadmapNotFoundError,
+        )
 
         try:
             roadmap = TreatmentOptionsRoadmapService.get_roadmap(
