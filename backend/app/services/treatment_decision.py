@@ -207,6 +207,14 @@ class TreatmentDecisionService:
                 and payload.clinical_context_sha256
                 == record.clinical_context_sha256
                 and payload.roadmap_sha256 == record.roadmap_sha256
+                and isinstance(payload.roadmap_snapshot, dict)
+                and payload.roadmap_snapshot.get("roadmap_sha256")
+                == record.roadmap_sha256
+                and payload.roadmap_snapshot.get("visit_id")
+                == record.visit_id
+                and payload.roadmap_snapshot.get("target_profile", {}).get(
+                    "clinical_context_sha256"
+                ) == record.clinical_context_sha256
                 and [
                     item.model_dump(mode="json")
                     for item in payload.selected_protocols
@@ -401,6 +409,7 @@ class TreatmentDecisionService:
             decision_type=payload.decision_type,
             clinical_context_sha256=context_sha256,
             roadmap_sha256=roadmap.roadmap_sha256,
+            roadmap_snapshot=roadmap.model_dump(mode="json"),
             selected_protocols=payload.selected_protocols,
             rationale=payload.rationale,
             modification_summary=payload.modification_summary,
