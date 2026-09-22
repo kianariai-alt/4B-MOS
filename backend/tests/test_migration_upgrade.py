@@ -186,11 +186,20 @@ def test_amendment_migration_refuses_loss_of_pending_or_reviewed_history(
             visit = Visit(patient_id=patient.id)
             db.add(visit)
             db.flush()
-            treatment = Treatment(visit_id=visit.id, treatment_type="ACS")
-            db.add(treatment)
+            treatment_id = "legacy-finalization-treatment"
+            db.execute(text(
+                "INSERT INTO treatments "
+                "(id, visit_id, treatment_type, status, session_number, "
+                "created_at, updated_at) VALUES "
+                "(:id, :visit_id, 'ACS', 'planned', 1, :now, :now)"
+            ), {
+                "id": treatment_id,
+                "visit_id": visit.id,
+                "now": datetime.now(timezone.utc),
+            })
             db.flush()
             session = TreatmentSession(
-                treatment_id=treatment.id,
+                treatment_id=treatment_id,
                 session_number=1,
                 status="completed",
                 operational_status="completed",
