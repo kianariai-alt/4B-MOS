@@ -138,11 +138,6 @@ def get_protocol(
             ),
             detail=str(exc),
         ) from exc
-    except ProtocolGovernanceRequiredError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(exc),
-        ) from exc
 
 
 @router.delete(
@@ -174,5 +169,10 @@ def deactivate_protocol(
             status_code=(
                 status.HTTP_404_NOT_FOUND
             ),
+            detail=str(exc),
+        ) from exc
+    except ProtocolGovernanceRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
             detail=str(exc),
         ) from exc
