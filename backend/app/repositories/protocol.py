@@ -32,6 +32,19 @@ class ProtocolRepository:
         return db.scalar(statement)
 
     @staticmethod
+    def list_by_code(
+        db: Session,
+        code: str,
+    ) -> list[ProtocolTemplate]:
+        return list(
+            db.scalars(
+                select(ProtocolTemplate)
+                .where(ProtocolTemplate.code == code)
+                .order_by(ProtocolTemplate.version.asc())
+            ).all()
+        )
+
+    @staticmethod
     def list(
         db: Session,
         treatment_type: str | None = None,
@@ -56,13 +69,24 @@ class ProtocolRepository:
     def create(
         db: Session,
         payload: ProtocolCreate,
+        *,
+        supersedes_protocol_id: str | None = None,
+        source_governance_case_id: str | None = None,
+        source_governance_case_sha256: str | None = None,
+        commit: bool = True,
     ) -> ProtocolTemplate:
         protocol = ProtocolTemplate(
             **payload.model_dump(),
+            supersedes_protocol_id=supersedes_protocol_id,
+            source_governance_case_id=source_governance_case_id,
+            source_governance_case_sha256=source_governance_case_sha256,
         )
 
         db.add(protocol)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         db.refresh(protocol)
 
         return protocol
