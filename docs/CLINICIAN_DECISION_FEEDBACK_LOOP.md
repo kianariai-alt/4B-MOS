@@ -39,6 +39,8 @@ Every new decision binds to:
 
 - the current clinical-context SHA-256;
 - the exact treatment-options-roadmap SHA-256;
+- the full roadmap snapshot shown at decision time, including cohort definitions,
+  aggregate option metrics, source outcome hashes and stated limitations;
 - any selected protocol code/version/treatment type;
 - the hashes of any current-context evidence briefs explicitly cited;
 - the authenticated physician;
