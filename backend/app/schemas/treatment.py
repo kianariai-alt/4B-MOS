@@ -25,6 +25,7 @@ class TreatmentCreate(BaseModel):
     treatment_type: TreatmentType
 
     protocol_template_id: str | None = None
+    source_treatment_decision_id: str | None = None
 
     session_number: int = Field(
         default=1,
@@ -85,6 +86,8 @@ class TreatmentRead(BaseModel):
     id: str
     visit_id: str
 
+    source_treatment_decision_id: str | None
+    source_treatment_decision_sha256: str | None
     protocol_template_id: str | None
     protocol_name: str | None
     protocol_version: str | None
