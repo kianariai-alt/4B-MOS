@@ -3,8 +3,9 @@
 The physician copilot snapshot is a read-only composition endpoint for a single
 visit. It gives an authorized physician or administrator one traceable view of
 the current structured clinical context, the latest safety inbox, open
-escalations from that latest safety evaluation, and the visit's immutable
-clinician-selected evidence briefs.
+escalations from that latest safety evaluation, the visit's immutable
+clinician-selected evidence briefs, and immutable longitudinal treatment
+outcomes recorded for treatments in that visit.
 
 ## Endpoint
 
@@ -28,7 +29,8 @@ The manifest binds the response to:
 - the latest safety evaluation result hash, when one exists;
 - the latest review hash for each escalation still open in the latest safety
   evaluation;
-- every immutable evidence-brief hash for the visit.
+- every immutable evidence-brief hash for the visit;
+- every immutable treatment-outcome hash for the visit.
 
 The snapshot hash is a canonical digest of that manifest and visit identifier.
 It is intended for traceability of the assembled view, not as a clinical
@@ -47,7 +49,8 @@ The copilot snapshot:
 - does not calculate a patient risk score;
 - does not grant clinical clearance;
 - does not infer that an evidence source applies to the patient;
-- does not learn from patient records;
+- does not infer causality from local treatment outcomes;
+- does not automatically learn from patient records;
 - does not replace independent physician review.
 
 `open_escalations` is deliberately scoped to findings from the latest safety
