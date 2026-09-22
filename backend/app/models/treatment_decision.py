@@ -55,7 +55,6 @@ class TreatmentDecision(Base):
     )
     supersedes_decision_id: Mapped[str | None] = mapped_column(
         String(36),
-        ForeignKey("treatment_decisions.id", ondelete="RESTRICT"),
         nullable=True,
         index=True,
     )
