@@ -92,6 +92,9 @@ from backend.app.api.routes.clinical_evidence import (
 from backend.app.api.routes.clinical_learning_review import (
     router as clinical_learning_review_router,
 )
+from backend.app.api.routes.protocol_governance import (
+    router as protocol_governance_router,
+)
 from backend.app.api.routes.physician_copilot import (
     router as physician_copilot_router,
 )
@@ -206,6 +209,9 @@ api_router.include_router(
 )
 api_router.include_router(
     clinical_learning_review_router
+)
+api_router.include_router(
+    protocol_governance_router
 )
 api_router.include_router(
     physician_copilot_router
