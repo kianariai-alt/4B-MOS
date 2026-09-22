@@ -526,6 +526,11 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
             "/api/v1/protocol-governance/cases/{case_id}/reviews",
             "post",
         ),
+        (
+            "/api/v1/protocol-governance/cases/{case_id}/release",
+            "post",
+        ),
+        ("/api/v1/protocol-governance/releases", "get"),
         ("/api/v1/treatments/{treatment_id}/outcomes", "post"),
         ("/api/v1/treatments/{treatment_id}/outcomes", "get"),
         ("/api/v1/treatment-outcomes/{outcome_id}", "get"),
