@@ -56,7 +56,7 @@ def upgrade():
             batch_op.add_column(
                 sa.Column(
                     "recovery_snapshot",
-                    sa.JSON(),
+                    sa.JSON(none_as_null=True),
                     nullable=True,
                 )
             )
