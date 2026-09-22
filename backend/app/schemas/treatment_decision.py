@@ -157,6 +157,7 @@ class TreatmentDecisionPayloadRead(BaseModel):
     decision_type: DecisionType
     clinical_context_sha256: str
     roadmap_sha256: str
+    roadmap_snapshot: dict
     selected_protocols: list[DecisionProtocolReference]
     rationale: str
     modification_summary: str | None
