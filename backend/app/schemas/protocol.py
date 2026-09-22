@@ -51,6 +51,9 @@ class ProtocolRead(BaseModel):
     treatment_type: str
     version: str
     description: str | None
+    supersedes_protocol_id: str | None = None
+    source_governance_case_id: str | None = None
+    source_governance_case_sha256: str | None = None
     preparation_parameters: dict | None
     administration_parameters: dict | None
     monitoring_parameters: dict | None

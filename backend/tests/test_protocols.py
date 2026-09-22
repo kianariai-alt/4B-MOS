@@ -64,7 +64,7 @@ def test_same_code_and_version_returns_409(
     assert second.status_code == 409
 
 
-def test_same_code_different_version_allowed(
+def test_same_code_different_version_requires_governance(
     client,
 ):
     first = client.post(
@@ -82,7 +82,8 @@ def test_same_code_different_version_allowed(
     )
 
     assert first.status_code == 201
-    assert second.status_code == 201
+    assert second.status_code == 409
+    assert "governance release" in second.json()["detail"]
 
 
 def test_list_protocols(client):
@@ -140,7 +141,7 @@ def test_filter_protocols_by_treatment_type(
     )
 
 
-def test_deactivate_protocol(client):
+def test_deactivate_protocol_requires_governance(client):
     create_response = client.post(
         "/api/v1/protocols",
         json=protocol_payload(),
@@ -148,17 +149,11 @@ def test_deactivate_protocol(client):
 
     assert create_response.status_code == 201
 
-    protocol_id = create_response.json()[
-        "id"
-    ]
+    protocol_id = create_response.json()["id"]
 
     response = client.delete(
         f"/api/v1/protocols/{protocol_id}"
     )
 
-    assert response.status_code == 200
-
-    assert (
-        response.json()["is_active"]
-        is False
-    )
+    assert response.status_code == 409
+    assert "governance release" in response.json()["detail"]

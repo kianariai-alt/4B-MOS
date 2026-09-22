@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from backend.app.models.protocol_governance import (
     ProtocolGovernanceCase,
     ProtocolGovernanceReview,
+    ProtocolGovernanceRelease,
 )
 
 
@@ -31,6 +32,39 @@ class ProtocolGovernanceRepository:
                 ProtocolGovernanceReview.id.asc(),
             )
         ).all())
+
+    @staticmethod
+    def get_release_by_case(
+        db: Session,
+        case_id: str,
+    ) -> ProtocolGovernanceRelease | None:
+        return db.scalar(
+            select(ProtocolGovernanceRelease)
+            .where(ProtocolGovernanceRelease.case_id == case_id)
+            .limit(1)
+        )
+
+    @staticmethod
+    def list_releases(db: Session) -> list[ProtocolGovernanceRelease]:
+        return list(
+            db.scalars(
+                select(ProtocolGovernanceRelease).order_by(
+                    ProtocolGovernanceRelease.created_at.desc(),
+                    ProtocolGovernanceRelease.id.desc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
+    def create_release(
+        db: Session,
+        **kwargs,
+    ) -> ProtocolGovernanceRelease:
+        record = ProtocolGovernanceRelease(**kwargs)
+        db.add(record)
+        db.flush()
+        db.refresh(record)
+        return record
 
     @staticmethod
     def create_case(db: Session, **kwargs) -> ProtocolGovernanceCase:

@@ -51,6 +51,7 @@ from backend.app.models.treatment_decision import TreatmentDecision
 from backend.app.models.protocol_governance import (
     ProtocolGovernanceCase,
     ProtocolGovernanceReview,
+    ProtocolGovernanceRelease,
 )
 
 __all__ = [
@@ -82,4 +83,5 @@ __all__ = [
     "TreatmentDecision",
     "ProtocolGovernanceCase",
     "ProtocolGovernanceReview",
+    "ProtocolGovernanceRelease",
 ]
