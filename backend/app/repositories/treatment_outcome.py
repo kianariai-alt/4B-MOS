@@ -50,6 +50,30 @@ class TreatmentOutcomeRepository:
         )
 
     @staticmethod
+    def list_for_roadmap(
+        db: Session,
+    ) -> list[TreatmentOutcome]:
+        """Return outcome records potentially usable by the roadmap.
+
+        Clinical similarity, protocol activity and context reproducibility are
+        deliberately evaluated in the service layer so the exclusion policy is
+        explicit and auditable.
+        """
+        return list(
+            db.scalars(
+                select(TreatmentOutcome)
+                .where(
+                    TreatmentOutcome.follow_up_day >= 28,
+                    TreatmentOutcome.follow_up_day <= 365,
+                )
+                .order_by(
+                    TreatmentOutcome.recorded_at.asc(),
+                    TreatmentOutcome.id.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
     def create(
         db: Session,
         *,
