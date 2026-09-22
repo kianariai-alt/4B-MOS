@@ -684,6 +684,7 @@ const governanceStatusLabels = Object.freeze({
   awaiting_operational_review: "در انتظار مرور عملیاتی",
   operational_hold: "توقف عملیاتی",
   approved_for_manual_action: "تأییدشده برای اقدام دستی",
+  released: "منتشرشده / اجراشده",
 });
 
 const governanceCaseTypeLabels = Object.freeze({
@@ -877,6 +878,56 @@ function renderGovernanceCases(cases) {
       ));
     }
 
+    if (item.release) {
+      card.append(
+        createTextElement("h5", "context-subheading", "Governed Release"),
+        createDefinitionGrid([
+          ["Action", item.release.action],
+          ["زمان اجرا", formatDateTime(item.release.created_at)],
+          ["Release ID", item.release.id],
+          ["SHA-256 Release", item.release.sha256],
+          [
+            "نسخه منتشرشده",
+            item.release.released_protocol_snapshot
+              ? item.release.released_protocol_snapshot.version
+              : "—",
+          ],
+          ["حفظ تاریخچه", item.release.preserves_history ? "بله" : "خیر"],
+        ], "safety-summary-grid"),
+        createTextElement(
+          "p",
+          "ordering-note",
+          `یادداشت اجرا: ${item.release.execution_note}`,
+        ),
+      );
+    }
+
+    if (
+      canReviewGovernanceOperationally()
+      && item.status === "approved_for_manual_action"
+      && !item.release
+      && ["revision_candidate", "deactivation_candidate"].includes(item.case_type)
+    ) {
+      const releaseForm = document.createElement("form");
+      releaseForm.className = "brief-form governance-release-form";
+      releaseForm.dataset.caseId = item.id;
+      releaseForm.dataset.caseSha256 = item.sha256;
+      appendGovernanceField(
+        releaseForm,
+        "یادداشت اجرای Release",
+        governanceTextarea({
+          name: "execution_note",
+          minLength: 10,
+          maxLength: 5000,
+          rows: 3,
+        }),
+      );
+      releaseForm.append(
+        governanceSubmitButton("اجرای Governed Release"),
+      );
+      card.append(releaseForm);
+    }
+
     if (canReviewGovernanceClinically(item)) {
       const form = document.createElement("form");
       form.className = "brief-form governance-review-form";
@@ -1039,6 +1090,45 @@ async function reviewGovernanceCase(form) {
       error instanceof ApiError && error.status === 403
         ? "این نقش یا این کاربر اجازهٔ انجام این Review را ندارد."
         : "ثبت Review Governance ممکن نشد.",
+      true,
+    );
+  } finally {
+    governanceRequestInProgress = false;
+  }
+}
+
+async function executeGovernanceRelease(form) {
+  if (
+    !canReviewGovernanceOperationally()
+    || governanceRequestInProgress
+  ) {
+    return;
+  }
+  if (!form.reportValidity()) {
+    return;
+  }
+  governanceRequestInProgress = true;
+  showGovernanceMessage("در حال اجرای Governed Protocol Release…");
+  try {
+    await apiRequest(
+      `/protocol-governance/cases/${encodeURIComponent(form.dataset.caseId)}/release`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_case_sha256: form.dataset.caseSha256,
+          execution_note: form.elements.execution_note.value.trim(),
+        }),
+      },
+    );
+    await loadProtocolGovernance();
+    showGovernanceMessage(
+      "Release اجرا شد؛ lineage و snapshot قبل/بعد به‌صورت تغییرناپذیر ثبت شدند.",
+    );
+  } catch (error) {
+    showGovernanceMessage(
+      error instanceof ApiError && error.status === 409
+        ? "پرونده دیگر قابل release نیست یا source protocol تغییر کرده است؛ صفحه را تازه‌سازی کنید."
+        : "اجرای Governed Release ممکن نشد.",
       true,
     );
   } finally {
@@ -3562,12 +3652,18 @@ elements.learningGovernanceSignals.addEventListener("submit", async (event) => {
   await createGovernanceCase(form);
 });
 elements.learningGovernanceCases.addEventListener("submit", async (event) => {
-  const form = event.target.closest("form.governance-review-form");
-  if (!form) {
+  const releaseForm = event.target.closest("form.governance-release-form");
+  if (releaseForm) {
+    event.preventDefault();
+    await executeGovernanceRelease(releaseForm);
+    return;
+  }
+  const reviewForm = event.target.closest("form.governance-review-form");
+  if (!reviewForm) {
     return;
   }
   event.preventDefault();
-  await reviewGovernanceCase(form);
+  await reviewGovernanceCase(reviewForm);
 });
 elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
 elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
