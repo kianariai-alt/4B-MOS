@@ -10,6 +10,9 @@ from sqlalchemy.orm import Session
 from backend.app.api.dependencies import (
     require_roles,
 )
+from backend.app.db.clinical_record_transactions import (
+    ClinicalRecordWriteConflictError,
+)
 from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.treatment import (
@@ -22,6 +25,7 @@ from backend.app.services.treatment import (
     TreatmentProtocolInactiveError,
     TreatmentProtocolMismatchError,
     TreatmentProtocolNotFoundError,
+    TreatmentDecisionLinkError,
     TreatmentService,
     TreatmentVisitNotFoundError,
 )
@@ -88,6 +92,8 @@ def create_treatment(
     except (
         TreatmentProtocolMismatchError,
         TreatmentProtocolInactiveError,
+        TreatmentDecisionLinkError,
+        ClinicalRecordWriteConflictError,
     ) as exc:
         raise HTTPException(
             status_code=(
