@@ -207,6 +207,20 @@ def test_revision_case_requires_independent_clinical_and_admin_review(
     assert duplicate.status_code == 409
     assert "already been released" in duplicate.json()["detail"]
 
+    late_review = client.post(
+        f"/api/v1/protocol-governance/cases/{case['id']}/reviews",
+        headers=reviewer_headers,
+        json={
+            "expected_case_sha256": case["sha256"],
+            "action": "request_changes",
+            "rationale": (
+                "Synthetic review after release must be rejected as terminal."
+            ),
+        },
+    )
+    assert late_review.status_code == 409
+    assert "terminal" in late_review.json()["detail"]
+
     release_list = client.get("/api/v1/protocol-governance/releases")
     assert release_list.status_code == 200
     assert [item["id"] for item in release_list.json()] == [release["id"]]
