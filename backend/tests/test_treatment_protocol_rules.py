@@ -1,5 +1,7 @@
 import pytest
 
+from backend.app.models.protocol import ProtocolTemplate
+
 
 pytestmark = pytest.mark.usefixtures(
     "authenticated_admin"
@@ -109,18 +111,19 @@ def test_missing_protocol_returns_404(client):
     assert response.status_code == 404
 
 
-def test_inactive_protocol_returns_409(client):
+def test_inactive_protocol_returns_409(client, db_session):
     visit = create_visit(client)
     protocol = create_protocol(
         client,
         treatment_type="PRGF",
     )
 
-    deactivate_response = client.delete(
-        f"/api/v1/protocols/{protocol['id']}"
+    protocol_record = db_session.get(
+        ProtocolTemplate,
+        protocol["id"],
     )
-
-    assert deactivate_response.status_code == 200
+    protocol_record.is_active = False
+    db_session.commit()
 
     response = client.post(
         f"/api/v1/visits/{visit['id']}/treatments",
