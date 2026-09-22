@@ -51,9 +51,13 @@ class TreatmentRepository:
         protocol_name: str | None = None,
         protocol_version: str | None = None,
         protocol_snapshot: dict | None = None,
+        source_treatment_decision_sha256: str | None = None,
+        commit: bool = True,
     ) -> Treatment:
         treatment = Treatment(
             visit_id=visit_id,
+            source_treatment_decision_id=payload.source_treatment_decision_id,
+            source_treatment_decision_sha256=source_treatment_decision_sha256,
             protocol_template_id=payload.protocol_template_id,
             protocol_name=protocol_name,
             protocol_version=protocol_version,
@@ -67,7 +71,10 @@ class TreatmentRepository:
         )
 
         db.add(treatment)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         db.refresh(treatment)
 
         return treatment
