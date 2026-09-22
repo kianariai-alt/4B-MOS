@@ -38,6 +38,21 @@ TestingSessionLocal = sessionmaker(
 )
 
 
+def drop_test_schema():
+    # Stage 23 adds a self-referential protocol lineage FK. SQLite cannot
+    # topologically drop a self-referencing table while FK enforcement is on,
+    # so disable it on the exact connection used by metadata.drop_all().
+    with test_engine.connect() as connection:
+        connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+        connection.commit()
+        try:
+            Base.metadata.drop_all(bind=connection)
+            connection.commit()
+        finally:
+            connection.exec_driver_sql("PRAGMA foreign_keys=ON")
+            connection.commit()
+
+
 def override_get_db():
     db = TestingSessionLocal()
 
@@ -53,9 +68,7 @@ def reset_database():
         get_db
     ] = override_get_db
 
-    Base.metadata.drop_all(
-        bind=test_engine
-    )
+    drop_test_schema()
 
     Base.metadata.create_all(
         bind=test_engine
@@ -63,9 +76,7 @@ def reset_database():
 
     yield
 
-    Base.metadata.drop_all(
-        bind=test_engine
-    )
+    drop_test_schema()
 
     app.dependency_overrides.clear()
 
