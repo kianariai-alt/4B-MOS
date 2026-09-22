@@ -41,6 +41,9 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
     assert '<html lang="fa" dir="rtl">' in html
     assert "4B-MOS | کنسول بالینی" in html
     assert 'id="login-form"' in html
+    assert 'id="copilot-workspace"' in html
+    assert 'id="copilot-visit-form"' in html
+    assert 'id="load-copilot-button"' in html
     assert 'id="evidence-workspace"' in html
     assert 'id="evidence-brief-form"' in html
     assert 'id="safety-workspace"' in html
@@ -78,6 +81,9 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert 'apiRequest("/auth/login"' in source
     assert 'apiRequest("/auth/me")' in source
     assert 'apiRequest("/dashboard/live-flow")' in source
+    assert "/physician-copilot`" in source
+    assert "COPILOT_READ_ROLES" in source
+    assert "currentCopilotSnapshot" in source
     assert "/clinical-context`" in source
     assert "/evidence-briefs`" in source
     assert "/safety-inbox`" in source
