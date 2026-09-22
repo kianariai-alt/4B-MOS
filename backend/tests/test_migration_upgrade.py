@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "c8e5f7a9d341"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d4a7c9e1f562"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "c8e5f7a9d341"
+            )) == "d4a7c9e1f562"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1008,6 +1008,121 @@ def test_governed_protocol_release_migration_refuses_history_loss(
             )) == "c8e5f7a9d341"
             assert connection.scalar(text(
                 "SELECT count(*) FROM protocol_governance_releases"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_governed_protocol_recovery_migration_refuses_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'governed-recovery-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "protocol_governance_recoveries" in inspector.get_table_names()
+        case_columns = {
+            item["name"]
+            for item in inspector.get_columns("protocol_governance_cases")
+        }
+        assert {
+            "source_release_id",
+            "source_release_sha256",
+            "recovery_snapshot",
+        } <= case_columns
+        assert len(
+            inspector.get_foreign_keys("protocol_governance_recoveries")
+        ) == 5
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('recovery-user', 'recovery_user', 'Recovery User', "
+                "'hash', 'admin', 1, 0, 0, "
+                "'2026-09-22 20:00:00', '2026-09-22 20:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_templates "
+                "(id, code, name, treatment_type, version, is_active, "
+                "created_at, updated_at) VALUES "
+                "('recovery-protocol', 'REC-MIG', 'Recovery Migration', "
+                "'ACS', '1.0', 1, '2026-09-22 20:00:00', "
+                "'2026-09-22 20:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_governance_cases "
+                "(id, protocol_code, protocol_version, treatment_type, "
+                "case_type, source_learning_review_sha256, protocol_snapshot, "
+                "learning_snapshot, proposed_protocol, source_release_id, "
+                "source_release_sha256, recovery_snapshot, rationale, "
+                "evidence_needed, created_by_user_id, payload, sha256, "
+                "created_at) VALUES "
+                "('recovery-release-case', 'REC-MIG', '1.0', 'ACS', "
+                "'deactivation_candidate', '" + "1" * 64 + "', '{}', '{}', "
+                "NULL, NULL, NULL, NULL, "
+                "'Synthetic release case for recovery migration.', '[]', "
+                "'recovery-user', '{}', '" + "2" * 64 + "', "
+                "'2026-09-22 20:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_governance_releases "
+                "(id, case_id, case_sha256, action, source_protocol_id, "
+                "released_protocol_id, source_protocol_before, "
+                "source_protocol_after, released_protocol_snapshot, "
+                "executed_by_user_id, execution_note, payload, sha256, "
+                "created_at) VALUES "
+                "('recovery-release', 'recovery-release-case', '" + "2" * 64
+                + "', 'deactivate', 'recovery-protocol', NULL, '{}', '{}', "
+                "NULL, 'recovery-user', 'Synthetic deactivation release.', "
+                "'{}', '" + "3" * 64 + "', '2026-09-22 20:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_governance_cases "
+                "(id, protocol_code, protocol_version, treatment_type, "
+                "case_type, source_learning_review_sha256, protocol_snapshot, "
+                "learning_snapshot, proposed_protocol, source_release_id, "
+                "source_release_sha256, recovery_snapshot, rationale, "
+                "evidence_needed, created_by_user_id, payload, sha256, "
+                "created_at) VALUES "
+                "('recovery-case', 'REC-MIG', '1.0', 'ACS', "
+                "'reactivation_candidate', '" + "4" * 64 + "', '{}', '{}', "
+                "NULL, 'recovery-release', '" + "3" * 64 + "', '{}', "
+                "'Synthetic recovery governance rationale.', '[]', "
+                "'recovery-user', '{}', '" + "5" * 64 + "', "
+                "'2026-09-22 20:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_governance_recoveries "
+                "(id, case_id, case_sha256, source_release_id, "
+                "source_release_sha256, action, deactivated_protocol_id, "
+                "reactivated_protocol_id, before_snapshots, after_snapshots, "
+                "executed_by_user_id, execution_note, payload, sha256, "
+                "created_at) VALUES "
+                "('recovery-record', 'recovery-case', '" + "5" * 64 + "', "
+                "'recovery-release', '" + "3" * 64 + "', 'reactivate', NULL, "
+                "'recovery-protocol', '{}', '{}', 'recovery-user', "
+                "'Synthetic governed recovery execution.', '{}', '" + "6" * 64
+                + "', '2026-09-22 20:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="governed protocol recovery history exists",
+        ):
+            command.downgrade(config, "c8e5f7a9d341")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "d4a7c9e1f562"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM protocol_governance_recoveries"
             )) == 1
     finally:
         engine.dispose()
