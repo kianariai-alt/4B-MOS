@@ -50,6 +50,9 @@ from backend.app.api.routes.treatments import (
 from backend.app.api.routes.treatment_outcomes import (
     router as treatment_outcomes_router,
 )
+from backend.app.api.routes.treatment_options_roadmap import (
+    router as treatment_options_roadmap_router,
+)
 from backend.app.api.routes.users import (
     router as users_router,
 )
@@ -113,6 +116,9 @@ api_router.include_router(
 )
 api_router.include_router(
     treatment_outcomes_router
+)
+api_router.include_router(
+    treatment_options_roadmap_router
 )
 
 api_router.include_router(
