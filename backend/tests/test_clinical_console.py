@@ -104,6 +104,9 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "/protocol-governance/cases" in source
     assert "renderGovernanceSignals" in source
     assert "renderGovernanceCases" in source
+    assert "executeGovernanceRelease" in source
+    assert "/release`" in source
+    assert "item.release" in source
     assert "createTreatmentDecision" in source
     assert "currentTreatmentDecisions" in source
     assert "selectedDecisionProtocols" in source
