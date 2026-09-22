@@ -78,6 +78,35 @@ const safetyOutcomeLabels = Object.freeze({
   no_active_rules: "قاعدهٔ فعال وجود ندارد (مجوز بالینی نیست)",
 });
 
+const roadmapStatusLabels = Object.freeze({
+  options_available: "گزینه‌های قابل بررسی موجود است",
+  insufficient_local_data: "دادهٔ محلی کافی نیست",
+  blocked_pending_safety_evaluation: "در انتظار ارزیابی ایمنی فعلی",
+  blocked_stale_safety_evaluation: "ارزیابی ایمنی با زمینهٔ فعلی منطبق نیست",
+  blocked_pending_safety_review: "در انتظار تکمیل مرور یافته‌های ایمنی",
+});
+
+const roadmapSafetyLabels = Object.freeze({
+  current: "فعلی",
+  missing: "ثبت نشده",
+  stale: "قدیمی / نامنطبق",
+  pending_review: "نیازمند مرور",
+});
+
+const roadmapWindowLabels = Object.freeze({
+  early_28_to_70_days: "پیگیری زودهنگام، ۲۸ تا ۷۰ روز",
+  intermediate_71_to_180_days: "پیگیری میان‌مدت، ۷۱ تا ۱۸۰ روز",
+  long_term_181_to_365_days: "پیگیری بلندمدت، ۱۸۱ تا ۳۶۵ روز",
+});
+
+const roadmapVolumeLabels = Object.freeze({
+  insufficient: "ناکافی",
+  very_limited: "بسیار محدود",
+  limited: "محدود",
+  moderate: "متوسط",
+  substantial: "حجم بالا",
+});
+
 const safetyReviewStatusLabels = Object.freeze({
   unreviewed: "مرور نشده",
   acknowledged: "مشاهده و ثبت شد",
@@ -152,6 +181,7 @@ const elements = {
   copilotContent: document.querySelector("#copilot-content"),
   copilotSummary: document.querySelector("#copilot-summary"),
   copilotEscalations: document.querySelector("#copilot-escalations"),
+  copilotRoadmap: document.querySelector("#copilot-roadmap"),
   copilotOutcomes: document.querySelector("#copilot-outcomes"),
   copilotEvidence: document.querySelector("#copilot-evidence"),
   evidenceVisitForm: document.querySelector("#evidence-visit-form"),
@@ -211,6 +241,7 @@ let safetyEscalationRequestInProgress = false;
 let activeWorkspace = "flow";
 let currentCopilotVisitId = null;
 let currentCopilotSnapshot = null;
+let currentTreatmentRoadmap = null;
 let currentEvidenceVisitId = null;
 let currentClinicalContext = null;
 let currentKnowledgeFacts = [];
@@ -419,10 +450,12 @@ function setSafetyEscalationsBusy(isBusy) {
 function resetCopilotState() {
   currentCopilotVisitId = null;
   currentCopilotSnapshot = null;
+  currentTreatmentRoadmap = null;
   elements.copilotVisitForm.reset();
   elements.copilotContent.hidden = true;
   elements.copilotSummary.replaceChildren();
   elements.copilotEscalations.replaceChildren();
+  elements.copilotRoadmap.replaceChildren();
   elements.copilotOutcomes.replaceChildren();
   elements.copilotEvidence.replaceChildren();
   showCopilotMessage("");
@@ -1327,6 +1360,151 @@ async function loadEvidenceWorkspace(visitId) {
 }
 
 
+function formatRoadmapNumber(value, digits = 1) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  return Number(value).toLocaleString("fa-IR", {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: 0,
+  });
+}
+
+function formatRoadmapPercent(value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  return `${formatRoadmapNumber(value * 100, 1)}٪`;
+}
+
+function roadmapMetricText(metric, formatter = formatRoadmapNumber) {
+  if (!metric || metric.value === null) {
+    const denominator = metric ? toPersianNumber(metric.denominator) : "۰";
+    const minimum = metric ? toPersianNumber(metric.minimum_denominator) : "۵";
+    return `گزارش نمی‌شود؛ n=${denominator}، حداقل ${minimum}`;
+  }
+  return `${formatter(metric.value)} · n=${toPersianNumber(metric.denominator)}`;
+}
+
+function renderTreatmentRoadmap(roadmap) {
+  currentTreatmentRoadmap = roadmap;
+  const fragment = document.createDocumentFragment();
+
+  const summary = document.createElement("article");
+  summary.className = "context-card context-intake";
+  summary.append(
+    createTextElement("h4", "", "خلاصهٔ نقشه‌راه"),
+    createDefinitionGrid([
+      ["وضعیت", roadmapStatusLabels[roadmap.roadmap_status] || roadmap.roadmap_status],
+      ["ایمنی", roadmapSafetyLabels[roadmap.safety_evaluation_status] || roadmap.safety_evaluation_status],
+      ["ناحیه", roadmap.target_profile.body_region],
+      [
+        "سن در زمان ویزیت",
+        roadmap.target_profile.age_years === null
+          ? null
+          : toPersianNumber(roadmap.target_profile.age_years),
+      ],
+      [
+        "درد پایه",
+        roadmap.target_profile.baseline_pain_score === null
+          ? null
+          : `${toPersianNumber(roadmap.target_profile.baseline_pain_score)} از ۱۰`,
+      ],
+      ["بیماران مشابه منحصربه‌فرد", roadmap.matched_unique_patient_count_display],
+      ["حداقل cohort قابل گزارش", toPersianNumber(roadmap.cohort_definition.minimum_reportable_unique_patients)],
+      ["SHA-256 نقشه‌راه", roadmap.roadmap_sha256],
+      ["رتبه‌بندی درمان", "ندارد"],
+      ["مجوز بالینی", "خیر"],
+    ], "safety-summary-grid"),
+  );
+  fragment.append(summary);
+
+  if (roadmap.roadmap_status !== "options_available") {
+    fragment.append(createTextElement(
+      "p",
+      "context-warning",
+      roadmapStatusLabels[roadmap.roadmap_status] || roadmap.roadmap_status,
+    ));
+  }
+
+  if (!roadmap.options.length) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "گزینهٔ قابل گزارش وجود ندارد. نبود گزینه به معنی نامناسب بودن یا مناسب بودن هیچ درمانی نیست.",
+    ));
+  }
+
+  for (const option of roadmap.options) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement(
+        "h4",
+        "",
+        `${option.protocol.name} · ${option.protocol_code} · نسخه ${option.protocol_version}`,
+      ),
+      createDefinitionGrid([
+        ["نوع درمان", option.treatment_type],
+        ["ناحیه", option.body_region],
+        ["بازه‌های دارای داده کافی", toPersianNumber(option.reportable_window_count)],
+        ["ترتیب درمانی", "ندارد؛ ترتیب فقط بر اساس کد پروتکل است"],
+      ]),
+      createTextElement(
+        "p",
+        "ordering-note",
+        "این کارت یک گزینهٔ قابل بررسی است، نه انتخاب نهایی، نسخه یا ادعای برتری درمان.",
+      ),
+    );
+
+    for (const window of option.windows) {
+      const windowCard = document.createElement("div");
+      windowCard.className = "context-card context-report";
+      const improvement = window.observed_improvement_proportion;
+      let improvementText = roadmapMetricText(
+        improvement,
+        formatRoadmapPercent,
+      );
+      if (
+        window.observed_improvement_wilson_95_low !== null
+        && window.observed_improvement_wilson_95_high !== null
+      ) {
+        improvementText += (
+          ` · بازه ۹۵٪ ${formatRoadmapPercent(window.observed_improvement_wilson_95_low)} تا `
+          + formatRoadmapPercent(window.observed_improvement_wilson_95_high)
+        );
+      }
+      windowCard.append(
+        createTextElement(
+          "h5",
+          "context-subheading",
+          roadmapWindowLabels[window.window] || window.window,
+        ),
+        createDefinitionGrid([
+          ["تعداد بیمار", toPersianNumber(window.unique_patient_count || 0)],
+          ["حجم دادهٔ محلی", roadmapVolumeLabels[window.local_data_volume] || window.local_data_volume],
+          ["میانه روز پیگیری", window.median_follow_up_day === null ? null : formatRoadmapNumber(window.median_follow_up_day)],
+          ["بهبود مشاهده‌شده", improvementText],
+          ["میانه امتیاز بیمار", roadmapMetricText(window.median_patient_rating)],
+          ["میانه امتیاز پزشک", roadmapMetricText(window.median_physician_rating)],
+          ["میانه کاهش درد (مثبت=کاهش)", roadmapMetricText(window.median_pain_change)],
+          ["میانه عملکرد", roadmapMetricText(window.median_function_score)],
+          ["عارضه مستندشده", roadmapMetricText(window.documented_adverse_event_proportion, formatRoadmapPercent)],
+        ], "safety-summary-grid"),
+      );
+      card.append(windowCard);
+    }
+    fragment.append(card);
+  }
+
+  fragment.append(createTextElement(
+    "p",
+    "ordering-note",
+    "این تحلیل فقط دادهٔ مشاهده‌ای محلی را خلاصه می‌کند. شواهد علمی بیرونی، منع مصرف‌ها و شرایط اختصاصی بیمار باید مستقل توسط پزشک بررسی شوند.",
+  ));
+  elements.copilotRoadmap.replaceChildren(fragment);
+}
+
 function renderCopilotSnapshot(snapshot) {
   currentCopilotSnapshot = snapshot;
   const context = snapshot.clinical_context;
@@ -1484,10 +1662,12 @@ async function loadCopilotWorkspace(visitId) {
   const requestGeneration = sessionGeneration;
   currentCopilotVisitId = normalizedVisitId;
   currentCopilotSnapshot = null;
+  currentTreatmentRoadmap = null;
   elements.copilotVisitId.value = normalizedVisitId;
   elements.copilotContent.hidden = true;
   elements.copilotSummary.replaceChildren();
   elements.copilotEscalations.replaceChildren();
+  elements.copilotRoadmap.replaceChildren();
   elements.copilotOutcomes.replaceChildren();
   elements.copilotEvidence.replaceChildren();
   showCopilotMessage("در حال دریافت snapshot یکپارچهٔ ویزیت…");
@@ -1501,9 +1681,38 @@ async function loadCopilotWorkspace(visitId) {
       return;
     }
     renderCopilotSnapshot(snapshot);
-    showCopilotMessage(
-      "Snapshot فقط‌خواندنی بارگذاری شد؛ تفسیر و تصمیم بالینی بر عهدهٔ پزشک است.",
-    );
+    try {
+      const roadmap = await apiRequest(
+        `/visits/${encodeURIComponent(normalizedVisitId)}/treatment-options-roadmap`,
+      );
+      if (!accessToken || requestGeneration !== sessionGeneration) {
+        return;
+      }
+      renderTreatmentRoadmap(roadmap);
+      showCopilotMessage(
+        roadmap.roadmap_status === "options_available"
+          ? "Snapshot و گزینه‌های چندگانهٔ قابل بررسی بارگذاری شد؛ هیچ گزینه‌ای رتبه‌بندی یا انتخاب نشده است."
+          : "Snapshot بارگذاری شد؛ وضعیت نقشه‌راه در بخش گزینه‌های درمانی نمایش داده شده است.",
+      );
+    } catch (roadmapError) {
+      if (roadmapError instanceof ApiError && roadmapError.status === 401) {
+        showLogin();
+        elements.loginMessage.textContent = "نشست شما پایان یافته است؛ دوباره وارد شوید.";
+        return;
+      }
+      currentTreatmentRoadmap = null;
+      elements.copilotRoadmap.replaceChildren(createTextElement(
+        "p",
+        "context-warning",
+        roadmapError instanceof ApiError && roadmapError.status === 409
+          ? "نقشه‌راه به‌دلیل ناسازگاری یا ناکافی بودن زمینهٔ ساختاریافته تولید نشد."
+          : "دریافت نقشه‌راه گزینه‌های درمانی ممکن نشد.",
+      ));
+      showCopilotMessage(
+        "Snapshot بارگذاری شد، اما نقشه‌راه درمانی در دسترس نیست.",
+        true,
+      );
+    }
     setConnectionState(true);
   } catch (error) {
     elements.copilotContent.hidden = true;
