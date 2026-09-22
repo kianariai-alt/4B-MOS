@@ -7,6 +7,10 @@ from backend.app.models.user import User
 from backend.app.schemas.protocol_governance import (
     ProtocolGovernanceCaseCreate,
     ProtocolGovernanceCaseRead,
+    ProtocolGovernanceLineageRead,
+    ProtocolGovernanceRecoveryCaseCreate,
+    ProtocolGovernanceRecoveryExecute,
+    ProtocolGovernanceRecoveryRead,
     ProtocolGovernanceReleaseExecute,
     ProtocolGovernanceReleaseRead,
     ProtocolGovernanceReviewCreate,
@@ -171,4 +175,90 @@ def list_protocol_governance_releases(
     try:
         return ProtocolGovernanceService.list_releases(db)
     except ProtocolGovernanceIntegrityError as error:
+        _translate(error)
+
+
+
+@router.post(
+    "/protocol-governance/releases/{release_id}/recovery-cases",
+    response_model=ProtocolGovernanceCaseRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_protocol_governance_recovery_case(
+    release_id: str,
+    payload: ProtocolGovernanceRecoveryCaseCreate,
+    actor: User = Depends(require_roles("physician")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return ProtocolGovernanceService.create_recovery_case(
+            db,
+            release_id,
+            payload,
+            actor=actor,
+        )
+    except (
+        ProtocolGovernanceAuthorizationError,
+        ProtocolGovernanceConflictError,
+        ProtocolGovernanceIntegrityError,
+        ProtocolGovernanceNotFoundError,
+    ) as error:
+        _translate(error)
+
+
+@router.post(
+    "/protocol-governance/cases/{case_id}/recovery",
+    response_model=ProtocolGovernanceCaseRead,
+)
+def execute_protocol_governance_recovery(
+    case_id: str,
+    payload: ProtocolGovernanceRecoveryExecute,
+    actor: User = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return ProtocolGovernanceService.execute_recovery(
+            db,
+            case_id,
+            payload,
+            actor=actor,
+        )
+    except (
+        ProtocolGovernanceAuthorizationError,
+        ProtocolGovernanceConflictError,
+        ProtocolGovernanceIntegrityError,
+        ProtocolGovernanceNotFoundError,
+    ) as error:
+        _translate(error)
+
+
+@router.get(
+    "/protocol-governance/recoveries",
+    response_model=list[ProtocolGovernanceRecoveryRead],
+)
+def list_protocol_governance_recoveries(
+    _actor: User = Depends(require_roles(*READ_ROLES)),
+    db: Session = Depends(get_db),
+):
+    try:
+        return ProtocolGovernanceService.list_recoveries(db)
+    except ProtocolGovernanceIntegrityError as error:
+        _translate(error)
+
+
+@router.get(
+    "/protocol-governance/protocols/{protocol_id}/lineage",
+    response_model=ProtocolGovernanceLineageRead,
+)
+def get_protocol_governance_lineage(
+    protocol_id: str,
+    _actor: User = Depends(require_roles(*READ_ROLES)),
+    db: Session = Depends(get_db),
+):
+    try:
+        return ProtocolGovernanceService.get_lineage(db, protocol_id)
+    except (
+        ProtocolGovernanceIntegrityError,
+        ProtocolGovernanceNotFoundError,
+    ) as error:
         _translate(error)
