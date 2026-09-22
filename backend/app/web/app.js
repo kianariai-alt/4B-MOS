@@ -4,6 +4,7 @@ const API_BASE = "/api/v1";
 const REFRESH_INTERVAL_MS = 30_000;
 const MAX_SELECTED_FACTS = 20;
 const COPILOT_READ_ROLES = new Set(["admin", "physician"]);
+const LEARNING_READ_ROLES = new Set(["admin", "physician"]);
 const EVIDENCE_READ_ROLES = new Set(["admin", "physician", "nurse"]);
 const SAFETY_READ_ROLES = new Set(["admin", "physician", "nurse"]);
 const SAFETY_EVALUATE_ROLES = new Set(["admin", "physician"]);
@@ -107,6 +108,15 @@ const roadmapVolumeLabels = Object.freeze({
   substantial: "حجم بالا",
 });
 
+const learningFlagLabels = Object.freeze({
+  fewer_than_5_treatments_with_outcomes: "کمتر از ۵ درمان دارای outcome",
+  no_decision_linked_treatments: "هنوز Treatment متصل به Decision ثبت نشده",
+  patient_rating_incomplete: "پوشش امتیاز بیمار ناقص است",
+  physician_rating_incomplete: "پوشش امتیاز پزشک ناقص است",
+  pain_score_incomplete: "پوشش pain score ناقص است",
+  function_score_incomplete: "پوشش function score ناقص است",
+});
+
 const safetyReviewStatusLabels = Object.freeze({
   unreviewed: "مرور نشده",
   acknowledged: "مشاهده و ثبت شد",
@@ -162,10 +172,12 @@ const elements = {
   consoleMessage: document.querySelector("#console-message"),
   flowTab: document.querySelector("#flow-tab"),
   copilotTab: document.querySelector("#copilot-tab"),
+  learningTab: document.querySelector("#learning-tab"),
   evidenceTab: document.querySelector("#evidence-tab"),
   safetyTab: document.querySelector("#safety-tab"),
   flowWorkspace: document.querySelector("#flow-workspace"),
   copilotWorkspace: document.querySelector("#copilot-workspace"),
+  learningWorkspace: document.querySelector("#learning-workspace"),
   evidenceWorkspace: document.querySelector("#evidence-workspace"),
   safetyWorkspace: document.querySelector("#safety-workspace"),
   flowBoard: document.querySelector("#flow-board"),
@@ -194,6 +206,11 @@ const elements = {
   copilotDecisionHistory: document.querySelector("#copilot-decision-history"),
   copilotOutcomes: document.querySelector("#copilot-outcomes"),
   copilotEvidence: document.querySelector("#copilot-evidence"),
+  loadLearningButton: document.querySelector("#load-learning-button"),
+  learningMessage: document.querySelector("#learning-message"),
+  learningReviewHash: document.querySelector("#learning-review-hash"),
+  learningSummary: document.querySelector("#learning-summary"),
+  learningProtocols: document.querySelector("#learning-protocols"),
   evidenceVisitForm: document.querySelector("#evidence-visit-form"),
   evidenceVisitId: document.querySelector("#evidence-visit-id"),
   activeVisits: document.querySelector("#active-visits"),
@@ -246,6 +263,7 @@ let requestInProgress = false;
 let actionInProgress = false;
 let copilotRequestInProgress = false;
 let decisionRequestInProgress = false;
+let learningRequestInProgress = false;
 let evidenceRequestInProgress = false;
 let safetyRequestInProgress = false;
 let safetyEscalationRequestInProgress = false;
@@ -254,6 +272,7 @@ let currentCopilotVisitId = null;
 let currentCopilotSnapshot = null;
 let currentTreatmentRoadmap = null;
 let currentTreatmentDecisions = [];
+let currentLearningReview = null;
 let currentEvidenceVisitId = null;
 let currentClinicalContext = null;
 let currentKnowledgeFacts = [];
@@ -355,6 +374,10 @@ function canCreateTreatmentDecision() {
   return Boolean(currentUser && currentUser.role === "physician");
 }
 
+function canReadLearning() {
+  return Boolean(currentUser && LEARNING_READ_ROLES.has(currentUser.role));
+}
+
 function canReadEvidence() {
   return Boolean(currentUser && EVIDENCE_READ_ROLES.has(currentUser.role));
 }
@@ -398,6 +421,12 @@ function showDecisionMessage(message, isError = false) {
   elements.copilotDecisionMessage.hidden = !message;
 }
 
+function showLearningMessage(message, isError = false) {
+  elements.learningMessage.textContent = message;
+  elements.learningMessage.classList.toggle("is-error", isError);
+  elements.learningMessage.hidden = !message;
+}
+
 function showEvidenceMessage(message, isError = false) {
   elements.evidenceMessage.textContent = message;
   elements.evidenceMessage.classList.toggle("is-error", isError);
@@ -435,6 +464,14 @@ function setCopilotBusy(isBusy) {
   elements.loadCopilotButton.textContent = isBusy
     ? "در حال دریافت…"
     : "بارگذاری snapshot پزشک‌یار";
+}
+
+function setLearningBusy(isBusy) {
+  learningRequestInProgress = isBusy;
+  elements.loadLearningButton.disabled = isBusy;
+  elements.loadLearningButton.textContent = isBusy
+    ? "در حال دریافت…"
+    : "تازه‌سازی مرور یادگیری";
 }
 
 function setEvidenceBusy(isBusy, label = "در حال بارگذاری…") {
@@ -491,6 +528,172 @@ function resetCopilotState() {
   showDecisionMessage("");
 }
 
+function formatCoverage(coverage) {
+  if (!coverage || coverage.total_count === 0) {
+    return "بدون داده";
+  }
+  const percent = coverage.proportion === null
+    ? "—"
+    : `${Number(coverage.proportion * 100).toLocaleString("fa-IR", { maximumFractionDigits: 1 })}٪`;
+  return (
+    `${toPersianNumber(coverage.present_count)} از `
+    + `${toPersianNumber(coverage.total_count)} · ${percent}`
+  );
+}
+
+function renderClinicalLearningReview(review) {
+  currentLearningReview = review;
+  elements.learningReviewHash.textContent = review.review_sha256;
+
+  const quality = review.data_quality;
+  const summary = document.createElement("article");
+  summary.className = "context-card context-intake";
+  summary.append(
+    createTextElement("h4", "", "پوشش زنجیرهٔ یادگیری"),
+    createDefinitionGrid([
+      ["رویدادهای Decision", toPersianNumber(quality.decision_event_count)],
+      ["Decision فعلی", toPersianNumber(quality.current_decision_count)],
+      ["Decision فعلی قابل اجرا", toPersianNumber(quality.current_actionable_decision_count)],
+      ["Treatment متصل به Decision", toPersianNumber(quality.decision_linked_treatment_count)],
+      ["Treatment قدیمی/بدون Decision", toPersianNumber(quality.legacy_or_unlinked_treatment_count)],
+      ["Treatment دارای Outcome", toPersianNumber(quality.treatment_with_outcome_count)],
+      ["کل Outcomeها", toPersianNumber(quality.outcome_record_count)],
+      ["پوشش امتیاز بیمار", formatCoverage(quality.patient_rating_coverage)],
+      ["پوشش امتیاز پزشک", formatCoverage(quality.physician_rating_coverage)],
+      ["پوشش pain score", formatCoverage(quality.pain_score_coverage)],
+      ["پوشش function score", formatCoverage(quality.function_score_coverage)],
+      ["Outcome دارای عارضه ثبت‌شده", toPersianNumber(quality.outcome_with_documented_adverse_event_count)],
+      ["رتبه‌بندی درمان", "ندارد"],
+      ["Learning score", "ساخته نمی‌شود"],
+    ], "safety-summary-grid"),
+  );
+  elements.learningSummary.replaceChildren(summary);
+
+  const fragment = document.createDocumentFragment();
+  if (!review.protocols.length) {
+    fragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "هنوز پروتکل نسخه‌بندی‌شده‌ای برای مرور یادگیری وجود ندارد.",
+    ));
+  }
+  for (const item of review.protocols) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement(
+        "h4",
+        "",
+        `${item.protocol_name} · ${item.protocol_code} · نسخه ${item.protocol_version}`,
+      ),
+      createDefinitionGrid([
+        ["نوع درمان", item.treatment_type],
+        ["وضعیت پروتکل", item.is_active ? "فعال" : "غیرفعال"],
+        ["ارجاع در Decisionها", toPersianNumber(item.decision_event_reference_count)],
+        ["ارجاع در Decision فعلی", toPersianNumber(item.current_decision_reference_count)],
+        ["Treatmentها", toPersianNumber(item.treatment_count)],
+        ["Treatment متصل به Decision", toPersianNumber(item.decision_linked_treatment_count)],
+        ["Treatment دارای Outcome", toPersianNumber(item.treatment_with_outcome_count)],
+        ["Outcome record", toPersianNumber(item.outcome_record_count)],
+        ["حجم داده", roadmapVolumeLabels[item.data_volume] || item.data_volume],
+        ["Follow-up ۲۸–۷۰ روز", toPersianNumber(item.follow_up_counts.early_28_to_70_days)],
+        ["Follow-up ۷۱–۱۸۰ روز", toPersianNumber(item.follow_up_counts.intermediate_71_to_180_days)],
+        ["Follow-up ۱۸۱–۳۶۵ روز", toPersianNumber(item.follow_up_counts.long_term_181_to_365_days)],
+        ["خارج از پنجره‌های استاندارد", toPersianNumber(item.follow_up_counts.outside_standard_windows)],
+        ["پوشش امتیاز بیمار", formatCoverage(item.patient_rating_coverage)],
+        ["پوشش امتیاز پزشک", formatCoverage(item.physician_rating_coverage)],
+        ["پوشش pain score", formatCoverage(item.pain_score_coverage)],
+        ["پوشش function score", formatCoverage(item.function_score_coverage)],
+      ], "safety-summary-grid"),
+    );
+
+    if (item.data_quality_flags.length) {
+      const list = document.createElement("ul");
+      list.className = "safety-flags";
+      for (const flag of item.data_quality_flags) {
+        list.append(createTextElement(
+          "li",
+          "",
+          learningFlagLabels[flag] || flag,
+        ));
+      }
+      card.append(list);
+    } else {
+      card.append(createTextElement(
+        "p",
+        "queue-current",
+        "در فیلدهای اصلی outcome این نسخه، missingness ثبت‌شده‌ای دیده نمی‌شود.",
+      ));
+    }
+    card.append(createTextElement(
+      "p",
+      "ordering-note",
+      "این کارت کیفیت و حجم داده را توصیف می‌کند؛ امتیاز عملکرد یا مقایسهٔ اثربخشی درمان نیست.",
+    ));
+    fragment.append(card);
+  }
+  elements.learningProtocols.replaceChildren(fragment);
+}
+
+async function loadClinicalLearningReview({ quiet = false } = {}) {
+  if (!canReadLearning() || learningRequestInProgress) {
+    return;
+  }
+  const requestGeneration = sessionGeneration;
+  setLearningBusy(true);
+  if (!quiet) {
+    showLearningMessage("در حال اعتبارسنجی زنجیرهٔ Decision، Treatment و Outcome…");
+  }
+  try {
+    const review = await apiRequest("/learning/review");
+    if (!accessToken || requestGeneration !== sessionGeneration) {
+      return;
+    }
+    if (
+      review.ranks_treatments !== false
+      || review.produces_learning_score !== false
+      || review.automatically_changes_protocols !== false
+      || review.is_cross_protocol_effectiveness_comparison !== false
+    ) {
+      throw new ApiError(409, "Unexpected clinical learning contract.");
+    }
+    renderClinicalLearningReview(review);
+    showLearningMessage(
+      "مرور کیفیت داده بارگذاری شد؛ این نما درمان‌ها را رتبه‌بندی نمی‌کند.",
+    );
+    setConnectionState(true);
+  } catch (error) {
+    currentLearningReview = null;
+    elements.learningReviewHash.textContent = "";
+    elements.learningSummary.replaceChildren();
+    elements.learningProtocols.replaceChildren();
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      return;
+    }
+    if (error instanceof ApiError && error.status === 403) {
+      showLearningMessage("نقش کاربری شما اجازهٔ مرور دادهٔ یادگیری را ندارد.", true);
+    } else if (error instanceof ApiError && error.status === 409) {
+      showLearningMessage("اعتبار یکی از زنجیره‌های Decision یا Outcome تأیید نشد.", true);
+    } else {
+      showLearningMessage("دریافت مرور یادگیری ممکن نشد؛ دوباره تلاش کنید.", true);
+    }
+    setConnectionState(false);
+  } finally {
+    if (requestGeneration === sessionGeneration) {
+      setLearningBusy(false);
+    }
+  }
+}
+
+function resetLearningState() {
+  currentLearningReview = null;
+  elements.learningReviewHash.textContent = "";
+  elements.learningSummary.replaceChildren();
+  elements.learningProtocols.replaceChildren();
+  showLearningMessage("");
+}
+
 function resetEvidenceState() {
   currentEvidenceVisitId = null;
   currentClinicalContext = null;
@@ -542,6 +745,9 @@ function setWorkspace(workspace) {
   if (workspace === "copilot" && !canReadCopilot()) {
     return;
   }
+  if (workspace === "learning" && !canReadLearning()) {
+    return;
+  }
   if (workspace === "evidence" && !canReadEvidence()) {
     return;
   }
@@ -552,18 +758,22 @@ function setWorkspace(workspace) {
   activeWorkspace = workspace;
   const isFlow = workspace === "flow";
   const isCopilot = workspace === "copilot";
+  const isLearning = workspace === "learning";
   const isEvidence = workspace === "evidence";
   const isSafety = workspace === "safety";
   elements.flowWorkspace.hidden = !isFlow;
   elements.copilotWorkspace.hidden = !isCopilot;
+  elements.learningWorkspace.hidden = !isLearning;
   elements.evidenceWorkspace.hidden = !isEvidence;
   elements.safetyWorkspace.hidden = !isSafety;
   elements.flowTab.setAttribute("aria-selected", String(isFlow));
   elements.copilotTab.setAttribute("aria-selected", String(isCopilot));
+  elements.learningTab.setAttribute("aria-selected", String(isLearning));
   elements.evidenceTab.setAttribute("aria-selected", String(isEvidence));
   elements.safetyTab.setAttribute("aria-selected", String(isSafety));
   elements.flowTab.tabIndex = isFlow ? 0 : -1;
   elements.copilotTab.tabIndex = isCopilot ? 0 : -1;
+  elements.learningTab.tabIndex = isLearning ? 0 : -1;
   elements.evidenceTab.tabIndex = isEvidence ? 0 : -1;
   elements.safetyTab.tabIndex = isSafety ? 0 : -1;
 
@@ -574,6 +784,14 @@ function setWorkspace(workspace) {
     }
   } else {
     stopAutoRefresh();
+  }
+  if (
+    isLearning
+    && accessToken
+    && currentLearningReview === null
+    && !learningRequestInProgress
+  ) {
+    loadClinicalLearningReview({ quiet: true });
   }
   if (
     isSafety
@@ -593,6 +811,7 @@ function showLogin() {
   requestInProgress = false;
   copilotRequestInProgress = false;
   decisionRequestInProgress = false;
+  learningRequestInProgress = false;
   evidenceRequestInProgress = false;
   safetyRequestInProgress = false;
   safetyEscalationRequestInProgress = false;
@@ -601,6 +820,8 @@ function showLogin() {
   elements.refreshButton.textContent = "تازه‌سازی";
   elements.loadCopilotButton.disabled = false;
   elements.loadCopilotButton.textContent = "بارگذاری snapshot پزشک‌یار";
+  elements.loadLearningButton.disabled = false;
+  elements.loadLearningButton.textContent = "تازه‌سازی مرور یادگیری";
   elements.loadEvidenceButton.disabled = false;
   elements.loadEvidenceButton.textContent = "بارگذاری زمینه و خلاصه‌ها";
   elements.knowledgeSearchButton.disabled = false;
@@ -613,22 +834,27 @@ function showLogin() {
   elements.dialogConfirm.disabled = false;
   resetOperationalState();
   resetCopilotState();
+  resetLearningState();
   resetEvidenceState();
   resetSafetyState();
   activeWorkspace = "flow";
   elements.flowWorkspace.hidden = false;
   elements.copilotWorkspace.hidden = true;
+  elements.learningWorkspace.hidden = true;
   elements.evidenceWorkspace.hidden = true;
   elements.safetyWorkspace.hidden = true;
   elements.flowTab.setAttribute("aria-selected", "true");
   elements.copilotTab.setAttribute("aria-selected", "false");
+  elements.learningTab.setAttribute("aria-selected", "false");
   elements.evidenceTab.setAttribute("aria-selected", "false");
   elements.safetyTab.setAttribute("aria-selected", "false");
   elements.flowTab.tabIndex = 0;
   elements.copilotTab.tabIndex = -1;
+  elements.learningTab.tabIndex = -1;
   elements.evidenceTab.tabIndex = -1;
   elements.safetyTab.tabIndex = -1;
   elements.copilotTab.hidden = true;
+  elements.learningTab.hidden = true;
   elements.evidenceTab.hidden = true;
   elements.safetyTab.hidden = true;
   elements.consoleView.hidden = true;
@@ -646,6 +872,7 @@ function showConsole() {
   elements.userDisplayName.textContent = currentUser.display_name;
   elements.userRole.textContent = roleLabels[currentUser.role] || currentUser.role;
   elements.copilotTab.hidden = !canReadCopilot();
+  elements.learningTab.hidden = !canReadLearning();
   elements.evidenceTab.hidden = !canReadEvidence();
   elements.safetyTab.hidden = !canReadSafety();
   elements.evidenceComposer.hidden = !canCreateEvidence();
@@ -2878,6 +3105,7 @@ function availableWorkspaceTabs() {
   return [
     { workspace: "flow", tab: elements.flowTab },
     { workspace: "copilot", tab: elements.copilotTab },
+    { workspace: "learning", tab: elements.learningTab },
     { workspace: "evidence", tab: elements.evidenceTab },
     { workspace: "safety", tab: elements.safetyTab },
   ].filter((entry) => !entry.tab.hidden);
@@ -2888,6 +3116,8 @@ elements.logoutButton.addEventListener("click", showLogin);
 elements.refreshButton.addEventListener("click", () => {
   if (activeWorkspace === "copilot" && currentCopilotVisitId) {
     loadCopilotWorkspace(currentCopilotVisitId);
+  } else if (activeWorkspace === "learning") {
+    loadClinicalLearningReview();
   } else if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
     loadEvidenceWorkspace(currentEvidenceVisitId);
   } else if (activeWorkspace === "safety" && currentSafetyVisitId) {
@@ -2901,11 +3131,14 @@ elements.refreshButton.addEventListener("click", () => {
 });
 elements.flowTab.addEventListener("click", () => setWorkspace("flow"));
 elements.copilotTab.addEventListener("click", () => setWorkspace("copilot"));
+elements.learningTab.addEventListener("click", () => setWorkspace("learning"));
+elements.loadLearningButton.addEventListener("click", () => loadClinicalLearningReview());
 elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
 elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
 for (const tab of [
   elements.flowTab,
   elements.copilotTab,
+  elements.learningTab,
   elements.evidenceTab,
   elements.safetyTab,
 ]) {
@@ -3097,6 +3330,8 @@ window.addEventListener("online", () => {
     loadFlow({ quiet: true });
   } else if (activeWorkspace === "copilot" && currentCopilotVisitId) {
     loadCopilotWorkspace(currentCopilotVisitId);
+  } else if (activeWorkspace === "learning") {
+    loadClinicalLearningReview({ quiet: true });
   } else if (activeWorkspace === "evidence" && currentEvidenceVisitId) {
     loadEvidenceWorkspace(currentEvidenceVisitId);
   } else if (activeWorkspace === "safety" && currentSafetyVisitId) {

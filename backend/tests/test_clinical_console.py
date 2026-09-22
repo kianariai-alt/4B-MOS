@@ -49,6 +49,10 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
     assert 'id="copilot-decision-form"' in html
     assert 'id="copilot-decision-history"' in html
     assert 'id="copilot-outcomes"' in html
+    assert 'id="learning-workspace"' in html
+    assert 'id="load-learning-button"' in html
+    assert 'id="learning-summary"' in html
+    assert 'id="learning-protocols"' in html
     assert 'id="evidence-workspace"' in html
     assert 'id="evidence-brief-form"' in html
     assert 'id="safety-workspace"' in html

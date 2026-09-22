@@ -108,6 +108,13 @@ Outcomes remain traceable through the frozen Treatment snapshot. The feedback
 loop does not automatically rewrite protocols or convert local outcomes into
 autonomous treatment policy.
 
+The [clinical learning review](docs/CLINICAL_LEARNING_REVIEW.md) audits whether
+that local feedback dataset is actually complete enough to support responsible
+learning. It reports Decision/Treatment/Outcome linkage, follow-up-window counts,
+field completeness and per-protocol data volume without creating an
+effectiveness league table, composite learning score or automatic protocol
+change.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains
