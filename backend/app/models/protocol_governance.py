@@ -76,7 +76,10 @@ class ProtocolGovernanceCase(Base):
         String(64),
         nullable=True,
     )
-    recovery_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    recovery_snapshot: Mapped[dict | None] = mapped_column(
+        JSON(none_as_null=True),
+        nullable=True,
+    )
     rationale: Mapped[str] = mapped_column(Text, nullable=False)
     evidence_needed: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     created_by_user_id: Mapped[str] = mapped_column(
