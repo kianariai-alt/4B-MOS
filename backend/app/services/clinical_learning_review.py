@@ -97,6 +97,7 @@ class ClinicalLearningReviewService:
         validated_decisions = []
         latest_by_visit = {}
         decision_by_id = {}
+        decision_payload_by_id = {}
         for record in decision_records:
             try:
                 payload = TreatmentDecisionService._validate(db, record)
@@ -104,6 +105,7 @@ class ClinicalLearningReviewService:
                 raise ClinicalLearningIntegrityError(str(error)) from error
             validated_decisions.append((record, payload))
             decision_by_id[record.id] = record
+            decision_payload_by_id[record.id] = payload
             current = latest_by_visit.get(record.visit_id)
             candidate_key = (record.decided_at, record.id)
             if current is None or candidate_key > (
@@ -167,10 +169,32 @@ class ClinicalLearningReviewService:
                     "A treatment decision hash does not match its immutable "
                     "clinician decision."
                 )
-            if code is not None and version is not None:
-                protocol_linked_treatment_ids[(code, version)].add(
-                    treatment.id
+            decision_payload = decision_payload_by_id[decision.id]
+            if code is None or version is None:
+                raise ClinicalLearningIntegrityError(
+                    "A Decision-linked treatment must freeze an exact "
+                    "protocol code and version."
                 )
+            selected = {
+                (
+                    item.protocol_code,
+                    item.protocol_version,
+                    item.treatment_type,
+                )
+                for item in decision_payload.selected_protocols
+            }
+            if (
+                code,
+                version,
+                treatment.treatment_type,
+            ) not in selected:
+                raise ClinicalLearningIntegrityError(
+                    "A Decision-linked treatment protocol is not present in "
+                    "the immutable clinician decision."
+                )
+            protocol_linked_treatment_ids[(code, version)].add(
+                treatment.id
+            )
 
         outcome_records = TreatmentOutcomeRepository.list_for_roadmap(db)
         validated_outcomes = []
@@ -186,6 +210,16 @@ class ClinicalLearningReviewService:
             if treatment is None:
                 raise ClinicalLearningIntegrityError(
                     "An outcome references a missing treatment."
+                )
+            treatment_snapshot = treatment.protocol_snapshot or {}
+            if (
+                outcome.protocol_code != treatment_snapshot.get("code")
+                or outcome.protocol_version != treatment.protocol_version
+                or outcome.treatment_type != treatment.treatment_type
+            ):
+                raise ClinicalLearningIntegrityError(
+                    "An outcome protocol identity conflicts with its "
+                    "current immutable treatment provenance."
                 )
             validated_outcomes.append(outcome)
             treatments_with_outcomes.add(outcome.treatment_id)
