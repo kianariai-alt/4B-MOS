@@ -14,6 +14,7 @@ from backend.app.models.user import User
 from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.treatment_outcome import TreatmentOutcomeRepository
 from backend.app.repositories.treatment_session import TreatmentSessionRepository
+from backend.app.repositories.visit import VisitRepository
 from backend.app.schemas.treatment import TreatmentRead
 from backend.app.schemas.treatment_outcome import (
     OutcomeFinalizationReference,
@@ -428,6 +429,23 @@ class TreatmentOutcomeService:
             for record in TreatmentOutcomeRepository.list_by_treatment(
                 db,
                 treatment_id,
+            )
+        ]
+
+    @staticmethod
+    def list_for_visit(
+        db: Session,
+        visit_id: str,
+    ) -> list[TreatmentOutcomeRead]:
+        if VisitRepository.get_by_id(db, visit_id) is None:
+            raise TreatmentOutcomeNotFoundError(
+                f"Visit '{visit_id}' was not found."
+            )
+        return [
+            TreatmentOutcomeService._to_read(db, record)
+            for record in TreatmentOutcomeRepository.list_by_visit(
+                db,
+                visit_id,
             )
         ]
 
