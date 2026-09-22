@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Integer,
@@ -26,6 +27,13 @@ if TYPE_CHECKING:
 
 class Treatment(Base):
     __tablename__ = "treatments"
+    __table_args__ = (
+        CheckConstraint(
+            "source_treatment_decision_sha256 IS NULL OR "
+            "length(source_treatment_decision_sha256) = 64",
+            name="ck_treatments_source_decision_sha256",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(
         String(36),
