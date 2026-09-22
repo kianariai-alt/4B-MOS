@@ -121,6 +121,13 @@ protocol versions. Independent physician review and separate operational
 acknowledgement are preserved, while even a fully reviewed case remains only
 approved for manual action and never changes a protocol automatically.
 
+The [governed protocol release](docs/GOVERNED_PROTOCOL_RELEASE.md) requires a
+separate explicit administrator execution after full governance approval.
+Revision releases atomically publish the frozen new version, deactivate the
+superseded source version and preserve registry lineage; deactivation releases
+atomically retire the approved source version. Ordinary API writes can no longer
+create later versions or deactivate protocols outside this governance path.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains
