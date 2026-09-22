@@ -17,10 +17,12 @@ from backend.app.models.user import User
 from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.protocol import ProtocolRepository
 from backend.app.repositories.protocol_governance import ProtocolGovernanceRepository
-from backend.app.schemas.protocol import ProtocolRead
+from backend.app.schemas.protocol import ProtocolCreate, ProtocolRead
 from backend.app.schemas.protocol_governance import (
     ProtocolGovernanceCaseCreate,
     ProtocolGovernanceCaseRead,
+    ProtocolGovernanceReleaseExecute,
+    ProtocolGovernanceReleaseRead,
     ProtocolGovernanceReviewCreate,
     ProtocolGovernanceReviewRead,
     ProtocolGovernanceSignalRead,
@@ -205,6 +207,62 @@ class ProtocolGovernanceService:
         return raw
 
     @staticmethod
+    def _validate_release_record(record):
+        try:
+            raw = deepcopy(record.payload)
+            valid = (
+                isinstance(raw, dict)
+                and evidence_digest(raw) == record.sha256
+                and raw.get("schema_version") == 1
+                and raw.get("id") == record.id
+                and raw.get("case_id") == record.case_id
+                and raw.get("case_sha256") == record.case_sha256
+                and raw.get("action") == record.action
+                and raw.get("source_protocol_id") == record.source_protocol_id
+                and raw.get("released_protocol_id") == record.released_protocol_id
+                and raw.get("source_protocol_before")
+                == record.source_protocol_before
+                and raw.get("source_protocol_after")
+                == record.source_protocol_after
+                and raw.get("released_protocol_snapshot")
+                == record.released_protocol_snapshot
+                and raw.get("executed_by_user_id")
+                == record.executed_by_user_id
+                and raw.get("execution_note") == record.execution_note
+                and _same_timestamp(raw.get("created_at"), record.created_at)
+                and raw.get("preserves_history") is True
+                and raw.get("is_rollback") is False
+            )
+        except (AttributeError, KeyError, TypeError, ValueError):
+            valid = False
+        if not valid:
+            raise ProtocolGovernanceIntegrityError(
+                "Stored governed protocol release failed its integrity check."
+            )
+        return raw
+
+    @staticmethod
+    def _release_to_read(record) -> ProtocolGovernanceReleaseRead:
+        raw = ProtocolGovernanceService._validate_release_record(record)
+        return ProtocolGovernanceReleaseRead(
+            id=record.id,
+            case_id=record.case_id,
+            case_sha256=record.case_sha256,
+            action=record.action,
+            source_protocol_id=record.source_protocol_id,
+            released_protocol_id=record.released_protocol_id,
+            source_protocol_before=deepcopy(record.source_protocol_before),
+            source_protocol_after=deepcopy(record.source_protocol_after),
+            released_protocol_snapshot=deepcopy(
+                record.released_protocol_snapshot
+            ),
+            executed_by_user_id=record.executed_by_user_id,
+            execution_note=raw["execution_note"],
+            sha256=record.sha256,
+            created_at=record.created_at,
+        )
+
+    @staticmethod
     def _to_read(db: Session, record) -> ProtocolGovernanceCaseRead:
         ProtocolGovernanceService._validate_case_record(db, record)
         reviews = ProtocolGovernanceRepository.list_reviews(db, record.id)
@@ -226,6 +284,15 @@ class ProtocolGovernanceService:
                     created_at=review.created_at,
                 )
             )
+        release_record = ProtocolGovernanceRepository.get_release_by_case(
+            db,
+            record.id,
+        )
+        release = (
+            ProtocolGovernanceService._release_to_read(release_record)
+            if release_record is not None
+            else None
+        )
         return ProtocolGovernanceCaseRead(
             id=record.id,
             protocol_code=record.protocol_code,
@@ -242,6 +309,7 @@ class ProtocolGovernanceService:
             sha256=record.sha256,
             created_at=record.created_at,
             reviews=review_reads,
+            release=release,
             status=ProtocolGovernanceService._case_status(review_reads),
         )
 
@@ -514,6 +582,276 @@ class ProtocolGovernanceService:
                 "The governance review conflicted with another write."
             ) from error
         return ProtocolGovernanceService._to_read(db, record)
+
+    @staticmethod
+    def _protocol_snapshot(protocol) -> dict:
+        return ProtocolRead.model_validate(protocol).model_dump(mode="json")
+
+    @staticmethod
+    def _matches_frozen_protocol_snapshot(
+        current_snapshot: dict,
+        frozen_snapshot: dict,
+    ) -> bool:
+        return all(
+            current_snapshot.get(key) == value
+            for key, value in frozen_snapshot.items()
+        )
+
+    @staticmethod
+    def execute_release(
+        db: Session,
+        case_id: str,
+        payload: ProtocolGovernanceReleaseExecute,
+        *,
+        actor: User | None,
+    ) -> ProtocolGovernanceCaseRead:
+        if actor is None or not actor.is_active or actor.role != "admin":
+            raise ProtocolGovernanceAuthorizationError(
+                "Only an active administrator may execute a governed "
+                "protocol release."
+            )
+
+        record = ProtocolGovernanceRepository.get_case(db, case_id)
+        if record is None:
+            raise ProtocolGovernanceNotFoundError(
+                f"Protocol governance case '{case_id}' was not found."
+            )
+        ProtocolGovernanceService._validate_case_record(db, record)
+        if payload.expected_case_sha256 != record.sha256:
+            raise ProtocolGovernanceConflictError(
+                "The governance case hash changed; reload before release."
+            )
+
+        if ProtocolGovernanceRepository.get_release_by_case(db, case_id):
+            raise ProtocolGovernanceConflictError(
+                "This governance case has already been released."
+            )
+
+        reviews = ProtocolGovernanceRepository.list_reviews(db, case_id)
+        for review in reviews:
+            ProtocolGovernanceService._validate_review_record(
+                review,
+                record.sha256,
+            )
+        if (
+            ProtocolGovernanceService._case_status(reviews)
+            != "approved_for_manual_action"
+        ):
+            raise ProtocolGovernanceConflictError(
+                "The governance case is not approved for manual release."
+            )
+
+        if record.case_type not in {
+            "revision_candidate",
+            "deactivation_candidate",
+        }:
+            raise ProtocolGovernanceConflictError(
+                "This governance case type does not permit a protocol release."
+            )
+
+        source = ProtocolRepository.get_by_code_version(
+            db,
+            record.protocol_code,
+            record.protocol_version,
+        )
+        if source is None:
+            raise ProtocolGovernanceNotFoundError(
+                "The source protocol version is missing from the registry."
+            )
+        source_before = ProtocolGovernanceService._protocol_snapshot(source)
+        if not ProtocolGovernanceService._matches_frozen_protocol_snapshot(
+            source_before,
+            record.protocol_snapshot,
+        ):
+            raise ProtocolGovernanceConflictError(
+                "The source protocol changed after the governance case was "
+                "opened; a new case is required."
+            )
+        if not source.is_active:
+            raise ProtocolGovernanceConflictError(
+                "The source protocol is already inactive."
+            )
+
+        release_id = str(uuid.uuid4())
+        created_at = datetime.now(timezone.utc)
+        released = None
+
+        try:
+            if record.case_type == "revision_candidate":
+                if record.proposed_protocol is None:
+                    raise ProtocolGovernanceIntegrityError(
+                        "Revision governance case is missing its proposed "
+                        "protocol snapshot."
+                    )
+                proposed = ProtocolCreate.model_validate(
+                    record.proposed_protocol
+                )
+                if ProtocolRepository.get_by_code_version(
+                    db,
+                    proposed.code,
+                    proposed.version,
+                ) is not None:
+                    raise ProtocolGovernanceConflictError(
+                        "The governed revision version already exists."
+                    )
+                released = ProtocolRepository.create(
+                    db,
+                    proposed,
+                    supersedes_protocol_id=source.id,
+                    source_governance_case_id=record.id,
+                    source_governance_case_sha256=record.sha256,
+                    commit=False,
+                )
+                ProtocolRepository.deactivate(
+                    db,
+                    source,
+                    commit=False,
+                )
+                action = "publish_revision"
+            else:
+                ProtocolRepository.deactivate(
+                    db,
+                    source,
+                    commit=False,
+                )
+                action = "deactivate"
+
+            source_after = ProtocolGovernanceService._protocol_snapshot(
+                source
+            )
+            released_snapshot = (
+                ProtocolGovernanceService._protocol_snapshot(released)
+                if released is not None
+                else None
+            )
+
+            stored = {
+                "schema_version": 1,
+                "id": release_id,
+                "case_id": record.id,
+                "case_sha256": record.sha256,
+                "action": action,
+                "source_protocol_id": source.id,
+                "released_protocol_id": (
+                    released.id if released is not None else None
+                ),
+                "source_protocol_before": source_before,
+                "source_protocol_after": source_after,
+                "released_protocol_snapshot": released_snapshot,
+                "executed_by_user_id": actor.id,
+                "execution_note": payload.execution_note,
+                "created_at": created_at.isoformat(),
+                "is_rollback": False,
+                "preserves_history": True,
+            }
+            sha256 = evidence_digest(stored)
+            release = ProtocolGovernanceRepository.create_release(
+                db,
+                id=release_id,
+                case_id=record.id,
+                case_sha256=record.sha256,
+                action=action,
+                source_protocol_id=source.id,
+                released_protocol_id=(
+                    released.id if released is not None else None
+                ),
+                source_protocol_before=source_before,
+                source_protocol_after=source_after,
+                released_protocol_snapshot=released_snapshot,
+                executed_by_user_id=actor.id,
+                execution_note=payload.execution_note,
+                payload=stored,
+                sha256=sha256,
+                created_at=created_at,
+            )
+
+            AuditLogRepository.create(
+                db,
+                commit=False,
+                entity_type="protocol_governance_release",
+                entity_id=release.id,
+                event_type="governed_protocol_release_executed",
+                from_state="approved_for_manual_action",
+                to_state=action,
+                message=(
+                    "An administrator explicitly executed an approved "
+                    "protocol governance release."
+                ),
+                event_data={
+                    "case_id": record.id,
+                    "case_sha256": record.sha256,
+                    "release_sha256": sha256,
+                    "action": action,
+                    "source_protocol_id": source.id,
+                    "released_protocol_id": (
+                        released.id if released is not None else None
+                    ),
+                },
+                **actor_data(actor),
+            )
+            AuditLogRepository.create(
+                db,
+                commit=False,
+                entity_type="protocol",
+                entity_id=source.id,
+                event_type="protocol_superseded"
+                if action == "publish_revision"
+                else "protocol_governance_deactivated",
+                from_state="active",
+                to_state="inactive",
+                message=(
+                    "Protocol state changed through an approved governance "
+                    "release."
+                ),
+                event_data={
+                    "case_id": record.id,
+                    "release_id": release.id,
+                    "release_sha256": sha256,
+                    "action": action,
+                },
+                **actor_data(actor),
+            )
+            if released is not None:
+                AuditLogRepository.create(
+                    db,
+                    commit=False,
+                    entity_type="protocol",
+                    entity_id=released.id,
+                    event_type="protocol_revision_published",
+                    from_state=None,
+                    to_state="active",
+                    message=(
+                        "A new protocol revision was published through an "
+                        "approved governance release."
+                    ),
+                    event_data={
+                        "case_id": record.id,
+                        "release_id": release.id,
+                        "release_sha256": sha256,
+                        "supersedes_protocol_id": source.id,
+                    },
+                    **actor_data(actor),
+                )
+            db.commit()
+        except IntegrityError as error:
+            db.rollback()
+            raise ProtocolGovernanceConflictError(
+                "The governed release conflicted with another write."
+            ) from error
+        except Exception:
+            db.rollback()
+            raise
+
+        return ProtocolGovernanceService._to_read(db, record)
+
+    @staticmethod
+    def list_releases(
+        db: Session,
+    ) -> list[ProtocolGovernanceReleaseRead]:
+        return [
+            ProtocolGovernanceService._release_to_read(item)
+            for item in ProtocolGovernanceRepository.list_releases(db)
+        ]
 
     @staticmethod
     def get_case(db: Session, case_id: str) -> ProtocolGovernanceCaseRead:
