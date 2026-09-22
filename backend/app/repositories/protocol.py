@@ -95,11 +95,16 @@ class ProtocolRepository:
     def deactivate(
         db: Session,
         protocol: ProtocolTemplate,
+        *,
+        commit: bool = True,
     ) -> ProtocolTemplate:
         protocol.is_active = False
 
         db.add(protocol)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         db.refresh(protocol)
 
         return protocol
