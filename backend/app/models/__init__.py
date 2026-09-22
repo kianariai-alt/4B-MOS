@@ -52,6 +52,7 @@ from backend.app.models.protocol_governance import (
     ProtocolGovernanceCase,
     ProtocolGovernanceReview,
     ProtocolGovernanceRelease,
+    ProtocolGovernanceRecovery,
 )
 
 __all__ = [
@@ -84,4 +85,5 @@ __all__ = [
     "ProtocolGovernanceCase",
     "ProtocolGovernanceReview",
     "ProtocolGovernanceRelease",
+    "ProtocolGovernanceRecovery",
 ]
