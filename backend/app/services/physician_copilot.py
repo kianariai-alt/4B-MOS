@@ -14,6 +14,7 @@ from backend.app.services.clinical_safety_review import (
     ClinicalSafetyFindingReviewService,
 )
 from backend.app.services.session_finalization import evidence_digest
+from backend.app.services.treatment_outcome import TreatmentOutcomeService
 
 
 class PhysicianCopilotIntegrityError(Exception):
@@ -56,6 +57,15 @@ class PhysicianCopilotService:
             if item.clinical_context_sha256 == context_sha256
         ]
 
+        treatment_outcomes = TreatmentOutcomeService.list_for_visit(
+            db,
+            visit_id,
+        )
+        treatment_outcomes = sorted(
+            treatment_outcomes,
+            key=lambda item: (item.recorded_at, item.id),
+        )
+
         open_escalations = sorted(
             [
                 item
@@ -73,6 +83,10 @@ class PhysicianCopilotService:
             item.sha256
             for item in sorted(evidence_briefs, key=lambda item: item.id)
         ]
+        outcome_hashes = [
+            item.sha256
+            for item in sorted(treatment_outcomes, key=lambda item: item.id)
+        ]
 
         manifest = PhysicianCopilotManifestRead(
             clinical_context_sha256=context_sha256,
@@ -83,6 +97,7 @@ class PhysicianCopilotService:
             ),
             open_escalation_review_sha256s=review_hashes,
             evidence_brief_sha256s=brief_hashes,
+            treatment_outcome_sha256s=outcome_hashes,
         )
 
         return PhysicianCopilotSnapshotRead(
@@ -93,6 +108,7 @@ class PhysicianCopilotService:
             open_escalations=open_escalations,
             evidence_briefs=evidence_briefs,
             current_context_evidence_briefs=current_context_evidence_briefs,
+            treatment_outcomes=treatment_outcomes,
             manifest=manifest,
             snapshot_sha256=evidence_digest(
                 {

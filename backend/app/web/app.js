@@ -152,6 +152,7 @@ const elements = {
   copilotContent: document.querySelector("#copilot-content"),
   copilotSummary: document.querySelector("#copilot-summary"),
   copilotEscalations: document.querySelector("#copilot-escalations"),
+  copilotOutcomes: document.querySelector("#copilot-outcomes"),
   copilotEvidence: document.querySelector("#copilot-evidence"),
   evidenceVisitForm: document.querySelector("#evidence-visit-form"),
   evidenceVisitId: document.querySelector("#evidence-visit-id"),
@@ -422,6 +423,7 @@ function resetCopilotState() {
   elements.copilotContent.hidden = true;
   elements.copilotSummary.replaceChildren();
   elements.copilotEscalations.replaceChildren();
+  elements.copilotOutcomes.replaceChildren();
   elements.copilotEvidence.replaceChildren();
   showCopilotMessage("");
 }
@@ -1354,6 +1356,7 @@ function renderCopilotSnapshot(snapshot) {
         toPersianNumber(snapshot.current_context_evidence_briefs.length),
       ],
       ["کل خلاصه‌های شواهد ویزیت", toPersianNumber(snapshot.evidence_briefs.length)],
+      ["ثبت‌های outcome", toPersianNumber(snapshot.treatment_outcomes.length)],
       ["مجوز بالینی", "خیر"],
     ], "safety-summary-grid"),
   );
@@ -1402,6 +1405,42 @@ function renderCopilotSnapshot(snapshot) {
   }
   elements.copilotEscalations.replaceChildren(escalationFragment);
 
+  const outcomeFragment = document.createDocumentFragment();
+  if (!snapshot.treatment_outcomes.length) {
+    outcomeFragment.append(createTextElement(
+      "p",
+      "empty-state",
+      "برای درمان‌های این ویزیت هنوز outcome ساختاریافته‌ای ثبت نشده است.",
+    ));
+  }
+  for (const outcome of snapshot.treatment_outcomes) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement(
+        "h4",
+        "",
+        `${outcome.protocol_code || outcome.treatment_type} · روز پیگیری ${toPersianNumber(outcome.follow_up_day)}`,
+      ),
+      createDefinitionGrid([
+        ["وضعیت کلی", outcome.outcome_status],
+        ["امتیاز بیمار", outcome.patient_rating === null ? null : `${toPersianNumber(outcome.patient_rating)} از ۵`],
+        ["امتیاز پزشک", outcome.physician_rating === null ? null : `${toPersianNumber(outcome.physician_rating)} از ۵`],
+        ["امتیاز درد", outcome.pain_score === null ? null : `${toPersianNumber(outcome.pain_score)} از ۱۰`],
+        ["عملکرد", outcome.function_score === null ? null : `${toPersianNumber(outcome.function_score)} از ۱۰۰`],
+        ["زمان ثبت", formatDateTime(outcome.recorded_at)],
+        ["SHA-256 outcome", outcome.sha256],
+      ]),
+      createTextElement(
+        "p",
+        "ordering-note",
+        "دادهٔ مشاهده‌ای است؛ برای نتیجه‌گیری علّی یا رتبه‌بندی درمان کافی نیست.",
+      ),
+    );
+    outcomeFragment.append(card);
+  }
+  elements.copilotOutcomes.replaceChildren(outcomeFragment);
+
   const evidenceFragment = document.createDocumentFragment();
   if (!snapshot.evidence_briefs.length) {
     evidenceFragment.append(createTextElement(
@@ -1449,6 +1488,7 @@ async function loadCopilotWorkspace(visitId) {
   elements.copilotContent.hidden = true;
   elements.copilotSummary.replaceChildren();
   elements.copilotEscalations.replaceChildren();
+  elements.copilotOutcomes.replaceChildren();
   elements.copilotEvidence.replaceChildren();
   showCopilotMessage("در حال دریافت snapshot یکپارچهٔ ویزیت…");
   setCopilotBusy(true);

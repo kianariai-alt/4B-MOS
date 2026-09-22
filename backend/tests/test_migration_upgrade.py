@@ -59,7 +59,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e6b7c8d9a401"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "f7c2d4e8a910"
     finally:
         engine.dispose()
 
@@ -254,7 +254,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "e6b7c8d9a401"
+            )) == "f7c2d4e8a910"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -683,6 +683,95 @@ def test_clinical_evidence_brief_migration_refuses_history_loss(
             )) == "e6b7c8d9a401"
             assert connection.scalar(text(
                 "SELECT count(*) FROM clinical_evidence_briefs"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_treatment_outcome_migration_refuses_outcome_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'treatment-outcome-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "treatment_outcomes" in inspector.get_table_names()
+        assert len(inspector.get_foreign_keys("treatment_outcomes")) == 3
+        checks = {
+            item["name"]
+            for item in inspector.get_check_constraints("treatment_outcomes")
+        }
+        assert {
+            "ck_treatment_outcome_follow_up_day",
+            "ck_treatment_outcome_status",
+            "ck_treatment_outcome_patient_rating",
+            "ck_treatment_outcome_physician_rating",
+            "ck_treatment_outcome_pain_score",
+            "ck_treatment_outcome_function_score",
+            "ck_treatment_outcome_context_sha256",
+            "ck_treatment_outcome_treatment_sha256",
+            "ck_treatment_outcome_sha256",
+        } <= checks
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('outcome-user', 'outcome_user', 'Outcome User', "
+                "'hash', 'physician', 1, 0, 0, "
+                "'2026-09-22 10:00:00', '2026-09-22 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO patients "
+                "(id, patient_code, first_name, last_name, is_active, "
+                "created_at, updated_at) VALUES "
+                "('outcome-patient', 'OUT-MIG-001', 'Outcome', 'Patient', 1, "
+                "'2026-09-22 10:00:00', '2026-09-22 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO visits "
+                "(id, patient_id, visit_date, status, created_at, updated_at) "
+                "VALUES ('outcome-visit', 'outcome-patient', "
+                "'2026-09-22 10:00:00', 'open', "
+                "'2026-09-22 10:00:00', '2026-09-22 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO treatments "
+                "(id, visit_id, treatment_type, status, session_number, "
+                "created_at, updated_at) VALUES "
+                "('outcome-treatment', 'outcome-visit', 'ACS', 'completed', 1, "
+                "'2026-09-22 10:00:00', '2026-09-22 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO treatment_outcomes "
+                "(id, treatment_id, visit_id, treatment_type, "
+                "clinical_context_sha256, treatment_snapshot_sha256, "
+                "finalization_sha256s, follow_up_day, outcome_status, "
+                "outcome_measures, adverse_events, created_by_user_id, "
+                "payload, sha256, recorded_at) VALUES "
+                "('outcome-record', 'outcome-treatment', 'outcome-visit', "
+                "'ACS', '" + "1" * 64 + "', '" + "2" * 64 + "', '[]', 42, "
+                "'improved', '[]', '[]', 'outcome-user', '{}', '" +
+                "3" * 64 + "', '2026-09-22 10:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="treatment outcome history exists",
+        ):
+            command.downgrade(config, "e6b7c8d9a401")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "f7c2d4e8a910"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM treatment_outcomes"
             )) == 1
     finally:
         engine.dispose()

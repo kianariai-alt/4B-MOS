@@ -84,6 +84,14 @@ escalations and immutable clinician-selected evidence briefs into one read-only,
 hash-bound physician view. It does not diagnose, recommend, rank treatments,
 calculate a patient risk score or grant clinical clearance.
 
+The [clinical outcomes registry](docs/CLINICAL_OUTCOMES_REGISTRY.md) records
+append-only, provenance-bound treatment follow-up observations after at least one
+completed session has immutable finalization evidence. Patient and physician
+ratings remain separate, protocol/context/finalization hashes are preserved, and
+the registry is explicitly observational rather than causal evidence. These
+records are also visible in the physician copilot as longitudinal follow-up
+history. The registry itself does not learn or recommend treatment.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains

@@ -47,6 +47,9 @@ from backend.app.api.routes.treatment_session_completion import (
 from backend.app.api.routes.treatments import (
     router as treatments_router,
 )
+from backend.app.api.routes.treatment_outcomes import (
+    router as treatment_outcomes_router,
+)
 from backend.app.api.routes.users import (
     router as users_router,
 )
@@ -107,6 +110,9 @@ api_router.include_router(
 
 api_router.include_router(
     treatments_router
+)
+api_router.include_router(
+    treatment_outcomes_router
 )
 
 api_router.include_router(

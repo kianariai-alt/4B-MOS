@@ -24,6 +24,10 @@ from backend.app.services.physician_copilot import (
     PhysicianCopilotIntegrityError,
     PhysicianCopilotService,
 )
+from backend.app.services.treatment_outcome import (
+    TreatmentOutcomeIntegrityError,
+    TreatmentOutcomeNotFoundError,
+)
 
 
 router = APIRouter(tags=["Physician Copilot"])
@@ -33,6 +37,7 @@ NOT_FOUND_ERRORS = (
     ClinicalContextNotFoundError,
     ClinicalEvidenceNotFoundError,
     ClinicalSafetyNotFoundError,
+    TreatmentOutcomeNotFoundError,
 )
 COPILOT_ERRORS = (
     *NOT_FOUND_ERRORS,
@@ -42,6 +47,7 @@ COPILOT_ERRORS = (
     ClinicalEvidenceIntegrityError,
     ClinicalSafetyConflictError,
     ClinicalSafetyIntegrityError,
+    TreatmentOutcomeIntegrityError,
     PhysicianCopilotIntegrityError,
 )
 

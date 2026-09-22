@@ -13,6 +13,7 @@ from backend.app.models.clinical_context import (
     ClinicalIntake,
     ParaclinicalReport,
 )
+from backend.app.models.treatment import Treatment
 from backend.app.models.visit import Visit
 
 
@@ -35,7 +36,16 @@ def _visit_identifier(arguments: dict):
             .where(ParaclinicalReport.id == arguments["report_id"])
             .scalar_subquery()
         )
-    raise TypeError("Clinical record commands need visit_id, intake_id, or report_id.")
+    if "treatment_id" in arguments:
+        return (
+            select(Treatment.visit_id)
+            .where(Treatment.id == arguments["treatment_id"])
+            .scalar_subquery()
+        )
+    raise TypeError(
+        "Clinical record commands need visit_id, intake_id, report_id, "
+        "or treatment_id."
+    )
 
 
 def _lock_visit(db: Session, arguments: dict) -> None:
@@ -71,11 +81,15 @@ def clinical_record_write(command):
     """Serialize a clinical record mutation and its audit events by visit."""
 
     parameters = signature(command)
-    if not {"visit_id", "intake_id", "report_id"}.intersection(
-        parameters.parameters
-    ):
+    if not {
+        "visit_id",
+        "intake_id",
+        "report_id",
+        "treatment_id",
+    }.intersection(parameters.parameters):
         raise TypeError(
-            "Clinical record commands need visit_id, intake_id, or report_id."
+            "Clinical record commands need visit_id, intake_id, report_id, "
+            "or treatment_id."
         )
 
     @wraps(command)
