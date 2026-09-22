@@ -26,6 +26,10 @@ class ProtocolVersionConflictError(Exception):
     pass
 
 
+class ProtocolGovernanceRequiredError(Exception):
+    pass
+
+
 class ProtocolService:
     @staticmethod
     def create_protocol(
@@ -46,6 +50,11 @@ class ProtocolService:
                 f"Protocol '{payload.code}' "
                 f"version '{payload.version}' "
                 "already exists."
+            )
+        if ProtocolRepository.list_by_code(db, payload.code):
+            raise ProtocolGovernanceRequiredError(
+                "Additional versions of an existing protocol must be "
+                "published through an approved governance release."
             )
 
         protocol = ProtocolRepository.create(
@@ -107,41 +116,8 @@ class ProtocolService:
         protocol_id: str,
         actor: User | None = None,
     ) -> ProtocolTemplate:
-        protocol = ProtocolService.get_protocol(
-            db,
-            protocol_id,
+        ProtocolService.get_protocol(db, protocol_id)
+        raise ProtocolGovernanceRequiredError(
+            "Protocol deactivation must be executed through an approved "
+            "governance release."
         )
-
-        old_state = (
-            "active"
-            if protocol.is_active
-            else "inactive"
-        )
-
-        updated_protocol = (
-            ProtocolRepository.deactivate(
-                db,
-                protocol,
-            )
-        )
-
-        AuditLogRepository.create(
-            db,
-            entity_type="protocol",
-            entity_id=updated_protocol.id,
-            event_type="protocol_deactivated",
-            from_state=old_state,
-            to_state="inactive",
-            message=(
-                "Clinical protocol deactivated."
-            ),
-            event_data={
-                "code": updated_protocol.code,
-                "version": (
-                    updated_protocol.version
-                ),
-            },
-            **actor_data(actor),
-        )
-
-        return updated_protocol
