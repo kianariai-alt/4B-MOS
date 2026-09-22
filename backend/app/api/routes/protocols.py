@@ -17,6 +17,7 @@ from backend.app.schemas.protocol import (
     ProtocolRead,
 )
 from backend.app.services.protocol import (
+    ProtocolGovernanceRequiredError,
     ProtocolNotFoundError,
     ProtocolService,
     ProtocolVersionConflictError,
@@ -69,7 +70,10 @@ def create_protocol(
             protocol
         )
 
-    except ProtocolVersionConflictError as exc:
+    except (
+        ProtocolVersionConflictError,
+        ProtocolGovernanceRequiredError,
+    ) as exc:
         raise HTTPException(
             status_code=(
                 status.HTTP_409_CONFLICT
@@ -132,6 +136,11 @@ def get_protocol(
             status_code=(
                 status.HTTP_404_NOT_FOUND
             ),
+            detail=str(exc),
+        ) from exc
+    except ProtocolGovernanceRequiredError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
             detail=str(exc),
         ) from exc
 
