@@ -508,6 +508,15 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
             "/api/v1/visits/{visit_id}/treatment-options-roadmap",
             "get",
         ),
+        (
+            "/api/v1/visits/{visit_id}/treatment-decisions",
+            "post",
+        ),
+        (
+            "/api/v1/visits/{visit_id}/treatment-decisions",
+            "get",
+        ),
+        ("/api/v1/treatment-decisions/{decision_id}", "get"),
         ("/api/v1/treatments/{treatment_id}/outcomes", "post"),
         ("/api/v1/treatments/{treatment_id}/outcomes", "get"),
         ("/api/v1/treatment-outcomes/{outcome_id}", "get"),
