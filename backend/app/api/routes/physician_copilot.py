@@ -19,10 +19,15 @@ from backend.app.services.clinical_safety import (
     ClinicalSafetyConflictError,
     ClinicalSafetyIntegrityError,
     ClinicalSafetyNotFoundError,
+    TreatmentOutcomeNotFoundError,
 )
 from backend.app.services.physician_copilot import (
     PhysicianCopilotIntegrityError,
     PhysicianCopilotService,
+)
+from backend.app.services.treatment_outcome import (
+    TreatmentOutcomeIntegrityError,
+    TreatmentOutcomeNotFoundError,
 )
 
 
@@ -42,6 +47,7 @@ COPILOT_ERRORS = (
     ClinicalEvidenceIntegrityError,
     ClinicalSafetyConflictError,
     ClinicalSafetyIntegrityError,
+    TreatmentOutcomeIntegrityError,
     PhysicianCopilotIntegrityError,
 )
 
