@@ -262,7 +262,7 @@ def test_protocol_create_is_audited(
     )
 
 
-def test_protocol_deactivation_is_audited(
+def test_direct_protocol_deactivation_requires_governance(
     client,
     admin_headers,
     db_session,
@@ -287,7 +287,8 @@ def test_protocol_deactivation_is_audited(
         headers=admin_headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 409
+    assert "governance release" in response.json()["detail"]
 
     logs = AuditLogRepository.list_by_entity(
         db_session,
@@ -295,29 +296,8 @@ def test_protocol_deactivation_is_audited(
         entity_id=protocol["id"],
     )
 
-    assert len(logs) == 2
-
-    log = logs[1]
-
-    assert (
-        log.event_type
-        == "protocol_deactivated"
-    )
-
-    assert (
-        log.from_state
-        == "active"
-    )
-
-    assert (
-        log.to_state
-        == "inactive"
-    )
-
-    assert (
-        log.actor_username
-        == "testadmin"
-    )
+    assert len(logs) == 1
+    assert logs[0].event_type == "protocol_created"
 
 
 def test_physician_is_recorded_as_treatment_actor(
