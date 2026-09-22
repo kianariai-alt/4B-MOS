@@ -327,7 +327,7 @@ class TreatmentOutcomeService:
             outcome_status=payload.outcome_status,
             patient_rating=payload.patient_rating,
             patient_rating_source=(
-                "patient_reported"
+                "clinician_documented_patient_report"
                 if payload.patient_rating is not None
                 else None
             ),
