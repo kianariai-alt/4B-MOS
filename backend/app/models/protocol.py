@@ -9,6 +9,8 @@ from sqlalchemy import (
     JSON,
     String,
     Text,
+    CheckConstraint,
+    ForeignKey,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -24,6 +26,11 @@ class ProtocolTemplate(Base):
             "code",
             "version",
             name="uq_protocol_templates_code_version",
+        ),
+        CheckConstraint(
+            "source_governance_case_sha256 IS NULL OR "
+            "length(source_governance_case_sha256) = 64",
+            name="ck_protocol_template_governance_sha256",
         ),
     )
 
@@ -58,6 +65,25 @@ class ProtocolTemplate(Base):
 
     description: Mapped[str | None] = mapped_column(
         Text,
+        nullable=True,
+    )
+
+    supersedes_protocol_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("protocol_templates.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+
+    source_governance_case_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("protocol_governance_cases.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+
+    source_governance_case_sha256: Mapped[str | None] = mapped_column(
+        String(64),
         nullable=True,
     )
 
