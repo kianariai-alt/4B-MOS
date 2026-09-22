@@ -310,8 +310,18 @@ class TreatmentOptionsRoadmapService:
         )
 
     @staticmethod
-    def _safety_status(db: Session, visit_id: str) -> tuple[str, int, int]:
+    def _safety_status(
+        db: Session,
+        visit_id: str,
+        *,
+        expected_context_sha256: str,
+    ) -> tuple[str, int, int]:
         inbox = ClinicalSafetyFindingReviewService.get_inbox(db, visit_id)
+        if (
+            inbox.current_clinical_context_sha256
+            != expected_context_sha256
+        ):
+            return "stale", len(inbox.findings), len(inbox.findings)
         if inbox.evaluation is None:
             return "missing", 0, 0
         if inbox.evaluation_matches_current_context is not True:
@@ -615,6 +625,7 @@ class TreatmentOptionsRoadmapService:
             TreatmentOptionsRoadmapService._safety_status(
                 db,
                 visit_id,
+                expected_context_sha256=target.clinical_context_sha256,
             )
         )
         if safety_status != "current":
