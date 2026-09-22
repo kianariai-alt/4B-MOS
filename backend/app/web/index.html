@@ -133,6 +133,18 @@
             پزشک‌یار
           </button>
           <button
+            id="learning-tab"
+            class="workspace-tab"
+            type="button"
+            role="tab"
+            aria-controls="learning-workspace"
+            aria-selected="false"
+            tabindex="-1"
+            hidden
+          >
+            مرور یادگیری
+          </button>
+          <button
             id="evidence-tab"
             class="workspace-tab"
             type="button"
@@ -390,6 +402,75 @@
               <div id="copilot-evidence" class="evidence-briefs"></div>
             </section>
           </div>
+        </section>
+
+        <section
+          id="learning-workspace"
+          class="workspace-panel evidence-workspace"
+          role="tabpanel"
+          aria-labelledby="learning-tab"
+          tabindex="0"
+          hidden
+        >
+          <header class="workspace-intro">
+            <div>
+              <p class="card-kicker">کیفیت داده قبل از ادعای یادگیری</p>
+              <h2>مرور یادگیری بالینی</h2>
+            </div>
+            <p>
+              پوشش زنجیرهٔ تصمیم، درمان و outcome را برای هر نسخهٔ پروتکل
+              نشان می‌دهد تا معلوم باشد دادهٔ محلی واقعاً چقدر کامل و قابل
+              استفاده است.
+            </p>
+          </header>
+
+          <aside class="safety-boundary" role="note" aria-label="مرز تفسیر یادگیری">
+            <strong>مرز تفسیر</strong>
+            <span>
+              این صفحه درمان‌ها را با هم مقایسه یا رتبه‌بندی نمی‌کند، امتیاز
+              عملکرد نمی‌سازد و هیچ پروتکلی را به‌صورت خودکار تغییر نمی‌دهد.
+            </span>
+          </aside>
+
+          <div class="visit-loader">
+            <div class="field-group">
+              <span class="muted">
+                داده‌ها به‌صورت تجمعی، بدون نمایش هویت بیماران مرور می‌شوند.
+              </span>
+            </div>
+            <button id="load-learning-button" class="button button-secondary" type="button">
+              تازه‌سازی مرور یادگیری
+            </button>
+          </div>
+
+          <p
+            id="learning-message"
+            class="notice"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+
+          <section class="evidence-section" aria-labelledby="learning-summary-heading">
+            <div class="section-heading">
+              <div>
+                <p class="card-kicker">Data lineage & completeness</p>
+                <h3 id="learning-summary-heading">کیفیت کل دادهٔ یادگیری</h3>
+              </div>
+              <code id="learning-review-hash" class="hash-value" dir="ltr"></code>
+            </div>
+            <div id="learning-summary"></div>
+          </section>
+
+          <section class="evidence-section" aria-labelledby="learning-protocols-heading">
+            <div class="section-heading">
+              <div>
+                <p class="card-kicker">نسخه به نسخه، بدون جدول لیگ</p>
+                <h3 id="learning-protocols-heading">آمادگی داده برای پروتکل‌ها</h3>
+              </div>
+            </div>
+            <div id="learning-protocols" class="evidence-briefs"></div>
+          </section>
         </section>
 
         <section
