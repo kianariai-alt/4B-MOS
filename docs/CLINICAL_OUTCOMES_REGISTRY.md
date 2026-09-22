@@ -24,7 +24,7 @@ A new record requires:
 The record may contain:
 
 - overall status: improved, unchanged, worsened, mixed or unknown;
-- patient-reported protocol rating from 1 to 5;
+- patient-reported protocol rating from 1 to 5, documented by the physician;
 - physician rating from 1 to 5;
 - pain score from 0 to 10;
 - a generic function score from 0 to 100;
@@ -58,9 +58,11 @@ Selection bias, confounding, concomitant care, missing follow-up, inconsistent
 measurement and small sample sizes can all distort apparent protocol
 performance.
 
-Patient and physician ratings are intentionally stored separately. They must not
-be merged into a single "success score" without a documented, validated analysis
-policy.
+Patient and physician ratings are intentionally stored separately. A patient
+rating entered in this workflow is explicitly marked as a clinician-documented
+patient report, not as a directly authenticated patient submission. The two
+ratings must not be merged into a single "success score" without a documented,
+validated analysis policy.
 
 Future similar-patient analysis must expose cohort definitions, sample size,
 missingness, outcome windows, protocol versions and uncertainty. It must never
