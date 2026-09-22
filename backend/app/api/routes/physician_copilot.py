@@ -19,7 +19,6 @@ from backend.app.services.clinical_safety import (
     ClinicalSafetyConflictError,
     ClinicalSafetyIntegrityError,
     ClinicalSafetyNotFoundError,
-    TreatmentOutcomeNotFoundError,
 )
 from backend.app.services.physician_copilot import (
     PhysicianCopilotIntegrityError,
@@ -38,6 +37,7 @@ NOT_FOUND_ERRORS = (
     ClinicalContextNotFoundError,
     ClinicalEvidenceNotFoundError,
     ClinicalSafetyNotFoundError,
+    TreatmentOutcomeNotFoundError,
 )
 COPILOT_ERRORS = (
     *NOT_FOUND_ERRORS,
