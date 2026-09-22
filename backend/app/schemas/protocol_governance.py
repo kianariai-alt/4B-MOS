@@ -143,6 +143,7 @@ class ProtocolGovernanceCaseRead(BaseModel):
         "awaiting_operational_review",
         "operational_hold",
         "approved_for_manual_action",
+        "released",
     ]
     automatically_changes_protocol: Literal[False] = False
-    requires_manual_protocol_action: Literal[True] = True
+    requires_manual_protocol_action: bool
