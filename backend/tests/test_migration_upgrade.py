@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from datetime import datetime, timezone
+import uuid
 
 import pytest
 
@@ -59,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "f7c2d4e8a910"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a3e5c7d9b120"
     finally:
         engine.dispose()
 
@@ -78,11 +79,25 @@ def test_finalization_migration_preserves_legacy_sessions_and_refuses_evidence_l
             visit = Visit(patient_id=patient.id)
             db.add(visit)
             db.flush()
-            treatment = Treatment(visit_id=visit.id, treatment_type="ACS")
-            db.add(treatment)
-            db.flush()
-            session = TreatmentSession(treatment_id=treatment.id, session_number=1, status="completed",
-                                       operational_status="completed", completed_at=datetime.now(timezone.utc))
+            treatment_id = str(uuid.uuid4())
+            now = datetime.now(timezone.utc)
+            db.execute(
+                text(
+                    "INSERT INTO treatments "
+                    "(id, visit_id, treatment_type, status, session_number, "
+                    "created_at, updated_at) "
+                    "VALUES (:id, :visit_id, 'ACS', 'planned', 1, "
+                    ":created_at, :updated_at)"
+                ),
+                {
+                    "id": treatment_id,
+                    "visit_id": visit.id,
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
+            session = TreatmentSession(treatment_id=treatment_id, session_number=1, status="completed",
+                                       operational_status="completed", completed_at=now)
             db.add(session)
             db.flush()
             session_id = session.id
@@ -254,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "f7c2d4e8a910"
+            )) == "a3e5c7d9b120"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -772,6 +787,88 @@ def test_treatment_outcome_migration_refuses_outcome_history_loss(
             )) == "f7c2d4e8a910"
             assert connection.scalar(text(
                 "SELECT count(*) FROM treatment_outcomes"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_treatment_decision_migration_refuses_decision_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'treatment-decision-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "treatment_decisions" in inspector.get_table_names()
+        treatment_columns = {
+            item["name"] for item in inspector.get_columns("treatments")
+        }
+        assert "source_treatment_decision_id" in treatment_columns
+        assert "source_treatment_decision_sha256" in treatment_columns
+        decision_fks = inspector.get_foreign_keys("treatment_decisions")
+        assert len(decision_fks) == 2
+        assert {
+            tuple(item["constrained_columns"])
+            for item in decision_fks
+        } == {("visit_id",), ("decided_by_user_id",)}
+        treatment_fk_names = {
+            item["name"]
+            for item in inspector.get_foreign_keys("treatments")
+        }
+        assert "fk_treatments_source_treatment_decision_id" in treatment_fk_names
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('decision-user', 'decision_user', 'Decision User', "
+                "'hash', 'physician', 1, 0, 0, "
+                "'2026-09-22 12:00:00', '2026-09-22 12:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO patients "
+                "(id, patient_code, first_name, last_name, is_active, "
+                "created_at, updated_at) VALUES "
+                "('decision-patient', 'DEC-MIG-001', 'Decision', 'Patient', 1, "
+                "'2026-09-22 12:00:00', '2026-09-22 12:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO visits "
+                "(id, patient_id, visit_date, status, created_at, updated_at) "
+                "VALUES ('decision-visit', 'decision-patient', "
+                "'2026-09-22 12:00:00', 'open', "
+                "'2026-09-22 12:00:00', '2026-09-22 12:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO treatment_decisions "
+                "(id, visit_id, decision_type, clinical_context_sha256, "
+                "roadmap_sha256, selected_protocols, rationale, "
+                "evidence_brief_ids, decided_by_user_id, payload, sha256, "
+                "decided_at) VALUES "
+                "('decision-record', 'decision-visit', 'defer', '" +
+                "1" * 64 + "', '" + "2" * 64 + "', '[]', "
+                "'Synthetic migration decision rationale.', '[]', "
+                "'decision-user', '{}', '" + "3" * 64 + "', "
+                "'2026-09-22 12:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="clinician treatment decision history exists",
+        ):
+            command.downgrade(config, "f7c2d4e8a910")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "a3e5c7d9b120"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM treatment_decisions"
             )) == 1
     finally:
         engine.dispose()

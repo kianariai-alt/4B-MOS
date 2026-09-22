@@ -47,6 +47,7 @@ from backend.app.models.clinical_safety_review import (
 )
 from backend.app.models.clinical_evidence import ClinicalEvidenceBrief
 from backend.app.models.treatment_outcome import TreatmentOutcome
+from backend.app.models.treatment_decision import TreatmentDecision
 
 __all__ = [
     "SessionFinalization",
@@ -74,4 +75,5 @@ __all__ = [
     "ClinicalSafetyFindingReview",
     "ClinicalEvidenceBrief",
     "TreatmentOutcome",
+    "TreatmentDecision",
 ]

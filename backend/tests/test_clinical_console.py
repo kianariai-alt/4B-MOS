@@ -45,6 +45,9 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
     assert 'id="copilot-visit-form"' in html
     assert 'id="load-copilot-button"' in html
     assert 'id="copilot-roadmap"' in html
+    assert 'id="copilot-decision-section"' in html
+    assert 'id="copilot-decision-form"' in html
+    assert 'id="copilot-decision-history"' in html
     assert 'id="copilot-outcomes"' in html
     assert 'id="evidence-workspace"' in html
     assert 'id="evidence-brief-form"' in html
@@ -90,6 +93,10 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "/treatment-options-roadmap" in source
     assert "renderTreatmentRoadmap" in source
     assert "roadmap.options" in source
+    assert "/treatment-decisions" in source
+    assert "createTreatmentDecision" in source
+    assert "currentTreatmentDecisions" in source
+    assert "selectedDecisionProtocols" in source
     assert "roadmap.ranks_treatments" not in source
     assert "outcome.patient_rating" in source
     assert "/clinical-context`" in source

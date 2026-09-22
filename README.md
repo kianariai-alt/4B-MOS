@@ -100,6 +100,14 @@ outcomes, separate patient/physician ratings and uncertainty. It does not rank,
 select, prescribe or grant clinical clearance, and local observations are not
 treated as causal evidence.
 
+The [clinician decision and learning feedback loop](docs/CLINICIAN_DECISION_FEEDBACK_LOOP.md)
+records the physician's explicit selection, modification, combination, outside-
+roadmap choice, deferral or no-treatment decision against an exact roadmap hash.
+Decisions are append-only, Treatments can freeze the decision ID/hash, and later
+Outcomes remain traceable through the frozen Treatment snapshot. The feedback
+loop does not automatically rewrite protocols or convert local outcomes into
+autonomous treatment policy.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains
