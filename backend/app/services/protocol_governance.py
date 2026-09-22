@@ -715,6 +715,25 @@ class ProtocolGovernanceService:
             for key, value in frozen_snapshot.items()
         )
 
+
+    @staticmethod
+    def _ensure_no_other_active_version(
+        db: Session,
+        protocol,
+        *,
+        allowed_active_id: str | None = None,
+    ) -> None:
+        conflicts = [
+            item
+            for item in ProtocolRepository.list_by_code(db, protocol.code)
+            if item.is_active
+            and item.id != allowed_active_id
+        ]
+        if conflicts:
+            raise ProtocolGovernanceConflictError(
+                "Protocol lineage already contains another active version."
+            )
+
     @staticmethod
     def create_recovery_case(
         db: Session,
@@ -769,6 +788,11 @@ class ProtocolGovernanceService:
                 raise ProtocolGovernanceConflictError(
                     "The deactivated protocol is already active."
                 )
+            ProtocolGovernanceService._ensure_no_other_active_version(
+                db,
+                target,
+                allowed_active_id=None,
+            )
             primary = target
             case_type = "reactivation_candidate"
             recovery_action = "reactivate"
@@ -806,6 +830,11 @@ class ProtocolGovernanceService:
                     "The revision lineage is no longer in the state created "
                     "by the source release."
                 )
+            ProtocolGovernanceService._ensure_no_other_active_version(
+                db,
+                current,
+                allowed_active_id=current.id,
+            )
             if (
                 current.supersedes_protocol_id != previous.id
                 or current.source_governance_case_id != release.case_id
@@ -1285,6 +1314,11 @@ class ProtocolGovernanceService:
                     "The protocol state changed after the recovery case was "
                     "opened; a new case is required."
                 )
+            ProtocolGovernanceService._ensure_no_other_active_version(
+                db,
+                reactivated,
+                allowed_active_id=None,
+            )
             action = "reactivate"
         else:
             deactivated = (
@@ -1325,6 +1359,11 @@ class ProtocolGovernanceService:
                     "The revision lineage changed after the recovery case was "
                     "opened; a new case is required."
                 )
+            ProtocolGovernanceService._ensure_no_other_active_version(
+                db,
+                deactivated,
+                allowed_active_id=deactivated.id,
+            )
             if (
                 deactivated.supersedes_protocol_id != reactivated.id
                 or deactivated.source_governance_case_id
