@@ -57,6 +57,11 @@ When the physician changes course, the new decision stores the identifier and
 SHA-256 of the previous decision. The earlier record remains intact and becomes
 historical.
 
+The supersession identifier is intentionally a logical lineage reference rather
+than a database self-foreign-key. Chain integrity is verified against the prior
+immutable row and its SHA-256 before a new decision is accepted; this keeps the
+same lineage semantics across the supported SQLite and PostgreSQL environments.
+
 This means later analysis can distinguish what the physician believed at each
 decision point rather than reconstructing history from a mutable current field.
 
