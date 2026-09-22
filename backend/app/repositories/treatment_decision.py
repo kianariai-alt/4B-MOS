@@ -83,6 +83,19 @@ class TreatmentDecisionRepository:
         )
 
     @staticmethod
+    def list_all(
+        db: Session,
+    ) -> list[TreatmentDecision]:
+        return list(
+            db.scalars(
+                select(TreatmentDecision).order_by(
+                    TreatmentDecision.decided_at.asc(),
+                    TreatmentDecision.id.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
     def create(
         db: Session,
         *,
