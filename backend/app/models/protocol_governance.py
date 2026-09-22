@@ -69,7 +69,6 @@ class ProtocolGovernanceCase(Base):
     proposed_protocol: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     source_release_id: Mapped[str | None] = mapped_column(
         String(36),
-        ForeignKey("protocol_governance_releases.id", ondelete="RESTRICT"),
         nullable=True,
         index=True,
     )
