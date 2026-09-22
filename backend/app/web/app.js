@@ -393,6 +393,7 @@ function canReviewGovernanceClinically(caseItem) {
     currentUser
     && currentUser.role === "physician"
     && currentUser.id !== caseItem.created_by_user_id
+    && !caseItem.release
   );
 }
 
