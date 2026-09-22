@@ -38,6 +38,24 @@ TestingSessionLocal = sessionmaker(
 )
 
 
+def drop_test_schema():
+    # SQLite enforces the Treatment -> TreatmentDecision FK during teardown.
+    # Disable FK checks only while destroying the isolated in-memory schema.
+    connection = test_engine.raw_connection()
+    try:
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=OFF")
+        cursor.close()
+        connection.commit()
+        Base.metadata.drop_all(bind=test_engine)
+    finally:
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+        connection.commit()
+        connection.close()
+
+
 def override_get_db():
     db = TestingSessionLocal()
 
@@ -53,9 +71,7 @@ def reset_database():
         get_db
     ] = override_get_db
 
-    Base.metadata.drop_all(
-        bind=test_engine
-    )
+    drop_test_schema()
 
     Base.metadata.create_all(
         bind=test_engine
@@ -63,9 +79,7 @@ def reset_database():
 
     yield
 
-    Base.metadata.drop_all(
-        bind=test_engine
-    )
+    drop_test_schema()
 
     app.dependency_overrides.clear()
 
