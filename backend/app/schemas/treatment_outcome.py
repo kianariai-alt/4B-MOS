@@ -137,7 +137,7 @@ class TreatmentOutcomePayloadRead(BaseModel):
     follow_up_day: int
     outcome_status: OutcomeStatus
     patient_rating: int | None
-    patient_rating_source: Literal["patient_reported"] | None
+    patient_rating_source: Literal["clinician_documented_patient_report"] | None
     physician_rating: int | None
     pain_score: int | None
     function_score: int | None
