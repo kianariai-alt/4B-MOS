@@ -1,6 +1,10 @@
 import pytest
 
 from backend.app.services.session_finalization import evidence_digest
+from backend.tests.test_treatment_outcomes import (
+    create_completed_treatment,
+    outcome_payload,
+)
 
 
 pytestmark = pytest.mark.usefixtures("authenticated_admin")
@@ -72,9 +76,11 @@ def test_admin_reads_traceable_empty_physician_snapshot(client, visit):
     assert body["open_escalations"] == []
     assert body["evidence_briefs"] == []
     assert body["current_context_evidence_briefs"] == []
+    assert body["treatment_outcomes"] == []
     assert body["manifest"]["safety_evaluation_result_sha256"] is None
     assert body["manifest"]["open_escalation_review_sha256s"] == []
     assert body["manifest"]["evidence_brief_sha256s"] == []
+    assert body["manifest"]["treatment_outcome_sha256s"] == []
     assert body["open_escalation_scope"] == "latest_safety_evaluation_for_visit"
     assert body["is_diagnosis"] is False
     assert body["is_recommendation"] is False
@@ -129,3 +135,37 @@ def test_physician_can_read_but_non_physician_clinical_roles_cannot(
 def test_unknown_visit_is_not_found(client):
     response = client.get("/api/v1/visits/missing/physician-copilot")
     assert response.status_code == 404
+
+
+def test_copilot_includes_verified_treatment_outcomes(client):
+    physician = create_role_headers(
+        client,
+        username="copilot_outcome_physician",
+        role="physician",
+    )
+    visit, treatment = create_completed_treatment(client, physician)
+    created = client.post(
+        f"/api/v1/treatments/{treatment['id']}/outcomes",
+        headers=physician,
+        json=outcome_payload(client, visit["id"], physician),
+    )
+    assert created.status_code == 201, created.text
+    outcome = created.json()
+
+    response = client.get(
+        f"/api/v1/visits/{visit['id']}/physician-copilot",
+        headers=physician,
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["treatment_outcomes"] == [outcome]
+    assert body["manifest"]["treatment_outcome_sha256s"] == [
+        outcome["sha256"]
+    ]
+    assert body["snapshot_sha256"] == evidence_digest(
+        {
+            "schema_version": 1,
+            "visit_id": visit["id"],
+            "manifest": body["manifest"],
+        }
+    )
