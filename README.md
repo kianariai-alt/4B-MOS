@@ -115,6 +115,12 @@ field completeness and per-protocol data volume without creating an
 effectiveness league table, composite learning score or automatic protocol
 change.
 
+The [protocol learning governance workspace](docs/PROTOCOL_LEARNING_GOVERNANCE.md)
+adds descriptive data-quality signals and append-only governance cases for exact
+protocol versions. Independent physician review and separate operational
+acknowledgement are preserved, while even a fully reviewed case remains only
+approved for manual action and never changes a protocol automatically.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains

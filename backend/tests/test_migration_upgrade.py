@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a3e5c7d9b120"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b7d4e6f8c230"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "a3e5c7d9b120"
+            )) == "b7d4e6f8c230"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -869,6 +869,60 @@ def test_treatment_decision_migration_refuses_decision_history_loss(
             )) == "a3e5c7d9b120"
             assert connection.scalar(text(
                 "SELECT count(*) FROM treatment_decisions"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_protocol_governance_migration_refuses_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'protocol-governance-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "protocol_governance_cases" in inspector.get_table_names()
+        assert "protocol_governance_reviews" in inspector.get_table_names()
+        assert len(inspector.get_foreign_keys("protocol_governance_cases")) == 1
+        assert len(inspector.get_foreign_keys("protocol_governance_reviews")) == 2
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('gov-user', 'gov_user', 'Governance User', 'hash', "
+                "'physician', 1, 0, 0, '2026-09-22 18:00:00', "
+                "'2026-09-22 18:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_governance_cases "
+                "(id, protocol_code, protocol_version, treatment_type, "
+                "case_type, source_learning_review_sha256, protocol_snapshot, "
+                "learning_snapshot, rationale, evidence_needed, "
+                "created_by_user_id, payload, sha256, created_at) VALUES "
+                "('gov-case', 'GOV', '1.0', 'ACS', 'collect_more_data', '" +
+                "1" * 64 + "', '{}', '{}', 'Synthetic governance rationale', "
+                "'[]', 'gov-user', '{}', '" + "2" * 64 + "', "
+                "'2026-09-22 18:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="protocol governance history exists",
+        ):
+            command.downgrade(config, "a3e5c7d9b120")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "b7d4e6f8c230"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM protocol_governance_cases"
             )) == 1
     finally:
         engine.dispose()

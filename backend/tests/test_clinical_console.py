@@ -53,6 +53,8 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
     assert 'id="load-learning-button"' in html
     assert 'id="learning-summary"' in html
     assert 'id="learning-protocols"' in html
+    assert 'id="learning-governance-signals"' in html
+    assert 'id="learning-governance-cases"' in html
     assert 'id="evidence-workspace"' in html
     assert 'id="evidence-brief-form"' in html
     assert 'id="safety-workspace"' in html
@@ -98,6 +100,10 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "renderTreatmentRoadmap" in source
     assert "roadmap.options" in source
     assert "/treatment-decisions" in source
+    assert "/learning/governance/signals" in source
+    assert "/protocol-governance/cases" in source
+    assert "renderGovernanceSignals" in source
+    assert "renderGovernanceCases" in source
     assert "createTreatmentDecision" in source
     assert "currentTreatmentDecisions" in source
     assert "selectedDecisionProtocols" in source
