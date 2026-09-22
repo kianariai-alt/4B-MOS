@@ -156,6 +156,7 @@ class TreatmentOptionsRoadmapRead(BaseModel):
     option_ordering: Literal[
         "protocol_code_then_version"
     ] = "protocol_code_then_version"
+    known_limitations: list[str]
     roadmap_steps: list[
         Literal[
             "verify_current_safety_review",
