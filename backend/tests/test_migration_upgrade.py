@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d4a7c9e1f562"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e9f4a2b7c613"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "d4a7c9e1f562"
+            )) == "e9f4a2b7c613"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1123,6 +1123,65 @@ def test_governed_protocol_recovery_migration_refuses_history_loss(
             )) == "d4a7c9e1f562"
             assert connection.scalar(text(
                 "SELECT count(*) FROM protocol_governance_recoveries"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_pilot_manual_gate_migration_refuses_attestation_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'pilot-attestation-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "pilot_manual_gate_attestations" in inspector.get_table_names()
+        assert "pilot_manual_gate_reviews" in inspector.get_table_names()
+        assert len(
+            inspector.get_foreign_keys("pilot_manual_gate_attestations")
+        ) == 2
+        assert len(
+            inspector.get_foreign_keys("pilot_manual_gate_reviews")
+        ) == 2
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('pilot-author', 'pilot_author', 'Pilot Author', "
+                "'hash', 'admin', 1, 0, 0, "
+                "'2026-09-23 10:00:00', '2026-09-23 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_manual_gate_attestations "
+                "(id, gate_name, readiness_sha256, generation, release_ref, "
+                "evidence_reference, statement, supersedes_attestation_id, "
+                "attested_by_user_id, attested_by_role, payload, sha256, "
+                "created_at) VALUES "
+                "('pilot-attestation', 'backup_restore', '" + "1" * 64 + "', "
+                "1, 'release-test', 'evidence-test', "
+                "'Synthetic migration attestation statement for testing.', "
+                "NULL, 'pilot-author', 'admin', '{}', '" + "2" * 64 + "', "
+                "'2026-09-23 10:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="pilot manual gate history exists",
+        ):
+            command.downgrade(config, "d4a7c9e1f562")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "e9f4a2b7c613"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM pilot_manual_gate_attestations"
             )) == 1
     finally:
         engine.dispose()
