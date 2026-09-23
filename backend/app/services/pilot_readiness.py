@@ -30,6 +30,7 @@ from backend.app.services.clinical_safety import (
     ClinicalSafetyIntegrityError,
     ClinicalSafetyRuleUnavailableError,
 )
+from backend.app.services.session_finalization import evidence_digest
 from backend.app.services.protocol_governance import (
     ProtocolGovernanceIntegrityError,
     ProtocolGovernanceNotFoundError,
@@ -326,20 +327,40 @@ class ControlledPilotReadinessService:
             )
             for name, code in MANUAL_GATES
         ]
+        status = (
+            "automated_prerequisites_passed"
+            if automated_ready
+            else "blocked"
+        )
+        warnings = [
+            "automated_gate_does_not_authorize_clinical_use",
+            "manual_release_decision_remains_required",
+        ]
+        digest_payload = {
+            "schema_version": 1,
+            "status": status,
+            "application": config.PROJECT_NAME,
+            "version": config.PROJECT_VERSION,
+            "database_dialect": dialect,
+            "automated_checks": [
+                item.model_dump(mode="json") for item in checks
+            ],
+            "manual_gates": [
+                item.model_dump(mode="json") for item in manual_gates
+            ],
+            "warnings": warnings,
+            "controlled_pilot_authorized": False,
+            "is_clinical_clearance": False,
+            "requires_human_release_decision": True,
+        }
         return ControlledPilotReadinessRead(
-            status=(
-                "automated_prerequisites_passed"
-                if automated_ready
-                else "blocked"
-            ),
+            status=status,
             generated_at=datetime.now(timezone.utc),
             application=config.PROJECT_NAME,
             version=config.PROJECT_VERSION,
             database_dialect=dialect,
+            readiness_sha256=evidence_digest(digest_payload),
             automated_checks=checks,
             manual_gates=manual_gates,
-            warnings=[
-                "automated_gate_does_not_authorize_clinical_use",
-                "manual_release_decision_remains_required",
-            ],
+            warnings=warnings,
         )
