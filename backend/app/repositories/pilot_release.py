@@ -7,6 +7,8 @@ from backend.app.models.pilot_release import (
     PilotManualGateAttestation,
     PilotManualGateReview,
     PilotLaunchPackage,
+    PilotReleaseEndorsement,
+    PilotReleaseDecision,
 )
 
 
@@ -182,6 +184,95 @@ class PilotLaunchPackageRepository:
             readiness_sha256=readiness_sha256,
             attestation_manifest=list(attestation_manifest),
             created_by_user_id=created_by_user_id,
+            payload=payload,
+            sha256=sha256,
+            created_at=created_at,
+        )
+        db.add(record)
+        db.flush()
+        db.refresh(record)
+        return record
+
+
+
+class PilotReleaseDecisionRepository:
+    @staticmethod
+    def get_endorsement_by_package(
+        db: Session,
+        package_id: str,
+    ) -> PilotReleaseEndorsement | None:
+        return db.scalar(
+            select(PilotReleaseEndorsement).where(
+                PilotReleaseEndorsement.package_id == package_id
+            )
+        )
+
+    @staticmethod
+    def get_decision_by_package(
+        db: Session,
+        package_id: str,
+    ) -> PilotReleaseDecision | None:
+        return db.scalar(
+            select(PilotReleaseDecision).where(
+                PilotReleaseDecision.package_id == package_id
+            )
+        )
+
+    @staticmethod
+    def create_endorsement(
+        db: Session,
+        *,
+        endorsement_id: str,
+        package_id: str,
+        package_sha256: str,
+        action: str,
+        rationale: str,
+        endorsed_by_user_id: str,
+        payload: dict,
+        sha256: str,
+        created_at,
+    ) -> PilotReleaseEndorsement:
+        record = PilotReleaseEndorsement(
+            id=endorsement_id,
+            package_id=package_id,
+            package_sha256=package_sha256,
+            action=action,
+            rationale=rationale,
+            endorsed_by_user_id=endorsed_by_user_id,
+            payload=payload,
+            sha256=sha256,
+            created_at=created_at,
+        )
+        db.add(record)
+        db.flush()
+        db.refresh(record)
+        return record
+
+    @staticmethod
+    def create_decision(
+        db: Session,
+        *,
+        decision_id: str,
+        package_id: str,
+        package_sha256: str,
+        endorsement_id: str,
+        endorsement_sha256: str,
+        action: str,
+        rationale: str,
+        decided_by_user_id: str,
+        payload: dict,
+        sha256: str,
+        created_at,
+    ) -> PilotReleaseDecision:
+        record = PilotReleaseDecision(
+            id=decision_id,
+            package_id=package_id,
+            package_sha256=package_sha256,
+            endorsement_id=endorsement_id,
+            endorsement_sha256=endorsement_sha256,
+            action=action,
+            rationale=rationale,
+            decided_by_user_id=decided_by_user_id,
             payload=payload,
             sha256=sha256,
             created_at=created_at,
