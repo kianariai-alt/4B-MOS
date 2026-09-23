@@ -195,20 +195,32 @@ def test_controlled_pilot_gate_blocks_sqlite_even_when_other_checks_pass(
     )
 
 
-def test_pilot_readiness_endpoint_is_admin_only(client):
+def test_pilot_readiness_endpoint_is_release_role_only(client):
     response = client.get("/api/v1/pilot-readiness")
     assert response.status_code == 200
     body = response.json()
     assert body["controlled_pilot_authorized"] is False
     assert body["requires_human_release_decision"] is True
+    assert len(body["readiness_sha256"]) == 64
 
     physician_headers = create_role_headers(
         client,
         username="pilot_readiness_physician",
         role="physician",
     )
-    forbidden = client.get(
+    physician_read = client.get(
         "/api/v1/pilot-readiness",
         headers=physician_headers,
+    )
+    assert physician_read.status_code == 200
+
+    nurse_headers = create_role_headers(
+        client,
+        username="pilot_readiness_nurse",
+        role="nurse",
+    )
+    forbidden = client.get(
+        "/api/v1/pilot-readiness",
+        headers=nurse_headers,
     )
     assert forbidden.status_code == 403
