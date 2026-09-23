@@ -185,3 +185,93 @@ class PilotLaunchPackageRead(BaseModel):
     controlled_pilot_authorized: Literal[False] = False
     is_clinical_clearance: Literal[False] = False
     requires_human_release_decision: Literal[True] = True
+
+
+
+class PilotReleaseEndorsementCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_package_sha256: str = Field(min_length=64, max_length=64)
+    action: Literal["endorse", "hold"]
+    rationale: str = Field(min_length=10, max_length=5000)
+
+    @field_validator("expected_package_sha256")
+    @classmethod
+    def validate_sha256(cls, value):
+        if any(char not in "0123456789abcdef" for char in value.lower()):
+            raise ValueError("Expected a hexadecimal SHA-256 value.")
+        return value.lower()
+
+
+class PilotReleaseEndorsementRead(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    package_id: str
+    package_sha256: str
+    action: Literal["endorse", "hold"]
+    rationale: str
+    endorsed_by_user_id: str
+    sha256: str
+    created_at: datetime
+    append_only: Literal[True] = True
+    is_clinical_clearance: Literal[False] = False
+    authorizes_specific_patient_treatment: Literal[False] = False
+
+
+class PilotReleaseDecisionCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_package_sha256: str = Field(min_length=64, max_length=64)
+    expected_endorsement_sha256: str = Field(min_length=64, max_length=64)
+    action: Literal["authorize_controlled_pilot", "hold"]
+    rationale: str = Field(min_length=10, max_length=5000)
+    acknowledgement: Literal[True]
+
+    @field_validator(
+        "expected_package_sha256",
+        "expected_endorsement_sha256",
+    )
+    @classmethod
+    def validate_sha256(cls, value):
+        if any(char not in "0123456789abcdef" for char in value.lower()):
+            raise ValueError("Expected a hexadecimal SHA-256 value.")
+        return value.lower()
+
+
+class PilotReleaseDecisionRead(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    package_id: str
+    package_sha256: str
+    endorsement_id: str
+    endorsement_sha256: str
+    action: Literal["authorize_controlled_pilot", "hold"]
+    rationale: str
+    decided_by_user_id: str
+    sha256: str
+    created_at: datetime
+    append_only: Literal[True] = True
+    controlled_pilot_authorized: bool
+    is_clinical_clearance: Literal[False] = False
+    authorizes_specific_patient_treatment: Literal[False] = False
+
+
+class PilotReleaseStatusRead(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    package: PilotLaunchPackageRead
+    evidence_matches_current_state: bool
+    endorsement: PilotReleaseEndorsementRead | None
+    decision: PilotReleaseDecisionRead | None
+    status: Literal[
+        "awaiting_physician_endorsement",
+        "physician_hold",
+        "awaiting_admin_decision",
+        "authorized_controlled_pilot",
+        "admin_hold",
+        "stale_evidence",
+    ]
+    is_clinical_clearance: Literal[False] = False
+    authorizes_specific_patient_treatment: Literal[False] = False
