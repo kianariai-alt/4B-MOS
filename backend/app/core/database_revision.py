@@ -1,2 +1,2 @@
 """Expected schema for this application release; update with every migration."""
-EXPECTED_DATABASE_REVISION = "a5d8e1f3b620"
+EXPECTED_DATABASE_REVISION = "b6e9f2a4c731"
