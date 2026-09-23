@@ -37,6 +37,14 @@ provides a redacted, read-only check of production runtime settings, database
 schema readiness and active-administrator availability. It does not deploy or
 migrate anything and is not production authorization.
 
+The [controlled-pilot readiness gate](docs/CONTROLLED_PILOT_READINESS.md)
+extends that technical preflight with PostgreSQL concurrency, staff-role
+separation, protocol lineage, safety-rule integrity, Decision/Treatment/Outcome
+provenance and protocol-governance history. Its strongest result is
+`automated_prerequisites_passed`; it explicitly never grants clinical
+clearance or pilot authorization, and the listed manual acceptance gates remain
+a human release decision.
+
 The root [production container artifact](docs/CONTAINER_RELEASE.md) runs as a
 non-root user and is build/smoke-tested by CI with a read-only root filesystem.
 It remains deployment-provider neutral and never migrates on normal startup.

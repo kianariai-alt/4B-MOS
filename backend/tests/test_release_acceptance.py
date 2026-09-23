@@ -531,6 +531,7 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
             "post",
         ),
         ("/api/v1/protocol-governance/releases", "get"),
+        ("/api/v1/pilot-readiness", "get"),
         (
             "/api/v1/protocol-governance/releases/{release_id}/recovery-cases",
             "post",

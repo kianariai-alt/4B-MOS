@@ -168,6 +168,18 @@
           >
             صندوق ایمنی بالینی
           </button>
+          <button
+            id="pilot-readiness-tab"
+            class="workspace-tab"
+            type="button"
+            role="tab"
+            aria-controls="pilot-readiness-workspace"
+            aria-selected="false"
+            tabindex="-1"
+            hidden
+          >
+            آمادگی پایلوت
+          </button>
         </nav>
 
         <datalist id="active-visits"></datalist>
@@ -778,6 +790,88 @@
               <div id="safety-findings" class="safety-findings"></div>
             </section>
           </div>
+        </section>
+
+        <section
+          id="pilot-readiness-workspace"
+          class="workspace-panel evidence-workspace"
+          role="tabpanel"
+          aria-labelledby="pilot-readiness-tab"
+          tabindex="0"
+          hidden
+        >
+          <header class="workspace-intro">
+            <div>
+              <p class="card-kicker">Automated gate + human release decision</p>
+              <h2>آمادگی پایلوت کنترل‌شده</h2>
+            </div>
+            <p>
+              این صفحه فقط پیش‌نیازهایی را که سامانه می‌تواند اثبات کند بررسی
+              می‌کند. عبور از همه checkها به‌معنای مجوز استفاده بالینی یا
+              تأیید محتوای پروتکل‌ها نیست.
+            </p>
+          </header>
+
+          <aside class="safety-boundary" role="note" aria-label="مرز آمادگی پایلوت">
+            <strong>مرز تصمیم</strong>
+            <span>
+              controlled_pilot_authorized همیشه false است. تأیید بالینی محتوا،
+              backup/restore، امنیت محیط، مانیتورینگ، پذیرش انسانی رابط کاربری
+              و الزامات حقوقی/حریم خصوصی باید خارج از این check خودکار تکمیل شوند.
+            </span>
+          </aside>
+
+          <div class="section-heading">
+            <div>
+              <p class="card-kicker">Release gate</p>
+              <h3>وضعیت پیش‌نیازهای خودکار</h3>
+            </div>
+            <button
+              id="load-pilot-readiness-button"
+              class="button button-secondary"
+              type="button"
+            >
+              اجرای دوبارهٔ Gate
+            </button>
+          </div>
+
+          <p
+            id="pilot-readiness-message"
+            class="notice"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+
+          <section class="evidence-section" aria-labelledby="pilot-summary-heading">
+            <div class="section-heading">
+              <div>
+                <p class="card-kicker">نتیجهٔ خودکار</p>
+                <h3 id="pilot-summary-heading">خلاصهٔ Gate</h3>
+              </div>
+            </div>
+            <div id="pilot-readiness-summary" class="safety-summary"></div>
+          </section>
+
+          <section class="evidence-section" aria-labelledby="pilot-checks-heading">
+            <div class="section-heading">
+              <div>
+                <p class="card-kicker">قابل اثبات توسط سامانه</p>
+                <h3 id="pilot-checks-heading">Automated checks</h3>
+              </div>
+            </div>
+            <div id="pilot-readiness-checks" class="evidence-briefs"></div>
+          </section>
+
+          <section class="evidence-section" aria-labelledby="pilot-manual-heading">
+            <div class="section-heading">
+              <div>
+                <p class="card-kicker">نیازمند تأیید خارج از سامانه</p>
+                <h3 id="pilot-manual-heading">Manual release gates</h3>
+              </div>
+            </div>
+            <div id="pilot-manual-gates" class="evidence-briefs"></div>
+          </section>
         </section>
       </section>
     </main>

@@ -62,6 +62,12 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
     assert 'id="run-safety-evaluation-button"' in html
     assert 'id="safety-escalations"' in html
     assert 'id="load-safety-escalations-button"' in html
+    assert 'id="pilot-readiness-tab"' in html
+    assert 'id="pilot-readiness-workspace"' in html
+    assert 'id="load-pilot-readiness-button"' in html
+    assert 'id="pilot-readiness-summary"' in html
+    assert 'id="pilot-readiness-checks"' in html
+    assert 'id="pilot-manual-gates"' in html
     assert "هیچ موردی از پیش انتخاب نمی‌شود" in html
     assert "جایگزین قضاوت مستقل پزشک نمی‌شود" in html
     assert "وجود نداشتن یافته، مجوز بالینی نیست" in html
@@ -111,6 +117,9 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "executeGovernanceRecovery" in source
     assert "item.recovery" in source
     assert "recoverySourceReleaseIds" in source
+    assert 'apiRequest("/pilot-readiness")' in source
+    assert "renderPilotReadiness" in source
+    assert "canReadPilotReadiness" in source
     assert "createTreatmentDecision" in source
     assert "currentTreatmentDecisions" in source
     assert "selectedDecisionProtocols" in source
