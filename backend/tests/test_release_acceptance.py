@@ -556,6 +556,10 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
             "/api/v1/pilot-readiness/manual-gates/release-decisions/{decision_id}",
             "get",
         ),
+        ("/api/v1/visits/{visit_id}/pilot-enrollments", "post"),
+        ("/api/v1/visits/{visit_id}/pilot-enrollments", "get"),
+        ("/api/v1/visits/{visit_id}/pilot-enrollment", "get"),
+        ("/api/v1/pilot-enrollments", "get"),
         (
             "/api/v1/pilot-readiness/manual-gates/attestations",
             "get",
