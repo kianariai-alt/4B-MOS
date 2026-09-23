@@ -23,6 +23,11 @@ from backend.app.services.treatment_decision import (
     TreatmentDecisionNotFoundError,
     TreatmentDecisionService,
 )
+from backend.app.services.pilot_enrollment import (
+    PilotEnrollmentConflictError,
+    PilotEnrollmentIntegrityError,
+    PilotVisitEnrollmentService,
+)
 
 
 class TreatmentNotFoundError(Exception):
@@ -181,6 +186,12 @@ class TreatmentService:
                     protocol.monitoring_parameters
                 ),
             }
+
+        PilotVisitEnrollmentService.validate_runtime_scope(
+            db,
+            visit_id,
+            payload.protocol_template_id,
+        )
 
         source_decision_sha256 = TreatmentService._validate_decision_link(
             db,
