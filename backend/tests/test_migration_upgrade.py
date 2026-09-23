@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a5d8e1f3b620"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b6e9f2a4c731"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "a5d8e1f3b620"
+            )) == "b6e9f2a4c731"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1291,6 +1291,106 @@ def test_pilot_release_decision_migration_refuses_history_loss(
             )) == "a5d8e1f3b620"
             assert connection.scalar(text(
                 "SELECT count(*) FROM pilot_release_decisions"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_pilot_visit_enrollment_migration_refuses_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'pilot-enrollment-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "pilot_visit_enrollments" in inspector.get_table_names()
+        assert len(inspector.get_foreign_keys("pilot_visit_enrollments")) == 5
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES "
+                "('pilot-enroll-user', 'pilot_enroll_user', 'Pilot Enroll User', "
+                "'hash', 'physician', 1, 0, 0, "
+                "'2026-09-23 13:00:00', '2026-09-23 13:00:00'), "
+                "('pilot-enroll-admin', 'pilot_enroll_admin', 'Pilot Enroll Admin', "
+                "'hash', 'admin', 1, 0, 0, "
+                "'2026-09-23 13:00:00', '2026-09-23 13:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO patients "
+                "(id, patient_code, first_name, last_name, created_at, updated_at) "
+                "VALUES ('pilot-enroll-patient', 'PILOT-MIG', 'Pilot', 'Enroll', "
+                "'2026-09-23 13:00:00', '2026-09-23 13:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO visits "
+                "(id, patient_id, visit_date, status, created_at, updated_at) "
+                "VALUES ('pilot-enroll-visit', 'pilot-enroll-patient', "
+                "'2026-09-23 13:00:00', 'open', "
+                "'2026-09-23 13:00:00', '2026-09-23 13:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO protocol_templates "
+                "(id, code, name, treatment_type, version, is_active, "
+                "created_at, updated_at) VALUES "
+                "('pilot-enroll-protocol', 'PILOT-MIG-ACS', 'Pilot Migration', "
+                "'ACS', '1.0', 1, '2026-09-23 13:00:00', "
+                "'2026-09-23 13:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_launch_packages "
+                "(id, release_ref, readiness_sha256, attestation_manifest, "
+                "created_by_user_id, payload, sha256, created_at) VALUES "
+                "('pilot-enroll-package', 'rc-pilot-enroll', '" + "1" * 64
+                + "', '[]', 'pilot-enroll-admin', '{}', '" + "2" * 64 + "', "
+                "'2026-09-23 13:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_release_decisions "
+                "(id, package_id, package_sha256, action, starts_at, expires_at, "
+                "max_enrolled_visits, allowed_protocol_codes, rationale, "
+                "decided_by_user_id, payload, sha256, created_at) VALUES "
+                "('pilot-enroll-decision', 'pilot-enroll-package', '" + "2" * 64
+                + "', 'authorize', '2026-09-23 12:00:00', "
+                "'2026-10-23 12:00:00', 10, '["PILOT-MIG-ACS"]', "
+                "'Synthetic migration authorization rationale.', "
+                "'pilot-enroll-admin', '{}', '" + "3" * 64 + "', "
+                "'2026-09-23 13:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_visit_enrollments "
+                "(id, visit_id, generation, supersedes_enrollment_id, "
+                "release_decision_id, release_decision_sha256, "
+                "clinical_context_sha256, protocol_template_id, protocol_code, "
+                "protocol_version, treatment_type, rationale, enrolled_by_user_id, "
+                "payload, sha256, created_at) VALUES "
+                "('pilot-enrollment', 'pilot-enroll-visit', 1, NULL, "
+                "'pilot-enroll-decision', '" + "3" * 64 + "', '" + "4" * 64
+                + "', 'pilot-enroll-protocol', 'PILOT-MIG-ACS', '1.0', 'ACS', "
+                "'Synthetic migration enrollment rationale.', "
+                "'pilot-enroll-user', '{}', '" + "5" * 64 + "', "
+                "'2026-09-23 13:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="pilot visit enrollment history exists",
+        ):
+            command.downgrade(config, "a5d8e1f3b620")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "b6e9f2a4c731"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM pilot_visit_enrollments"
             )) == 1
     finally:
         engine.dispose()
