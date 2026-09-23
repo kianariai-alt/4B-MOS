@@ -45,6 +45,12 @@ provenance and protocol-governance history. Its strongest result is
 clearance or pilot authorization, and the listed manual acceptance gates remain
 a human release decision.
 
+The [pilot manual gate attestation workflow](docs/PILOT_MANUAL_GATE_ATTESTATIONS.md)
+records those human gates as immutable, readiness-hash-bound generations with
+independent same-role review. Clinical sign-offs require two physicians and
+operational sign-offs require two administrators. Approval records evidence of
+human review; it still does not grant clinical clearance or launch authorization.
+
 The root [production container artifact](docs/CONTAINER_RELEASE.md) runs as a
 non-root user and is build/smoke-tested by CI with a read-only root filesystem.
 It remains deployment-provider neutral and never migrates on normal startup.
