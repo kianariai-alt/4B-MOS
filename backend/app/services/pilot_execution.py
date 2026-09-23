@@ -36,9 +36,6 @@ from backend.app.services.session_finalization import evidence_digest
 from backend.app.services.treatment_decision import (
     TreatmentDecisionIntegrityError, TreatmentDecisionService,
 )
-from backend.app.services.treatment_outcome import (
-    TreatmentOutcomeIntegrityError, TreatmentOutcomeService,
-)
 
 
 class PilotExecutionNotFoundError(Exception):
@@ -458,6 +455,9 @@ class PilotExecutionService:
 
     @staticmethod
     def acceptance(db: Session, decision_id: str) -> PilotAcceptanceRead:
+        from backend.app.services.treatment_outcome import (
+            TreatmentOutcomeIntegrityError, TreatmentOutcomeService,
+        )
         operations = PilotExecutionService.operations(db, decision_id)
         enrollments = PilotExecutionService.list_enrollments(db, decision_id)
         treatment_visits = 0
