@@ -15,7 +15,13 @@ from backend.app.core.database_revision import EXPECTED_DATABASE_REVISION
 REQUIRED_DATABASE_TABLES = frozenset(
     {
         "users",
+        "audit_logs",
+        "patients",
+        "visits",
+        "protocol_templates",
+        "orthobiologic_materials",
         "treatments",
+        "treatment_components",
         "treatment_sessions",
         "treatment_session_components",
         "session_finalizations",
@@ -32,6 +38,12 @@ REQUIRED_DATABASE_TABLES = frozenset(
         "clinical_safety_findings",
         "clinical_safety_finding_reviews",
         "clinical_evidence_briefs",
+        "treatment_decisions",
+        "treatment_outcomes",
+        "protocol_governance_cases",
+        "protocol_governance_reviews",
+        "protocol_governance_releases",
+        "protocol_governance_recoveries",
     }
 )
 
