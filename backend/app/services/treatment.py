@@ -187,11 +187,19 @@ class TreatmentService:
                 ),
             }
 
-        PilotVisitEnrollmentService.validate_runtime_scope(
+        pilot_enrollment = PilotVisitEnrollmentService.validate_runtime_scope(
             db,
             visit_id,
             payload.protocol_template_id,
         )
+        if (
+            pilot_enrollment is not None
+            and payload.source_treatment_decision_id is None
+        ):
+            raise PilotEnrollmentConflictError(
+                "A pilot-enrolled visit requires a current clinician treatment "
+                "decision before treatment can be created."
+            )
 
         source_decision_sha256 = TreatmentService._validate_decision_link(
             db,
