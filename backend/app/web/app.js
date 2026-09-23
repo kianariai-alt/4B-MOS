@@ -79,6 +79,27 @@ const safetyOutcomeLabels = Object.freeze({
   no_active_rules: "قاعدهٔ فعال وجود ندارد (مجوز بالینی نیست)",
 });
 
+const pilotCheckLabels = Object.freeze({
+  runtime_configuration: "پیکربندی Production",
+  database_schema: "Schema دیتابیس",
+  database_engine: "موتور دیتابیس",
+  role_separation: "تفکیک نقش‌های کارکنان",
+  protocol_registry: "Registry و Lineage پروتکل",
+  clinical_safety_registry: "Registry قواعد ایمنی",
+  clinical_feedback_integrity: "یکپارچگی Decision → Treatment → Outcome",
+  protocol_governance_integrity: "یکپارچگی Governance history",
+});
+
+const pilotManualGateLabels = Object.freeze({
+  clinical_protocol_signoff: "تأیید بالینی محتوای پروتکل‌ها",
+  clinical_safety_signoff: "تأیید بالینی قواعد ایمنی",
+  backup_restore: "تمرین Backup / Restore",
+  security_perimeter: "بازبینی امنیت محیط و شبکه",
+  monitoring_alerting: "اعتبارسنجی Monitoring / Alerting",
+  human_ui_acceptance: "پذیرش انسانی رابط کاربری",
+  privacy_retention_legal: "بازبینی حریم خصوصی، نگهداری و الزامات حقوقی",
+});
+
 const roadmapStatusLabels = Object.freeze({
   options_available: "گزینه‌های قابل بررسی موجود است",
   insufficient_local_data: "دادهٔ محلی کافی نیست",
@@ -180,6 +201,13 @@ const elements = {
   learningWorkspace: document.querySelector("#learning-workspace"),
   evidenceWorkspace: document.querySelector("#evidence-workspace"),
   safetyWorkspace: document.querySelector("#safety-workspace"),
+  pilotReadinessTab: document.querySelector("#pilot-readiness-tab"),
+  pilotReadinessWorkspace: document.querySelector("#pilot-readiness-workspace"),
+  loadPilotReadinessButton: document.querySelector("#load-pilot-readiness-button"),
+  pilotReadinessMessage: document.querySelector("#pilot-readiness-message"),
+  pilotReadinessSummary: document.querySelector("#pilot-readiness-summary"),
+  pilotReadinessChecks: document.querySelector("#pilot-readiness-checks"),
+  pilotManualGates: document.querySelector("#pilot-manual-gates"),
   flowBoard: document.querySelector("#flow-board"),
   metricActive: document.querySelector("#metric-active"),
   metricCheckedIn: document.querySelector("#metric-checked-in"),
@@ -271,6 +299,7 @@ let governanceRequestInProgress = false;
 let evidenceRequestInProgress = false;
 let safetyRequestInProgress = false;
 let safetyEscalationRequestInProgress = false;
+let pilotReadinessRequestInProgress = false;
 let activeWorkspace = "flow";
 let currentCopilotVisitId = null;
 let currentCopilotSnapshot = null;
@@ -286,6 +315,7 @@ let currentEvidenceBriefs = [];
 let currentSafetyVisitId = null;
 let currentSafetyInbox = null;
 let currentSafetyEscalations = null;
+let currentPilotReadiness = null;
 let sessionGeneration = 0;
 const selectedFacts = new Map();
 const selectedDecisionProtocols = new Set();
@@ -418,6 +448,10 @@ function canRunSafetyEvaluation() {
   return Boolean(currentUser && SAFETY_EVALUATE_ROLES.has(currentUser.role));
 }
 
+function canReadPilotReadiness() {
+  return Boolean(currentUser && currentUser.role === "admin");
+}
+
 function canRecordSafetyReview() {
   return Boolean(currentUser && ["physician", "nurse"].includes(currentUser.role));
 }
@@ -473,6 +507,12 @@ function showSafetyEscalationsMessage(message, isError = false) {
   elements.safetyEscalationsMessage.textContent = message;
   elements.safetyEscalationsMessage.classList.toggle("is-error", isError);
   elements.safetyEscalationsMessage.hidden = !message;
+}
+
+function showPilotReadinessMessage(message, isError = false) {
+  elements.pilotReadinessMessage.textContent = message;
+  elements.pilotReadinessMessage.classList.toggle("is-error", isError);
+  elements.pilotReadinessMessage.hidden = !message;
 }
 
 function setLoginBusy(isBusy) {
@@ -535,6 +575,14 @@ function setSafetyEscalationsBusy(isBusy) {
   elements.loadSafetyEscalationsButton.textContent = isBusy
     ? "در حال دریافت…"
     : "تازه‌سازی صف";
+}
+
+function setPilotReadinessBusy(isBusy) {
+  pilotReadinessRequestInProgress = isBusy;
+  elements.loadPilotReadinessButton.disabled = isBusy;
+  elements.loadPilotReadinessButton.textContent = isBusy
+    ? "در حال بررسی…"
+    : "اجرای دوبارهٔ Gate";
 }
 
 function resetCopilotState() {
@@ -1423,6 +1471,120 @@ function resetSafetyState() {
   showSafetyEscalationsMessage("");
 }
 
+function resetPilotReadinessState() {
+  currentPilotReadiness = null;
+  elements.pilotReadinessSummary.replaceChildren();
+  elements.pilotReadinessChecks.replaceChildren();
+  elements.pilotManualGates.replaceChildren();
+  showPilotReadinessMessage("");
+}
+
+function renderPilotReadiness(report) {
+  currentPilotReadiness = report;
+
+  const summary = document.createElement("article");
+  summary.className = "context-card context-intake";
+  summary.append(
+    createTextElement("h4", "", "نتیجهٔ Controlled-Pilot Gate"),
+    createDefinitionGrid([
+      [
+        "وضعیت خودکار",
+        report.status === "automated_prerequisites_passed"
+          ? "پیش‌نیازهای خودکار پاس شده‌اند"
+          : "مسدود",
+      ],
+      ["زمان بررسی", formatDateTime(report.generated_at)],
+      ["موتور دیتابیس", report.database_dialect],
+      ["مجوز پایلوت صادر شده", "خیر"],
+      ["Clinical clearance", "خیر"],
+      ["تصمیم انسانی Release", "الزامی"],
+    ], "safety-summary-grid"),
+  );
+  elements.pilotReadinessSummary.replaceChildren(summary);
+
+  const checks = document.createDocumentFragment();
+  for (const item of report.automated_checks) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement(
+        "h4",
+        "",
+        pilotCheckLabels[item.name] || item.name,
+      ),
+      createDefinitionGrid([
+        [
+          "وضعیت",
+          item.status === "pass"
+            ? "PASS"
+            : item.status === "blocked"
+              ? "BLOCKED"
+              : "FAIL",
+        ],
+        ["کد", item.code],
+      ]),
+    );
+    checks.append(card);
+  }
+  elements.pilotReadinessChecks.replaceChildren(checks);
+
+  const manual = document.createDocumentFragment();
+  for (const item of report.manual_gates) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement(
+        "h4",
+        "",
+        pilotManualGateLabels[item.name] || item.name,
+      ),
+      createDefinitionGrid([
+        ["وضعیت", "نیازمند تأیید انسانی"],
+        ["کد", item.code],
+      ]),
+    );
+    manual.append(card);
+  }
+  elements.pilotManualGates.replaceChildren(manual);
+
+  showPilotReadinessMessage(
+    report.status === "automated_prerequisites_passed"
+      ? "پیش‌نیازهای خودکار پاس شده‌اند؛ Manual Gateها و تصمیم انسانی Release همچنان الزامی‌اند."
+      : "Controlled-Pilot Gate مسدود است؛ checkهای FAIL/BLOCKED را پیش از هر تصمیم استقرار برطرف کنید.",
+    report.status !== "automated_prerequisites_passed",
+  );
+}
+
+async function loadPilotReadiness({ quiet = false } = {}) {
+  if (
+    !canReadPilotReadiness()
+    || pilotReadinessRequestInProgress
+  ) {
+    return;
+  }
+
+  setPilotReadinessBusy(true);
+  if (!quiet) {
+    showPilotReadinessMessage("در حال بررسی پیش‌نیازهای پایلوت…");
+  }
+
+  try {
+    const report = await apiRequest("/pilot-readiness");
+    renderPilotReadiness(report);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      return;
+    }
+    showPilotReadinessMessage(
+      "بررسی آمادگی پایلوت ممکن نشد؛ وضعیت backend و دسترسی admin را بررسی کنید.",
+      true,
+    );
+  } finally {
+    setPilotReadinessBusy(false);
+  }
+}
+
 function resetOperationalState() {
   currentFlow = null;
   elements.flowBoard.replaceChildren();
@@ -1449,6 +1611,9 @@ function setWorkspace(workspace) {
   if (workspace === "safety" && !canReadSafety()) {
     return;
   }
+  if (workspace === "pilot" && !canReadPilotReadiness()) {
+    return;
+  }
 
   activeWorkspace = workspace;
   const isFlow = workspace === "flow";
@@ -1456,21 +1621,25 @@ function setWorkspace(workspace) {
   const isLearning = workspace === "learning";
   const isEvidence = workspace === "evidence";
   const isSafety = workspace === "safety";
+  const isPilot = workspace === "pilot";
   elements.flowWorkspace.hidden = !isFlow;
   elements.copilotWorkspace.hidden = !isCopilot;
   elements.learningWorkspace.hidden = !isLearning;
   elements.evidenceWorkspace.hidden = !isEvidence;
   elements.safetyWorkspace.hidden = !isSafety;
+  elements.pilotReadinessWorkspace.hidden = !isPilot;
   elements.flowTab.setAttribute("aria-selected", String(isFlow));
   elements.copilotTab.setAttribute("aria-selected", String(isCopilot));
   elements.learningTab.setAttribute("aria-selected", String(isLearning));
   elements.evidenceTab.setAttribute("aria-selected", String(isEvidence));
   elements.safetyTab.setAttribute("aria-selected", String(isSafety));
+  elements.pilotReadinessTab.setAttribute("aria-selected", String(isPilot));
   elements.flowTab.tabIndex = isFlow ? 0 : -1;
   elements.copilotTab.tabIndex = isCopilot ? 0 : -1;
   elements.learningTab.tabIndex = isLearning ? 0 : -1;
   elements.evidenceTab.tabIndex = isEvidence ? 0 : -1;
   elements.safetyTab.tabIndex = isSafety ? 0 : -1;
+  elements.pilotReadinessTab.tabIndex = isPilot ? 0 : -1;
 
   if (isFlow) {
     startAutoRefresh();
@@ -1496,6 +1665,14 @@ function setWorkspace(workspace) {
   ) {
     loadSafetyEscalations({ quiet: true });
   }
+  if (
+    isPilot
+    && accessToken
+    && currentPilotReadiness === null
+    && !pilotReadinessRequestInProgress
+  ) {
+    loadPilotReadiness({ quiet: true });
+  }
 }
 
 function showLogin() {
@@ -1511,6 +1688,7 @@ function showLogin() {
   evidenceRequestInProgress = false;
   safetyRequestInProgress = false;
   safetyEscalationRequestInProgress = false;
+  pilotReadinessRequestInProgress = false;
   actionInProgress = false;
   elements.refreshButton.disabled = false;
   elements.refreshButton.textContent = "تازه‌سازی";
@@ -1527,32 +1705,39 @@ function showLogin() {
   elements.runSafetyEvaluationButton.disabled = false;
   elements.loadSafetyEscalationsButton.disabled = false;
   elements.loadSafetyEscalationsButton.textContent = "تازه‌سازی صف";
+  elements.loadPilotReadinessButton.disabled = false;
+  elements.loadPilotReadinessButton.textContent = "اجرای دوبارهٔ Gate";
   elements.dialogConfirm.disabled = false;
   resetOperationalState();
   resetCopilotState();
   resetLearningState();
   resetEvidenceState();
   resetSafetyState();
+  resetPilotReadinessState();
   activeWorkspace = "flow";
   elements.flowWorkspace.hidden = false;
   elements.copilotWorkspace.hidden = true;
   elements.learningWorkspace.hidden = true;
   elements.evidenceWorkspace.hidden = true;
   elements.safetyWorkspace.hidden = true;
+  elements.pilotReadinessWorkspace.hidden = true;
   elements.flowTab.setAttribute("aria-selected", "true");
   elements.copilotTab.setAttribute("aria-selected", "false");
   elements.learningTab.setAttribute("aria-selected", "false");
   elements.evidenceTab.setAttribute("aria-selected", "false");
   elements.safetyTab.setAttribute("aria-selected", "false");
+  elements.pilotReadinessTab.setAttribute("aria-selected", "false");
   elements.flowTab.tabIndex = 0;
   elements.copilotTab.tabIndex = -1;
   elements.learningTab.tabIndex = -1;
   elements.evidenceTab.tabIndex = -1;
   elements.safetyTab.tabIndex = -1;
+  elements.pilotReadinessTab.tabIndex = -1;
   elements.copilotTab.hidden = true;
   elements.learningTab.hidden = true;
   elements.evidenceTab.hidden = true;
   elements.safetyTab.hidden = true;
+  elements.pilotReadinessTab.hidden = true;
   elements.consoleView.hidden = true;
   elements.identityArea.hidden = true;
   elements.loginView.hidden = false;
@@ -1571,6 +1756,7 @@ function showConsole() {
   elements.learningTab.hidden = !canReadLearning();
   elements.evidenceTab.hidden = !canReadEvidence();
   elements.safetyTab.hidden = !canReadSafety();
+  elements.pilotReadinessTab.hidden = !canReadPilotReadiness();
   elements.evidenceComposer.hidden = !canCreateEvidence();
   elements.runSafetyEvaluationButton.hidden = !canRunSafetyEvaluation();
   setWorkspace("flow");
@@ -3804,6 +3990,7 @@ function availableWorkspaceTabs() {
     { workspace: "learning", tab: elements.learningTab },
     { workspace: "evidence", tab: elements.evidenceTab },
     { workspace: "safety", tab: elements.safetyTab },
+    { workspace: "pilot", tab: elements.pilotReadinessTab },
   ].filter((entry) => !entry.tab.hidden);
 }
 
@@ -3821,6 +4008,8 @@ elements.refreshButton.addEventListener("click", () => {
     loadSafetyWorkspace(currentSafetyVisitId);
   } else if (activeWorkspace === "safety") {
     loadSafetyEscalations();
+  } else if (activeWorkspace === "pilot") {
+    loadPilotReadiness();
   } else {
     loadFlow();
   }
@@ -3869,12 +4058,15 @@ elements.learningGovernanceCases.addEventListener("submit", async (event) => {
 });
 elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
 elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
+elements.pilotReadinessTab.addEventListener("click", () => setWorkspace("pilot"));
+elements.loadPilotReadinessButton.addEventListener("click", () => loadPilotReadiness());
 for (const tab of [
   elements.flowTab,
   elements.copilotTab,
   elements.learningTab,
   elements.evidenceTab,
   elements.safetyTab,
+  elements.pilotReadinessTab,
 ]) {
   tab.addEventListener("keydown", (event) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
@@ -4073,6 +4265,8 @@ window.addEventListener("online", () => {
     loadSafetyWorkspace(currentSafetyVisitId);
   } else if (activeWorkspace === "safety") {
     loadSafetyEscalations({ quiet: true });
+  } else if (activeWorkspace === "pilot") {
+    loadPilotReadiness({ quiet: true });
   }
 });
 
