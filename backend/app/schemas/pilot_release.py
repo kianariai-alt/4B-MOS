@@ -267,3 +267,62 @@ class PilotReleaseDecisionRead(BaseModel):
     authorizes_individual_treatment: Literal[False] = False
     is_clinical_clearance: Literal[False] = False
     individual_clinician_decision_required: Literal[True] = True
+
+
+
+class PilotVisitEnrollmentCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    release_decision_id: str = Field(min_length=36, max_length=36)
+    expected_release_decision_sha256: str = Field(min_length=64, max_length=64)
+    expected_clinical_context_sha256: str = Field(min_length=64, max_length=64)
+    protocol_template_id: str = Field(min_length=36, max_length=36)
+    rationale: str = Field(min_length=20, max_length=5000)
+    supersedes_enrollment_id: str | None = Field(
+        default=None,
+        min_length=36,
+        max_length=36,
+    )
+    expected_supersedes_sha256: str | None = Field(
+        default=None,
+        min_length=64,
+        max_length=64,
+    )
+
+    @field_validator(
+        "expected_release_decision_sha256",
+        "expected_clinical_context_sha256",
+        "expected_supersedes_sha256",
+    )
+    @classmethod
+    def validate_sha256(cls, value):
+        if value is None:
+            return value
+        if any(char not in "0123456789abcdef" for char in value.lower()):
+            raise ValueError("Expected a hexadecimal SHA-256 value.")
+        return value.lower()
+
+
+class PilotVisitEnrollmentRead(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    visit_id: str
+    generation: int
+    supersedes_enrollment_id: str | None
+    release_decision_id: str
+    release_decision_sha256: str
+    clinical_context_sha256: str
+    protocol_template_id: str
+    protocol_code: str
+    protocol_version: str
+    treatment_type: str
+    rationale: str
+    enrolled_by_user_id: str
+    sha256: str
+    created_at: datetime
+    append_only: Literal[True] = True
+    pilot_enrollment: Literal[True] = True
+    authorizes_individual_treatment: Literal[False] = False
+    requires_clinician_treatment_decision: Literal[True] = True
+    is_clinical_clearance: Literal[False] = False
