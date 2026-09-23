@@ -1760,6 +1760,7 @@ async function createPilotManualAttestation(form) {
         }),
       },
     );
+    setPilotReadinessBusy(false);
     await loadPilotReadiness({ quiet: true });
     showPilotReadinessMessage(
       "Attestation ثبت شد و تا review مستقل هیچ gateای تأییدشده محسوب نمی‌شود.",
@@ -1793,6 +1794,7 @@ async function reviewPilotManualAttestation(form) {
         }),
       },
     );
+    setPilotReadinessBusy(false);
     await loadPilotReadiness({ quiet: true });
     showPilotReadinessMessage(
       "Review مستقل ثبت شد؛ تاریخچه قبلی بدون بازنویسی حفظ شده است.",
