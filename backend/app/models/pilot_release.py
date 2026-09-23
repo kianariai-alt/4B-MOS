@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     JSON,
+    Integer,
     String,
     Text,
     UniqueConstraint,
@@ -53,6 +54,15 @@ class PilotManualGateAttestation(Base):
             "supersedes_attestation_id",
             name="uq_pilot_manual_gate_attestation_supersedes",
         ),
+        UniqueConstraint(
+            "gate_name",
+            "generation",
+            name="uq_pilot_manual_gate_attestation_generation",
+        ),
+        CheckConstraint(
+            "generation >= 1",
+            name="ck_pilot_manual_gate_attestation_generation",
+        ),
     )
 
     id: Mapped[str] = mapped_column(
@@ -66,6 +76,7 @@ class PilotManualGateAttestation(Base):
         index=True,
     )
     readiness_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    generation: Mapped[int] = mapped_column(Integer, nullable=False)
     release_ref: Mapped[str] = mapped_column(String(200), nullable=False)
     evidence_reference: Mapped[str] = mapped_column(String(500), nullable=False)
     statement: Mapped[str] = mapped_column(Text, nullable=False)
