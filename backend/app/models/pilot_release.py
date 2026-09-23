@@ -212,6 +212,119 @@ class PilotLaunchPackage(Base):
     )
 
 
+class PilotReleaseEndorsement(Base):
+    __tablename__ = "pilot_release_endorsements"
+    __table_args__ = (
+        UniqueConstraint(
+            "package_id",
+            name="uq_pilot_release_endorsement_package",
+        ),
+        CheckConstraint(
+            "action IN ('endorse', 'hold')",
+            name="ck_pilot_release_endorsement_action",
+        ),
+        CheckConstraint(
+            "length(package_sha256) = 64",
+            name="ck_pilot_release_endorsement_package_sha256",
+        ),
+        CheckConstraint(
+            "length(sha256) = 64",
+            name="ck_pilot_release_endorsement_sha256",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    package_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("pilot_launch_packages.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    package_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    action: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    endorsed_by_user_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+    )
+
+
+class PilotReleaseDecision(Base):
+    __tablename__ = "pilot_release_decisions"
+    __table_args__ = (
+        UniqueConstraint(
+            "package_id",
+            name="uq_pilot_release_decision_package",
+        ),
+        CheckConstraint(
+            "action IN ('authorize_controlled_pilot', 'hold')",
+            name="ck_pilot_release_decision_action",
+        ),
+        CheckConstraint(
+            "length(package_sha256) = 64",
+            name="ck_pilot_release_decision_package_sha256",
+        ),
+        CheckConstraint(
+            "length(endorsement_sha256) = 64",
+            name="ck_pilot_release_decision_endorsement_sha256",
+        ),
+        CheckConstraint(
+            "length(sha256) = 64",
+            name="ck_pilot_release_decision_sha256",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    package_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("pilot_launch_packages.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    package_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    endorsement_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("pilot_release_endorsements.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    endorsement_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    action: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    decided_by_user_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+    )
+
+
 def _reject_rewrite(mapper, connection, target):
     raise ValueError("Pilot manual gate records are append-only.")
 
@@ -220,6 +333,8 @@ for _model in (
     PilotManualGateAttestation,
     PilotManualGateReview,
     PilotLaunchPackage,
+    PilotReleaseEndorsement,
+    PilotReleaseDecision,
 ):
     event.listen(_model, "before_update", _reject_rewrite)
     event.listen(_model, "before_delete", _reject_rewrite)
