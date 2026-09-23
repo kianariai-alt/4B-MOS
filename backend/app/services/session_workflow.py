@@ -14,6 +14,12 @@ from backend.app.services.session_finalization import SessionFinalizationService
 from backend.app.services.treatment_session_completion import (
     TreatmentSessionCompletionGuardService,
 )
+from backend.app.repositories.treatment import TreatmentRepository
+from backend.app.services.pilot_enrollment import (
+    PilotEnrollmentConflictError,
+    PilotEnrollmentIntegrityError,
+    PilotVisitEnrollmentService,
+)
 
 
 WORKFLOW_ACTIONS = {
@@ -170,6 +176,26 @@ class SessionWorkflowService:
             treatment_session.ready_at = now
 
         elif new_status == "in_treatment":
+            treatment = TreatmentRepository.get_by_id(
+                db,
+                treatment_session.treatment_id,
+            )
+            if treatment is None:
+                raise SessionWorkflowConflictError(
+                    "Treatment session references a missing treatment."
+                )
+            try:
+                PilotVisitEnrollmentService.validate_runtime_scope(
+                    db,
+                    treatment.visit_id,
+                    treatment.protocol_template_id,
+                )
+            except (
+                PilotEnrollmentConflictError,
+                PilotEnrollmentIntegrityError,
+            ) as error:
+                raise SessionWorkflowConflictError(str(error)) from error
+
             if treatment_session.status != "planned":
                 raise SessionWorkflowConflictError(
                     "Clinical session must be "
