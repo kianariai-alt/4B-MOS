@@ -108,3 +108,21 @@ class ProtocolRepository:
         db.refresh(protocol)
 
         return protocol
+
+    @staticmethod
+    def activate(
+        db: Session,
+        protocol: ProtocolTemplate,
+        *,
+        commit: bool = True,
+    ) -> ProtocolTemplate:
+        protocol.is_active = True
+
+        db.add(protocol)
+        if commit:
+            db.commit()
+        else:
+            db.flush()
+        db.refresh(protocol)
+
+        return protocol

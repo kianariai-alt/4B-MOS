@@ -128,6 +128,13 @@ superseded source version and preserve registry lineage; deactivation releases
 atomically retire the approved source version. Ordinary API writes can no longer
 create later versions or deactivate protocols outside this governance path.
 
+The [governed protocol recovery and lineage](docs/GOVERNED_PROTOCOL_RECOVERY.md)
+adds a separate recovery case for an exact prior release. A deactivation may be
+reactivated and a revision release may be rolled back only after a new
+independent physician review and administrator acknowledgement. The original
+release remains immutable, recovery is recorded as a new append-only event, and
+the lineage API rejects multiple simultaneously active versions.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains

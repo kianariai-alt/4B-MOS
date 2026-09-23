@@ -550,3 +550,433 @@ def test_non_release_governance_case_cannot_execute_release(
     )
     assert response.status_code == 409
     assert "does not permit" in response.json()["detail"]
+
+
+
+def approve_governance_case(
+    client,
+    case,
+    reviewer_headers,
+):
+    clinical = client.post(
+        f"/api/v1/protocol-governance/cases/{case['id']}/reviews",
+        headers=reviewer_headers,
+        json={
+            "expected_case_sha256": case["sha256"],
+            "action": "clinical_approve",
+            "rationale": (
+                "Independent synthetic physician approval for governed "
+                "recovery testing."
+            ),
+        },
+    )
+    assert clinical.status_code == 200, clinical.text
+
+    operational = client.post(
+        f"/api/v1/protocol-governance/cases/{case['id']}/reviews",
+        json={
+            "expected_case_sha256": case["sha256"],
+            "action": "operational_acknowledge",
+            "rationale": (
+                "Synthetic administrator acknowledgement for governed "
+                "recovery execution."
+            ),
+        },
+    )
+    assert operational.status_code == 200, operational.text
+    assert operational.json()["status"] == "approved_for_manual_action"
+    return operational.json()
+
+
+def create_revision_release(
+    client,
+    author_headers,
+    reviewer_headers,
+    *,
+    code,
+):
+    source = client.post(
+        "/api/v1/protocols",
+        headers=author_headers,
+        json=protocol_payload(
+            code=code,
+            version="1.0",
+            treatment_type="ACS",
+        ),
+    )
+    assert source.status_code == 201, source.text
+
+    case_response = client.post(
+        "/api/v1/protocol-governance/cases",
+        headers=author_headers,
+        json={
+            "protocol_code": code,
+            "protocol_version": "1.0",
+            "source_learning_review_sha256": current_learning_hash(
+                client,
+                author_headers,
+            ),
+            "case_type": "revision_candidate",
+            "rationale": (
+                "Synthetic revision release used as the immutable source for "
+                "governed recovery testing."
+            ),
+            "evidence_needed": [],
+            "proposed_protocol": protocol_payload(
+                code=code,
+                version="2.0",
+                treatment_type="ACS",
+            ),
+        },
+    )
+    assert case_response.status_code == 201, case_response.text
+    case = case_response.json()
+    approve_governance_case(client, case, reviewer_headers)
+
+    released = client.post(
+        f"/api/v1/protocol-governance/cases/{case['id']}/release",
+        json={
+            "expected_case_sha256": case["sha256"],
+            "execution_note": (
+                "Synthetic governed revision release before recovery testing."
+            ),
+        },
+    )
+    assert released.status_code == 200, released.text
+    return source.json(), released.json()["release"]
+
+
+def create_deactivation_release(
+    client,
+    author_headers,
+    reviewer_headers,
+    *,
+    code,
+):
+    source = client.post(
+        "/api/v1/protocols",
+        headers=author_headers,
+        json=protocol_payload(
+            code=code,
+            version="1.0",
+            treatment_type="ACS",
+        ),
+    )
+    assert source.status_code == 201, source.text
+
+    case_response = client.post(
+        "/api/v1/protocol-governance/cases",
+        headers=author_headers,
+        json={
+            "protocol_code": code,
+            "protocol_version": "1.0",
+            "source_learning_review_sha256": current_learning_hash(
+                client,
+                author_headers,
+            ),
+            "case_type": "deactivation_candidate",
+            "rationale": (
+                "Synthetic deactivation release used as the immutable source "
+                "for governed reactivation testing."
+            ),
+            "evidence_needed": [],
+        },
+    )
+    assert case_response.status_code == 201, case_response.text
+    case = case_response.json()
+    approve_governance_case(client, case, reviewer_headers)
+
+    released = client.post(
+        f"/api/v1/protocol-governance/cases/{case['id']}/release",
+        json={
+            "expected_case_sha256": case["sha256"],
+            "execution_note": (
+                "Synthetic governed deactivation before reactivation testing."
+            ),
+        },
+    )
+    assert released.status_code == 200, released.text
+    return source.json(), released.json()["release"]
+
+
+def test_revision_release_can_be_recovered_with_governed_rollback(
+    client,
+    author_headers,
+    reviewer_headers,
+    db_session,
+):
+    original, release = create_revision_release(
+        client,
+        author_headers,
+        reviewer_headers,
+        code="GOV-REC-ROLLBACK",
+    )
+
+    versions = client.get("/api/v1/protocols").json()
+    by_version = {item["version"]: item for item in versions}
+    assert by_version["1.0"]["is_active"] is False
+    assert by_version["2.0"]["is_active"] is True
+
+    stale = client.post(
+        f"/api/v1/protocol-governance/releases/{release['id']}/recovery-cases",
+        headers=author_headers,
+        json={
+            "expected_release_sha256": "0" * 64,
+            "expected_learning_review_sha256": current_learning_hash(
+                client,
+                author_headers,
+            ),
+            "rationale": (
+                "Synthetic recovery request with stale release provenance "
+                "must be rejected."
+            ),
+            "evidence_needed": [],
+        },
+    )
+    assert stale.status_code == 409
+
+    recovery_case_response = client.post(
+        f"/api/v1/protocol-governance/releases/{release['id']}/recovery-cases",
+        headers=author_headers,
+        json={
+            "expected_release_sha256": release["sha256"],
+            "expected_learning_review_sha256": current_learning_hash(
+                client,
+                author_headers,
+            ),
+            "rationale": (
+                "Synthetic recovery case requesting governed rollback of the "
+                "exact released revision."
+            ),
+            "evidence_needed": [
+                "Independent clinical review",
+                "Operational acknowledgement",
+            ],
+        },
+    )
+    assert recovery_case_response.status_code == 201, recovery_case_response.text
+    recovery_case = recovery_case_response.json()
+    assert recovery_case["case_type"] == "rollback_revision_candidate"
+    assert recovery_case["source_release_id"] == release["id"]
+    assert recovery_case["source_release_sha256"] == release["sha256"]
+    assert (
+        recovery_case["recovery_snapshot"]["recovery_action"]
+        == "rollback_revision"
+    )
+    assert recovery_case["automatically_changes_protocol"] is False
+
+    approve_governance_case(
+        client,
+        recovery_case,
+        reviewer_headers,
+    )
+
+    physician_attempt = client.post(
+        f"/api/v1/protocol-governance/cases/{recovery_case['id']}/recovery",
+        headers=reviewer_headers,
+        json={
+            "expected_case_sha256": recovery_case["sha256"],
+            "execution_note": (
+                "Synthetic physician recovery execution must be refused."
+            ),
+        },
+    )
+    assert physician_attempt.status_code == 403
+
+    recovered = client.post(
+        f"/api/v1/protocol-governance/cases/{recovery_case['id']}/recovery",
+        json={
+            "expected_case_sha256": recovery_case["sha256"],
+            "execution_note": (
+                "Synthetic administrator execution of approved revision "
+                "rollback recovery."
+            ),
+        },
+    )
+    assert recovered.status_code == 200, recovered.text
+    body = recovered.json()
+    assert body["status"] == "recovered"
+    assert body["requires_manual_protocol_action"] is False
+    recovery = body["recovery"]
+    assert recovery["action"] == "rollback_revision"
+    assert recovery["source_release_id"] == release["id"]
+    assert recovery["deactivated_protocol_id"] == by_version["2.0"]["id"]
+    assert recovery["reactivated_protocol_id"] == original["id"]
+    assert recovery["preserves_history"] is True
+    assert recovery["destructive_rollback"] is False
+
+    versions = client.get("/api/v1/protocols").json()
+    by_version = {item["version"]: item for item in versions}
+    assert by_version["1.0"]["is_active"] is True
+    assert by_version["2.0"]["is_active"] is False
+    assert (
+        by_version["2.0"]["supersedes_protocol_id"]
+        == by_version["1.0"]["id"]
+    )
+
+    lineage = client.get(
+        f"/api/v1/protocol-governance/protocols/"
+        f"{by_version['2.0']['id']}/lineage"
+    )
+    assert lineage.status_code == 200, lineage.text
+    lineage_body = lineage.json()
+    assert lineage_body["protocol_code"] == "GOV-REC-ROLLBACK"
+    assert len(lineage_body["versions"]) == 2
+    assert len(lineage_body["releases"]) == 1
+    assert len(lineage_body["recoveries"]) == 1
+    assert lineage_body["active_protocol_ids"] == [by_version["1.0"]["id"]]
+    assert lineage_body["lineage_consistent"] is True
+    assert lineage_body["automatically_selects_protocol"] is False
+
+    recovery_list = client.get("/api/v1/protocol-governance/recoveries")
+    assert recovery_list.status_code == 200
+    assert [item["id"] for item in recovery_list.json()] == [recovery["id"]]
+
+    duplicate_case = client.post(
+        f"/api/v1/protocol-governance/releases/{release['id']}/recovery-cases",
+        headers=author_headers,
+        json={
+            "expected_release_sha256": release["sha256"],
+            "expected_learning_review_sha256": current_learning_hash(
+                client,
+                author_headers,
+            ),
+            "rationale": (
+                "Synthetic duplicate recovery request after completed "
+                "recovery must be rejected."
+            ),
+            "evidence_needed": [],
+        },
+    )
+    assert duplicate_case.status_code == 409
+    assert "already been recovered" in duplicate_case.json()["detail"]
+
+    late_review = client.post(
+        f"/api/v1/protocol-governance/cases/{recovery_case['id']}/reviews",
+        headers=reviewer_headers,
+        json={
+            "expected_case_sha256": recovery_case["sha256"],
+            "action": "request_changes",
+            "rationale": (
+                "Synthetic review after completed recovery must be refused."
+            ),
+        },
+    )
+    assert late_review.status_code == 409
+    assert "terminal" in late_review.json()["detail"]
+
+    recovery_logs = AuditLogRepository.list_by_entity(
+        db_session,
+        entity_type="protocol_governance_recovery",
+        entity_id=recovery["id"],
+    )
+    assert len(recovery_logs) == 1
+    assert (
+        recovery_logs[0].event_type
+        == "governed_protocol_recovery_executed"
+    )
+
+
+def test_deactivation_release_can_be_governed_reactivated(
+    client,
+    author_headers,
+    reviewer_headers,
+    db_session,
+):
+    source, release = create_deactivation_release(
+        client,
+        author_headers,
+        reviewer_headers,
+        code="GOV-REC-REACTIVATE",
+    )
+
+    protocol = client.get(f"/api/v1/protocols/{source['id']}").json()
+    assert protocol["is_active"] is False
+
+    recovery_case_response = client.post(
+        f"/api/v1/protocol-governance/releases/{release['id']}/recovery-cases",
+        headers=author_headers,
+        json={
+            "expected_release_sha256": release["sha256"],
+            "expected_learning_review_sha256": current_learning_hash(
+                client,
+                author_headers,
+            ),
+            "rationale": (
+                "Synthetic recovery case requesting reactivation of the exact "
+                "governed deactivation."
+            ),
+            "evidence_needed": [],
+        },
+    )
+    assert recovery_case_response.status_code == 201, recovery_case_response.text
+    recovery_case = recovery_case_response.json()
+    assert recovery_case["case_type"] == "reactivation_candidate"
+    assert (
+        recovery_case["recovery_snapshot"]["recovery_action"]
+        == "reactivate"
+    )
+
+    approve_governance_case(
+        client,
+        recovery_case,
+        reviewer_headers,
+    )
+    recovered = client.post(
+        f"/api/v1/protocol-governance/cases/{recovery_case['id']}/recovery",
+        json={
+            "expected_case_sha256": recovery_case["sha256"],
+            "execution_note": (
+                "Synthetic administrator execution of approved protocol "
+                "reactivation."
+            ),
+        },
+    )
+    assert recovered.status_code == 200, recovered.text
+    body = recovered.json()
+    assert body["status"] == "recovered"
+    assert body["recovery"]["action"] == "reactivate"
+    assert body["recovery"]["deactivated_protocol_id"] is None
+    assert body["recovery"]["reactivated_protocol_id"] == source["id"]
+
+    protocol = client.get(f"/api/v1/protocols/{source['id']}").json()
+    assert protocol["is_active"] is True
+
+    lineage = client.get(
+        f"/api/v1/protocol-governance/protocols/{source['id']}/lineage"
+    )
+    assert lineage.status_code == 200, lineage.text
+    lineage_body = lineage.json()
+    assert len(lineage_body["versions"]) == 1
+    assert len(lineage_body["releases"]) == 1
+    assert len(lineage_body["recoveries"]) == 1
+    assert lineage_body["active_protocol_ids"] == [source["id"]]
+
+    source_logs = AuditLogRepository.list_by_entity(
+        db_session,
+        entity_type="protocol",
+        entity_id=source["id"],
+    )
+    assert source_logs[-1].event_type == "protocol_reactivated"
+
+
+def test_recovery_candidate_cannot_be_created_directly(
+    client,
+    author_headers,
+):
+    response = client.post(
+        "/api/v1/protocol-governance/cases",
+        headers=author_headers,
+        json={
+            "protocol_code": "DIRECT-RECOVERY",
+            "protocol_version": "1.0",
+            "source_learning_review_sha256": "0" * 64,
+            "case_type": "reactivation_candidate",
+            "rationale": (
+                "Synthetic direct recovery candidate must be refused before "
+                "it can enter governance."
+            ),
+            "evidence_needed": [],
+        },
+    )
+    assert response.status_code == 422

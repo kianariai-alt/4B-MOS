@@ -21,6 +21,10 @@ from backend.app.schemas.protocol import ProtocolCreate, ProtocolRead
 from backend.app.schemas.protocol_governance import (
     ProtocolGovernanceCaseCreate,
     ProtocolGovernanceCaseRead,
+    ProtocolGovernanceLineageRead,
+    ProtocolGovernanceRecoveryCaseCreate,
+    ProtocolGovernanceRecoveryExecute,
+    ProtocolGovernanceRecoveryRead,
     ProtocolGovernanceReleaseExecute,
     ProtocolGovernanceReleaseRead,
     ProtocolGovernanceReviewCreate,
@@ -168,6 +172,10 @@ class ProtocolGovernanceService:
                 and raw.get("protocol_snapshot") == record.protocol_snapshot
                 and raw.get("learning_snapshot") == record.learning_snapshot
                 and raw.get("proposed_protocol") == record.proposed_protocol
+                and raw.get("source_release_id") == record.source_release_id
+                and raw.get("source_release_sha256")
+                == record.source_release_sha256
+                and raw.get("recovery_snapshot") == record.recovery_snapshot
                 and raw.get("rationale") == record.rationale
                 and raw.get("evidence_needed") == list(record.evidence_needed)
                 and raw.get("created_by_user_id") == record.created_by_user_id
@@ -263,6 +271,62 @@ class ProtocolGovernanceService:
         )
 
     @staticmethod
+    def _validate_recovery_record(record):
+        try:
+            raw = deepcopy(record.payload)
+            valid = (
+                isinstance(raw, dict)
+                and evidence_digest(raw) == record.sha256
+                and raw.get("schema_version") == 1
+                and raw.get("id") == record.id
+                and raw.get("case_id") == record.case_id
+                and raw.get("case_sha256") == record.case_sha256
+                and raw.get("source_release_id") == record.source_release_id
+                and raw.get("source_release_sha256")
+                == record.source_release_sha256
+                and raw.get("action") == record.action
+                and raw.get("deactivated_protocol_id")
+                == record.deactivated_protocol_id
+                and raw.get("reactivated_protocol_id")
+                == record.reactivated_protocol_id
+                and raw.get("before_snapshots") == record.before_snapshots
+                and raw.get("after_snapshots") == record.after_snapshots
+                and raw.get("executed_by_user_id")
+                == record.executed_by_user_id
+                and raw.get("execution_note") == record.execution_note
+                and _same_timestamp(raw.get("created_at"), record.created_at)
+                and raw.get("preserves_history") is True
+                and raw.get("destructive_rollback") is False
+            )
+        except (AttributeError, KeyError, TypeError, ValueError):
+            valid = False
+        if not valid:
+            raise ProtocolGovernanceIntegrityError(
+                "Stored governed protocol recovery failed its integrity check."
+            )
+        return raw
+
+    @staticmethod
+    def _recovery_to_read(record) -> ProtocolGovernanceRecoveryRead:
+        raw = ProtocolGovernanceService._validate_recovery_record(record)
+        return ProtocolGovernanceRecoveryRead(
+            id=record.id,
+            case_id=record.case_id,
+            case_sha256=record.case_sha256,
+            source_release_id=record.source_release_id,
+            source_release_sha256=record.source_release_sha256,
+            action=record.action,
+            deactivated_protocol_id=record.deactivated_protocol_id,
+            reactivated_protocol_id=record.reactivated_protocol_id,
+            before_snapshots=deepcopy(record.before_snapshots),
+            after_snapshots=deepcopy(record.after_snapshots),
+            executed_by_user_id=record.executed_by_user_id,
+            execution_note=raw["execution_note"],
+            sha256=record.sha256,
+            created_at=record.created_at,
+        )
+
+    @staticmethod
     def _to_read(db: Session, record) -> ProtocolGovernanceCaseRead:
         ProtocolGovernanceService._validate_case_record(db, record)
         reviews = ProtocolGovernanceRepository.list_reviews(db, record.id)
@@ -293,6 +357,15 @@ class ProtocolGovernanceService:
             if release_record is not None
             else None
         )
+        recovery_record = ProtocolGovernanceRepository.get_recovery_by_case(
+            db,
+            record.id,
+        )
+        recovery = (
+            ProtocolGovernanceService._recovery_to_read(recovery_record)
+            if recovery_record is not None
+            else None
+        )
         return ProtocolGovernanceCaseRead(
             id=record.id,
             protocol_code=record.protocol_code,
@@ -303,6 +376,9 @@ class ProtocolGovernanceService:
             protocol_snapshot=deepcopy(record.protocol_snapshot),
             learning_snapshot=deepcopy(record.learning_snapshot),
             proposed_protocol=deepcopy(record.proposed_protocol),
+            source_release_id=record.source_release_id,
+            source_release_sha256=record.source_release_sha256,
+            recovery_snapshot=deepcopy(record.recovery_snapshot),
             rationale=record.rationale,
             evidence_needed=list(record.evidence_needed),
             created_by_user_id=record.created_by_user_id,
@@ -310,17 +386,25 @@ class ProtocolGovernanceService:
             created_at=record.created_at,
             reviews=review_reads,
             release=release,
+            recovery=recovery,
             status=(
-                "released"
-                if release is not None
-                else ProtocolGovernanceService._case_status(review_reads)
+                "recovered"
+                if recovery is not None
+                else (
+                    "released"
+                    if release is not None
+                    else ProtocolGovernanceService._case_status(review_reads)
+                )
             ),
             requires_manual_protocol_action=(
                 record.case_type in {
                     "revision_candidate",
                     "deactivation_candidate",
+                    "reactivation_candidate",
+                    "rollback_revision_candidate",
                 }
                 and release is None
+                and recovery is None
             ),
         )
 
@@ -334,6 +418,13 @@ class ProtocolGovernanceService:
         if actor is None or not actor.is_active or actor.role != "physician":
             raise ProtocolGovernanceAuthorizationError(
                 "Only an active physician may open a protocol governance case."
+            )
+        if payload.case_type in {
+            "reactivation_candidate",
+            "rollback_revision_candidate",
+        }:
+            raise ProtocolGovernanceConflictError(
+                "Recovery cases must originate from a governed release."
             )
         try:
             learning = ClinicalLearningReviewService.get_review(db)
@@ -421,6 +512,9 @@ class ProtocolGovernanceService:
             "protocol_snapshot": protocol_snapshot,
             "learning_snapshot": learning_snapshot,
             "proposed_protocol": proposed,
+            "source_release_id": None,
+            "source_release_sha256": None,
+            "recovery_snapshot": None,
             "rationale": payload.rationale,
             "evidence_needed": list(payload.evidence_needed),
             "created_by_user_id": actor.id,
@@ -440,6 +534,9 @@ class ProtocolGovernanceService:
                 protocol_snapshot=protocol_snapshot,
                 learning_snapshot=learning_snapshot,
                 proposed_protocol=proposed,
+                source_release_id=None,
+                source_release_sha256=None,
+                recovery_snapshot=None,
                 rationale=payload.rationale,
                 evidence_needed=list(payload.evidence_needed),
                 created_by_user_id=actor.id,
@@ -491,6 +588,11 @@ class ProtocolGovernanceService:
         if ProtocolGovernanceRepository.get_release_by_case(db, case_id):
             raise ProtocolGovernanceConflictError(
                 "A released governance case is terminal and cannot accept "
+                "additional reviews."
+            )
+        if ProtocolGovernanceRepository.get_recovery_by_case(db, case_id):
+            raise ProtocolGovernanceConflictError(
+                "A recovered governance case is terminal and cannot accept "
                 "additional reviews."
             )
         if payload.expected_case_sha256 != record.sha256:
@@ -612,6 +714,251 @@ class ProtocolGovernanceService:
             current_snapshot.get(key) == value
             for key, value in frozen_snapshot.items()
         )
+
+
+    @staticmethod
+    def _ensure_no_other_active_version(
+        db: Session,
+        protocol,
+        *,
+        allowed_active_id: str | None = None,
+    ) -> None:
+        conflicts = [
+            item
+            for item in ProtocolRepository.list_by_code(db, protocol.code)
+            if item.is_active
+            and item.id != allowed_active_id
+        ]
+        if conflicts:
+            raise ProtocolGovernanceConflictError(
+                "Protocol lineage already contains another active version."
+            )
+
+    @staticmethod
+    def create_recovery_case(
+        db: Session,
+        release_id: str,
+        payload: ProtocolGovernanceRecoveryCaseCreate,
+        *,
+        actor: User | None,
+    ) -> ProtocolGovernanceCaseRead:
+        if actor is None or not actor.is_active or actor.role != "physician":
+            raise ProtocolGovernanceAuthorizationError(
+                "Only an active physician may open a protocol recovery case."
+            )
+
+        release = ProtocolGovernanceRepository.get_release(db, release_id)
+        if release is None:
+            raise ProtocolGovernanceNotFoundError(
+                f"Protocol governance release '{release_id}' was not found."
+            )
+        ProtocolGovernanceService._validate_release_record(release)
+        if payload.expected_release_sha256 != release.sha256:
+            raise ProtocolGovernanceConflictError(
+                "The governed release hash changed; reload before recovery."
+            )
+        if ProtocolGovernanceRepository.get_recovery_by_source_release(
+            db,
+            release.id,
+        ) is not None:
+            raise ProtocolGovernanceConflictError(
+                "This governed release has already been recovered."
+            )
+
+        try:
+            learning = ClinicalLearningReviewService.get_review(db)
+        except ClinicalLearningIntegrityError as error:
+            raise ProtocolGovernanceIntegrityError(str(error)) from error
+        if payload.expected_learning_review_sha256 != learning.review_sha256:
+            raise ProtocolGovernanceConflictError(
+                "The clinical learning review changed; reload it before "
+                "opening a recovery case."
+            )
+
+        if release.action == "deactivate":
+            target = ProtocolRepository.get_by_id(
+                db,
+                release.source_protocol_id,
+            )
+            if target is None:
+                raise ProtocolGovernanceNotFoundError(
+                    "The deactivated protocol is missing from the registry."
+                )
+            if target.is_active:
+                raise ProtocolGovernanceConflictError(
+                    "The deactivated protocol is already active."
+                )
+            ProtocolGovernanceService._ensure_no_other_active_version(
+                db,
+                target,
+                allowed_active_id=None,
+            )
+            primary = target
+            case_type = "reactivation_candidate"
+            recovery_action = "reactivate"
+            recovery_snapshot = {
+                "source_release": (
+                    ProtocolGovernanceService._release_to_read(
+                        release
+                    ).model_dump(mode="json")
+                ),
+                "recovery_action": recovery_action,
+                "reactivated_protocol_before": (
+                    ProtocolGovernanceService._protocol_snapshot(target)
+                ),
+                "deactivated_protocol_before": None,
+            }
+        elif release.action == "publish_revision":
+            previous = ProtocolRepository.get_by_id(
+                db,
+                release.source_protocol_id,
+            )
+            current = (
+                ProtocolRepository.get_by_id(
+                    db,
+                    release.released_protocol_id,
+                )
+                if release.released_protocol_id is not None
+                else None
+            )
+            if previous is None or current is None:
+                raise ProtocolGovernanceNotFoundError(
+                    "The revision lineage is incomplete in the registry."
+                )
+            if previous.is_active or not current.is_active:
+                raise ProtocolGovernanceConflictError(
+                    "The revision lineage is no longer in the state created "
+                    "by the source release."
+                )
+            ProtocolGovernanceService._ensure_no_other_active_version(
+                db,
+                current,
+                allowed_active_id=current.id,
+            )
+            if (
+                current.supersedes_protocol_id != previous.id
+                or current.source_governance_case_id != release.case_id
+                or current.source_governance_case_sha256
+                != release.case_sha256
+            ):
+                raise ProtocolGovernanceIntegrityError(
+                    "The revision lineage does not match its governed release."
+                )
+            primary = current
+            case_type = "rollback_revision_candidate"
+            recovery_action = "rollback_revision"
+            recovery_snapshot = {
+                "source_release": (
+                    ProtocolGovernanceService._release_to_read(
+                        release
+                    ).model_dump(mode="json")
+                ),
+                "recovery_action": recovery_action,
+                "reactivated_protocol_before": (
+                    ProtocolGovernanceService._protocol_snapshot(previous)
+                ),
+                "deactivated_protocol_before": (
+                    ProtocolGovernanceService._protocol_snapshot(current)
+                ),
+            }
+        else:
+            raise ProtocolGovernanceIntegrityError(
+                "Unsupported governed release action."
+            )
+
+        source = next(
+            (
+                item for item in learning.protocols
+                if item.protocol_code == primary.code
+                and item.protocol_version == primary.version
+            ),
+            None,
+        )
+        if source is None:
+            raise ProtocolGovernanceNotFoundError(
+                "The recovery target is not present in the current clinical "
+                "learning review."
+            )
+
+        case_id = str(uuid.uuid4())
+        created_at = datetime.now(timezone.utc)
+        protocol_snapshot = ProtocolGovernanceService._protocol_snapshot(
+            primary
+        )
+        learning_snapshot = source.model_dump(mode="json")
+        stored = {
+            "schema_version": 1,
+            "id": case_id,
+            "protocol_code": primary.code,
+            "protocol_version": primary.version,
+            "treatment_type": primary.treatment_type,
+            "case_type": case_type,
+            "source_learning_review_sha256": learning.review_sha256,
+            "protocol_snapshot": protocol_snapshot,
+            "learning_snapshot": learning_snapshot,
+            "proposed_protocol": None,
+            "source_release_id": release.id,
+            "source_release_sha256": release.sha256,
+            "recovery_snapshot": recovery_snapshot,
+            "rationale": payload.rationale,
+            "evidence_needed": list(payload.evidence_needed),
+            "created_by_user_id": actor.id,
+            "created_at": created_at.isoformat(),
+            "automatically_changes_protocol": False,
+        }
+        sha256 = evidence_digest(stored)
+        try:
+            record = ProtocolGovernanceRepository.create_case(
+                db,
+                id=case_id,
+                protocol_code=primary.code,
+                protocol_version=primary.version,
+                treatment_type=primary.treatment_type,
+                case_type=case_type,
+                source_learning_review_sha256=learning.review_sha256,
+                protocol_snapshot=protocol_snapshot,
+                learning_snapshot=learning_snapshot,
+                proposed_protocol=None,
+                source_release_id=release.id,
+                source_release_sha256=release.sha256,
+                recovery_snapshot=recovery_snapshot,
+                rationale=payload.rationale,
+                evidence_needed=list(payload.evidence_needed),
+                created_by_user_id=actor.id,
+                payload=stored,
+                sha256=sha256,
+                created_at=created_at,
+            )
+            AuditLogRepository.create(
+                db,
+                commit=False,
+                entity_type="protocol_governance_case",
+                entity_id=record.id,
+                event_type="protocol_governance_recovery_case_opened",
+                from_state=None,
+                to_state="awaiting_clinical_review",
+                message=(
+                    "A physician opened an immutable governed protocol "
+                    "recovery case."
+                ),
+                event_data={
+                    "case_type": case_type,
+                    "source_release_id": release.id,
+                    "source_release_sha256": release.sha256,
+                    "recovery_action": recovery_action,
+                    "case_sha256": sha256,
+                    "automatically_changes_protocol": False,
+                },
+                **actor_data(actor),
+            )
+            db.commit()
+        except IntegrityError as error:
+            db.rollback()
+            raise ProtocolGovernanceConflictError(
+                "The protocol recovery case conflicted with another write."
+            ) from error
+
+        return ProtocolGovernanceService._to_read(db, record)
 
     @staticmethod
     def execute_release(
@@ -859,6 +1206,391 @@ class ProtocolGovernanceService:
             raise
 
         return ProtocolGovernanceService._to_read(db, record)
+
+    @staticmethod
+    def execute_recovery(
+        db: Session,
+        case_id: str,
+        payload: ProtocolGovernanceRecoveryExecute,
+        *,
+        actor: User | None,
+    ) -> ProtocolGovernanceCaseRead:
+        if actor is None or not actor.is_active or actor.role != "admin":
+            raise ProtocolGovernanceAuthorizationError(
+                "Only an active administrator may execute a governed "
+                "protocol recovery."
+            )
+
+        record = ProtocolGovernanceRepository.get_case(db, case_id)
+        if record is None:
+            raise ProtocolGovernanceNotFoundError(
+                f"Protocol governance case '{case_id}' was not found."
+            )
+        ProtocolGovernanceService._validate_case_record(db, record)
+        if payload.expected_case_sha256 != record.sha256:
+            raise ProtocolGovernanceConflictError(
+                "The governance case hash changed; reload before recovery."
+            )
+        if record.case_type not in {
+            "reactivation_candidate",
+            "rollback_revision_candidate",
+        }:
+            raise ProtocolGovernanceConflictError(
+                "This governance case type does not permit recovery."
+            )
+        if ProtocolGovernanceRepository.get_recovery_by_case(db, case_id):
+            raise ProtocolGovernanceConflictError(
+                "This governance case has already been recovered."
+            )
+        if (
+            record.source_release_id is None
+            or record.source_release_sha256 is None
+            or record.recovery_snapshot is None
+        ):
+            raise ProtocolGovernanceIntegrityError(
+                "The recovery governance case is missing source provenance."
+            )
+
+        source_release = ProtocolGovernanceRepository.get_release(
+            db,
+            record.source_release_id,
+        )
+        if source_release is None:
+            raise ProtocolGovernanceNotFoundError(
+                "The source governed release is missing."
+            )
+        ProtocolGovernanceService._validate_release_record(source_release)
+        if source_release.sha256 != record.source_release_sha256:
+            raise ProtocolGovernanceIntegrityError(
+                "The source governed release hash does not match the "
+                "recovery case."
+            )
+        if ProtocolGovernanceRepository.get_recovery_by_source_release(
+            db,
+            source_release.id,
+        ):
+            raise ProtocolGovernanceConflictError(
+                "This governed release has already been recovered."
+            )
+
+        reviews = ProtocolGovernanceRepository.list_reviews(db, case_id)
+        for review in reviews:
+            ProtocolGovernanceService._validate_review_record(
+                review,
+                record.sha256,
+            )
+        if (
+            ProtocolGovernanceService._case_status(reviews)
+            != "approved_for_manual_action"
+        ):
+            raise ProtocolGovernanceConflictError(
+                "The recovery case is not approved for manual recovery."
+            )
+
+        recovery_id = str(uuid.uuid4())
+        created_at = datetime.now(timezone.utc)
+        deactivated = None
+
+        if record.case_type == "reactivation_candidate":
+            reactivated = ProtocolRepository.get_by_id(
+                db,
+                source_release.source_protocol_id,
+            )
+            if reactivated is None:
+                raise ProtocolGovernanceNotFoundError(
+                    "The protocol selected for reactivation is missing."
+                )
+            current_reactivated = (
+                ProtocolGovernanceService._protocol_snapshot(reactivated)
+            )
+            if (
+                current_reactivated
+                != record.recovery_snapshot[
+                    "reactivated_protocol_before"
+                ]
+                or reactivated.is_active
+            ):
+                raise ProtocolGovernanceConflictError(
+                    "The protocol state changed after the recovery case was "
+                    "opened; a new case is required."
+                )
+            ProtocolGovernanceService._ensure_no_other_active_version(
+                db,
+                reactivated,
+                allowed_active_id=None,
+            )
+            action = "reactivate"
+        else:
+            deactivated = (
+                ProtocolRepository.get_by_id(
+                    db,
+                    source_release.released_protocol_id,
+                )
+                if source_release.released_protocol_id is not None
+                else None
+            )
+            reactivated = ProtocolRepository.get_by_id(
+                db,
+                source_release.source_protocol_id,
+            )
+            if deactivated is None or reactivated is None:
+                raise ProtocolGovernanceNotFoundError(
+                    "The revision lineage is incomplete."
+                )
+            current_deactivated = (
+                ProtocolGovernanceService._protocol_snapshot(deactivated)
+            )
+            current_reactivated = (
+                ProtocolGovernanceService._protocol_snapshot(reactivated)
+            )
+            if (
+                current_deactivated
+                != record.recovery_snapshot[
+                    "deactivated_protocol_before"
+                ]
+                or current_reactivated
+                != record.recovery_snapshot[
+                    "reactivated_protocol_before"
+                ]
+                or not deactivated.is_active
+                or reactivated.is_active
+            ):
+                raise ProtocolGovernanceConflictError(
+                    "The revision lineage changed after the recovery case was "
+                    "opened; a new case is required."
+                )
+            ProtocolGovernanceService._ensure_no_other_active_version(
+                db,
+                deactivated,
+                allowed_active_id=deactivated.id,
+            )
+            if (
+                deactivated.supersedes_protocol_id != reactivated.id
+                or deactivated.source_governance_case_id
+                != source_release.case_id
+                or deactivated.source_governance_case_sha256
+                != source_release.case_sha256
+            ):
+                raise ProtocolGovernanceIntegrityError(
+                    "The revision lineage no longer matches the source release."
+                )
+            action = "rollback_revision"
+
+        before_snapshots = {
+            "deactivated_protocol": (
+                ProtocolGovernanceService._protocol_snapshot(deactivated)
+                if deactivated is not None
+                else None
+            ),
+            "reactivated_protocol": (
+                ProtocolGovernanceService._protocol_snapshot(reactivated)
+            ),
+        }
+
+        try:
+            if deactivated is not None:
+                ProtocolRepository.deactivate(
+                    db,
+                    deactivated,
+                    commit=False,
+                )
+            ProtocolRepository.activate(
+                db,
+                reactivated,
+                commit=False,
+            )
+
+            after_snapshots = {
+                "deactivated_protocol": (
+                    ProtocolGovernanceService._protocol_snapshot(deactivated)
+                    if deactivated is not None
+                    else None
+                ),
+                "reactivated_protocol": (
+                    ProtocolGovernanceService._protocol_snapshot(reactivated)
+                ),
+            }
+            stored = {
+                "schema_version": 1,
+                "id": recovery_id,
+                "case_id": record.id,
+                "case_sha256": record.sha256,
+                "source_release_id": source_release.id,
+                "source_release_sha256": source_release.sha256,
+                "action": action,
+                "deactivated_protocol_id": (
+                    deactivated.id if deactivated is not None else None
+                ),
+                "reactivated_protocol_id": reactivated.id,
+                "before_snapshots": before_snapshots,
+                "after_snapshots": after_snapshots,
+                "executed_by_user_id": actor.id,
+                "execution_note": payload.execution_note,
+                "created_at": created_at.isoformat(),
+                "preserves_history": True,
+                "destructive_rollback": False,
+            }
+            sha256 = evidence_digest(stored)
+            recovery = ProtocolGovernanceRepository.create_recovery(
+                db,
+                id=recovery_id,
+                case_id=record.id,
+                case_sha256=record.sha256,
+                source_release_id=source_release.id,
+                source_release_sha256=source_release.sha256,
+                action=action,
+                deactivated_protocol_id=(
+                    deactivated.id if deactivated is not None else None
+                ),
+                reactivated_protocol_id=reactivated.id,
+                before_snapshots=before_snapshots,
+                after_snapshots=after_snapshots,
+                executed_by_user_id=actor.id,
+                execution_note=payload.execution_note,
+                payload=stored,
+                sha256=sha256,
+                created_at=created_at,
+            )
+            AuditLogRepository.create(
+                db,
+                commit=False,
+                entity_type="protocol_governance_recovery",
+                entity_id=recovery.id,
+                event_type="governed_protocol_recovery_executed",
+                from_state="approved_for_manual_action",
+                to_state=action,
+                message=(
+                    "An administrator explicitly executed an approved "
+                    "governed protocol recovery."
+                ),
+                event_data={
+                    "case_id": record.id,
+                    "case_sha256": record.sha256,
+                    "source_release_id": source_release.id,
+                    "source_release_sha256": source_release.sha256,
+                    "recovery_sha256": sha256,
+                    "action": action,
+                    "deactivated_protocol_id": (
+                        deactivated.id if deactivated is not None else None
+                    ),
+                    "reactivated_protocol_id": reactivated.id,
+                },
+                **actor_data(actor),
+            )
+            if deactivated is not None:
+                AuditLogRepository.create(
+                    db,
+                    commit=False,
+                    entity_type="protocol",
+                    entity_id=deactivated.id,
+                    event_type="protocol_recovery_deactivated",
+                    from_state="active",
+                    to_state="inactive",
+                    message=(
+                        "Protocol version deactivated by an approved governed "
+                        "recovery."
+                    ),
+                    event_data={
+                        "recovery_id": recovery.id,
+                        "source_release_id": source_release.id,
+                        "recovery_sha256": sha256,
+                    },
+                    **actor_data(actor),
+                )
+            AuditLogRepository.create(
+                db,
+                commit=False,
+                entity_type="protocol",
+                entity_id=reactivated.id,
+                event_type="protocol_reactivated",
+                from_state="inactive",
+                to_state="active",
+                message=(
+                    "Protocol version reactivated by an approved governed "
+                    "recovery."
+                ),
+                event_data={
+                    "recovery_id": recovery.id,
+                    "source_release_id": source_release.id,
+                    "recovery_sha256": sha256,
+                    "action": action,
+                },
+                **actor_data(actor),
+            )
+            db.commit()
+        except IntegrityError as error:
+            db.rollback()
+            raise ProtocolGovernanceConflictError(
+                "The governed recovery conflicted with another write."
+            ) from error
+        except Exception:
+            db.rollback()
+            raise
+
+        return ProtocolGovernanceService._to_read(db, record)
+
+    @staticmethod
+    def list_recoveries(
+        db: Session,
+    ) -> list[ProtocolGovernanceRecoveryRead]:
+        return [
+            ProtocolGovernanceService._recovery_to_read(item)
+            for item in ProtocolGovernanceRepository.list_recoveries(db)
+        ]
+
+    @staticmethod
+    def get_lineage(
+        db: Session,
+        protocol_id: str,
+    ) -> ProtocolGovernanceLineageRead:
+        protocol = ProtocolRepository.get_by_id(db, protocol_id)
+        if protocol is None:
+            raise ProtocolGovernanceNotFoundError(
+                f"Protocol '{protocol_id}' was not found."
+            )
+        versions = ProtocolRepository.list_by_code(db, protocol.code)
+        ids = {item.id for item in versions}
+        if any(item.treatment_type != protocol.treatment_type for item in versions):
+            raise ProtocolGovernanceIntegrityError(
+                "Protocol lineage contains conflicting treatment types."
+            )
+
+        releases = []
+        for record in ProtocolGovernanceRepository.list_releases(db):
+            if (
+                record.source_protocol_id in ids
+                or record.released_protocol_id in ids
+            ):
+                releases.append(
+                    ProtocolGovernanceService._release_to_read(record)
+                )
+        recoveries = []
+        for record in ProtocolGovernanceRepository.list_recoveries(db):
+            if (
+                record.reactivated_protocol_id in ids
+                or record.deactivated_protocol_id in ids
+            ):
+                recoveries.append(
+                    ProtocolGovernanceService._recovery_to_read(record)
+                )
+
+        active_ids = [item.id for item in versions if item.is_active]
+        if len(active_ids) > 1:
+            raise ProtocolGovernanceIntegrityError(
+                "Protocol lineage has more than one active version."
+            )
+
+        return ProtocolGovernanceLineageRead(
+            protocol_code=protocol.code,
+            treatment_type=protocol.treatment_type,
+            versions=[
+                ProtocolRead.model_validate(item)
+                for item in versions
+            ],
+            releases=releases,
+            recoveries=recoveries,
+            active_protocol_ids=active_ids,
+        )
 
     @staticmethod
     def list_releases(

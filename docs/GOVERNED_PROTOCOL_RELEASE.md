@@ -105,9 +105,10 @@ write.
 
 A governed release is historical evidence and is never deleted or rewritten.
 
-Stage 23 does not implement a destructive rollback. A future reversal or
-reactivation must be represented as another explicit governed action so the
-original release remains visible.
+Stage 23 does not implement a destructive rollback. Stage 24 adds
+[Governed Protocol Recovery](GOVERNED_PROTOCOL_RECOVERY.md), where any supported
+reversal or reactivation is represented as another explicit governed action and
+the original release remains visible.
 
 ## Clinical boundary
 

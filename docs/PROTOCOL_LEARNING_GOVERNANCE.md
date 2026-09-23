@@ -109,3 +109,13 @@ Stage 23 adds the explicit release step after a case reaches
 
 A release is a separate administrator action and is never implied by clinical or
 operational approval alone.
+
+
+## Governed recovery
+
+Stage 24 adds recovery cases that can only originate from an exact immutable
+release. The backend derives whether the case is a reactivation candidate or a
+revision-rollback candidate; callers cannot choose an arbitrary protocol
+version. Recovery still requires independent clinical review, operational
+acknowledgement and separate administrator execution. See
+[Governed Protocol Recovery](GOVERNED_PROTOCOL_RECOVERY.md).

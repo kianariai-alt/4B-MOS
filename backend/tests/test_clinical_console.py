@@ -107,6 +107,10 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "executeGovernanceRelease" in source
     assert "/release`" in source
     assert "item.release" in source
+    assert "createGovernanceRecoveryCase" in source
+    assert "executeGovernanceRecovery" in source
+    assert "item.recovery" in source
+    assert "recoverySourceReleaseIds" in source
     assert "createTreatmentDecision" in source
     assert "currentTreatmentDecisions" in source
     assert "selectedDecisionProtocols" in source
