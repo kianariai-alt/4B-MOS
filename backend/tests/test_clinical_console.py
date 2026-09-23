@@ -120,6 +120,12 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert 'apiRequest("/pilot-readiness")' in source
     assert "renderPilotReadiness" in source
     assert "canReadPilotReadiness" in source
+    assert 'apiRequest("/pilot-readiness/manual-gates")' in source
+    assert "createPilotManualAttestation" in source
+    assert "reviewPilotManualAttestation" in source
+    assert "pilot-attestation-form" in source
+    assert "pilot-review-form" in source
+    assert "readiness_sha256" in source
     assert "createTreatmentDecision" in source
     assert "currentTreatmentDecisions" in source
     assert "selectedDecisionProtocols" in source
