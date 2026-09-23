@@ -51,6 +51,12 @@ independent same-role review. Clinical sign-offs require two physicians and
 operational sign-offs require two administrators. Approval records evidence of
 human review; it still does not grant clinical clearance or launch authorization.
 
+The [pilot launch package](docs/PILOT_LAUNCH_PACKAGE.md) freezes one manifest of
+the current passing readiness snapshot and the exact approved attestation/review
+hashes for all seven manual gates. Mixed release references, stale readiness or
+missing approvals block package creation. The package remains evidence only and
+still requires an explicit human release decision.
+
 The root [production container artifact](docs/CONTAINER_RELEASE.md) runs as a
 non-root user and is build/smoke-tested by CI with a read-only root filesystem.
 It remains deployment-provider neutral and never migrates on normal startup.

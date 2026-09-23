@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.app.models.pilot_release import (
     PilotManualGateAttestation,
     PilotManualGateReview,
+    PilotLaunchPackage,
 )
 
 
@@ -119,6 +122,66 @@ class PilotManualGateRepository:
             rationale=rationale,
             reviewed_by_user_id=reviewed_by_user_id,
             reviewed_by_role=reviewed_by_role,
+            payload=payload,
+            sha256=sha256,
+            created_at=created_at,
+        )
+        db.add(record)
+        db.flush()
+        db.refresh(record)
+        return record
+
+
+
+class PilotLaunchPackageRepository:
+    @staticmethod
+    def get(
+        db: Session,
+        package_id: str,
+    ) -> PilotLaunchPackage | None:
+        return db.get(PilotLaunchPackage, package_id)
+
+    @staticmethod
+    def get_by_release_ref(
+        db: Session,
+        release_ref: str,
+    ) -> PilotLaunchPackage | None:
+        return db.scalar(
+            select(PilotLaunchPackage).where(
+                PilotLaunchPackage.release_ref == release_ref
+            )
+        )
+
+    @staticmethod
+    def list(db: Session) -> list[PilotLaunchPackage]:
+        return list(
+            db.scalars(
+                select(PilotLaunchPackage).order_by(
+                    PilotLaunchPackage.created_at.asc(),
+                    PilotLaunchPackage.id.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
+    def create(
+        db: Session,
+        *,
+        package_id: str,
+        release_ref: str,
+        readiness_sha256: str,
+        attestation_manifest: list[dict],
+        created_by_user_id: str,
+        payload: dict,
+        sha256: str,
+        created_at,
+    ) -> PilotLaunchPackage:
+        record = PilotLaunchPackage(
+            id=package_id,
+            release_ref=release_ref,
+            readiness_sha256=readiness_sha256,
+            attestation_manifest=list(attestation_manifest),
+            created_by_user_id=created_by_user_id,
             payload=payload,
             sha256=sha256,
             created_at=created_at,

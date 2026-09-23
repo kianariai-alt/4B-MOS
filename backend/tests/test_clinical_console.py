@@ -68,6 +68,9 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
     assert 'id="pilot-readiness-summary"' in html
     assert 'id="pilot-readiness-checks"' in html
     assert 'id="pilot-manual-gates"' in html
+    assert 'id="pilot-launch-preview"' in html
+    assert 'id="pilot-launch-history"' in html
+    assert 'id="freeze-pilot-launch-package-button"' in html
     assert "هیچ موردی از پیش انتخاب نمی‌شود" in html
     assert "جایگزین قضاوت مستقل پزشک نمی‌شود" in html
     assert "وجود نداشتن یافته، مجوز بالینی نیست" in html
@@ -126,6 +129,10 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "pilot-attestation-form" in source
     assert "pilot-review-form" in source
     assert "readiness_sha256" in source
+    assert "renderPilotLaunchPackage" in source
+    assert "freezePilotLaunchPackage" in source
+    assert "/launch-package-preview" in source
+    assert "/launch-packages" in source
     assert "createTreatmentDecision" in source
     assert "currentTreatmentDecisions" in source
     assert "selectedDecisionProtocols" in source

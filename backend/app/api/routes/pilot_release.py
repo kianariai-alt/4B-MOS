@@ -10,6 +10,9 @@ from backend.app.schemas.pilot_release import (
     PilotManualGateAttestationRead,
     PilotManualGateReviewCreate,
     PilotManualGateStatusRead,
+    PilotLaunchPackageCreate,
+    PilotLaunchPackagePreviewRead,
+    PilotLaunchPackageRead,
 )
 from backend.app.services.pilot_release import (
     PilotManualGateAuthorizationError,
@@ -17,6 +20,13 @@ from backend.app.services.pilot_release import (
     PilotManualGateIntegrityError,
     PilotManualGateNotFoundError,
     PilotManualGateService,
+)
+from backend.app.services.pilot_launch import (
+    PilotLaunchPackageAuthorizationError,
+    PilotLaunchPackageConflictError,
+    PilotLaunchPackageIntegrityError,
+    PilotLaunchPackageNotFoundError,
+    PilotLaunchPackageService,
 )
 
 
@@ -139,3 +149,75 @@ def review_manual_gate_attestation(
         PilotManualGateNotFoundError,
     ) as error:
         _translate(error)
+
+
+
+@router.get(
+    "/launch-package-preview",
+    response_model=PilotLaunchPackagePreviewRead,
+)
+def preview_pilot_launch_package(
+    _actor: User = Depends(require_roles("admin", "physician")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return PilotLaunchPackageService.preview(db, settings)
+    except PilotLaunchPackageIntegrityError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@router.get(
+    "/launch-packages",
+    response_model=list[PilotLaunchPackageRead],
+)
+def list_pilot_launch_packages(
+    _actor: User = Depends(require_roles("admin", "physician")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return PilotLaunchPackageService.list(db)
+    except PilotLaunchPackageIntegrityError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@router.get(
+    "/launch-packages/{package_id}",
+    response_model=PilotLaunchPackageRead,
+)
+def get_pilot_launch_package(
+    package_id: str,
+    _actor: User = Depends(require_roles("admin", "physician")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return PilotLaunchPackageService.get(db, package_id)
+    except PilotLaunchPackageNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except PilotLaunchPackageIntegrityError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@router.post(
+    "/launch-packages",
+    response_model=PilotLaunchPackageRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_pilot_launch_package(
+    payload: PilotLaunchPackageCreate,
+    actor: User = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return PilotLaunchPackageService.create(
+            db,
+            payload,
+            actor=actor,
+            config=settings,
+        )
+    except PilotLaunchPackageAuthorizationError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except (
+        PilotLaunchPackageConflictError,
+        PilotLaunchPackageIntegrityError,
+    ) as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error

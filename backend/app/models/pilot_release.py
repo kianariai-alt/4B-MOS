@@ -167,10 +167,59 @@ class PilotManualGateReview(Base):
     )
 
 
+class PilotLaunchPackage(Base):
+    __tablename__ = "pilot_launch_packages"
+    __table_args__ = (
+        UniqueConstraint(
+            "release_ref",
+            name="uq_pilot_launch_package_release_ref",
+        ),
+        CheckConstraint(
+            "length(readiness_sha256) = 64",
+            name="ck_pilot_launch_package_readiness_sha256",
+        ),
+        CheckConstraint(
+            "length(sha256) = 64",
+            name="ck_pilot_launch_package_sha256",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    release_ref: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+        index=True,
+    )
+    readiness_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    attestation_manifest: Mapped[list] = mapped_column(JSON, nullable=False)
+    created_by_user_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+    )
+
+
 def _reject_rewrite(mapper, connection, target):
     raise ValueError("Pilot manual gate records are append-only.")
 
 
-for _model in (PilotManualGateAttestation, PilotManualGateReview):
+for _model in (
+    PilotManualGateAttestation,
+    PilotManualGateReview,
+    PilotLaunchPackage,
+):
     event.listen(_model, "before_update", _reject_rewrite)
     event.listen(_model, "before_delete", _reject_rewrite)
