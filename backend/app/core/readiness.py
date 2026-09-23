@@ -48,6 +48,8 @@ REQUIRED_DATABASE_TABLES = frozenset(
         "pilot_manual_gate_reviews",
         "pilot_launch_packages",
         "pilot_release_decisions",
+        "pilot_visit_enrollments",
+        "pilot_stop_events",
     }
 )
 

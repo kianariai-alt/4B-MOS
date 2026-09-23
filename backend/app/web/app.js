@@ -203,6 +203,15 @@ const elements = {
   safetyWorkspace: document.querySelector("#safety-workspace"),
   pilotReadinessTab: document.querySelector("#pilot-readiness-tab"),
   pilotReadinessWorkspace: document.querySelector("#pilot-readiness-workspace"),
+  pilotExecutionTab: document.querySelector("#pilot-execution-tab"),
+  pilotExecutionWorkspace: document.querySelector("#pilot-execution-workspace"),
+  pilotExecutionLoadForm: document.querySelector("#pilot-execution-load-form"),
+  pilotExecutionReleaseId: document.querySelector("#pilot-execution-release-id"),
+  pilotExecutionMessage: document.querySelector("#pilot-execution-message"),
+  pilotExecutionSummary: document.querySelector("#pilot-execution-summary"),
+  pilotExecutionAcceptance: document.querySelector("#pilot-execution-acceptance"),
+  pilotEnrollmentForm: document.querySelector("#pilot-enrollment-form"),
+  pilotExecutionStopForm: document.querySelector("#pilot-execution-stop-form"),
   loadPilotReadinessButton: document.querySelector("#load-pilot-readiness-button"),
   pilotReadinessMessage: document.querySelector("#pilot-readiness-message"),
   pilotReadinessSummary: document.querySelector("#pilot-readiness-summary"),
@@ -325,6 +334,8 @@ let currentPilotGateStatuses = [];
 let currentPilotLaunchPreview = null;
 let currentPilotLaunchPackages = [];
 let currentPilotReleaseDecisions = [];
+let currentPilotExecution = null;
+let pilotExecutionRequestInProgress = false;
 let sessionGeneration = 0;
 const selectedFacts = new Map();
 const selectedDecisionProtocols = new Set();
@@ -455,6 +466,10 @@ function canReadSafety() {
 
 function canRunSafetyEvaluation() {
   return Boolean(currentUser && SAFETY_EVALUATE_ROLES.has(currentUser.role));
+}
+
+function canReadPilotExecution() {
+  return Boolean(currentUser && ["admin", "physician"].includes(currentUser.role));
 }
 
 function canReadPilotReadiness() {
@@ -1616,6 +1631,189 @@ function createPilotReviewForm(attestation) {
   return form;
 }
 
+function showPilotExecutionMessage(message, isError = false) {
+  elements.pilotExecutionMessage.textContent = message;
+  elements.pilotExecutionMessage.classList.toggle("is-error", isError);
+  elements.pilotExecutionMessage.hidden = !message;
+}
+
+function resetPilotExecutionState() {
+  currentPilotExecution = null;
+  pilotExecutionRequestInProgress = false;
+  elements.pilotExecutionLoadForm.reset();
+  elements.pilotEnrollmentForm.reset();
+  elements.pilotExecutionStopForm.reset();
+  elements.pilotExecutionSummary.replaceChildren();
+  elements.pilotExecutionAcceptance.replaceChildren();
+  elements.pilotEnrollmentForm.hidden = true;
+  elements.pilotExecutionStopForm.hidden = true;
+  showPilotExecutionMessage("");
+}
+
+function renderPilotExecution(operations, acceptance) {
+  currentPilotExecution = operations;
+  const summary = document.createElement("article");
+  summary.className = "evidence-brief-card";
+  summary.append(
+    createTextElement("h4", "", "محدوده و وضعیت واقعی Release"),
+    createDefinitionGrid([
+      ["وضعیت", operations.status],
+      ["پیش‌نیاز Enforcement", operations.pilot_enforcement_enabled ? "فعال" : "غیرفعال"],
+      ["تعداد ویزیت ثبت‌شده", toPersianNumber(operations.enrolled_visits)],
+      ["ظرفیت باقیمانده", toPersianNumber(operations.remaining_enrollment_slots)],
+      ["SHA-256 تصمیم Release", operations.release_decision_sha256],
+      ["توقف ثبت شده", operations.stopped ? "بله" : "خیر"],
+      ["مجوز خودکار درمان فردی", "خیر"],
+    ], "safety-summary-grid"),
+  );
+  elements.pilotExecutionSummary.replaceChildren(summary);
+
+  const evidence = document.createElement("article");
+  evidence.className = "evidence-brief-card";
+  evidence.append(
+    createTextElement("h4", "", "مرور شواهد پایلوت"),
+    createDefinitionGrid([
+      ["وضعیت پیگیری", acceptance.status],
+      ["ویزیت دارای طرح درمان", toPersianNumber(acceptance.visits_with_treatment)],
+      ["ویزیت دارای outcome", toPersianNumber(acceptance.visits_with_outcome)],
+      ["مشاهده outcome", toPersianNumber(acceptance.total_outcome_observations)],
+      ["موارد adverse-event ثبت‌شده در outcome", toPersianNumber(acceptance.total_reported_adverse_event_entries)],
+      ["Evidence manifest SHA-256", acceptance.evidence_manifest_sha256],
+      ["مرور بالینی مستقل", "الزامی"],
+      ["نتیجه‌گیری اثربخشی", "خیر"],
+    ], "safety-summary-grid"),
+  );
+  elements.pilotExecutionAcceptance.replaceChildren(evidence);
+  elements.pilotEnrollmentForm.hidden = !(
+    currentUser
+    && currentUser.role === "physician"
+    && operations.status === "active"
+    && operations.new_pilot_activity_allowed
+    && operations.remaining_enrollment_slots > 0
+  );
+  elements.pilotExecutionStopForm.hidden = operations.stopped;
+  showPilotExecutionMessage(
+    operations.status === "active" && operations.new_pilot_activity_allowed
+      ? "Release در بازهٔ مجاز فعال است؛ تصمیم درمان هر بیمار همچنان مستقل است."
+      : "فعالیت جدید پایلوت مجاز نیست. ثبت مستندات و مراقبت ضروری بیمار باید ادامه یابد.",
+    operations.status !== "active" || !operations.new_pilot_activity_allowed,
+  );
+}
+
+async function loadPilotExecution({ quiet = false } = {}) {
+  if (!canReadPilotExecution() || pilotExecutionRequestInProgress) {
+    return;
+  }
+  const releaseId = elements.pilotExecutionReleaseId.value.trim();
+  if (!releaseId) {
+    if (!quiet) showPilotExecutionMessage("شناسه Human Release Decision را وارد کنید.", true);
+    return;
+  }
+  pilotExecutionRequestInProgress = true;
+  if (!quiet) showPilotExecutionMessage("در حال بررسی وضعیت پایلوت…");
+  try {
+    const prefix = `/pilot-execution/releases/${encodeURIComponent(releaseId)}`;
+    const [operations, acceptance] = await Promise.all([
+      apiRequest(`${prefix}/operations`),
+      apiRequest(`${prefix}/acceptance`),
+    ]);
+    renderPilotExecution(operations, acceptance);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      showLogin();
+      return;
+    }
+    currentPilotExecution = null;
+    elements.pilotExecutionSummary.replaceChildren();
+    elements.pilotExecutionAcceptance.replaceChildren();
+    elements.pilotEnrollmentForm.hidden = true;
+    elements.pilotExecutionStopForm.hidden = true;
+    showPilotExecutionMessage("وضعیت این Release قابل تأیید نیست؛ شناسه و دسترسی را بررسی کنید.", true);
+  } finally {
+    pilotExecutionRequestInProgress = false;
+  }
+}
+
+async function enrollPilotVisit() {
+  if (
+    !canReadPilotExecution()
+    || !currentUser
+    || currentUser.role !== "physician"
+    || !currentPilotExecution
+    || pilotExecutionRequestInProgress
+    || !elements.pilotEnrollmentForm.reportValidity()
+  ) return;
+  const form = elements.pilotEnrollmentForm;
+  pilotExecutionRequestInProgress = true;
+  try {
+    await apiRequest(
+      `/pilot-execution/releases/${encodeURIComponent(currentPilotExecution.release_decision_id)}/visits/${encodeURIComponent(form.elements.visit_id.value.trim())}/enroll`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_release_decision_sha256: currentPilotExecution.release_decision_sha256,
+          protocol_template_id: form.elements.protocol_id.value.trim(),
+          clinician_decision_id: form.elements.decision_id.value.trim(),
+          expected_clinician_decision_sha256: form.elements.decision_sha256.value.trim(),
+          consent_evidence_reference: form.elements.consent_reference.value.trim(),
+          consent_confirmed_at: new Date(form.elements.consent_confirmed_at.value).toISOString(),
+          clinician_statement: form.elements.statement.value.trim(),
+        }),
+      },
+    );
+    form.reset();
+    pilotExecutionRequestInProgress = false;
+    await loadPilotExecution({ quiet: true });
+    showPilotExecutionMessage("ویزیت ثبت شد؛ این اقدام مجوز خودکار درمان نیست.");
+  } catch (error) {
+    showPilotExecutionMessage(
+      error instanceof ApiError && [403, 409].includes(error.status)
+        ? error.message
+        : "ثبت‌نام ویزیت انجام نشد؛ وضعیت مجوز، پروتکل و تصمیم پزشک را بررسی کنید.",
+      true,
+    );
+  } finally {
+    pilotExecutionRequestInProgress = false;
+  }
+}
+
+async function stopPilotExecution() {
+  if (
+    !canReadPilotExecution()
+    || !currentPilotExecution
+    || pilotExecutionRequestInProgress
+    || !elements.pilotExecutionStopForm.reportValidity()
+  ) return;
+  const form = elements.pilotExecutionStopForm;
+  pilotExecutionRequestInProgress = true;
+  try {
+    await apiRequest(
+      `/pilot-execution/releases/${encodeURIComponent(currentPilotExecution.release_decision_id)}/stop`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_release_decision_sha256: currentPilotExecution.release_decision_sha256,
+          reason_category: form.elements.category.value,
+          reason: form.elements.reason.value.trim(),
+        }),
+      },
+    );
+    form.reset();
+    pilotExecutionRequestInProgress = false;
+    await loadPilotExecution({ quiet: true });
+    showPilotExecutionMessage("توقف پایلوت ثبت شد؛ شروع دوباره به Release جدید نیاز دارد.");
+  } catch (error) {
+    showPilotExecutionMessage(
+      error instanceof ApiError && [403, 409].includes(error.status)
+        ? error.message
+        : "توقف ثبت نشد؛ وضعیت Release و اتصال را بررسی کنید.",
+      true,
+    );
+  } finally {
+    pilotExecutionRequestInProgress = false;
+  }
+}
+
 function renderPilotLaunchPackage(preview, packages, decisions) {
   currentPilotLaunchPreview = preview;
   currentPilotLaunchPackages = packages;
@@ -2202,6 +2400,9 @@ function setWorkspace(workspace) {
   if (workspace === "pilot" && !canReadPilotReadiness()) {
     return;
   }
+  if (workspace === "pilot-execution" && !canReadPilotExecution()) {
+    return;
+  }
 
   activeWorkspace = workspace;
   const isFlow = workspace === "flow";
@@ -2210,24 +2411,28 @@ function setWorkspace(workspace) {
   const isEvidence = workspace === "evidence";
   const isSafety = workspace === "safety";
   const isPilot = workspace === "pilot";
+  const isPilotExecution = workspace === "pilot-execution";
   elements.flowWorkspace.hidden = !isFlow;
   elements.copilotWorkspace.hidden = !isCopilot;
   elements.learningWorkspace.hidden = !isLearning;
   elements.evidenceWorkspace.hidden = !isEvidence;
   elements.safetyWorkspace.hidden = !isSafety;
   elements.pilotReadinessWorkspace.hidden = !isPilot;
+  elements.pilotExecutionWorkspace.hidden = !isPilotExecution;
   elements.flowTab.setAttribute("aria-selected", String(isFlow));
   elements.copilotTab.setAttribute("aria-selected", String(isCopilot));
   elements.learningTab.setAttribute("aria-selected", String(isLearning));
   elements.evidenceTab.setAttribute("aria-selected", String(isEvidence));
   elements.safetyTab.setAttribute("aria-selected", String(isSafety));
   elements.pilotReadinessTab.setAttribute("aria-selected", String(isPilot));
+  elements.pilotExecutionTab.setAttribute("aria-selected", String(isPilotExecution));
   elements.flowTab.tabIndex = isFlow ? 0 : -1;
   elements.copilotTab.tabIndex = isCopilot ? 0 : -1;
   elements.learningTab.tabIndex = isLearning ? 0 : -1;
   elements.evidenceTab.tabIndex = isEvidence ? 0 : -1;
   elements.safetyTab.tabIndex = isSafety ? 0 : -1;
   elements.pilotReadinessTab.tabIndex = isPilot ? 0 : -1;
+  elements.pilotExecutionTab.tabIndex = isPilotExecution ? 0 : -1;
 
   if (isFlow) {
     startAutoRefresh();
@@ -2277,6 +2482,7 @@ function showLogin() {
   safetyRequestInProgress = false;
   safetyEscalationRequestInProgress = false;
   pilotReadinessRequestInProgress = false;
+  pilotExecutionRequestInProgress = false;
   actionInProgress = false;
   elements.refreshButton.disabled = false;
   elements.refreshButton.textContent = "تازه‌سازی";
@@ -2302,6 +2508,7 @@ function showLogin() {
   resetEvidenceState();
   resetSafetyState();
   resetPilotReadinessState();
+  resetPilotExecutionState();
   activeWorkspace = "flow";
   elements.flowWorkspace.hidden = false;
   elements.copilotWorkspace.hidden = true;
@@ -2309,23 +2516,27 @@ function showLogin() {
   elements.evidenceWorkspace.hidden = true;
   elements.safetyWorkspace.hidden = true;
   elements.pilotReadinessWorkspace.hidden = true;
+  elements.pilotExecutionWorkspace.hidden = true;
   elements.flowTab.setAttribute("aria-selected", "true");
   elements.copilotTab.setAttribute("aria-selected", "false");
   elements.learningTab.setAttribute("aria-selected", "false");
   elements.evidenceTab.setAttribute("aria-selected", "false");
   elements.safetyTab.setAttribute("aria-selected", "false");
   elements.pilotReadinessTab.setAttribute("aria-selected", "false");
+  elements.pilotExecutionTab.setAttribute("aria-selected", "false");
   elements.flowTab.tabIndex = 0;
   elements.copilotTab.tabIndex = -1;
   elements.learningTab.tabIndex = -1;
   elements.evidenceTab.tabIndex = -1;
   elements.safetyTab.tabIndex = -1;
   elements.pilotReadinessTab.tabIndex = -1;
+  elements.pilotExecutionTab.tabIndex = -1;
   elements.copilotTab.hidden = true;
   elements.learningTab.hidden = true;
   elements.evidenceTab.hidden = true;
   elements.safetyTab.hidden = true;
   elements.pilotReadinessTab.hidden = true;
+  elements.pilotExecutionTab.hidden = true;
   elements.consoleView.hidden = true;
   elements.identityArea.hidden = true;
   elements.loginView.hidden = false;
@@ -2345,6 +2556,7 @@ function showConsole() {
   elements.evidenceTab.hidden = !canReadEvidence();
   elements.safetyTab.hidden = !canReadSafety();
   elements.pilotReadinessTab.hidden = !canReadPilotReadiness();
+  elements.pilotExecutionTab.hidden = !canReadPilotExecution();
   elements.evidenceComposer.hidden = !canCreateEvidence();
   elements.runSafetyEvaluationButton.hidden = !canRunSafetyEvaluation();
   setWorkspace("flow");
@@ -4579,6 +4791,7 @@ function availableWorkspaceTabs() {
     { workspace: "evidence", tab: elements.evidenceTab },
     { workspace: "safety", tab: elements.safetyTab },
     { workspace: "pilot", tab: elements.pilotReadinessTab },
+    { workspace: "pilot-execution", tab: elements.pilotExecutionTab },
   ].filter((entry) => !entry.tab.hidden);
 }
 
@@ -4598,6 +4811,8 @@ elements.refreshButton.addEventListener("click", () => {
     loadSafetyEscalations();
   } else if (activeWorkspace === "pilot") {
     loadPilotReadiness();
+  } else if (activeWorkspace === "pilot-execution") {
+    loadPilotExecution();
   } else {
     loadFlow();
   }
@@ -4647,6 +4862,19 @@ elements.learningGovernanceCases.addEventListener("submit", async (event) => {
 elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
 elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
 elements.pilotReadinessTab.addEventListener("click", () => setWorkspace("pilot"));
+elements.pilotExecutionTab.addEventListener("click", () => setWorkspace("pilot-execution"));
+elements.pilotExecutionLoadForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await loadPilotExecution();
+});
+elements.pilotEnrollmentForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await enrollPilotVisit();
+});
+elements.pilotExecutionStopForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await stopPilotExecution();
+});
 elements.loadPilotReadinessButton.addEventListener("click", () => loadPilotReadiness());
 elements.freezePilotLaunchPackageButton.addEventListener(
   "click",
@@ -4680,6 +4908,7 @@ for (const tab of [
   elements.evidenceTab,
   elements.safetyTab,
   elements.pilotReadinessTab,
+  elements.pilotExecutionTab,
 ]) {
   tab.addEventListener("keydown", (event) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
@@ -4880,6 +5109,8 @@ window.addEventListener("online", () => {
     loadSafetyEscalations({ quiet: true });
   } else if (activeWorkspace === "pilot") {
     loadPilotReadiness({ quiet: true });
+  } else if (activeWorkspace === "pilot-execution") {
+    loadPilotExecution({ quiet: true });
   }
 });
 

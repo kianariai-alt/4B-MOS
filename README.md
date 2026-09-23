@@ -168,3 +168,13 @@ explicitly non-recommendation, non-ranking, non-clearance and subject to
 independent physician review. It does not infer applicability or learn from
 patient records. The clinical console exposes this workflow without weakening
 the same role, hash, immutability or independent-review controls.
+
+
+The [controlled pilot execution and acceptance](docs/CONTROLLED_PILOT_EXECUTION.md)
+binds pilot visits to independently authorized releases, current clinician
+decisions and a documented consent reference. New pilot interventions fail
+closed on scope, cap, expiry, changed evidence or append-only STOP; the
+post-pilot report remains an evidence summary, not a clinical conclusion.
+The [Persian engineering handoff](docs/FINAL_RELEASE_HANDOFF_FA.md) lists
+deployment prerequisites and explicitly distinguishes merged code from live
+clinical deployment.

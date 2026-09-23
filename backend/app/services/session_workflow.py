@@ -5,6 +5,7 @@ from backend.app.db.transactions import atomic_write
 
 from backend.app.models.treatment_session import TreatmentSession
 from backend.app.models.user import User
+from backend.app.services.pilot_execution import PilotExecutionConflictError, PilotExecutionService
 from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.treatment_session import (
     TreatmentSessionRepository,
@@ -149,6 +150,14 @@ class SessionWorkflowService:
                 set(),
             )
         )
+
+        if new_status == "in_treatment":
+            try:
+                PilotExecutionService.require_treatment_eligible(
+                    db, treatment_session.treatment_id
+                )
+            except PilotExecutionConflictError as error:
+                raise SessionWorkflowConflictError(str(error)) from error
 
         if new_status not in allowed:
             raise SessionWorkflowConflictError(

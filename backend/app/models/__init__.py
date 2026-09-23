@@ -54,6 +54,7 @@ from backend.app.models.protocol_governance import (
     ProtocolGovernanceRelease,
     ProtocolGovernanceRecovery,
 )
+from backend.app.models.pilot_execution import PilotVisitEnrollment, PilotStopEvent
 from backend.app.models.pilot_release import (
     PilotManualGateAttestation,
     PilotManualGateReview,
@@ -96,4 +97,6 @@ __all__ = [
     "PilotManualGateReview",
     "PilotLaunchPackage",
     "PilotReleaseDecision",
+    "PilotVisitEnrollment",
+    "PilotStopEvent",
 ]

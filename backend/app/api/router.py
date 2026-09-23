@@ -104,6 +104,7 @@ from backend.app.api.routes.pilot_readiness import (
 from backend.app.api.routes.pilot_release import (
     router as pilot_release_router,
 )
+from backend.app.api.routes.pilot_execution import router as pilot_execution_router
 
 api_router = APIRouter()
 api_router.include_router(session_finalization_router)
@@ -228,3 +229,4 @@ api_router.include_router(
 api_router.include_router(
     pilot_release_router
 )
+api_router.include_router(pilot_execution_router)

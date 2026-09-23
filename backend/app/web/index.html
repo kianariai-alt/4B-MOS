@@ -180,6 +180,9 @@
           >
             آمادگی پایلوت
           </button>
+          <button id="pilot-execution-tab" class="workspace-tab" type="button"
+            role="tab" aria-controls="pilot-execution-workspace" aria-selected="false"
+            tabindex="-1" hidden>اجرای پایلوت</button>
         </nav>
 
         <datalist id="active-visits"></datalist>
@@ -894,6 +897,65 @@
             </p>
             <div id="pilot-launch-preview" class="safety-summary"></div>
             <div id="pilot-launch-history" class="evidence-briefs"></div>
+          </section>
+        </section>
+
+        <section id="pilot-execution-workspace" class="workspace-panel evidence-workspace"
+          role="tabpanel" aria-labelledby="pilot-execution-tab" tabindex="0" hidden>
+          <header class="workspace-intro">
+            <div><p class="card-kicker">Bounded pilot operations</p><h2>اجرای پایلوت کنترل‌شده</h2></div>
+            <p>ثبت‌نام ویزیت در پایلوت، جای رضایت معتبر بیمار یا تصمیم درمانی مستقل پزشک را نمی‌گیرد.</p>
+          </header>
+          <aside class="safety-boundary" role="note">
+            <strong>توقف فوری پایلوت</strong>
+            <span>توقف، آغاز فعالیت جدید پایلوت را مسدود می‌کند. مراقبت ضروری و ثبت مستندات درمان‌های قبلی باید طبق قضاوت پزشک ادامه یابد.</span>
+          </aside>
+          <form id="pilot-execution-load-form" class="brief-form">
+            <label for="pilot-execution-release-id">شناسه Human Release Decision</label>
+            <input id="pilot-execution-release-id" name="release_id" required maxlength="36" />
+            <button class="button button-secondary" type="submit">بارگذاری وضعیت پایلوت</button>
+          </form>
+          <p id="pilot-execution-message" class="notice" role="status" aria-live="polite" hidden></p>
+          <div id="pilot-execution-summary" class="safety-summary"></div>
+          <section class="evidence-section" aria-labelledby="pilot-enroll-heading">
+            <div class="section-heading"><h3 id="pilot-enroll-heading">ثبت‌نام ویزیت توسط پزشک</h3></div>
+            <form id="pilot-enrollment-form" class="brief-form" hidden>
+              <label for="pilot-enroll-visit-id">شناسه ویزیت</label>
+              <input id="pilot-enroll-visit-id" name="visit_id" maxlength="36" required />
+              <label for="pilot-enroll-protocol-id">شناسه نسخه پروتکل</label>
+              <input id="pilot-enroll-protocol-id" name="protocol_id" maxlength="36" required />
+              <label for="pilot-enroll-clinician-id">شناسه تصمیم بالینی فعلی</label>
+              <input id="pilot-enroll-clinician-id" name="decision_id" maxlength="36" required />
+              <label for="pilot-enroll-clinician-sha">SHA-256 تصمیم بالینی</label>
+              <input id="pilot-enroll-clinician-sha" name="decision_sha256" minlength="64" maxlength="64" required />
+              <label for="pilot-enroll-consent-ref">ارجاع سند رضایت بیمار</label>
+              <input id="pilot-enroll-consent-ref" name="consent_reference" minlength="8" maxlength="500" required />
+              <label for="pilot-enroll-consent-at">تاریخ و زمان واقعی تأیید رضایت</label>
+              <input id="pilot-enroll-consent-at" name="consent_confirmed_at" type="datetime-local" required />
+              <label for="pilot-enroll-statement">اظهار پزشک درباره eligibility و مستندات رضایت</label>
+              <textarea id="pilot-enroll-statement" name="statement" minlength="20" maxlength="5000" rows="3" required></textarea>
+              <button class="button button-secondary" type="submit">ثبت ویزیت در پایلوت</button>
+            </form>
+          </section>
+          <section class="evidence-section" aria-labelledby="pilot-stop-heading">
+            <div class="section-heading"><h3 id="pilot-stop-heading">توقف غیرقابل‌بازگشت همین Release</h3></div>
+            <form id="pilot-execution-stop-form" class="brief-form" hidden>
+              <label for="pilot-stop-category">علت توقف</label>
+              <select id="pilot-stop-category" name="category" required>
+                <option value="clinical_safety">ایمنی بالینی</option>
+                <option value="operational">عملیاتی</option>
+                <option value="privacy">حریم خصوصی</option>
+                <option value="other">سایر</option>
+              </select>
+              <label for="pilot-stop-reason">شرح علت توقف</label>
+              <textarea id="pilot-stop-reason" name="reason" minlength="20" maxlength="5000" rows="3" required></textarea>
+              <label><input name="confirm" type="checkbox" required /> تأیید می‌کنم که این Release متوقف شده و برای شروع دوباره، Release جدید لازم است.</label>
+              <button class="button button-danger" type="submit">توقف پایلوت</button>
+            </form>
+          </section>
+          <section class="evidence-section" aria-labelledby="pilot-acceptance-heading">
+            <div class="section-heading"><h3 id="pilot-acceptance-heading">بسته پذیرش و پیگیری</h3></div>
+            <div id="pilot-execution-acceptance" class="evidence-briefs"></div>
           </section>
         </section>
       </section>

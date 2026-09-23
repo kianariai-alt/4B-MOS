@@ -189,6 +189,18 @@ class TreatmentService:
             protocol=protocol,
         )
 
+        from backend.app.services.pilot_execution import (
+            PilotExecutionConflictError, PilotExecutionService,
+        )
+        try:
+            PilotExecutionService.require_visit_eligible(
+                db, visit_id,
+                protocol_template_id=payload.protocol_template_id,
+                clinician_decision_id=payload.source_treatment_decision_id,
+            )
+        except PilotExecutionConflictError as error:
+            raise TreatmentDecisionLinkError(str(error)) from error
+
         treatment = TreatmentRepository.create(
             db,
             visit_id,
@@ -262,6 +274,14 @@ class TreatmentService:
         actor: User | None = None,
     ) -> Treatment:
         treatment = TreatmentService.get_treatment(db, treatment_id)
+        from backend.app.services.pilot_execution import (
+            PilotExecutionConflictError, PilotExecutionService,
+        )
+        if payload.status == "in_progress" and treatment.status != "in_progress":
+            try:
+                PilotExecutionService.require_treatment_eligible(db, treatment.id)
+            except PilotExecutionConflictError as error:
+                raise TreatmentDecisionLinkError(str(error)) from error
         old_status = treatment.status
         update_data = payload.model_dump(exclude_unset=True)
         changed_fields = list(update_data.keys())
