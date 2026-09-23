@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "f2c6b8d1a704"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a5d8e1f3b620"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "f2c6b8d1a704"
+            )) == "a5d8e1f3b620"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1231,6 +1231,66 @@ def test_pilot_launch_package_migration_refuses_package_history_loss(
             )) == "f2c6b8d1a704"
             assert connection.scalar(text(
                 "SELECT count(*) FROM pilot_launch_packages"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_pilot_release_decision_migration_refuses_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'pilot-release-decision-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "pilot_release_decisions" in inspector.get_table_names()
+        assert len(inspector.get_foreign_keys("pilot_release_decisions")) == 2
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('release-author', 'release_author', 'Release Author', "
+                "'hash', 'admin', 1, 0, 0, "
+                "'2026-09-23 12:00:00', '2026-09-23 12:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_launch_packages "
+                "(id, release_ref, readiness_sha256, attestation_manifest, "
+                "created_by_user_id, payload, sha256, created_at) VALUES "
+                "('release-package', 'rc-release-migration', '" + "1" * 64
+                + "', '[]', 'release-author', '{}', '" + "2" * 64 + "', "
+                "'2026-09-23 12:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_release_decisions "
+                "(id, package_id, package_sha256, action, starts_at, "
+                "expires_at, max_enrolled_visits, allowed_protocol_codes, "
+                "rationale, decided_by_user_id, payload, sha256, created_at) "
+                "VALUES ('release-decision', 'release-package', '" + "2" * 64
+                + "', 'hold', NULL, NULL, NULL, '[]', "
+                "'Synthetic migration release hold rationale.', "
+                "'release-author', '{}', '" + "3" * 64 + "', "
+                "'2026-09-23 12:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="pilot release decision history exists",
+        ):
+            command.downgrade(config, "f2c6b8d1a704")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "a5d8e1f3b620"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM pilot_release_decisions"
             )) == 1
     finally:
         engine.dispose()
