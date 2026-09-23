@@ -98,6 +98,9 @@ from backend.app.api.routes.protocol_governance import (
 from backend.app.api.routes.physician_copilot import (
     router as physician_copilot_router,
 )
+from backend.app.api.routes.pilot_readiness import (
+    router as pilot_readiness_router,
+)
 
 api_router = APIRouter()
 api_router.include_router(session_finalization_router)
@@ -215,4 +218,7 @@ api_router.include_router(
 )
 api_router.include_router(
     physician_copilot_router
+)
+api_router.include_router(
+    pilot_readiness_router
 )
