@@ -80,6 +80,7 @@ class PilotOperationsRead(BaseModel):
     remaining_enrollment_slots: int
     stopped: bool
     stop_sha256: str | None
+    pilot_enforcement_enabled: bool
     new_pilot_activity_allowed: bool
     individual_treatment_authorized: Literal[False] = False
 
