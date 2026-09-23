@@ -532,6 +532,23 @@ def test_openapi_keeps_release_endpoints_and_unique_operation_ids():
         ),
         ("/api/v1/protocol-governance/releases", "get"),
         ("/api/v1/pilot-readiness", "get"),
+        ("/api/v1/pilot-readiness/manual-gates", "get"),
+        (
+            "/api/v1/pilot-readiness/manual-gates/attestations",
+            "get",
+        ),
+        (
+            "/api/v1/pilot-readiness/manual-gates/attestations",
+            "post",
+        ),
+        (
+            "/api/v1/pilot-readiness/manual-gates/attestations/{attestation_id}",
+            "get",
+        ),
+        (
+            "/api/v1/pilot-readiness/manual-gates/attestations/{attestation_id}/review",
+            "post",
+        ),
         (
             "/api/v1/protocol-governance/releases/{release_id}/recovery-cases",
             "post",
