@@ -59,6 +59,7 @@ from backend.app.models.pilot_release import (
     PilotManualGateReview,
     PilotLaunchPackage,
     PilotReleaseDecision,
+    PilotVisitEnrollment,
 )
 
 __all__ = [
@@ -96,4 +97,5 @@ __all__ = [
     "PilotManualGateReview",
     "PilotLaunchPackage",
     "PilotReleaseDecision",
+    "PilotVisitEnrollment",
 ]
