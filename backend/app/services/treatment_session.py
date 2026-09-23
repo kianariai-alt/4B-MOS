@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from backend.app.db.transactions import atomic_write
 from backend.app.models.treatment_session import TreatmentSession
 from backend.app.models.user import User
+from backend.app.services.pilot_execution import PilotExecutionConflictError, PilotExecutionService
 from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.repositories.treatment import TreatmentRepository
 from backend.app.repositories.treatment_session import (
@@ -84,6 +85,11 @@ class TreatmentSessionService:
             raise TreatmentForSessionNotFoundError(
                 f"Treatment '{treatment_id}' was not found."
             )
+
+        try:
+            PilotExecutionService.require_treatment_eligible(db, treatment_id)
+        except PilotExecutionConflictError as error:
+            raise TreatmentSessionConflictError(str(error)) from error
 
         existing = (
             TreatmentSessionRepository.get_by_treatment_and_number(
