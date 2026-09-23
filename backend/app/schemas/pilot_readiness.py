@@ -28,6 +28,7 @@ class ControlledPilotReadinessRead(BaseModel):
     application: str
     version: str
     database_dialect: str
+    readiness_sha256: str
     automated_checks: list[PilotReadinessCheckRead]
     manual_gates: list[PilotManualGateRead]
     warnings: list[str]
