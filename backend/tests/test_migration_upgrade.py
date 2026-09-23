@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "a5d8e1f3b620"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b6e9c2d4a731"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "a5d8e1f3b620"
+            )) == "b6e9c2d4a731"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1291,6 +1291,74 @@ def test_pilot_release_decision_migration_refuses_history_loss(
             )) == "a5d8e1f3b620"
             assert connection.scalar(text(
                 "SELECT count(*) FROM pilot_release_decisions"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_pilot_execution_migration_refuses_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'pilot-execution-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "pilot_visit_enrollments" in inspector.get_table_names()
+        assert "pilot_stop_events" in inspector.get_table_names()
+        assert len(inspector.get_foreign_keys("pilot_visit_enrollments")) == 5
+        assert len(inspector.get_foreign_keys("pilot_stop_events")) == 2
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('pilot-admin', 'pilot_admin', 'Pilot Admin', "
+                "'hash', 'admin', 1, 0, 0, "
+                "'2026-09-24 10:00:00', '2026-09-24 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_launch_packages "
+                "(id, release_ref, readiness_sha256, attestation_manifest, "
+                "created_by_user_id, payload, sha256, created_at) VALUES "
+                "('pilot-package', 'pilot-migration', '" + "1" * 64
+                + "', '[]', 'pilot-admin', '{}', '" + "2" * 64 + "', "
+                "'2026-09-24 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_release_decisions "
+                "(id, package_id, package_sha256, action, starts_at, "
+                "expires_at, max_enrolled_visits, allowed_protocol_codes, "
+                "rationale, decided_by_user_id, payload, sha256, created_at) "
+                "VALUES ('pilot-decision', 'pilot-package', '" + "2" * 64
+                + "', 'hold', NULL, NULL, NULL, '[]', "
+                "'Synthetic historical pilot release hold.', 'pilot-admin', "
+                "'{}', '" + "3" * 64 + "', '2026-09-24 10:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_stop_events "
+                "(id, release_decision_id, release_decision_sha256, "
+                "reason_category, reason, stopped_by_user_id, payload, "
+                "sha256, created_at) VALUES ('pilot-stop', 'pilot-decision', '"
+                + "3" * 64 + "', 'operational', "
+                "'Synthetic migration safety stop.', 'pilot-admin', '{}', '"
+                + "4" * 64 + "', '2026-09-24 10:00:00')"
+            ))
+        with pytest.raises(
+            RuntimeError,
+            match="controlled pilot execution history exists",
+        ):
+            command.downgrade(config, "a5d8e1f3b620")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "b6e9c2d4a731"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM pilot_stop_events"
             )) == 1
     finally:
         engine.dispose()
