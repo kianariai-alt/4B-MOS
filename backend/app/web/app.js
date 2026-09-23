@@ -1756,7 +1756,7 @@ async function enrollPilotVisit() {
           clinician_decision_id: form.elements.decision_id.value.trim(),
           expected_clinician_decision_sha256: form.elements.decision_sha256.value.trim(),
           consent_evidence_reference: form.elements.consent_reference.value.trim(),
-          consent_confirmed_at: new Date().toISOString(),
+          consent_confirmed_at: new Date(form.elements.consent_confirmed_at.value).toISOString(),
           clinician_statement: form.elements.statement.value.trim(),
         }),
       },
