@@ -26,7 +26,8 @@ def production_settings():
 
 def seed_required_roles(db_session):
     for username, role in (
-        ("pilot-admin", "admin"),
+        ("pilot-admin-1", "admin"),
+        ("pilot-admin-2", "admin"),
         ("pilot-physician-1", "physician"),
         ("pilot-physician-2", "physician"),
         ("pilot-nurse", "nurse"),
@@ -117,6 +118,12 @@ def test_controlled_pilot_gate_passes_automated_prerequisites(
     assert all(item.status == "pass" for item in report.automated_checks)
     assert len(report.manual_gates) == 7
     assert {item.status for item in report.manual_gates} == {"manual_required"}
+    assert len(report.readiness_sha256) == 64
+    repeat = ControlledPilotReadinessService.build(
+        db_session,
+        production_settings(),
+    )
+    assert repeat.readiness_sha256 == report.readiness_sha256
     assert report.controlled_pilot_authorized is False
     assert report.is_clinical_clearance is False
     assert report.requires_human_release_decision is True
@@ -124,12 +131,12 @@ def test_controlled_pilot_gate_passes_automated_prerequisites(
     rendered = render_text(report)
     assert "AUTOMATED_PREREQUISITES_PASSED" in rendered
     assert "controlled_pilot_authorized=false" in rendered
-    assert "pilot-admin" not in rendered
+    assert "pilot-admin-1" not in rendered
     assert "PILOT-ACS" not in rendered
     assert "synthetic-hash" not in rendered
 
     serialized = json.dumps(report.model_dump(mode="json"))
-    assert "pilot-admin" not in serialized
+    assert "pilot-admin-1" not in serialized
     assert "PILOT-ACS" not in serialized
 
 
@@ -188,20 +195,32 @@ def test_controlled_pilot_gate_blocks_sqlite_even_when_other_checks_pass(
     )
 
 
-def test_pilot_readiness_endpoint_is_admin_only(client):
+def test_pilot_readiness_endpoint_is_release_role_only(client):
     response = client.get("/api/v1/pilot-readiness")
     assert response.status_code == 200
     body = response.json()
     assert body["controlled_pilot_authorized"] is False
     assert body["requires_human_release_decision"] is True
+    assert len(body["readiness_sha256"]) == 64
 
     physician_headers = create_role_headers(
         client,
         username="pilot_readiness_physician",
         role="physician",
     )
-    forbidden = client.get(
+    physician_read = client.get(
         "/api/v1/pilot-readiness",
         headers=physician_headers,
+    )
+    assert physician_read.status_code == 200
+
+    nurse_headers = create_role_headers(
+        client,
+        username="pilot_readiness_nurse",
+        role="nurse",
+    )
+    forbidden = client.get(
+        "/api/v1/pilot-readiness",
+        headers=nurse_headers,
     )
     assert forbidden.status_code == 403

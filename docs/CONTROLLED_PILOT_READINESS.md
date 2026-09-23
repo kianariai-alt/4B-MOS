@@ -55,13 +55,13 @@ basis for the controlled clinical pilot gate.
 The automated gate verifies, without returning identities or counts, that active
 accounts exist for at least:
 
-- one administrator;
+- two administrators;
 - two physicians;
 - one nurse;
 - one operator.
 
-Two physicians are required because independent clinical governance review
-cannot be performed by the case author.
+Two physicians are required for independent clinical attestation review and two
+administrators are required for independent operational attestation review.
 
 ### Protocol registry and lineage
 
@@ -98,7 +98,8 @@ Broken governance evidence blocks the automated gate.
 
 ## Manual gates
 
-The following remain `manual_required` and are never auto-passed by 4B-MOS:
+The following begin as `manual_required` and are never auto-passed by 4B-MOS.
+Stage 26 can preserve a human attestation and independent review for each gate:
 
 - clinical sign-off of protocol content;
 - clinical sign-off of safety-rule content;
@@ -137,3 +138,11 @@ clearance or production release signature.
   list of manual acceptance gates.
 
 A pass at one layer does not imply a pass at the next layer.
+
+
+## Stage 26 evidence workflow
+
+See [Pilot Manual Gate Attestations](PILOT_MANUAL_GATE_ATTESTATIONS.md).
+Human approval is stored as immutable release evidence bound to an exact
+readiness SHA-256. It remains distinct from clinical clearance and launch
+authorization.
