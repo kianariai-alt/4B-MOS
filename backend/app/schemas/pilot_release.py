@@ -110,3 +110,78 @@ class PilotManualGateStatusRead(BaseModel):
         "approved",
         "rejected",
     ]
+
+
+
+class PilotLaunchManifestItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    gate_name: PilotManualGateName
+    generation: int
+    attestation_id: str
+    attestation_sha256: str
+    review_id: str
+    review_sha256: str
+
+
+class PilotLaunchPackagePreviewRead(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["packageable", "blocked"]
+    readiness_sha256: str
+    release_ref: str | None
+    approved_gate_count: int
+    required_gate_count: Literal[7] = 7
+    issues: list[str]
+    attestation_manifest: list[PilotLaunchManifestItem]
+    controlled_pilot_authorized: Literal[False] = False
+    is_clinical_clearance: Literal[False] = False
+    requires_human_release_decision: Literal[True] = True
+
+
+class PilotLaunchPackageExpectedAttestation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    gate_name: PilotManualGateName
+    attestation_sha256: str = Field(min_length=64, max_length=64)
+
+    @field_validator("attestation_sha256")
+    @classmethod
+    def validate_sha256(cls, value):
+        if any(char not in "0123456789abcdef" for char in value.lower()):
+            raise ValueError("Expected a hexadecimal SHA-256 value.")
+        return value.lower()
+
+
+class PilotLaunchPackageCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_readiness_sha256: str = Field(min_length=64, max_length=64)
+    expected_release_ref: str = Field(min_length=1, max_length=200)
+    expected_attestations: list[PilotLaunchPackageExpectedAttestation] = Field(
+        min_length=7,
+        max_length=7,
+    )
+
+    @field_validator("expected_readiness_sha256")
+    @classmethod
+    def validate_sha256(cls, value):
+        if any(char not in "0123456789abcdef" for char in value.lower()):
+            raise ValueError("Expected a hexadecimal SHA-256 value.")
+        return value.lower()
+
+
+class PilotLaunchPackageRead(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    release_ref: str
+    readiness_sha256: str
+    attestation_manifest: list[PilotLaunchManifestItem]
+    created_by_user_id: str
+    sha256: str
+    created_at: datetime
+    append_only: Literal[True] = True
+    controlled_pilot_authorized: Literal[False] = False
+    is_clinical_clearance: Literal[False] = False
+    requires_human_release_decision: Literal[True] = True
