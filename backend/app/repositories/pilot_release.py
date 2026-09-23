@@ -7,6 +7,7 @@ from backend.app.models.pilot_release import (
     PilotManualGateAttestation,
     PilotManualGateReview,
     PilotLaunchPackage,
+    PilotReleaseDecision,
 )
 
 
@@ -182,6 +183,76 @@ class PilotLaunchPackageRepository:
             readiness_sha256=readiness_sha256,
             attestation_manifest=list(attestation_manifest),
             created_by_user_id=created_by_user_id,
+            payload=payload,
+            sha256=sha256,
+            created_at=created_at,
+        )
+        db.add(record)
+        db.flush()
+        db.refresh(record)
+        return record
+
+
+
+class PilotReleaseDecisionRepository:
+    @staticmethod
+    def get(
+        db: Session,
+        decision_id: str,
+    ) -> PilotReleaseDecision | None:
+        return db.get(PilotReleaseDecision, decision_id)
+
+    @staticmethod
+    def get_by_package(
+        db: Session,
+        package_id: str,
+    ) -> PilotReleaseDecision | None:
+        return db.scalar(
+            select(PilotReleaseDecision).where(
+                PilotReleaseDecision.package_id == package_id
+            )
+        )
+
+    @staticmethod
+    def list(db: Session) -> list[PilotReleaseDecision]:
+        return list(
+            db.scalars(
+                select(PilotReleaseDecision).order_by(
+                    PilotReleaseDecision.created_at.asc(),
+                    PilotReleaseDecision.id.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
+    def create(
+        db: Session,
+        *,
+        decision_id: str,
+        package_id: str,
+        package_sha256: str,
+        action: str,
+        starts_at,
+        expires_at,
+        max_enrolled_visits: int | None,
+        allowed_protocol_codes: list[str],
+        rationale: str,
+        decided_by_user_id: str,
+        payload: dict,
+        sha256: str,
+        created_at,
+    ) -> PilotReleaseDecision:
+        record = PilotReleaseDecision(
+            id=decision_id,
+            package_id=package_id,
+            package_sha256=package_sha256,
+            action=action,
+            starts_at=starts_at,
+            expires_at=expires_at,
+            max_enrolled_visits=max_enrolled_visits,
+            allowed_protocol_codes=list(allowed_protocol_codes),
+            rationale=rationale,
+            decided_by_user_id=decided_by_user_id,
             payload=payload,
             sha256=sha256,
             created_at=created_at,
