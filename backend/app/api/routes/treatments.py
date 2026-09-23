@@ -29,6 +29,10 @@ from backend.app.services.treatment import (
     TreatmentService,
     TreatmentVisitNotFoundError,
 )
+from backend.app.services.pilot_enrollment import (
+    PilotEnrollmentConflictError,
+    PilotEnrollmentIntegrityError,
+)
 
 
 router = APIRouter(
@@ -93,6 +97,8 @@ def create_treatment(
         TreatmentProtocolMismatchError,
         TreatmentProtocolInactiveError,
         TreatmentDecisionLinkError,
+        PilotEnrollmentConflictError,
+        PilotEnrollmentIntegrityError,
         ClinicalRecordWriteConflictError,
     ) as exc:
         raise HTTPException(
