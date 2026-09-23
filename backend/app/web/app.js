@@ -316,6 +316,7 @@ let currentSafetyVisitId = null;
 let currentSafetyInbox = null;
 let currentSafetyEscalations = null;
 let currentPilotReadiness = null;
+let currentPilotGateStatuses = [];
 let sessionGeneration = 0;
 const selectedFacts = new Map();
 const selectedDecisionProtocols = new Set();
@@ -449,7 +450,19 @@ function canRunSafetyEvaluation() {
 }
 
 function canReadPilotReadiness() {
-  return Boolean(currentUser && currentUser.role === "admin");
+  return Boolean(
+    currentUser
+    && ["admin", "physician"].includes(currentUser.role)
+  );
+}
+
+function pilotGateRequiredRole(gateName) {
+  return [
+    "clinical_protocol_signoff",
+    "clinical_safety_signoff",
+  ].includes(gateName)
+    ? "physician"
+    : "admin";
 }
 
 function canRecordSafetyReview() {
@@ -583,6 +596,11 @@ function setPilotReadinessBusy(isBusy) {
   elements.loadPilotReadinessButton.textContent = isBusy
     ? "در حال بررسی…"
     : "اجرای دوبارهٔ Gate";
+  for (const field of elements.pilotManualGates.querySelectorAll(
+    "button, select, textarea, input",
+  )) {
+    field.disabled = isBusy;
+  }
 }
 
 function resetCopilotState() {
@@ -1473,14 +1491,114 @@ function resetSafetyState() {
 
 function resetPilotReadinessState() {
   currentPilotReadiness = null;
+  currentPilotGateStatuses = [];
   elements.pilotReadinessSummary.replaceChildren();
   elements.pilotReadinessChecks.replaceChildren();
   elements.pilotManualGates.replaceChildren();
   showPilotReadinessMessage("");
 }
 
-function renderPilotReadiness(report) {
+function createPilotField(labelText, control) {
+  const wrapper = document.createElement("label");
+  wrapper.className = "field-group";
+  wrapper.append(
+    createTextElement("span", "", labelText),
+    control,
+  );
+  return wrapper;
+}
+
+function createPilotAttestationForm(gateName, latest) {
+  const form = document.createElement("form");
+  form.className = "brief-form pilot-attestation-form";
+  form.dataset.gateName = gateName;
+  if (latest) {
+    form.dataset.supersedesAttestationId = latest.id;
+    form.dataset.expectedSupersedesSha256 = latest.sha256;
+  }
+
+  const releaseRef = document.createElement("input");
+  releaseRef.name = "release_ref";
+  releaseRef.type = "text";
+  releaseRef.maxLength = 200;
+  releaseRef.required = true;
+  releaseRef.autocomplete = "off";
+
+  const evidenceReference = document.createElement("input");
+  evidenceReference.name = "evidence_reference";
+  evidenceReference.type = "text";
+  evidenceReference.maxLength = 500;
+  evidenceReference.required = true;
+  evidenceReference.autocomplete = "off";
+
+  const statement = document.createElement("textarea");
+  statement.name = "statement";
+  statement.minLength = 20;
+  statement.maxLength = 5000;
+  statement.rows = 4;
+  statement.required = true;
+
+  const submit = document.createElement("button");
+  submit.className = "button button-primary";
+  submit.type = "submit";
+  submit.textContent = latest
+    ? "ثبت نسل جدید Attestation"
+    : "ثبت Attestation";
+
+  form.append(
+    createPilotField("Release reference", releaseRef),
+    createPilotField("Evidence reference", evidenceReference),
+    createPilotField("Statement", statement),
+    submit,
+  );
+  return form;
+}
+
+function createPilotReviewForm(attestation) {
+  const form = document.createElement("form");
+  form.className = "brief-form pilot-review-form";
+  form.dataset.attestationId = attestation.id;
+  form.dataset.attestationSha256 = attestation.sha256;
+
+  const action = document.createElement("select");
+  action.name = "action";
+  action.required = true;
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "انتخاب نتیجه review";
+  placeholder.selected = true;
+  placeholder.disabled = true;
+  const approve = document.createElement("option");
+  approve.value = "approve";
+  approve.textContent = "Approve";
+  const reject = document.createElement("option");
+  reject.value = "reject";
+  reject.textContent = "Reject";
+  action.append(placeholder, approve, reject);
+
+  const rationale = document.createElement("textarea");
+  rationale.name = "rationale";
+  rationale.minLength = 10;
+  rationale.maxLength = 5000;
+  rationale.rows = 3;
+  rationale.required = true;
+
+  const submit = document.createElement("button");
+  submit.className = "button button-primary";
+  submit.type = "submit";
+  submit.textContent = "ثبت review مستقل";
+
+  form.append(
+    createPilotField("نتیجه review", action),
+    createPilotField("Rationale", rationale),
+    submit,
+  );
+  return form;
+}
+
+function renderPilotReadiness(report, gateStatuses) {
   currentPilotReadiness = report;
+  currentPilotGateStatuses = gateStatuses;
 
   const summary = document.createElement("article");
   summary.className = "context-card context-intake";
@@ -1495,6 +1613,7 @@ function renderPilotReadiness(report) {
       ],
       ["زمان بررسی", formatDateTime(report.generated_at)],
       ["موتور دیتابیس", report.database_dialect],
+      ["Readiness SHA-256", report.readiness_sha256],
       ["مجوز پایلوت صادر شده", "خیر"],
       ["Clinical clearance", "خیر"],
       ["تصمیم انسانی Release", "الزامی"],
@@ -1528,31 +1647,166 @@ function renderPilotReadiness(report) {
   }
   elements.pilotReadinessChecks.replaceChildren(checks);
 
+  const statusByGate = new Map(
+    gateStatuses.map((item) => [item.gate_name, item]),
+  );
   const manual = document.createDocumentFragment();
   for (const item of report.manual_gates) {
+    const state = statusByGate.get(item.name);
+    const latest = state ? state.latest_attestation : null;
+    const requiredRole = pilotGateRequiredRole(item.name);
     const card = document.createElement("article");
     card.className = "evidence-brief-card";
+
+    const statusText = !state || state.status === "not_attested"
+      ? "ثبت نشده"
+      : state.status === "pending_review"
+        ? "در انتظار review مستقل"
+        : state.status === "approved"
+          ? "تأیید شده"
+          : "رد شده";
+
+    const rows = [
+      ["وضعیت", statusText],
+      ["نقش لازم", roleLabels[requiredRole] || requiredRole],
+      ["کد", item.code],
+    ];
+    if (latest) {
+      rows.push(
+        ["Generation", toPersianNumber(latest.generation)],
+        ["Release ref", latest.release_ref],
+        ["Evidence ref", latest.evidence_reference],
+        ["Attestation SHA-256", latest.sha256],
+        ["زمان ثبت", formatDateTime(latest.created_at)],
+      );
+      if (latest.review) {
+        rows.push(
+          [
+            "Review",
+            latest.review.action === "approve" ? "Approve" : "Reject",
+          ],
+          ["Review SHA-256", latest.review.sha256],
+          ["زمان review", formatDateTime(latest.review.created_at)],
+        );
+      }
+    }
+
     card.append(
       createTextElement(
         "h4",
         "",
         pilotManualGateLabels[item.name] || item.name,
       ),
-      createDefinitionGrid([
-        ["وضعیت", "نیازمند تأیید انسانی"],
-        ["کد", item.code],
-      ]),
+      createDefinitionGrid(rows),
     );
+
+    const roleMatches = (
+      currentUser
+      && currentUser.role === requiredRole
+      && report.status === "automated_prerequisites_passed"
+    );
+    if (roleMatches) {
+      if (!latest || ["approved", "rejected"].includes(state.status)) {
+        card.append(createPilotAttestationForm(item.name, latest));
+      } else if (
+        state.status === "pending_review"
+        && latest.attested_by_user_id !== currentUser.id
+      ) {
+        card.append(createPilotReviewForm(latest));
+      } else if (state.status === "pending_review") {
+        card.append(createTextElement(
+          "p",
+          "ordering-note",
+          "این attestation را شما ثبت کرده‌اید؛ review باید توسط فرد هم‌نقش دیگری انجام شود.",
+        ));
+      }
+    }
     manual.append(card);
   }
   elements.pilotManualGates.replaceChildren(manual);
 
   showPilotReadinessMessage(
     report.status === "automated_prerequisites_passed"
-      ? "پیش‌نیازهای خودکار پاس شده‌اند؛ Manual Gateها و تصمیم انسانی Release همچنان الزامی‌اند."
-      : "Controlled-Pilot Gate مسدود است؛ checkهای FAIL/BLOCKED را پیش از هر تصمیم استقرار برطرف کنید.",
+      ? "پیش‌نیازهای خودکار پاس شده‌اند؛ Manual Gateها باید با review مستقل تکمیل شوند و هنوز مجوز بالینی صادر نشده است."
+      : "Controlled-Pilot Gate مسدود است؛ checkهای FAIL/BLOCKED را پیش از attestation برطرف کنید.",
     report.status !== "automated_prerequisites_passed",
   );
+}
+
+async function createPilotManualAttestation(form) {
+  if (
+    !currentPilotReadiness
+    || pilotReadinessRequestInProgress
+    || !form.reportValidity()
+  ) {
+    return;
+  }
+  setPilotReadinessBusy(true);
+  try {
+    await apiRequest(
+      "/pilot-readiness/manual-gates/attestations",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          gate_name: form.dataset.gateName,
+          expected_readiness_sha256: currentPilotReadiness.readiness_sha256,
+          release_ref: form.elements.release_ref.value.trim(),
+          evidence_reference: form.elements.evidence_reference.value.trim(),
+          statement: form.elements.statement.value.trim(),
+          supersedes_attestation_id:
+            form.dataset.supersedesAttestationId || null,
+          expected_supersedes_sha256:
+            form.dataset.expectedSupersedesSha256 || null,
+        }),
+      },
+    );
+    await loadPilotReadiness({ quiet: true });
+    showPilotReadinessMessage(
+      "Attestation ثبت شد و تا review مستقل هیچ gateای تأییدشده محسوب نمی‌شود.",
+    );
+  } catch (error) {
+    showPilotReadinessMessage(
+      error instanceof ApiError && error.status === 409
+        ? "Readiness یا نسل این gate تغییر کرده است؛ صفحه را دوباره بارگذاری کنید."
+        : "ثبت attestation ممکن نشد.",
+      true,
+    );
+  } finally {
+    setPilotReadinessBusy(false);
+  }
+}
+
+async function reviewPilotManualAttestation(form) {
+  if (pilotReadinessRequestInProgress || !form.reportValidity()) {
+    return;
+  }
+  setPilotReadinessBusy(true);
+  try {
+    await apiRequest(
+      `/pilot-readiness/manual-gates/attestations/${encodeURIComponent(form.dataset.attestationId)}/review`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_attestation_sha256: form.dataset.attestationSha256,
+          action: form.elements.action.value,
+          rationale: form.elements.rationale.value.trim(),
+        }),
+      },
+    );
+    await loadPilotReadiness({ quiet: true });
+    showPilotReadinessMessage(
+      "Review مستقل ثبت شد؛ تاریخچه قبلی بدون بازنویسی حفظ شده است.",
+    );
+  } catch (error) {
+    showPilotReadinessMessage(
+      error instanceof ApiError && error.status === 409
+        ? "Attestation یا readiness تغییر کرده است؛ صفحه را دوباره بارگذاری کنید."
+        : "ثبت review ممکن نشد.",
+      true,
+    );
+  } finally {
+    setPilotReadinessBusy(false);
+  }
 }
 
 async function loadPilotReadiness({ quiet = false } = {}) {
@@ -1569,15 +1823,18 @@ async function loadPilotReadiness({ quiet = false } = {}) {
   }
 
   try {
-    const report = await apiRequest("/pilot-readiness");
-    renderPilotReadiness(report);
+    const [report, gateStatuses] = await Promise.all([
+      apiRequest("/pilot-readiness"),
+      apiRequest("/pilot-readiness/manual-gates"),
+    ]);
+    renderPilotReadiness(report, gateStatuses);
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       showLogin();
       return;
     }
     showPilotReadinessMessage(
-      "بررسی آمادگی پایلوت ممکن نشد؛ وضعیت backend و دسترسی admin را بررسی کنید.",
+      "بررسی آمادگی پایلوت ممکن نشد؛ وضعیت backend و دسترسی release role را بررسی کنید.",
       true,
     );
   } finally {
@@ -4060,6 +4317,19 @@ elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
 elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
 elements.pilotReadinessTab.addEventListener("click", () => setWorkspace("pilot"));
 elements.loadPilotReadinessButton.addEventListener("click", () => loadPilotReadiness());
+elements.pilotManualGates.addEventListener("submit", async (event) => {
+  const attestationForm = event.target.closest("form.pilot-attestation-form");
+  if (attestationForm) {
+    event.preventDefault();
+    await createPilotManualAttestation(attestationForm);
+    return;
+  }
+  const reviewForm = event.target.closest("form.pilot-review-form");
+  if (reviewForm) {
+    event.preventDefault();
+    await reviewPilotManualAttestation(reviewForm);
+  }
+});
 for (const tab of [
   elements.flowTab,
   elements.copilotTab,
