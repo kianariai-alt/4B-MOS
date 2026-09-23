@@ -11,7 +11,6 @@ from backend.app.repositories.treatment import TreatmentRepository
 from backend.app.repositories.visit import VisitRepository
 from backend.app.schemas.treatment import TreatmentCreate, TreatmentUpdate
 from backend.app.services.audit_context import actor_data
-from backend.app.services.pilot_execution import PilotExecutionConflictError, PilotExecutionService
 from backend.app.services.clinical_context import (
     ClinicalContextIntegrityError,
     ClinicalContextNotFoundError,
@@ -190,6 +189,9 @@ class TreatmentService:
             protocol=protocol,
         )
 
+        from backend.app.services.pilot_execution import (
+            PilotExecutionConflictError, PilotExecutionService,
+        )
         try:
             PilotExecutionService.require_visit_eligible(
                 db, visit_id,
@@ -272,6 +274,9 @@ class TreatmentService:
         actor: User | None = None,
     ) -> Treatment:
         treatment = TreatmentService.get_treatment(db, treatment_id)
+        from backend.app.services.pilot_execution import (
+            PilotExecutionConflictError, PilotExecutionService,
+        )
         if payload.status == "in_progress" and treatment.status != "in_progress":
             try:
                 PilotExecutionService.require_treatment_eligible(db, treatment.id)
