@@ -8,6 +8,7 @@ from backend.app.models.treatment_session_component import (
     TreatmentSessionComponent,
 )
 from backend.app.models.user import User
+from backend.app.services.pilot_execution import PilotExecutionConflictError, PilotExecutionService
 from backend.app.repositories.audit_log import (
     AuditLogRepository,
 )
@@ -208,6 +209,13 @@ class TreatmentSessionComponentService:
                 treatment_session
             )
         )
+
+        try:
+            PilotExecutionService.require_treatment_eligible(
+                db, treatment_session.treatment_id
+            )
+        except PilotExecutionConflictError as error:
+            raise TreatmentSessionComponentLockedError(str(error)) from error
 
         material = (
             OrthobiologicMaterialRepository
