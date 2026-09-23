@@ -57,6 +57,7 @@ from backend.app.models.protocol_governance import (
 from backend.app.models.pilot_release import (
     PilotManualGateAttestation,
     PilotManualGateReview,
+    PilotLaunchPackage,
 )
 
 __all__ = [
@@ -92,4 +93,5 @@ __all__ = [
     "ProtocolGovernanceRecovery",
     "PilotManualGateAttestation",
     "PilotManualGateReview",
+    "PilotLaunchPackage",
 ]
