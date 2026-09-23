@@ -40,6 +40,7 @@ class Settings(BaseSettings):
         le=86400,
     )
     CLINIC_TIMEZONE: str = "Asia/Tehran"
+    PILOT_ENFORCEMENT_ENABLED: bool = False
 
     @model_validator(mode="after")
     def validate_production(self):
