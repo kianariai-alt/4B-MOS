@@ -355,6 +355,8 @@ class PilotVisitEnrollmentService:
         db: Session,
         visit_id: str,
     ) -> PilotVisitEnrollmentRead | None:
+        if VisitRepository.get_by_id(db, visit_id) is None:
+            raise PilotEnrollmentNotFoundError(f"Visit '{visit_id}' was not found.")
         record = PilotVisitEnrollmentRepository.latest_by_visit(db, visit_id)
         return (
             PilotVisitEnrollmentService._to_read(record)
