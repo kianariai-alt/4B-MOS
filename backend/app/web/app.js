@@ -208,6 +208,11 @@ const elements = {
   pilotReadinessSummary: document.querySelector("#pilot-readiness-summary"),
   pilotReadinessChecks: document.querySelector("#pilot-readiness-checks"),
   pilotManualGates: document.querySelector("#pilot-manual-gates"),
+  pilotLaunchPreview: document.querySelector("#pilot-launch-preview"),
+  pilotLaunchHistory: document.querySelector("#pilot-launch-history"),
+  freezePilotLaunchPackageButton: document.querySelector(
+    "#freeze-pilot-launch-package-button",
+  ),
   flowBoard: document.querySelector("#flow-board"),
   metricActive: document.querySelector("#metric-active"),
   metricCheckedIn: document.querySelector("#metric-checked-in"),
@@ -317,6 +322,8 @@ let currentSafetyInbox = null;
 let currentSafetyEscalations = null;
 let currentPilotReadiness = null;
 let currentPilotGateStatuses = [];
+let currentPilotLaunchPreview = null;
+let currentPilotLaunchPackages = [];
 let sessionGeneration = 0;
 const selectedFacts = new Map();
 const selectedDecisionProtocols = new Set();
@@ -596,6 +603,7 @@ function setPilotReadinessBusy(isBusy) {
   elements.loadPilotReadinessButton.textContent = isBusy
     ? "در حال بررسی…"
     : "اجرای دوبارهٔ Gate";
+  elements.freezePilotLaunchPackageButton.disabled = isBusy;
   for (const field of elements.pilotManualGates.querySelectorAll(
     "button, select, textarea, input",
   )) {
@@ -1492,9 +1500,14 @@ function resetSafetyState() {
 function resetPilotReadinessState() {
   currentPilotReadiness = null;
   currentPilotGateStatuses = [];
+  currentPilotLaunchPreview = null;
+  currentPilotLaunchPackages = [];
   elements.pilotReadinessSummary.replaceChildren();
   elements.pilotReadinessChecks.replaceChildren();
   elements.pilotManualGates.replaceChildren();
+  elements.pilotLaunchPreview.replaceChildren();
+  elements.pilotLaunchHistory.replaceChildren();
+  elements.freezePilotLaunchPackageButton.hidden = true;
   showPilotReadinessMessage("");
 }
 
@@ -1594,6 +1607,115 @@ function createPilotReviewForm(attestation) {
     submit,
   );
   return form;
+}
+
+function renderPilotLaunchPackage(preview, packages) {
+  currentPilotLaunchPreview = preview;
+  currentPilotLaunchPackages = packages;
+
+  const previewCard = document.createElement("article");
+  previewCard.className = "context-card context-intake";
+  const issueText = preview.issues.length
+    ? preview.issues.join("، ")
+    : "بدون مانع";
+  previewCard.append(
+    createTextElement("h4", "", "Launch Package Preview"),
+    createDefinitionGrid([
+      [
+        "وضعیت",
+        preview.status === "packageable" ? "PACKAGEABLE" : "BLOCKED",
+      ],
+      ["Release ref", preview.release_ref || "—"],
+      ["Readiness SHA-256", preview.readiness_sha256],
+      [
+        "Manual gates",
+        `${toPersianNumber(preview.approved_gate_count)} / ${toPersianNumber(preview.required_gate_count)}`,
+      ],
+      ["Issues", issueText],
+      ["مجوز Launch", "خیر"],
+    ], "safety-summary-grid"),
+  );
+  elements.pilotLaunchPreview.replaceChildren(previewCard);
+
+  elements.freezePilotLaunchPackageButton.hidden = !(
+    currentUser
+    && currentUser.role === "admin"
+    && preview.status === "packageable"
+  );
+
+  const history = document.createDocumentFragment();
+  if (!packages.length) {
+    history.append(createTextElement(
+      "p",
+      "empty-state",
+      "هنوز Launch Package تغییرناپذیری ثبت نشده است.",
+    ));
+  }
+  for (const item of packages) {
+    const card = document.createElement("article");
+    card.className = "evidence-brief-card";
+    card.append(
+      createTextElement("h4", "", `Package · ${item.release_ref}`),
+      createDefinitionGrid([
+        ["Package ID", item.id],
+        ["Readiness SHA-256", item.readiness_sha256],
+        ["Package SHA-256", item.sha256],
+        ["Manual gates", toPersianNumber(item.attestation_manifest.length)],
+        ["زمان Freeze", formatDateTime(item.created_at)],
+        ["Pilot authorized", "خیر"],
+        ["Clinical clearance", "خیر"],
+      ]),
+    );
+    history.append(card);
+  }
+  elements.pilotLaunchHistory.replaceChildren(history);
+}
+
+async function freezePilotLaunchPackage() {
+  if (
+    pilotReadinessRequestInProgress
+    || !currentPilotLaunchPreview
+    || currentPilotLaunchPreview.status !== "packageable"
+    || !currentUser
+    || currentUser.role !== "admin"
+  ) {
+    return;
+  }
+
+  setPilotReadinessBusy(true);
+  try {
+    await apiRequest(
+      "/pilot-readiness/manual-gates/launch-packages",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expected_readiness_sha256:
+            currentPilotLaunchPreview.readiness_sha256,
+          expected_release_ref:
+            currentPilotLaunchPreview.release_ref,
+          expected_attestations:
+            currentPilotLaunchPreview.attestation_manifest.map((item) => ({
+              gate_name: item.gate_name,
+              attestation_sha256: item.attestation_sha256,
+            })),
+        }),
+      },
+    );
+    setPilotReadinessBusy(false);
+    await loadPilotReadiness({ quiet: true });
+    showPilotReadinessMessage(
+      "Launch Package تغییرناپذیر ثبت شد؛ هنوز تصمیم انسانی نهایی برای launch لازم است.",
+    );
+  } catch (error) {
+    showPilotReadinessMessage(
+      error instanceof ApiError && error.status === 409
+        ? "شواهد launch تغییر کرده‌اند یا Package قبلاً ثبت شده است؛ صفحه را تازه‌سازی کنید."
+        : "Freeze کردن Launch Package ممکن نشد.",
+      true,
+    );
+  } finally {
+    setPilotReadinessBusy(false);
+  }
 }
 
 function renderPilotReadiness(report, gateStatuses) {
@@ -1825,11 +1947,19 @@ async function loadPilotReadiness({ quiet = false } = {}) {
   }
 
   try {
-    const [report, gateStatuses] = await Promise.all([
+    const [
+      report,
+      gateStatuses,
+      launchPreview,
+      launchPackages,
+    ] = await Promise.all([
       apiRequest("/pilot-readiness"),
       apiRequest("/pilot-readiness/manual-gates"),
+      apiRequest("/pilot-readiness/manual-gates/launch-package-preview"),
+      apiRequest("/pilot-readiness/manual-gates/launch-packages"),
     ]);
     renderPilotReadiness(report, gateStatuses);
+    renderPilotLaunchPackage(launchPreview, launchPackages);
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       showLogin();
@@ -4319,6 +4449,10 @@ elements.evidenceTab.addEventListener("click", () => setWorkspace("evidence"));
 elements.safetyTab.addEventListener("click", () => setWorkspace("safety"));
 elements.pilotReadinessTab.addEventListener("click", () => setWorkspace("pilot"));
 elements.loadPilotReadinessButton.addEventListener("click", () => loadPilotReadiness());
+elements.freezePilotLaunchPackageButton.addEventListener(
+  "click",
+  freezePilotLaunchPackage,
+);
 elements.pilotManualGates.addEventListener("submit", async (event) => {
   const attestationForm = event.target.closest("form.pilot-attestation-form");
   if (attestationForm) {
