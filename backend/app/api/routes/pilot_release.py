@@ -13,6 +13,9 @@ from backend.app.schemas.pilot_release import (
     PilotLaunchPackageCreate,
     PilotLaunchPackagePreviewRead,
     PilotLaunchPackageRead,
+    PilotReleaseEndorsementCreate,
+    PilotReleaseDecisionCreate,
+    PilotReleaseStatusRead,
 )
 from backend.app.services.pilot_release import (
     PilotManualGateAuthorizationError,
@@ -27,6 +30,13 @@ from backend.app.services.pilot_launch import (
     PilotLaunchPackageIntegrityError,
     PilotLaunchPackageNotFoundError,
     PilotLaunchPackageService,
+)
+from backend.app.services.pilot_release_decision import (
+    PilotReleaseDecisionAuthorizationError,
+    PilotReleaseDecisionConflictError,
+    PilotReleaseDecisionIntegrityError,
+    PilotReleaseDecisionNotFoundError,
+    PilotReleaseDecisionService,
 )
 
 
@@ -219,5 +229,85 @@ def create_pilot_launch_package(
     except (
         PilotLaunchPackageConflictError,
         PilotLaunchPackageIntegrityError,
+    ) as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+
+@router.get(
+    "/launch-packages/{package_id}/release-status",
+    response_model=PilotReleaseStatusRead,
+)
+def get_pilot_release_status(
+    package_id: str,
+    _actor: User = Depends(require_roles("admin", "physician")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return PilotReleaseDecisionService.get_status(
+            db,
+            package_id,
+            settings,
+        )
+    except PilotReleaseDecisionNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except PilotReleaseDecisionIntegrityError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@router.post(
+    "/launch-packages/{package_id}/endorsement",
+    response_model=PilotReleaseStatusRead,
+)
+def create_pilot_release_endorsement(
+    package_id: str,
+    payload: PilotReleaseEndorsementCreate,
+    actor: User = Depends(require_roles("physician")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return PilotReleaseDecisionService.create_endorsement(
+            db,
+            package_id,
+            payload,
+            actor=actor,
+            config=settings,
+        )
+    except PilotReleaseDecisionAuthorizationError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except PilotReleaseDecisionNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except (
+        PilotReleaseDecisionConflictError,
+        PilotReleaseDecisionIntegrityError,
+    ) as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@router.post(
+    "/launch-packages/{package_id}/decision",
+    response_model=PilotReleaseStatusRead,
+)
+def create_pilot_release_decision(
+    package_id: str,
+    payload: PilotReleaseDecisionCreate,
+    actor: User = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return PilotReleaseDecisionService.create_decision(
+            db,
+            package_id,
+            payload,
+            actor=actor,
+            config=settings,
+        )
+    except PilotReleaseDecisionAuthorizationError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except PilotReleaseDecisionNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except (
+        PilotReleaseDecisionConflictError,
+        PilotReleaseDecisionIntegrityError,
     ) as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
