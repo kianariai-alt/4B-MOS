@@ -132,7 +132,7 @@ class ControlledPilotReadinessService:
         if database_ready:
             try:
                 required_roles = {
-                    "admin": 1,
+                    "admin": 2,
                     "physician": 2,
                     "nurse": 1,
                     "operator": 1,
