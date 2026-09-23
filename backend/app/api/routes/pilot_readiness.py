@@ -17,7 +17,7 @@ router = APIRouter(tags=["System"])
     response_model=ControlledPilotReadinessRead,
 )
 def controlled_pilot_readiness(
-    _actor: User = Depends(require_roles("admin")),
+    _actor: User = Depends(require_roles("admin", "physician")),
     db: Session = Depends(get_db),
 ) -> ControlledPilotReadinessRead:
     return ControlledPilotReadinessService.build(db, settings)
