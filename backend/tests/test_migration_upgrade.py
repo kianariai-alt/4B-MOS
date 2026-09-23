@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e9f4a2b7c613"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "f2c6b8d1a704"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "e9f4a2b7c613"
+            )) == "f2c6b8d1a704"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1182,6 +1182,55 @@ def test_pilot_manual_gate_migration_refuses_attestation_history_loss(
             )) == "e9f4a2b7c613"
             assert connection.scalar(text(
                 "SELECT count(*) FROM pilot_manual_gate_attestations"
+            )) == 1
+    finally:
+        engine.dispose()
+
+
+
+def test_pilot_launch_package_migration_refuses_package_history_loss(
+    tmp_path,
+    monkeypatch,
+):
+    url = f"sqlite:///{tmp_path / 'pilot-launch-package-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "head")
+    engine = create_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "pilot_launch_packages" in inspector.get_table_names()
+        assert len(inspector.get_foreign_keys("pilot_launch_packages")) == 1
+
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO users "
+                "(id, username, display_name, password_hash, role, is_active, "
+                "auth_version, failed_login_count, created_at, updated_at) "
+                "VALUES ('launch-admin', 'launch_admin', 'Launch Admin', "
+                "'hash', 'admin', 1, 0, 0, "
+                "'2026-09-23 11:00:00', '2026-09-23 11:00:00')"
+            ))
+            connection.execute(text(
+                "INSERT INTO pilot_launch_packages "
+                "(id, release_ref, readiness_sha256, attestation_manifest, "
+                "created_by_user_id, payload, sha256, created_at) VALUES "
+                "('launch-package', 'rc-migration', '" + "1" * 64 + "', "
+                "'[]', 'launch-admin', '{}', '" + "2" * 64 + "', "
+                "'2026-09-23 11:00:00')"
+            ))
+
+        with pytest.raises(
+            RuntimeError,
+            match="pilot launch package history exists",
+        ):
+            command.downgrade(config, "e9f4a2b7c613")
+        with engine.connect() as connection:
+            assert connection.scalar(text(
+                "SELECT version_num FROM alembic_version"
+            )) == "f2c6b8d1a704"
+            assert connection.scalar(text(
+                "SELECT count(*) FROM pilot_launch_packages"
             )) == 1
     finally:
         engine.dispose()
