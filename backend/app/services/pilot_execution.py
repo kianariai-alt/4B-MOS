@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
 from backend.app.models.pilot_execution import PilotStopEvent, PilotVisitEnrollment
+from backend.app.models.treatment import Treatment
 from backend.app.models.pilot_release import PilotReleaseDecision
 from backend.app.models.treatment_outcome import TreatmentOutcome
 from backend.app.models.user import User
@@ -420,9 +421,7 @@ class PilotExecutionService:
 
     @staticmethod
     def require_treatment_eligible(db: Session, treatment_id: str) -> None:
-        treatment = db.get(__import__(
-            "backend.app.models.treatment", fromlist=["Treatment"]
-        ).Treatment, treatment_id)
+        treatment = db.get(Treatment, treatment_id)
         if treatment is None:
             raise PilotExecutionNotFoundError("Treatment was not found.")
         PilotExecutionService.require_visit_eligible(
