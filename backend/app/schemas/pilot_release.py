@@ -82,6 +82,7 @@ class PilotManualGateAttestationRead(BaseModel):
     id: str
     gate_name: PilotManualGateName
     readiness_sha256: str
+    generation: int
     release_ref: str
     evidence_reference: str
     statement: str
