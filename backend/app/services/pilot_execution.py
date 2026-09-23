@@ -410,6 +410,15 @@ class PilotExecutionService:
             raise PilotExecutionConflictError("The enrolled protocol is no longer active or in scope.")
         if evidence_digest(ProtocolRead.model_validate(protocol).model_dump(mode="json")) != record.protocol_snapshot_sha256:
             raise PilotExecutionConflictError("The enrolled protocol snapshot changed.")
+        try:
+            package = PilotLaunchPackageService.get(db, release.package_id)
+            PilotReleaseDecisionService._verify_package_still_current(
+                db, package, settings,
+            )
+        except Exception as error:
+            raise PilotExecutionConflictError(
+                "The pilot release prerequisites changed; stop new pilot activity."
+            ) from error
         clinician = TreatmentDecisionService.get_current_record(db, visit_id)
         if clinician is None or clinician.id != record.clinician_decision_id or clinician.sha256 != record.clinician_decision_sha256:
             raise PilotExecutionConflictError(
