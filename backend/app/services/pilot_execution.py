@@ -178,6 +178,10 @@ class PilotExecutionService:
     ) -> PilotEnrollmentRead:
         if actor is None or not actor.is_active or actor.role != "physician":
             raise PilotExecutionAuthorizationError("Only an active physician may enroll a pilot visit.")
+        if settings.ENVIRONMENT == "production" and not settings.PILOT_ENFORCEMENT_ENABLED:
+            raise PilotExecutionConflictError(
+                "Production pilot enrollment requires PILOT_ENFORCEMENT_ENABLED."
+            )
         if VisitRepository.get_by_id(db, visit_id) is None:
             raise PilotExecutionNotFoundError("The visit does not exist.")
         if db.new or db.dirty or db.deleted:
@@ -459,7 +463,8 @@ class PilotExecutionService:
             status=state, enrolled_visits=count, max_enrolled_visits=release.max_enrolled_visits,
             remaining_enrollment_slots=remaining, stopped=stop is not None,
             stop_sha256=(stop.sha256 if stop else None),
-            new_pilot_activity_allowed=state == "active",
+            pilot_enforcement_enabled=settings.PILOT_ENFORCEMENT_ENABLED,
+            new_pilot_activity_allowed=(state == "active" and settings.PILOT_ENFORCEMENT_ENABLED),
         )
 
     @staticmethod
