@@ -70,6 +70,11 @@ def test_console_shell_is_public_but_contains_no_clinical_data(client):
     assert 'id="pilot-manual-gates"' in html
     assert 'id="pilot-launch-preview"' in html
     assert 'id="pilot-launch-history"' in html
+    assert 'id="pilot-execution-tab"' in html
+    assert 'id="pilot-execution-workspace"' in html
+    assert 'id="pilot-enrollment-form"' in html
+    assert 'id="pilot-execution-stop-form"' in html
+    assert 'id="pilot-execution-acceptance"' in html
     assert 'id="freeze-pilot-launch-package-button"' in html
     assert "هیچ موردی از پیش انتخاب نمی‌شود" in html
     assert "جایگزین قضاوت مستقل پزشک نمی‌شود" in html
@@ -132,6 +137,11 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "renderPilotLaunchPackage" in source
     assert "freezePilotLaunchPackage" in source
     assert "createPilotReleaseDecision" in source
+    assert "loadPilotExecution" in source
+    assert "enrollPilotVisit" in source
+    assert "stopPilotExecution" in source
+    assert "/pilot-execution/releases/" in source
+    assert "new_pilot_activity_allowed" in source
     assert "pilot-release-decision-form" in source
     assert "/release-decisions" in source
     assert "controlled_pilot_release_authorized" in source
