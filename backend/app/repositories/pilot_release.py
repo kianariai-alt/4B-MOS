@@ -8,6 +8,7 @@ from backend.app.models.pilot_release import (
     PilotManualGateReview,
     PilotLaunchPackage,
     PilotReleaseDecision,
+    PilotVisitEnrollment,
 )
 
 
@@ -253,6 +254,120 @@ class PilotReleaseDecisionRepository:
             allowed_protocol_codes=list(allowed_protocol_codes),
             rationale=rationale,
             decided_by_user_id=decided_by_user_id,
+            payload=payload,
+            sha256=sha256,
+            created_at=created_at,
+        )
+        db.add(record)
+        db.flush()
+        db.refresh(record)
+        return record
+
+
+
+class PilotVisitEnrollmentRepository:
+    @staticmethod
+    def get(
+        db: Session,
+        enrollment_id: str,
+    ) -> PilotVisitEnrollment | None:
+        return db.get(PilotVisitEnrollment, enrollment_id)
+
+    @staticmethod
+    def latest_by_visit(
+        db: Session,
+        visit_id: str,
+    ) -> PilotVisitEnrollment | None:
+        return db.scalar(
+            select(PilotVisitEnrollment)
+            .where(PilotVisitEnrollment.visit_id == visit_id)
+            .order_by(
+                PilotVisitEnrollment.generation.desc(),
+                PilotVisitEnrollment.created_at.desc(),
+                PilotVisitEnrollment.id.desc(),
+            )
+            .limit(1)
+        )
+
+    @staticmethod
+    def list_by_visit(
+        db: Session,
+        visit_id: str,
+    ) -> list[PilotVisitEnrollment]:
+        return list(
+            db.scalars(
+                select(PilotVisitEnrollment)
+                .where(PilotVisitEnrollment.visit_id == visit_id)
+                .order_by(
+                    PilotVisitEnrollment.generation.asc(),
+                    PilotVisitEnrollment.created_at.asc(),
+                    PilotVisitEnrollment.id.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
+    def list(db: Session) -> list[PilotVisitEnrollment]:
+        return list(
+            db.scalars(
+                select(PilotVisitEnrollment).order_by(
+                    PilotVisitEnrollment.created_at.asc(),
+                    PilotVisitEnrollment.id.asc(),
+                )
+            ).all()
+        )
+
+    @staticmethod
+    def count_distinct_visits_for_decision(
+        db: Session,
+        release_decision_id: str,
+    ) -> int:
+        from sqlalchemy import func
+
+        value = db.scalar(
+            select(func.count(func.distinct(PilotVisitEnrollment.visit_id)))
+            .where(
+                PilotVisitEnrollment.release_decision_id
+                == release_decision_id
+            )
+        )
+        return int(value or 0)
+
+    @staticmethod
+    def create(
+        db: Session,
+        *,
+        enrollment_id: str,
+        visit_id: str,
+        generation: int,
+        supersedes_enrollment_id: str | None,
+        release_decision_id: str,
+        release_decision_sha256: str,
+        clinical_context_sha256: str,
+        protocol_template_id: str,
+        protocol_code: str,
+        protocol_version: str,
+        treatment_type: str,
+        rationale: str,
+        enrolled_by_user_id: str,
+        payload: dict,
+        sha256: str,
+        created_at,
+    ) -> PilotVisitEnrollment:
+        record = PilotVisitEnrollment(
+            id=enrollment_id,
+            visit_id=visit_id,
+            generation=generation,
+            supersedes_enrollment_id=supersedes_enrollment_id,
+            release_decision_id=release_decision_id,
+            release_decision_sha256=release_decision_sha256,
+            clinical_context_sha256=clinical_context_sha256,
+            protocol_template_id=protocol_template_id,
+            protocol_code=protocol_code,
+            protocol_version=protocol_version,
+            treatment_type=treatment_type,
+            rationale=rationale,
+            enrolled_by_user_id=enrolled_by_user_id,
             payload=payload,
             sha256=sha256,
             created_at=created_at,
