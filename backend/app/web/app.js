@@ -324,6 +324,7 @@ let currentPilotReadiness = null;
 let currentPilotGateStatuses = [];
 let currentPilotLaunchPreview = null;
 let currentPilotLaunchPackages = [];
+let currentPilotReleaseDecisions = [];
 let sessionGeneration = 0;
 const selectedFacts = new Map();
 const selectedDecisionProtocols = new Set();
@@ -604,9 +605,14 @@ function setPilotReadinessBusy(isBusy) {
     ? "در حال بررسی…"
     : "اجرای دوبارهٔ Gate";
   elements.freezePilotLaunchPackageButton.disabled = isBusy;
-  for (const field of elements.pilotManualGates.querySelectorAll(
-    "button, select, textarea, input",
-  )) {
+  for (const field of [
+    ...elements.pilotManualGates.querySelectorAll(
+      "button, select, textarea, input",
+    ),
+    ...elements.pilotLaunchHistory.querySelectorAll(
+      "button, select, textarea, input",
+    ),
+  ]) {
     field.disabled = isBusy;
   }
 }
@@ -1502,6 +1508,7 @@ function resetPilotReadinessState() {
   currentPilotGateStatuses = [];
   currentPilotLaunchPreview = null;
   currentPilotLaunchPackages = [];
+  currentPilotReleaseDecisions = [];
   elements.pilotReadinessSummary.replaceChildren();
   elements.pilotReadinessChecks.replaceChildren();
   elements.pilotManualGates.replaceChildren();
@@ -1609,9 +1616,10 @@ function createPilotReviewForm(attestation) {
   return form;
 }
 
-function renderPilotLaunchPackage(preview, packages) {
+function renderPilotLaunchPackage(preview, packages, decisions) {
   currentPilotLaunchPreview = preview;
   currentPilotLaunchPackages = packages;
+  currentPilotReleaseDecisions = decisions;
 
   const previewCard = document.createElement("article");
   previewCard.className = "context-card context-intake";
@@ -1651,9 +1659,13 @@ function renderPilotLaunchPackage(preview, packages) {
       "هنوز Launch Package تغییرناپذیری ثبت نشده است.",
     ));
   }
+  const decisionByPackage = new Map(
+    decisions.map((decision) => [decision.package_id, decision]),
+  );
   for (const item of packages) {
     const card = document.createElement("article");
     card.className = "evidence-brief-card";
+    const decision = decisionByPackage.get(item.id) || null;
     card.append(
       createTextElement("h4", "", `Package · ${item.release_ref}`),
       createDefinitionGrid([
@@ -1662,13 +1674,198 @@ function renderPilotLaunchPackage(preview, packages) {
         ["Package SHA-256", item.sha256],
         ["Manual gates", toPersianNumber(item.attestation_manifest.length)],
         ["زمان Freeze", formatDateTime(item.created_at)],
-        ["Pilot authorized", "خیر"],
+        [
+          "Human release decision",
+          decision
+            ? decision.action === "authorize" ? "AUTHORIZE" : "HOLD"
+            : "ثبت نشده",
+        ],
+        [
+          "Pilot release authorized",
+          decision && decision.controlled_pilot_release_authorized ? "بله" : "خیر",
+        ],
         ["Clinical clearance", "خیر"],
       ]),
     );
+
+    if (decision) {
+      card.append(
+        createDefinitionGrid([
+          ["Decision SHA-256", decision.sha256],
+          ["شروع scope", formatDateTime(decision.starts_at)],
+          ["پایان scope", formatDateTime(decision.expires_at)],
+          [
+            "سقف ویزیت",
+            decision.max_enrolled_visits === null
+              ? "—"
+              : toPersianNumber(decision.max_enrolled_visits),
+          ],
+          [
+            "Protocol codes",
+            decision.allowed_protocol_codes.length
+              ? decision.allowed_protocol_codes.join("، ")
+              : "—",
+          ],
+          ["درمان فردی را مجاز می‌کند", "خیر"],
+        ]),
+      );
+    } else if (
+      currentUser
+      && currentUser.role === "admin"
+      && currentUser.id !== item.created_by_user_id
+    ) {
+      card.append(createPilotReleaseDecisionForm(item));
+    } else if (
+      currentUser
+      && currentUser.role === "admin"
+      && currentUser.id === item.created_by_user_id
+    ) {
+      card.append(createTextElement(
+        "p",
+        "ordering-note",
+        "سازندهٔ Package نمی‌تواند تصمیم انسانی Release همان Package را ثبت کند.",
+      ));
+    }
     history.append(card);
   }
   elements.pilotLaunchHistory.replaceChildren(history);
+}
+
+function createPilotReleaseDecisionForm(packageItem) {
+  const form = document.createElement("form");
+  form.className = "brief-form pilot-release-decision-form";
+  form.dataset.packageId = packageItem.id;
+  form.dataset.packageSha256 = packageItem.sha256;
+
+  const action = document.createElement("select");
+  action.name = "action";
+  action.required = true;
+  for (const [value, label] of [
+    ["", "انتخاب تصمیم"],
+    ["authorize", "Authorize controlled pilot"],
+    ["hold", "Hold"],
+  ]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    if (!value) {
+      option.disabled = true;
+      option.selected = true;
+    }
+    action.append(option);
+  }
+
+  const startsAt = document.createElement("input");
+  startsAt.name = "starts_at";
+  startsAt.type = "datetime-local";
+
+  const expiresAt = document.createElement("input");
+  expiresAt.name = "expires_at";
+  expiresAt.type = "datetime-local";
+
+  const maxVisits = document.createElement("input");
+  maxVisits.name = "max_enrolled_visits";
+  maxVisits.type = "number";
+  maxVisits.min = "1";
+  maxVisits.max = "100";
+
+  const protocolCodes = document.createElement("textarea");
+  protocolCodes.name = "allowed_protocol_codes";
+  protocolCodes.rows = 3;
+  protocolCodes.placeholder = "هر کد پروتکل در یک خط";
+
+  const rationale = document.createElement("textarea");
+  rationale.name = "rationale";
+  rationale.minLength = 20;
+  rationale.maxLength = 5000;
+  rationale.rows = 4;
+  rationale.required = true;
+
+  const submit = document.createElement("button");
+  submit.className = "button button-primary";
+  submit.type = "submit";
+  submit.textContent = "ثبت تصمیم انسانی Release";
+
+  form.append(
+    createPilotField("Decision", action),
+    createPilotField("شروع scope", startsAt),
+    createPilotField("پایان scope", expiresAt),
+    createPilotField("حداکثر ویزیت پایلوت", maxVisits),
+    createPilotField("Protocol codes", protocolCodes),
+    createPilotField("Rationale", rationale),
+    submit,
+  );
+  return form;
+}
+
+async function createPilotReleaseDecision(form) {
+  if (
+    !currentUser
+    || currentUser.role !== "admin"
+    || pilotReadinessRequestInProgress
+    || !form.reportValidity()
+  ) {
+    return;
+  }
+  const action = form.elements.action.value;
+  const payload = {
+    expected_package_sha256: form.dataset.packageSha256,
+    action,
+    rationale: form.elements.rationale.value.trim(),
+    starts_at: null,
+    expires_at: null,
+    max_enrolled_visits: null,
+    allowed_protocol_codes: [],
+  };
+  if (action === "authorize") {
+    const codes = form.elements.allowed_protocol_codes.value
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (
+      !form.elements.starts_at.value
+      || !form.elements.expires_at.value
+      || !form.elements.max_enrolled_visits.value
+      || !codes.length
+    ) {
+      showPilotReadinessMessage(
+        "برای authorize باید بازه زمانی، سقف ویزیت و حداقل یک کد پروتکل ثبت شود.",
+        true,
+      );
+      return;
+    }
+    payload.starts_at = new Date(form.elements.starts_at.value).toISOString();
+    payload.expires_at = new Date(form.elements.expires_at.value).toISOString();
+    payload.max_enrolled_visits = Number(form.elements.max_enrolled_visits.value);
+    payload.allowed_protocol_codes = codes;
+  }
+
+  setPilotReadinessBusy(true);
+  try {
+    await apiRequest(
+      `/pilot-readiness/manual-gates/launch-packages/${encodeURIComponent(form.dataset.packageId)}/release-decisions`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+    setPilotReadinessBusy(false);
+    await loadPilotReadiness({ quiet: true });
+    showPilotReadinessMessage(
+      action === "authorize"
+        ? "تصمیم انسانی Release ثبت شد؛ این تصمیم هنوز مجوز درمان فردی نیست."
+        : "Release روی HOLD ثبت شد.",
+    );
+  } catch (error) {
+    showPilotReadinessMessage(
+      error instanceof ApiError && [403, 409].includes(error.status)
+        ? error.message
+        : "ثبت تصمیم انسانی Release ممکن نشد.",
+      true,
+    );
+  } finally {
+    setPilotReadinessBusy(false);
+  }
 }
 
 async function freezePilotLaunchPackage() {
@@ -1952,14 +2149,16 @@ async function loadPilotReadiness({ quiet = false } = {}) {
       gateStatuses,
       launchPreview,
       launchPackages,
+      releaseDecisions,
     ] = await Promise.all([
       apiRequest("/pilot-readiness"),
       apiRequest("/pilot-readiness/manual-gates"),
       apiRequest("/pilot-readiness/manual-gates/launch-package-preview"),
       apiRequest("/pilot-readiness/manual-gates/launch-packages"),
+      apiRequest("/pilot-readiness/manual-gates/release-decisions"),
     ]);
     renderPilotReadiness(report, gateStatuses);
-    renderPilotLaunchPackage(launchPreview, launchPackages);
+    renderPilotLaunchPackage(launchPreview, launchPackages, releaseDecisions);
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       showLogin();
@@ -4453,6 +4652,14 @@ elements.freezePilotLaunchPackageButton.addEventListener(
   "click",
   freezePilotLaunchPackage,
 );
+elements.pilotLaunchHistory.addEventListener("submit", async (event) => {
+  const form = event.target.closest("form.pilot-release-decision-form");
+  if (!form) {
+    return;
+  }
+  event.preventDefault();
+  await createPilotReleaseDecision(form);
+});
 elements.pilotManualGates.addEventListener("submit", async (event) => {
   const attestationForm = event.target.closest("form.pilot-attestation-form");
   if (attestationForm) {

@@ -131,6 +131,10 @@ def test_console_assets_are_same_origin_and_not_cached(client):
     assert "readiness_sha256" in source
     assert "renderPilotLaunchPackage" in source
     assert "freezePilotLaunchPackage" in source
+    assert "createPilotReleaseDecision" in source
+    assert "pilot-release-decision-form" in source
+    assert "/release-decisions" in source
+    assert "controlled_pilot_release_authorized" in source
     assert "/launch-package-preview" in source
     assert "/launch-packages" in source
     assert "createTreatmentDecision" in source

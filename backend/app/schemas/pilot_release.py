@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 PilotManualGateName = Literal[
@@ -185,3 +185,85 @@ class PilotLaunchPackageRead(BaseModel):
     controlled_pilot_authorized: Literal[False] = False
     is_clinical_clearance: Literal[False] = False
     requires_human_release_decision: Literal[True] = True
+
+
+
+class PilotReleaseDecisionCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_package_sha256: str = Field(min_length=64, max_length=64)
+    action: Literal["authorize", "hold"]
+    rationale: str = Field(min_length=20, max_length=5000)
+    starts_at: datetime | None = None
+    expires_at: datetime | None = None
+    max_enrolled_visits: int | None = Field(default=None, ge=1, le=100)
+    allowed_protocol_codes: list[str] = Field(default_factory=list, max_length=50)
+
+    @field_validator("expected_package_sha256")
+    @classmethod
+    def validate_sha256(cls, value):
+        if any(char not in "0123456789abcdef" for char in value.lower()):
+            raise ValueError("Expected a hexadecimal SHA-256 value.")
+        return value.lower()
+
+    @field_validator("allowed_protocol_codes")
+    @classmethod
+    def normalize_protocol_codes(cls, value):
+        normalized = []
+        seen = set()
+        for item in value:
+            code = item.strip()
+            if not code or len(code) > 100:
+                raise ValueError("Protocol codes must be 1-100 characters.")
+            if code in seen:
+                raise ValueError("Protocol codes must be unique.")
+            seen.add(code)
+            normalized.append(code)
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_scope(self):
+        if self.action == "authorize":
+            if (
+                self.starts_at is None
+                or self.expires_at is None
+                or self.max_enrolled_visits is None
+                or not self.allowed_protocol_codes
+            ):
+                raise ValueError(
+                    "authorize requires starts_at, expires_at, "
+                    "max_enrolled_visits and allowed_protocol_codes."
+                )
+            if self.expires_at <= self.starts_at:
+                raise ValueError("expires_at must be after starts_at.")
+        else:
+            if (
+                self.starts_at is not None
+                or self.expires_at is not None
+                or self.max_enrolled_visits is not None
+                or self.allowed_protocol_codes
+            ):
+                raise ValueError("hold cannot include an active pilot scope.")
+        return self
+
+
+class PilotReleaseDecisionRead(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    package_id: str
+    package_sha256: str
+    action: Literal["authorize", "hold"]
+    starts_at: datetime | None
+    expires_at: datetime | None
+    max_enrolled_visits: int | None
+    allowed_protocol_codes: list[str]
+    rationale: str
+    decided_by_user_id: str
+    sha256: str
+    created_at: datetime
+    append_only: Literal[True] = True
+    controlled_pilot_release_authorized: bool
+    authorizes_individual_treatment: Literal[False] = False
+    is_clinical_clearance: Literal[False] = False
+    individual_clinician_decision_required: Literal[True] = True

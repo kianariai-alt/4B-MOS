@@ -155,6 +155,12 @@ independent physician review and administrator acknowledgement. The original
 release remains immutable, recovery is recorded as a new append-only event, and
 the lineage API rejects multiple simultaneously active versions.
 
+The [human pilot release decision](docs/HUMAN_PILOT_RELEASE_DECISION.md) binds a
+separate independent administrator decision to one immutable launch package.
+Authorization freezes a time window, visit cap and currently active protocol
+codes, while explicitly remaining non-clearance and never authorizing treatment
+for an individual patient.
+
 The [clinician-selected clinical evidence brief](docs/CLINICAL_EVIDENCE_BRIEFS.md)
 lets a physician preserve approved, source-linked knowledge beside one exact
 final clinical-context snapshot. Selection is manual and every response remains
