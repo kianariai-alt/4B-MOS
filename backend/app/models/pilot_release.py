@@ -284,6 +284,94 @@ class PilotReleaseDecision(Base):
     )
 
 
+class PilotVisitEnrollment(Base):
+    __tablename__ = "pilot_visit_enrollments"
+    __table_args__ = (
+        UniqueConstraint(
+            "visit_id",
+            "generation",
+            name="uq_pilot_visit_enrollment_generation",
+        ),
+        UniqueConstraint(
+            "supersedes_enrollment_id",
+            name="uq_pilot_visit_enrollment_supersedes",
+        ),
+        CheckConstraint(
+            "generation >= 1",
+            name="ck_pilot_visit_enrollment_generation",
+        ),
+        CheckConstraint(
+            "length(release_decision_sha256) = 64",
+            name="ck_pilot_visit_enrollment_release_sha256",
+        ),
+        CheckConstraint(
+            "length(clinical_context_sha256) = 64",
+            name="ck_pilot_visit_enrollment_context_sha256",
+        ),
+        CheckConstraint(
+            "length(sha256) = 64",
+            name="ck_pilot_visit_enrollment_sha256",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    visit_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("visits.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    generation: Mapped[int] = mapped_column(Integer, nullable=False)
+    supersedes_enrollment_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("pilot_visit_enrollments.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+    release_decision_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("pilot_release_decisions.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    release_decision_sha256: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+    )
+    clinical_context_sha256: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+    )
+    protocol_template_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("protocol_templates.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    protocol_code: Mapped[str] = mapped_column(String(100), nullable=False)
+    protocol_version: Mapped[str] = mapped_column(String(30), nullable=False)
+    treatment_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    enrolled_by_user_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+    )
+
+
 def _reject_rewrite(mapper, connection, target):
     raise ValueError("Pilot manual gate records are append-only.")
 
@@ -293,6 +381,7 @@ for _model in (
     PilotManualGateReview,
     PilotLaunchPackage,
     PilotReleaseDecision,
+    PilotVisitEnrollment,
 ):
     event.listen(_model, "before_update", _reject_rewrite)
     event.listen(_model, "before_delete", _reject_rewrite)
