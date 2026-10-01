@@ -233,3 +233,7 @@ api_router.include_router(pilot_execution_router)
 
 from backend.app.api.routes.reception import router as reception_router
 api_router.include_router(reception_router)
+
+from backend.app.api.routes.physician_questions import router as physician_question_router, screening_router
+api_router.include_router(physician_question_router)
+api_router.include_router(screening_router)

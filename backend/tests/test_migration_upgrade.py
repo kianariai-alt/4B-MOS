@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "c7f0a3e8d942"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d8a1b4f9e053"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "c7f0a3e8d942"
+            )) == "d8a1b4f9e053"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1395,5 +1395,37 @@ def test_reception_migration_preserves_visits_and_refuses_evidence_loss(tmp_path
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT COUNT(*) FROM visit_consent_events")) == 1
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "c7f0a3e8d942"
+    finally:
+        engine.dispose()
+
+
+def test_physician_question_migration_matches_metadata_and_refuses_evidence_loss(tmp_path, monkeypatch):
+    from backend.app.models.physician_questions import PhysicianQuestionEvent
+    from backend.app.models.user import User
+    from backend.app.services.session_finalization import evidence_digest
+    url = f"sqlite:///{tmp_path / 'question-bank.db'}"
+    monkeypatch.setattr(settings, 'DATABASE_URL', url)
+    config = Config(str(Path(__file__).resolve().parents[2] / 'alembic.ini'))
+    command.upgrade(config, 'c7f0a3e8d942')
+    engine = create_engine(url)
+    try:
+        with Session(engine) as db:
+            doctor = User(username='migration_doctor',display_name='Synthetic doctor',password_hash='hash',role='physician',is_active=True)
+            db.add(doctor); db.commit(); owner=doctor.id
+        engine.dispose()
+        command.upgrade(config, 'head')
+        fks=inspect(engine).get_foreign_keys('physician_question_events')
+        assert {fk['name'] for fk in fks} == {'fk_question_owner','fk_question_recorder'}
+        assert all(fk['options']['ondelete']=='RESTRICT' for fk in fks)
+        command.check(config)
+        with Session(engine) as db:
+            body={'synthetic':'preserved evidence'}
+            db.add(PhysicianQuestionEvent(physician_id=owner,version=1,action='draft',request_key='migration-key',recorded_by=owner,payload=body,sha256=evidence_digest(body)))
+            db.commit()
+        with pytest.raises(RuntimeError,match='history would be lost'):
+            command.downgrade(config,'c7f0a3e8d942')
+        with engine.connect() as connection:
+            assert connection.scalar(text('SELECT COUNT(*) FROM physician_question_events'))==1
+            assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='d8a1b4f9e053'
     finally:
         engine.dispose()

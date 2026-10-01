@@ -1043,3 +1043,30 @@ def test_postgresql_reception_writers_serialize_expected_versions(postgresql_eng
     with Session(postgresql_engine) as db:
         assert len(list(db.scalars(select(model).where(model.visit_id==context["visit_id"])))) == 1
         assert len(list(db.scalars(select(AuditLog).where(AuditLog.entity_type==model.__tablename__)))) == 1
+
+
+def test_postgresql_question_bank_writers_serialize_expected_versions(postgresql_engine):
+    from backend.app.db.account_transactions import AccountWriteConflictError
+    from backend.app.schemas.physician_questions import DraftCreate
+    from backend.app.services.physician_questions import PhysicianQuestionService, QuestionBankConflictError
+    from backend.app.models.physician_questions import PhysicianQuestionEvent
+    _seed_clinical_context(postgresql_engine)
+    with Session(postgresql_engine) as db:
+        actor=User(username='bank_pg_doctor',display_name='Synthetic doctor',password_hash='hash',role='physician',is_active=True)
+        db.add(actor);db.commit();owner=actor.id
+    rendezvous=Barrier(2)
+    def write(number):
+        with Session(postgresql_engine) as db:
+            actor=db.get(User,owner)
+            rendezvous.wait(timeout=10)
+            try:
+                PhysicianQuestionService.save_draft(db,owner,DraftCreate(title_fa='Synthetic bank',scope_fa='Synthetic scope',questions=[dict(id='first',text_fa='Synthetic question',purpose_fa='Synthetic purpose')],expected_version=0,request_key=f'bank-pg-{number}'),actor=actor)
+                return 'created'
+            except (QuestionBankConflictError,AccountWriteConflictError):
+                return 'conflict'
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures=[pool.submit(write,n) for n in (0,1)]
+        assert sorted(f.result(timeout=20) for f in futures)==['conflict','created']
+    with Session(postgresql_engine) as db:
+        assert len(list(db.scalars(select(PhysicianQuestionEvent).where(PhysicianQuestionEvent.physician_id==owner))))==1
+        assert len(list(db.scalars(select(AuditLog).where(AuditLog.entity_type=='physician_question_events'))))==1

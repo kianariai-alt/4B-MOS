@@ -102,3 +102,5 @@ __all__ = [
 ]
 
 from backend.app.models.reception import ReceptionRevision, VisitConsentEvent
+
+from backend.app.models.physician_questions import PhysicianQuestionEvent

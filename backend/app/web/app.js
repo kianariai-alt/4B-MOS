@@ -2556,6 +2556,7 @@ function showLogin() {
 }
 
 function showConsole() {
+  document.querySelector("#physician-bank-section").hidden = currentUser.role !== "physician";
   document.querySelector("#reception-tab").hidden = !canReadReception();
   document.querySelector("#reception-new-patient-section").hidden = !canWriteReception();
   elements.loginView.hidden = true;
@@ -4809,6 +4810,7 @@ function receptionMessage(message) {
   const node = document.querySelector("#reception-message"); node.textContent = message; node.hidden = !message;
 }
 function resetReception() {
+  resetPhysicianBank();
   receptionEpoch += 1; receptionBusy = false; receptionSnapshot = null; receptionPatient = null; receptionRetry = null;
   document.querySelector("#reception-content").hidden = true;
   document.querySelector("#reception-create-visit").hidden = true;
@@ -5292,3 +5294,110 @@ window.addEventListener("online", () => {
 window.addEventListener("offline", () => setConnectionState(false));
 
 elements.username.focus();
+
+// The editor is private to the signed-in physician and cleared on logout.
+let physicianBank = null;
+let bankDirty = false;
+let bankRequest = null;
+let bankBusy = false;
+function bankNode(id) { return document.querySelector(`#${id}`); }
+function resetPhysicianBank() {
+  physicianBank = null; bankDirty = false; bankRequest = null; bankBusy = false;
+  bankNode("physician-bank-section").hidden = true;
+  bankNode("bank-form").reset(); bankNode("bank-review-form").reset();
+  bankNode("bank-questions").replaceChildren(); bankNode("bank-status").textContent = "";
+}
+function bankQuestion(q = {}) {
+  const card = document.createElement("fieldset");
+  card.dataset.questionId = q.id || `q_${crypto.randomUUID()}`;
+  const field = (label, name, value, max = 1000) => {
+    const wrapper = document.createElement("label"); wrapper.textContent = label;
+    const input = document.createElement("textarea"); input.name = name; input.value = value || ""; input.maxLength = max;
+    if (["text_fa", "purpose_fa"].includes(name)) { input.required = true; input.minLength = 3; }
+    wrapper.append(input); card.append(wrapper); return input;
+  };
+  field("متن پرسش", "text_fa", q.text_fa);
+  field("هدف پرسش", "purpose_fa", q.purpose_fa);
+  const label = document.createElement("label"); label.textContent = "نوع پاسخ";
+  const type = document.createElement("select"); type.name = "answer_type";
+  for (const [value, text] of [["text", "متنی"], ["yes_no", "بله / خیر"], ["single_choice", "یک گزینه"]]) {
+    const option = document.createElement("option"); option.value = value; option.textContent = text; type.append(option);
+  }
+  type.value = q.answer_type || "text"; label.append(type); card.append(label);
+  field("گزینه‌ها، هر گزینه در یک خط؛ فقط برای پاسخ گزینه‌ای", "choices", (q.choices || []).join("\n"), 4000);
+  const dep = document.createElement("label"); dep.textContent = "پرسش پیش‌نیاز (شناسه یکی از پرسش‌های قبلی، اختیاری)";
+  const depInput = document.createElement("input"); depInput.name = "depends_on_id"; depInput.value = q.depends_on_id || ""; depInput.maxLength = 80; dep.append(depInput); card.append(dep);
+  field("پاسخ‌های فعال‌کننده، هر پاسخ در یک خط؛ برای بله/خیر از yes و no استفاده کنید", "show_when_answer_in", (q.show_when_answer_in || []).join("\n"), 4000);
+  const identifier = document.createElement("small"); identifier.textContent = `شناسه: ${card.dataset.questionId} — پاسخ نامشخص و انصراف همیشه مجاز است.`; card.append(identifier);
+  const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "حذف پرسش";
+  remove.addEventListener("click", () => {card.remove(); bankDirty = true;}); card.append(remove);
+  bankNode("bank-questions").append(card);
+}
+function renderPhysicianBank(data) {
+  physicianBank = data; bankDirty = false; bankRequest = null;
+  bankNode("bank-status").textContent = `نسخه تاریخچه: ${data.version} — ${data.has_approved_bank ? "گنجینه فعال تأییدشده دارد" : "گنجینه تأییدشده ندارد"}`;
+  const content = data.latest?.content;
+  const form = bankNode("bank-form");
+  for (const name of ["title_fa", "scope_fa", "summary_preferences_fa"]) form.elements[name].value = content?.[name] || "";
+  bankNode("bank-questions").replaceChildren();
+  for (const q of content?.questions || []) bankQuestion(q);
+  if (!content) bankQuestion();
+  bankNode("bank-review-form").reset();
+}
+async function bankAction(callback) {
+  if (bankBusy || currentUser?.role !== "physician") return;
+  const generation = sessionGeneration; const owner = currentUser.id;
+  const active = () => sessionGeneration === generation && currentUser?.id === owner;
+  bankBusy = true;
+  const fields = [...bankNode("physician-bank-section").querySelectorAll("button, input, textarea, select")];
+  fields.forEach(node => {node.disabled = true;});
+  try { await callback(active, `/physicians/${owner}/question-bank`); }
+  catch (error) {
+    if (!active()) return;
+    if (error instanceof ApiError && error.status === 401) {showLogin(); return;}
+    bankNode("bank-status").textContent = error instanceof ApiError && error.status === 409
+      ? "نسخه تغییر کرده است؛ گنجینه را دوباره بارگذاری کنید و تغییرات خود را بررسی کنید."
+      : "اقدام کامل نشد؛ متن پرسش‌ها، گزینه‌ها و پیش‌نیازها را بررسی کنید. ورودی شما حفظ شده است.";
+  }
+  finally { if (active()) {bankBusy = false; fields.forEach(node => {node.disabled = false;});} }
+}
+function bankRetryCommand(path, content) {
+  const signature = JSON.stringify({path, content});
+  if (!bankRequest || bankRequest.signature !== signature) bankRequest = {signature, command: {...content, request_key: crypto.randomUUID()}};
+  return bankRequest.command;
+}
+bankNode("bank-load").addEventListener("click", () => bankAction(async (active, path) => {
+  const data = await apiRequest(path); if (active()) renderPhysicianBank(data);
+}));
+bankNode("bank-add").addEventListener("click", () => {bankQuestion(); bankDirty = true;});
+bankNode("bank-form").addEventListener("input", () => {bankDirty = true;});
+bankNode("bank-form").addEventListener("change", () => {bankDirty = true;});
+bankNode("bank-form").addEventListener("submit", event => {
+  event.preventDefault(); const form = bankNode("bank-form"); if (!form.reportValidity()) return;
+  if (!physicianBank) {bankNode("bank-status").textContent = "ابتدا گنجینه خود را بارگذاری کنید."; return;}
+  const lines = value => value.split("\n").map(v => v.trim()).filter(Boolean);
+  const questions = [...bankNode("bank-questions").children].map(card => {
+    const value = name => card.querySelector(`[name="${name}"]`).value;
+    return {id: card.dataset.questionId, text_fa: value("text_fa"), purpose_fa: value("purpose_fa"), answer_type: value("answer_type"), choices: lines(value("choices")), depends_on_id: value("depends_on_id") || null, show_when_answer_in: lines(value("show_when_answer_in")), allow_unknown: true, allow_decline: true};
+  });
+  const content = {title_fa: form.elements.title_fa.value, scope_fa: form.elements.scope_fa.value, summary_preferences_fa: form.elements.summary_preferences_fa.value || null, questions, expected_version: physicianBank.version};
+  bankAction(async (active, path) => {
+    await apiRequest(`${path}/drafts`, {method: "POST", body: JSON.stringify(bankRetryCommand("drafts", content))});
+    if (!active()) return;
+    const data = await apiRequest(path); if (active()) renderPhysicianBank(data);
+  });
+});
+async function bankReview(action) {
+  const form = bankNode("bank-review-form"); if (!form.reportValidity()) return;
+  if (!physicianBank || (action === "approve" && bankDirty)) {bankNode("bank-status").textContent = "ابتدا تغییرات پرسش‌ها را ثبت کنید."; return;}
+  const target = action === "approve" ? physicianBank.latest : physicianBank.active_bank;
+  if (!target || (action === "approve" && target.action !== "draft")) {bankNode("bank-status").textContent = "نسخه مناسب برای این اقدام وجود ندارد."; return;}
+  const content = {expected_version: physicianBank.version, expected_bank_sha256: target.sha256, statement_fa: form.elements.statement_fa.value};
+  await bankAction(async (active, path) => {
+    await apiRequest(`${path}/${action}`, {method: "POST", body: JSON.stringify(bankRetryCommand(action, content))});
+    if (!active()) return;
+    const data = await apiRequest(path); if (active()) renderPhysicianBank(data);
+  });
+}
+bankNode("bank-review-form").addEventListener("submit", event => {event.preventDefault(); bankReview("approve");});
+bankNode("bank-retire").addEventListener("click", () => bankReview("retire"));
