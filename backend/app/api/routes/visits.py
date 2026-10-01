@@ -17,6 +17,7 @@ from backend.app.schemas.visit import (
 )
 from backend.app.services.visit import (
     VisitNotFoundError,
+    VisitAuthorizationError,
     VisitPatientNotFoundError,
     VisitService,
 )
@@ -75,6 +76,9 @@ def create_visit(
         return VisitRead.model_validate(
             visit
         )
+
+    except VisitAuthorizationError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
     except VisitPatientNotFoundError as exc:
         raise HTTPException(

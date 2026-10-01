@@ -120,6 +120,7 @@
           >
             جریان زنده
           </button>
+          <button id="reception-tab" class="workspace-tab" type="button" role="tab" aria-controls="reception-workspace" aria-selected="false" tabindex="-1" hidden>پذیرش و رضایت</button>
           <button
             id="copilot-tab"
             class="workspace-tab"
@@ -957,6 +958,65 @@
             <div class="section-heading"><h3 id="pilot-acceptance-heading">بسته پذیرش و پیگیری</h3></div>
             <div id="pilot-execution-acceptance" class="evidence-briefs"></div>
           </section>
+        </section>
+        <section id="reception-workspace" role="tabpanel" aria-labelledby="reception-tab" hidden>
+          <div class="section-heading"><h2>پذیرش و همراهی بیمار</h2></div>
+          <p class="muted">اطلاعات این بخش به همان پرونده و ویزیت متصل می‌شوند. رضایت‌ها جداگانه ثبت می‌شوند.</p>
+          <div id="reception-message" class="notice" role="status" aria-live="polite" hidden></div>
+          <section class="evidence-section" id="reception-new-patient-section">
+            <h3>افتتاح پرونده بیمار جدید</h3>
+            <p class="muted">پیش از افتتاح، وجود پرونده قبلی را بررسی کنید. پرونده‌های هم‌نام خودکار ادغام نمی‌شوند.</p>
+            <form id="reception-new-patient" class="evidence-brief-form">
+              <label for="reception-patient-code">کد پرونده</label><input id="reception-patient-code" name="patient_code" maxlength="50" required>
+              <label for="reception-first-name">نام</label><input id="reception-first-name" name="first_name" maxlength="100" required>
+              <label for="reception-last-name">نام خانوادگی</label><input id="reception-last-name" name="last_name" maxlength="100" required>
+              <button class="button button-secondary" type="submit">افتتاح پرونده</button>
+            </form>
+          </section>
+          <section class="evidence-section">
+            <h3>انتخاب بیمار و ویزیت</h3>
+            <form id="reception-patient-form" class="evidence-brief-form">
+              <label for="reception-patient-id">شناسه پرونده موجود</label><input id="reception-patient-id" maxlength="36" required>
+              <button class="button button-secondary" type="submit">نمایش ویزیت‌های این بیمار</button>
+            </form>
+            <p id="reception-patient-summary" class="muted"></p>
+            <div id="reception-visits" class="evidence-briefs"></div>
+            <button id="reception-create-visit" class="button button-secondary" type="button" hidden>ایجاد ویزیت جدید برای این بیمار</button>
+            <form id="reception-load-form" class="evidence-brief-form">
+              <label for="reception-visit-id">شناسه ویزیت</label><input id="reception-visit-id" maxlength="36" required>
+              <button class="button button-secondary" type="submit">بازکردن پذیرش</button>
+            </form>
+          </section>
+          <div id="reception-content" hidden>
+            <section class="evidence-section">
+              <h3>اطلاعات پذیرش</h3>
+              <p id="reception-version" class="muted"></p>
+              <form id="reception-intake-form" class="evidence-brief-form">
+                <label for="reception-complaint">علت مراجعه به بیان بیمار</label><textarea id="reception-complaint" name="patient_reported_complaint" minlength="3" maxlength="3000" required></textarea>
+                <label for="reception-goal">انتظار بیمار از مراجعه</label><textarea id="reception-goal" name="care_goal" maxlength="2000"></textarea>
+                <label for="reception-phone">شماره تماس</label><input id="reception-phone" name="phone" type="tel" maxlength="40">
+                <label for="reception-channel">روش تماس ترجیحی</label><select id="reception-channel" name="preferred_channel"><option value="unknown">نامشخص</option><option value="phone">تماس تلفنی</option><option value="sms">پیامک</option><option value="none">تمایل به تماس ندارد</option></select>
+                <label for="reception-contact-time">زمان مناسب تماس</label><input id="reception-contact-time" name="preferred_contact_time" maxlength="100">
+                <label for="reception-physician">شناسه پزشک مقصد</label><input id="reception-physician" name="assigned_physician_id" maxlength="36">
+                <label for="reception-state">وضعیت آماده‌سازی</label><select id="reception-state" name="state"><option value="draft">در حال تکمیل</option><option value="ready_for_screen">آماده اسکرین؛ پزشک مقصد تعیین شده</option></select>
+                <button id="reception-save" class="button button-primary" type="submit">ثبت نسخه جدید پذیرش</button>
+              </form>
+            </section>
+            <section class="evidence-section">
+              <h3>رضایت‌های مستقل</h3>
+              <p class="muted">انتخاب روش تماس به معنی رضایت تبلیغاتی نیست. رد ضبط یا آموزش مانع دریافت درمان نیست.</p>
+              <div id="reception-consent-states" class="evidence-briefs"></div>
+              <form id="reception-consent-form" class="evidence-brief-form">
+                <label for="reception-consent-purpose">موضوع رضایت</label><select id="reception-consent-purpose" name="purpose" required><option value="">انتخاب کنید</option><option value="care">درمان</option><option value="audio_recording">ضبط صدا</option><option value="educational_use">استفاده آموزشی</option><option value="follow_up_contact">تماس پیگیری</option><option value="marketing">پیام تبلیغاتی</option></select>
+                <label for="reception-consent-state">تصمیم بیمار</label><select id="reception-consent-state" name="state" required><option value="">انتخاب کنید</option><option value="granted">موافقت</option><option value="declined">عدم موافقت</option><option value="withdrawn">پس‌گرفتن رضایت</option></select>
+                <label for="reception-consent-document">نسخه متن رضایت</label><input id="reception-consent-document" name="document_version" maxlength="100" required>
+                <label for="reception-consent-reference">ارجاع مدرک تأییدشده</label><input id="reception-consent-reference" name="evidence_reference" minlength="8" maxlength="500" required>
+                <label for="reception-consent-time">زمان واقعی اعلام تصمیم بیمار</label><input id="reception-consent-time" name="confirmed_at" type="datetime-local" step="1" required>
+                <label><input name="acknowledge" type="checkbox" required> تصمیم بیمار و مدرک مرتبط را بررسی و ثبت می‌کنم.</label>
+                <button class="button button-primary" type="submit">ثبت تصمیم بیمار</button>
+              </form>
+            </section>
+          </div>
         </section>
       </section>
     </main>

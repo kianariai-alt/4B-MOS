@@ -230,3 +230,6 @@ api_router.include_router(
     pilot_release_router
 )
 api_router.include_router(pilot_execution_router)
+
+from backend.app.api.routes.reception import router as reception_router
+api_router.include_router(reception_router)

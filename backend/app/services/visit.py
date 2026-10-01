@@ -28,6 +28,10 @@ class VisitPatientNotFoundError(Exception):
     pass
 
 
+class VisitAuthorizationError(Exception):
+    pass
+
+
 class VisitService:
     @staticmethod
     def create_visit(
@@ -36,6 +40,8 @@ class VisitService:
         payload: VisitCreate,
         actor: User | None = None,
     ) -> Visit:
+        if actor is not None and actor.role == "operator" and payload.diagnosis is not None:
+            raise VisitAuthorizationError("Reception staff cannot author a diagnosis.")
         patient = PatientRepository.get_by_id(
             db,
             patient_id,
