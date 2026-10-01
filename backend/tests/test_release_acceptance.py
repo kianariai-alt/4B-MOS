@@ -147,11 +147,19 @@ def test_complete_clinical_journey_is_coherent_and_append_only(
             json={
                 "chief_complaint": "Knee pain",
                 "body_region": "Knee",
-                "diagnosis": "Knee osteoarthritis",
                 "notes": "Synthetic acceptance record; no patient data.",
             },
         ),
         201,
+    )
+    # Reception captures the complaint; the physician authors the diagnosis.
+    visit = assert_status(
+        client.patch(
+            f"/api/v1/visits/{visit['id']}",
+            headers=physician,
+            json={"diagnosis": "Knee osteoarthritis"},
+        ),
+        200,
     )
     intake = assert_status(
         client.post(
