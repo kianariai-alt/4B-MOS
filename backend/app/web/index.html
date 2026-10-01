@@ -1018,6 +1018,26 @@
             </section>
           </div>
         </section>
+        <section id="physician-bank-section" hidden class="context-card" dir="rtl">
+          <h2>گنجینه اختصاصی پرسش‌های پزشک</h2>
+          <p>هر نسخه پس از مرور و تأیید شما برای اسکرین قابل استفاده است. این گنجینه هنوز مدل آموزش‌دیده نیست.</p>
+          <button id="bank-load" type="button" class="button">بارگذاری گنجینه من</button>
+          <p id="bank-status" aria-live="polite"></p>
+          <form id="bank-form" class="evidence-brief-form">
+            <label>نام گنجینه<input name="title_fa" minlength="3" maxlength="200" required></label>
+            <label>دامنه کاربرد<input name="scope_fa" minlength="3" maxlength="500" required></label>
+            <label>ترجیح شما برای خلاصه شرح حال<textarea name="summary_preferences_fa" maxlength="2000"></textarea></label>
+            <div id="bank-questions"></div>
+            <button id="bank-add" type="button" class="button">افزودن پرسش</button>
+            <button type="submit" class="button button-primary">ثبت پیش‌نویس</button>
+          </form>
+          <form id="bank-review-form" class="evidence-brief-form">
+            <label>یادداشت مرور<textarea name="statement_fa" minlength="20" maxlength="2000" required></textarea></label>
+            <label><input name="acknowledge" type="checkbox" required> نسخه ثبت‌شده و ترتیب پرسش‌ها را بررسی کرده‌ام.</label>
+            <button type="submit" class="button button-primary">تأیید پیش‌نویس ثبت‌شده</button>
+            <button id="bank-retire" type="button" class="button">بازنشستگی گنجینه فعال</button>
+          </form>
+        </section>
       </section>
     </main>
 
