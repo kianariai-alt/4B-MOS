@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d8a1b4f9e053"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e9b2c5a0f164"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "d8a1b4f9e053"
+            )) == "e9b2c5a0f164"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1413,11 +1413,10 @@ def test_physician_question_migration_matches_metadata_and_refuses_evidence_loss
             doctor = User(username='migration_doctor',display_name='Synthetic doctor',password_hash='hash',role='physician',is_active=True)
             db.add(doctor); db.commit(); owner=doctor.id
         engine.dispose()
-        command.upgrade(config, 'head')
+        command.upgrade(config, 'd8a1b4f9e053')
         fks=inspect(engine).get_foreign_keys('physician_question_events')
         assert {fk['name'] for fk in fks} == {'fk_question_owner','fk_question_recorder'}
         assert all(fk['options']['ondelete']=='RESTRICT' for fk in fks)
-        command.check(config)
         with Session(engine) as db:
             body={'synthetic':'preserved evidence'}
             db.add(PhysicianQuestionEvent(physician_id=owner,version=1,action='draft',request_key='migration-key',recorded_by=owner,payload=body,sha256=evidence_digest(body)))
@@ -1429,3 +1428,32 @@ def test_physician_question_migration_matches_metadata_and_refuses_evidence_loss
             assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='d8a1b4f9e053'
     finally:
         engine.dispose()
+
+
+def test_recording_migration_preserves_visit_and_refuses_evidence_loss(tmp_path, monkeypatch):
+    from backend.app.models.recording import VisitRecordingEvent
+    from backend.app.models.user import User
+    from backend.app.services.session_finalization import evidence_digest
+    url=f"sqlite:///{tmp_path / 'recording-migration.db'}"
+    monkeypatch.setattr(settings,'DATABASE_URL',url)
+    config=Config(str(Path(__file__).resolve().parents[2]/'alembic.ini'))
+    command.upgrade(config,'d8a1b4f9e053')
+    engine=create_engine(url)
+    try:
+        with Session(engine) as db:
+            patient=Patient(patient_code='REC-MIG-SYNTHETIC',first_name='Synthetic',last_name='Patient')
+            doctor=User(username='rec_migration_doctor',display_name='Synthetic',password_hash='hash',role='physician')
+            db.add_all([patient,doctor]);db.flush()
+            visit=Visit(patient_id=patient.id,chief_complaint='Preserved synthetic visit');db.add(visit);db.commit()
+            visit_id,doctor_id=visit.id,doctor.id
+        engine.dispose();command.upgrade(config,'head');command.check(config)
+        assert {fk['options']['ondelete'] for fk in inspect(engine).get_foreign_keys('visit_recording_events')}=={'RESTRICT'}
+        with Session(engine) as db:
+            assert db.get(Visit,visit_id).chief_complaint=='Preserved synthetic visit'
+            payload={'synthetic':'recording evidence'}
+            db.add(VisitRecordingEvent(visit_id=visit_id,recording_id=str(uuid.uuid4()),version=1,action='start',request_key='migration-recording',recorded_by=doctor_id,payload=payload,sha256=evidence_digest(payload)));db.commit()
+        with pytest.raises(RuntimeError,match='recording evidence would be lost'):command.downgrade(config,'d8a1b4f9e053')
+        with engine.connect() as connection:
+            assert connection.scalar(text('SELECT COUNT(*) FROM visit_recording_events'))==1
+            assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='e9b2c5a0f164'
+    finally:engine.dispose()
