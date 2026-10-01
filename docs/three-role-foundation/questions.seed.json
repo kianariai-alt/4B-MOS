@@ -1,0 +1,295 @@
+{
+  "schema_version": 1,
+  "status": "draft",
+  "clinically_approved": false,
+  "physician_id": null,
+  "scope": "knee_complaint_interview_seed",
+  "questions": [
+    {
+      "id": "chief_complaint",
+      "text_fa": "مهم‌ترین مشکلی که برای آن مراجعه کرده‌اید چیست؟",
+      "answer_type": "text",
+      "order": 1,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "care_goal"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "care_goal",
+      "text_fa": "از این مراجعه چه انتظاری دارید؟",
+      "answer_type": "text",
+      "order": 2,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "location"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "location",
+      "text_fa": "مشکل را در کدام ناحیه احساس می‌کنید؟",
+      "answer_type": "text",
+      "order": 3,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "laterality"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "laterality",
+      "text_fa": "مشکل در سمت راست، چپ یا هر دو طرف است؟",
+      "answer_type": "single_choice",
+      "order": 4,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "onset"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "onset",
+      "text_fa": "از چه زمانی شروع شده است؟",
+      "answer_type": "text",
+      "order": 5,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "course"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "course",
+      "text_fa": "از شروع تا امروز چه تغییری کرده است؟",
+      "answer_type": "text",
+      "order": 6,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "patient_trigger"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "patient_trigger",
+      "text_fa": "به نظر شما با چه اتفاق یا فعالیتی شروع شد؟",
+      "answer_type": "text",
+      "order": 7,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "aggravating"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "aggravating",
+      "text_fa": "چه فعالیت‌هایی مشکل را بیشتر می‌کنند؟",
+      "answer_type": "text",
+      "order": 8,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "relieving"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "relieving",
+      "text_fa": "چه چیزهایی آن را کمتر می‌کنند؟",
+      "answer_type": "text",
+      "order": 9,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "daily_impact"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "daily_impact",
+      "text_fa": "چه کارهای روزانه‌ای برایتان دشوار شده‌اند؟",
+      "answer_type": "text",
+      "order": 10,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "previous_care"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "previous_care",
+      "text_fa": "قبلاً برای همین مشکل چه بررسی یا درمانی داشته‌اید؟",
+      "answer_type": "text",
+      "order": 11,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "previous_response"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "previous_response",
+      "text_fa": "نتیجه درمان‌های قبلی را چگونه توصیف می‌کنید؟",
+      "answer_type": "text",
+      "order": 12,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "history"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "history",
+      "text_fa": "چه بیماری‌های زمینه‌ای یا سابقه جراحی دارید؟",
+      "answer_type": "text",
+      "order": 13,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "medications"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "medications",
+      "text_fa": "اکنون چه داروها یا مکمل‌هایی مصرف می‌کنید؟",
+      "answer_type": "text",
+      "order": 14,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "allergies"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "allergies",
+      "text_fa": "آیا حساسیت یا واکنش قبلی به دارو یا درمان داشته‌اید؟",
+      "answer_type": "text",
+      "order": 15,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "documents"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "documents",
+      "text_fa": "چه مدارک پزشکی همراه دارید؟",
+      "answer_type": "text",
+      "order": 16,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "questions"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "questions",
+      "text_fa": "چه پرسشی دوست دارید پزشک حتماً پاسخ دهد؟",
+      "answer_type": "text",
+      "order": 17,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [
+        "contact"
+      ],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    },
+    {
+      "id": "contact",
+      "text_fa": "برای پیگیری، چه روش و زمانی برای تماس مناسب است؟",
+      "answer_type": "text",
+      "order": 18,
+      "purpose": "جمع‌آوری گفته بیمار برای بازبینی پزشک",
+      "display_condition": {
+        "type": "always"
+      },
+      "next_question_ids": [],
+      "allow_unknown": true,
+      "allow_decline": true,
+      "approved_by": null
+    }
+  ]
+}
