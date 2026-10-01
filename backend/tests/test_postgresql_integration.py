@@ -1070,3 +1070,34 @@ def test_postgresql_question_bank_writers_serialize_expected_versions(postgresql
     with Session(postgresql_engine) as db:
         assert len(list(db.scalars(select(PhysicianQuestionEvent).where(PhysicianQuestionEvent.physician_id==owner))))==1
         assert len(list(db.scalars(select(AuditLog).where(AuditLog.entity_type=='physician_question_events'))))==1
+
+
+def test_postgresql_recording_start_writers_serialize_and_bind_consent(postgresql_engine):
+    from datetime import datetime, timezone
+    from backend.app.schemas.reception import ReceptionCreate, ConsentCreate
+    from backend.app.schemas.recording import RecordingStart
+    from backend.app.services.reception import ReceptionService
+    from backend.app.services.recording import RecordingService, RecordingConflictError
+    from backend.app.models.recording import VisitRecordingEvent
+    context=_seed_clinical_context(postgresql_engine)
+    with Session(postgresql_engine) as db:
+        doctor=User(username='capture_pg_doctor',display_name='Synthetic doctor',password_hash='hash',role='physician')
+        db.add(doctor);db.commit();owner=doctor.id
+        admin=db.get(User,context['admin_ids'][0])
+        ReceptionService.save_intake(db,context['visit_id'],ReceptionCreate(patient_reported_complaint='Synthetic',assigned_physician_id=owner,expected_version=0,request_key='record-assign'),actor=admin)
+        consent=ReceptionService.record_consent(db,context['visit_id'],ConsentCreate(purpose='audio_recording',state='granted',document_version='FA-1',evidence_reference='SYNTHETIC-PG-CONSENT',confirmed_at=datetime.now(timezone.utc),expected_version=0,request_key='record-consent'),actor=admin)
+        consent_sha=consent.sha256
+    rendezvous=Barrier(2)
+    def write(number):
+        with Session(postgresql_engine) as db:
+            actor=db.get(User,owner);rendezvous.wait(timeout=10)
+            try:
+                RecordingService.start(db,context['visit_id'],RecordingStart(recording_id=str(uuid.uuid4()),expected_version=0,request_key=f'pg-capture-{number}',expected_consent_sha256=consent_sha),actor=actor)
+                return 'created'
+            except (RecordingConflictError,ClinicalRecordWriteConflictError):return 'conflict'
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures=[pool.submit(write,n) for n in (0,1)]
+        assert sorted(f.result(timeout=20) for f in futures)==['conflict','created']
+    with Session(postgresql_engine) as db:
+        assert len(list(db.scalars(select(VisitRecordingEvent))))==1
+        assert len(list(db.scalars(select(AuditLog).where(AuditLog.entity_type=='visit_recording_events'))))==1

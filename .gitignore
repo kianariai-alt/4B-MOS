@@ -60,3 +60,11 @@ Thumbs.db
 *.sqlite3-wal
 *.sqlite3-shm
 backups/
+
+# Windows recorder build outputs and local capture files
+windows/**/bin/
+windows/**/obj/
+*.4baudio
+*.pending
+*.receipt
+*.part

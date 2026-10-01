@@ -1,0 +1,41 @@
+name: Windows Recorder CI
+on:
+  pull_request:
+    branches: [main]
+    paths: ['windows/**', '.github/workflows/windows-recorder-ci.yml']
+  push:
+    branches: [main]
+    paths: ['windows/**', '.github/workflows/windows-recorder-ci.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recorder:
+    name: Windows recorder build and encryption tests
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.401'
+      - name: Restore pinned dependencies
+        run: |
+          dotnet restore windows/Recorder.App/Recorder.App.csproj --locked-mode
+          dotnet restore windows/Recorder.Tests/Recorder.Tests.csproj --locked-mode
+      - name: Verify recording container and real Windows DPAPI
+        run: dotnet run --project windows/Recorder.Tests/Recorder.Tests.csproj --configuration Release --no-restore
+      - name: Build Windows app
+        run: dotnet build windows/Recorder.App/Recorder.App.csproj --configuration Release --no-restore
+      - name: Publish self-contained Windows x64 app
+        run: dotnet publish windows/Recorder.App/Recorder.App.csproj --configuration Release --runtime win-x64 --self-contained true --output artifacts/4B-VisitRecorder
+      - name: Add installation notes
+        shell: pwsh
+        run: Copy-Item docs/WINDOWS_RECORDER_FA.md artifacts/4B-VisitRecorder/README_FA.md
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: 4B-VisitRecorder-Windows-x64
+          path: artifacts/4B-VisitRecorder/
+          retention-days: 30
