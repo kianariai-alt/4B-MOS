@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "status": "draft",
+  "patient_id": null,
+  "visit_id": null,
+  "assigned_physician_id": null,
+  "intake_state": "draft",
+  "identity": {
+    "first_name": null,
+    "last_name": null,
+    "date_of_birth": null
+  },
+  "contact": {
+    "phone": null,
+    "preferred_channel": null,
+    "preferred_time": null
+  },
+  "clinical_sections": {
+    "chief_complaint": {
+      "status": "unknown",
+      "patient_reported_value": null,
+      "reviewed_by": null
+    },
+    "relevant_history": {
+      "status": "unknown",
+      "patient_reported_value": null,
+      "reviewed_by": null
+    },
+    "current_medications": {
+      "status": "unknown",
+      "patient_reported_value": null,
+      "reviewed_by": null
+    },
+    "allergies": {
+      "status": "unknown",
+      "patient_reported_value": null,
+      "reviewed_by": null
+    },
+    "prior_treatments": {
+      "status": "unknown",
+      "patient_reported_value": null,
+      "reviewed_by": null
+    }
+  },
+  "consent_purposes": {
+    "care": {
+      "state": "unknown",
+      "document_version": null,
+      "evidence_reference": null,
+      "recorded_at": null,
+      "recorded_by": null
+    },
+    "audio_recording": {
+      "state": "unknown",
+      "document_version": null,
+      "evidence_reference": null,
+      "recorded_at": null,
+      "recorded_by": null
+    },
+    "educational_use": {
+      "state": "unknown",
+      "document_version": null,
+      "evidence_reference": null,
+      "recorded_at": null,
+      "recorded_by": null
+    },
+    "follow_up_contact": {
+      "state": "unknown",
+      "document_version": null,
+      "evidence_reference": null,
+      "recorded_at": null,
+      "recorded_by": null
+    },
+    "marketing": {
+      "state": "unknown",
+      "document_version": null,
+      "evidence_reference": null,
+      "recorded_at": null,
+      "recorded_by": null
+    }
+  },
+  "question_bank_version": null,
+  "answers": [],
+  "exam_findings": [],
+  "physician_final_diagnosis": null,
+  "follow_up_tasks": []
+}
