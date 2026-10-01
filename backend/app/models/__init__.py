@@ -100,3 +100,5 @@ __all__ = [
     "PilotVisitEnrollment",
     "PilotStopEvent",
 ]
+
+from backend.app.models.reception import ReceptionRevision, VisitConsentEvent

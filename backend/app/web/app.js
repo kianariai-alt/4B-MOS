@@ -2385,6 +2385,7 @@ function resetOperationalState() {
 }
 
 function setWorkspace(workspace) {
+  if (workspace === "reception" && !canReadReception()) return;
   if (workspace === "copilot" && !canReadCopilot()) {
     return;
   }
@@ -2404,6 +2405,10 @@ function setWorkspace(workspace) {
     return;
   }
 
+  const receptionSelected = workspace === "reception";
+  document.querySelector("#reception-workspace").hidden = !receptionSelected;
+  document.querySelector("#reception-tab").setAttribute("aria-selected", String(receptionSelected));
+  document.querySelector("#reception-tab").tabIndex = receptionSelected ? 0 : -1;
   activeWorkspace = workspace;
   const isFlow = workspace === "flow";
   const isCopilot = workspace === "copilot";
@@ -2469,6 +2474,11 @@ function setWorkspace(workspace) {
 }
 
 function showLogin() {
+  resetReception();
+  document.querySelector("#reception-workspace").hidden = true;
+  document.querySelector("#reception-tab").hidden = true;
+  document.querySelector("#reception-tab").setAttribute("aria-selected", "false");
+  document.querySelector("#reception-tab").tabIndex = -1;
   stopAutoRefresh();
   sessionGeneration += 1;
   accessToken = null;
@@ -2546,6 +2556,8 @@ function showLogin() {
 }
 
 function showConsole() {
+  document.querySelector("#reception-tab").hidden = !canReadReception();
+  document.querySelector("#reception-new-patient-section").hidden = !canWriteReception();
   elements.loginView.hidden = true;
   elements.consoleView.hidden = false;
   elements.identityArea.hidden = false;
@@ -4783,9 +4795,169 @@ function stopAutoRefresh() {
   }
 }
 
+// Reception data stays in memory and is cleared on every session change.
+let receptionSnapshot = null;
+let receptionPatient = null;
+let receptionBusy = false;
+let receptionEpoch = 0;
+let receptionRetry = null;
+const receptionPurposeLabels = {care: "درمان", audio_recording: "ضبط صدا", educational_use: "استفاده آموزشی", follow_up_contact: "تماس پیگیری", marketing: "پیام تبلیغاتی"};
+const receptionStateLabels = {unknown: "ثبت نشده", granted: "موافقت", declined: "عدم موافقت", withdrawn: "رضایت پس گرفته شده"};
+function canReadReception() { return Boolean(currentUser && ["admin", "operator", "physician", "nurse"].includes(currentUser.role)); }
+function canWriteReception() { return Boolean(currentUser && ["admin", "operator", "physician"].includes(currentUser.role)); }
+function receptionMessage(message) {
+  const node = document.querySelector("#reception-message"); node.textContent = message; node.hidden = !message;
+}
+function resetReception() {
+  receptionEpoch += 1; receptionBusy = false; receptionSnapshot = null; receptionPatient = null; receptionRetry = null;
+  document.querySelector("#reception-content").hidden = true;
+  document.querySelector("#reception-create-visit").hidden = true;
+  document.querySelector("#reception-patient-summary").textContent = "";
+  document.querySelector("#reception-version").textContent = "";
+  document.querySelector("#reception-consent-states").replaceChildren();
+  document.querySelector("#reception-visits").replaceChildren();
+  document.querySelectorAll("#reception-workspace form").forEach(form => form.reset());
+  document.querySelectorAll("#reception-workspace button, #reception-workspace input, #reception-workspace select, #reception-workspace textarea").forEach(field => { field.disabled = false; });
+  receptionMessage("");
+}
+function renderReception(data) {
+  receptionSnapshot = data;
+  document.querySelector("#reception-content").hidden = false;
+  document.querySelector("#reception-version").textContent = `نسخه پذیرش: ${toPersianNumber(data.intake_version)} — گفته بیمار برای مرور پزشک`;
+  const content = data.latest_intake ? data.latest_intake.content : {};
+  const form = document.querySelector("#reception-intake-form");
+  for (const field of form.elements) if (field.name) field.value = content[field.name] ?? (field.name === "state" ? "draft" : field.name === "preferred_channel" ? "unknown" : "");
+  for (const field of form.elements) field.disabled = !canWriteReception();
+  document.querySelector("#reception-consent-form").hidden = !canWriteReception();
+  const nodes = data.consents.map(consent => {
+    const card = document.createElement("article"); card.className = "context-card";
+    card.append(createTextElement("h4", "", receptionPurposeLabels[consent.purpose]), createTextElement("p", "", receptionStateLabels[consent.state]));
+    if (consent.latest_event) card.append(createTextElement("small", "muted", formatDateTime(consent.latest_event.created_at)));
+    return card;
+  });
+  document.querySelector("#reception-consent-states").replaceChildren(...nodes);
+}
+async function receptionAction(callback) {
+  if (receptionBusy || !canReadReception()) return;
+  const generation = sessionGeneration; const epoch = ++receptionEpoch;
+  receptionBusy = true;
+  const fields = [...document.querySelectorAll("#reception-workspace button, #reception-workspace input, #reception-workspace select, #reception-workspace textarea")];
+  const previous = fields.map(field => field.disabled); fields.forEach(field => { field.disabled = true; });
+  const active = () => generation === sessionGeneration && epoch === receptionEpoch && canReadReception();
+  try { await callback(active); }
+  catch (error) {
+    if (!active()) return;
+    if (error instanceof ApiError && error.status === 401) { showLogin(); return; }
+    if (error instanceof ApiError && error.status === 409) receptionMessage("اطلاعات یا نسخه تغییر کرده است؛ پذیرش را دوباره باز کنید. مقادیر واردشده برای بررسی حفظ شده‌اند.");
+    else receptionMessage("اقدام کامل نشد. داده را بررسی کنید؛ پیش از ایجاد دوباره پرونده یا ویزیت، وجود آن را بررسی کنید.");
+  } finally {
+    if (active()) {
+      receptionBusy = false;
+      fields.forEach((field, i) => { field.disabled = previous[i]; });
+      if (receptionSnapshot) for (const field of document.querySelector("#reception-intake-form").elements) field.disabled = !canWriteReception();
+    }
+  }
+}
+async function fetchReception(visitId, active) {
+  receptionSnapshot = null; document.querySelector("#reception-content").hidden = true;
+  const data = await apiRequest(`/visits/${encodeURIComponent(visitId)}/reception`);
+  if (!active()) return;
+  document.querySelector("#reception-visit-id").value = visitId;
+  receptionRetry = null; renderReception(data); receptionMessage("پذیرش بارگذاری شد.");
+}
+function receptionCommandKey(endpoint, command) {
+  const serialized = JSON.stringify(command);
+  if (!receptionRetry || receptionRetry.endpoint !== endpoint || receptionRetry.serialized !== serialized) receptionRetry = {endpoint, serialized, key: crypto.randomUUID()};
+  return receptionRetry.key;
+}
+document.querySelector("#reception-tab").addEventListener("click", () => setWorkspace("reception"));
+document.querySelector("#reception-load-form").addEventListener("submit", event => {
+  event.preventDefault(); const id = document.querySelector("#reception-visit-id").value.trim();
+  if (id) receptionAction(active => fetchReception(id, active));
+});
+document.querySelector("#reception-intake-form").addEventListener("submit", event => {
+  event.preventDefault(); if (!canWriteReception() || !receptionSnapshot) return;
+  const form = event.currentTarget; if (!form.reportValidity()) return;
+  const command = Object.fromEntries(new FormData(form));
+  for (const key of ["care_goal", "phone", "preferred_contact_time", "assigned_physician_id"]) command[key] = command[key].trim() || null;
+  command.expected_version = receptionSnapshot.intake_version;
+  const id = receptionSnapshot.visit_id; const endpoint = `/visits/${encodeURIComponent(id)}/reception/intakes`;
+  command.request_key = receptionCommandKey(endpoint, command);
+  receptionAction(async active => {
+    await apiRequest(endpoint, {method: "POST", body: JSON.stringify(command)});
+    if (!active()) return;
+    await fetchReception(id, active); if (active()) receptionMessage("نسخه جدید پذیرش ثبت شد.");
+  });
+});
+document.querySelector("#reception-consent-form").addEventListener("submit", event => {
+  event.preventDefault(); if (!canWriteReception() || !receptionSnapshot) return;
+  const form = event.currentTarget; if (!form.reportValidity()) return;
+  const command = Object.fromEntries(new FormData(form)); delete command.acknowledge;
+  const confirmed = new Date(command.confirmed_at);
+  if (Number.isNaN(confirmed.getTime()) || confirmed.getTime() > Date.now()) { receptionMessage("زمان واقعی تصمیم بیمار را وارد کنید؛ زمان آینده قابل ثبت نیست."); return; }
+  command.confirmed_at = confirmed.toISOString(); command.expected_version = receptionSnapshot.consent_version;
+  const id = receptionSnapshot.visit_id; const endpoint = `/visits/${encodeURIComponent(id)}/reception/consents`;
+  command.request_key = receptionCommandKey(endpoint, command);
+  receptionAction(async active => {
+    await apiRequest(endpoint, {method: "POST", body: JSON.stringify(command)});
+    if (!active()) return;
+    form.reset(); await fetchReception(id, active); if (active()) receptionMessage("تصمیم بیمار برای همین موضوع ثبت شد.");
+  });
+});
+async function loadReceptionPatient(id, active) {
+  receptionPatient = null; receptionSnapshot = null; receptionRetry = null;
+  document.querySelector("#reception-content").hidden = true;
+  document.querySelector("#reception-create-visit").hidden = true;
+  document.querySelector("#reception-patient-summary").textContent = "";
+  document.querySelector("#reception-visits").replaceChildren();
+  const patient = await apiRequest(`/patients/${encodeURIComponent(id)}`);
+  if (!active()) return;
+  const visits = await apiRequest(`/patients/${encodeURIComponent(id)}/visits?limit=100`);
+  if (!active()) return;
+  receptionPatient = patient; document.querySelector("#reception-patient-id").value = patient.id;
+  document.querySelector("#reception-patient-summary").textContent = `${patient.first_name} ${patient.last_name} — کد پرونده ${patient.patient_code}`;
+  document.querySelector("#reception-create-visit").hidden = !canWriteReception() || !patient.is_active;
+  const nodes = visits.map(visit => { const button = document.createElement("button"); button.type = "button"; button.className = "button button-secondary";
+    button.textContent = `${formatDateTime(visit.visit_date)} — ${visit.chief_complaint || "ویزیت"}`;
+    button.addEventListener("click", () => receptionAction(check => fetchReception(visit.id, check))); return button; });
+  document.querySelector("#reception-visits").replaceChildren(...nodes);
+  // A newly selected patient must never retain a previous patient's intake.
+  receptionSnapshot = null; receptionRetry = null; document.querySelector("#reception-content").hidden = true;
+  document.querySelector("#reception-visit-id").value = "";
+  receptionMessage("بیمار انتخاب شد؛ ویزیت را انتخاب کنید یا ویزیت جدید بسازید.");
+}
+document.querySelector("#reception-patient-form").addEventListener("submit", event => {
+  event.preventDefault(); const id = document.querySelector("#reception-patient-id").value.trim();
+  if (id) receptionAction(active => loadReceptionPatient(id, active));
+});
+document.querySelector("#reception-new-patient").addEventListener("submit", event => {
+  event.preventDefault(); if (!canWriteReception()) return;
+  const form = event.currentTarget; if (!form.reportValidity()) return;
+  const command = Object.fromEntries(new FormData(form));
+  receptionAction(async active => {
+    const patient = await apiRequest("/patients", {method: "POST", body: JSON.stringify(command)});
+    if (!active()) return;
+    document.querySelector("#reception-patient-id").value = patient.id; form.reset();
+    await loadReceptionPatient(patient.id, active);
+  });
+});
+document.querySelector("#reception-create-visit").addEventListener("click", () => {
+  if (!canWriteReception() || !receptionPatient) return;
+  const id = receptionPatient.id;
+  receptionAction(async active => {
+    document.querySelector("#reception-create-visit").hidden = true;
+    const visit = await apiRequest(`/patients/${encodeURIComponent(id)}/visits`, {method: "POST", body: JSON.stringify({})});
+    if (!active()) return;
+    document.querySelector("#reception-visit-id").value = visit.id;
+    document.querySelector("#reception-create-visit").hidden = true;
+    await fetchReception(visit.id, active);
+  });
+});
+
 function availableWorkspaceTabs() {
   return [
     { workspace: "flow", tab: elements.flowTab },
+    { workspace: "reception", tab: document.querySelector("#reception-tab") },
     { workspace: "copilot", tab: elements.copilotTab },
     { workspace: "learning", tab: elements.learningTab },
     { workspace: "evidence", tab: elements.evidenceTab },
@@ -4798,7 +4970,9 @@ function availableWorkspaceTabs() {
 elements.loginForm.addEventListener("submit", handleLogin);
 elements.logoutButton.addEventListener("click", showLogin);
 elements.refreshButton.addEventListener("click", () => {
-  if (activeWorkspace === "copilot" && currentCopilotVisitId) {
+  if (activeWorkspace === "reception" && receptionSnapshot) {
+    receptionAction(active => fetchReception(receptionSnapshot.visit_id, active));
+  } else if (activeWorkspace === "copilot" && currentCopilotVisitId) {
     loadCopilotWorkspace(currentCopilotVisitId);
   } else if (activeWorkspace === "learning") {
     loadClinicalLearningReview();
@@ -4902,6 +5076,7 @@ elements.pilotManualGates.addEventListener("submit", async (event) => {
   }
 });
 for (const tab of [
+  document.querySelector("#reception-tab"),
   elements.flowTab,
   elements.copilotTab,
   elements.learningTab,

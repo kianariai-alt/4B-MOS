@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b6e9c2d4a731"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "c7f0a3e8d942"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "b6e9c2d4a731"
+            )) == "c7f0a3e8d942"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1360,5 +1360,40 @@ def test_pilot_execution_migration_refuses_history_loss(
             assert connection.scalar(text(
                 "SELECT count(*) FROM pilot_stop_events"
             )) == 1
+    finally:
+        engine.dispose()
+
+
+def test_reception_migration_preserves_visits_and_refuses_evidence_loss(tmp_path, monkeypatch):
+    from backend.app.models.user import User
+    from backend.app.models.reception import VisitConsentEvent
+    from backend.app.services.session_finalization import evidence_digest
+    url = f"sqlite:///{tmp_path / 'reception-migration.db'}"
+    monkeypatch.setattr(settings, "DATABASE_URL", url)
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    command.upgrade(config, "b6e9c2d4a731")
+    engine = create_engine(url)
+    try:
+        with Session(engine) as db:
+            patient = Patient(patient_code="RECEPTION-MIG-SYN", first_name="Synthetic", last_name="Only")
+            actor = User(username="migration_operator", display_name="Synthetic", password_hash="not-a-real-password", role="operator")
+            db.add_all([patient, actor]); db.flush()
+            visit = Visit(patient_id=patient.id, chief_complaint="Existing synthetic visit")
+            db.add(visit); db.commit()
+            visit_id, actor_id = visit.id, actor.id
+        command.upgrade(config, "head")
+        assert {"reception_revisions", "visit_consent_events"} <= set(inspect(engine).get_table_names())
+        for table in ("reception_revisions", "visit_consent_events"):
+            assert {fk["options"].get("ondelete") for fk in inspect(engine).get_foreign_keys(table)} == {"RESTRICT"}
+        with Session(engine) as db:
+            assert db.get(Visit, visit_id).chief_complaint == "Existing synthetic visit"
+            payload = {"synthetic":"migration-evidence"}
+            db.add(VisitConsentEvent(visit_id=visit_id, version=1, request_key="synthetic-key", recorded_by=actor_id, payload=payload, sha256=evidence_digest(payload)))
+            db.commit()
+        with pytest.raises(RuntimeError, match="evidence would be lost"):
+            command.downgrade(config, "b6e9c2d4a731")
+        with engine.connect() as connection:
+            assert connection.scalar(text("SELECT COUNT(*) FROM visit_consent_events")) == 1
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "c7f0a3e8d942"
     finally:
         engine.dispose()

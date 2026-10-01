@@ -1005,3 +1005,41 @@ def test_clinical_evidence_briefs_share_the_postgresql_visit_lock(
                 MedicalKnowledgeFact.id == fact_id
             )
         ).status == "approved"
+
+
+@pytest.mark.parametrize("kind", ["intake", "consent"])
+def test_postgresql_reception_writers_serialize_expected_versions(postgresql_engine, kind):
+    from datetime import datetime, timezone
+    from backend.app.schemas.reception import ReceptionCreate, ConsentCreate
+    from backend.app.services.reception import ReceptionService, ReceptionConflictError
+    from backend.app.models.reception import ReceptionRevision, VisitConsentEvent
+    context = _seed_clinical_context(postgresql_engine)
+    rendezvous = Barrier(2)
+
+    def write(number):
+        with Session(postgresql_engine) as db:
+            actor = db.get(User, context["admin_ids"][number])
+            rendezvous.wait(timeout=10)
+            try:
+                if kind == "intake":
+                    result = ReceptionService.save_intake(db, context["visit_id"], ReceptionCreate(
+                        patient_reported_complaint="Synthetic patient statement", expected_version=0,
+                        request_key=f"postgres-intake-{number}",
+                    ), actor=actor)
+                else:
+                    result = ReceptionService.record_consent(db, context["visit_id"], ConsentCreate(
+                        purpose="marketing", state="declined", document_version="FA-1",
+                        evidence_reference="SYNTHETIC-POSTGRES-DOC", confirmed_at=datetime.now(timezone.utc),
+                        expected_version=0, request_key=f"postgres-consent-{number}",
+                    ), actor=actor)
+                return "created", result.version
+            except (ReceptionConflictError, ClinicalRecordWriteConflictError):
+                return "conflict", None
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(write, n) for n in (0,1)]
+        results = [future.result(timeout=20) for future in futures]
+    assert sorted(result[0] for result in results) == ["conflict", "created"]
+    model = ReceptionRevision if kind == "intake" else VisitConsentEvent
+    with Session(postgresql_engine) as db:
+        assert len(list(db.scalars(select(model).where(model.visit_id==context["visit_id"])))) == 1
+        assert len(list(db.scalars(select(AuditLog).where(AuditLog.entity_type==model.__tablename__)))) == 1
