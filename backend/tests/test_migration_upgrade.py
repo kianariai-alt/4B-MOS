@@ -60,7 +60,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e9b2c5a0f164"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "f0c3d6b1a275"
     finally:
         engine.dispose()
 
@@ -269,7 +269,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "e9b2c5a0f164"
+            )) == "f0c3d6b1a275"
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}
@@ -1456,4 +1456,32 @@ def test_recording_migration_preserves_visit_and_refuses_evidence_loss(tmp_path,
         with engine.connect() as connection:
             assert connection.scalar(text('SELECT COUNT(*) FROM visit_recording_events'))==1
             assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='e9b2c5a0f164'
+    finally:engine.dispose()
+
+
+def test_media_migration_refuses_encrypted_evidence_loss(tmp_path,monkeypatch):
+    from backend.app.models.user import User
+    from backend.app.models.recording import VisitRecordingEvent
+    from backend.app.models.recording_media import RecordingAudioTransfer
+    url=f"sqlite:///{tmp_path / 'audio-migration.db'}"
+    monkeypatch.setattr(settings,'DATABASE_URL',url)
+    config=Config(str(Path(__file__).resolve().parents[2]/'alembic.ini'))
+    command.upgrade(config,'e9b2c5a0f164')
+    engine=create_engine(url)
+    try:
+        with Session(engine) as db:
+            patient=Patient(patient_code='AUDIO-MIG-SYN',first_name='Synthetic',last_name='Only')
+            doctor=User(username='audio_mig',display_name='Synthetic',password_hash='hash',role='physician')
+            db.add_all([patient,doctor]);db.flush()
+            visit=Visit(patient_id=patient.id,chief_complaint='Synthetic');db.add(visit);db.flush()
+            recording=VisitRecordingEvent(visit_id=visit.id,recording_id=str(uuid.uuid4()),version=1,action='start',request_key='audio-mig-start',recorded_by=doctor.id,payload={},sha256='a'*64)
+            db.add(recording);db.commit();ids=(visit.id,recording.id,recording.recording_id,doctor.id)
+        command.upgrade(config,'head');command.check(config)
+        with Session(engine) as db:
+            db.add(RecordingAudioTransfer(visit_id=ids[0],start_event_id=ids[1],recording_id=ids[2],recorded_by=ids[3],pcm_bytes=32000,key_id='audio-v1',payload={},sha256='b'*64));db.commit()
+        with pytest.raises(RuntimeError,match='encrypted recording evidence would be lost'):
+            command.downgrade(config,'e9b2c5a0f164')
+        with engine.connect() as connection:
+            assert connection.scalar(text('SELECT COUNT(*) FROM recording_audio_transfers'))==1
+            assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='f0c3d6b1a275'
     finally:engine.dispose()

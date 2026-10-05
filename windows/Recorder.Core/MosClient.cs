@@ -39,6 +39,13 @@ public sealed class MosClient : IDisposable
     public Task<JsonElement> Get(string path)=>GetInternal(path);
     private async Task<JsonElement> GetInternal(string path)=>await Read(await _http.GetAsync("api/v1/"+path));
     public async Task<JsonElement> Post(string path,object command)=>await Read(await _http.PostAsJsonAsync("api/v1/"+path,command,Json));
+    public async Task<JsonElement> PutPcm(string path,byte[] pcm,string sha)
+    {
+        using var request=new HttpRequestMessage(HttpMethod.Put,"api/v1/"+path){Content=new ByteArrayContent(pcm)};
+        request.Content.Headers.ContentType=new MediaTypeHeaderValue("application/octet-stream");
+        request.Headers.Add("X-PCM-SHA256",sha);
+        return await Read(await _http.SendAsync(request));
+    }
     public static string VisitPath(string visitId)=>"visits/"+Guid.Parse(visitId).ToString("D")+"/recordings";
     public void Dispose(){_http.DefaultRequestHeaders.Authorization=null;_http.Dispose();UserId=null;}
 }

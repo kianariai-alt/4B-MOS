@@ -85,6 +85,21 @@ try{
         using var client=new MosClient(context.Server,new FakeHandler("operator"));Throws(()=>client.Login("synthetic","synthetic").GetAwaiter().GetResult());
         Check(client.UserId is null,"Unauthorized identity retained");
     });
+    Test("Completed recordings remain scoped in receipt journal",()=>{
+        var journal=new Journal(root,context.Server,context.PhysicianId,protector);
+        Check(journal.Completed().Single().Context==context,"Completed receipt unavailable");
+    });
+    Test("Upload verifies full capture and sends only authenticated PCM",()=>{
+        var handler=new UploadHandler();using var client=new MosClient(context.Server,handler);
+        client.Login("synthetic","synthetic").GetAwaiter().GetResult();
+        var item=new PendingCapture(context,"start-key","finish-key",result.FilePath,result.PcmBytes,result.EncryptedFileSha256,"finished",1);
+        var status=AudioUploader.Upload(client,item,protector).GetAwaiter().GetResult();
+        Check(status.GetProperty("audio_received").GetBoolean(),"Missing receipt");
+        Check(handler.Pcm.SequenceEqual(pcm.Concat(pcm)),"Upload PCM mismatch");
+        Check(handler.Init.GetProperty("pcm_sha256").GetString()==EncryptedCapture.Verify(result.FilePath,protector).Summary.PcmSha256,"Whole checksum mismatch");
+        Throws(()=>AudioUploader.Upload(client,item with{EncryptedFileSha256=new string('0',64)},protector).GetAwaiter().GetResult());
+        Throws(()=>AudioUploader.Upload(client,item with{Reason="interrupted"},protector).GetAwaiter().GetResult());
+    });
     Console.WriteLine($"{passed} recorder core tests passed. DPAPI: {(OperatingSystem.IsWindows()?"real Windows CurrentUser":"test protector; Windows CI verifies DPAPI")}.");
 }finally{Directory.Delete(root,recursive:true);}
 
@@ -104,5 +119,28 @@ sealed class FakeHandler(string role):HttpMessageHandler
         Requests.Add(request.RequestUri!.AbsoluteUri);Authorization=request.Headers.Authorization?.ToString();
         object body=request.RequestUri.AbsolutePath.EndsWith("/login")?new{access_token="synthetic-token"}:(object)new{id=UserId,display_name="Synthetic doctor",role};
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(body),Encoding.UTF8,"application/json")});
+    }
+}
+
+sealed class UploadHandler:HttpMessageHandler
+{
+    public byte[] Pcm{get;private set;}=[];
+    public JsonElement Init{get;private set;}
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
+    {
+        string path=request.RequestUri!.AbsolutePath;object body;
+        if(path.EndsWith("/login"))body=new{access_token="synthetic-token"};
+        else if(path.EndsWith("/me"))body=new{id=FakeHandler.UserId,display_name="Synthetic",role="physician"};
+        else if(path.EndsWith("/initialize")){
+            Init=JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken)).RootElement.Clone();
+            body=new{audio_received=false,chunk_bytes=262144,next_chunk_index=0};
+        }else if(path.Contains("/chunks/")){
+            Pcm=await request.Content!.ReadAsByteArrayAsync(cancellationToken);
+            string sha=Convert.ToHexString(SHA256.HashData(Pcm)).ToLowerInvariant();
+            if(request.Headers.GetValues("X-PCM-SHA256").Single()!=sha)throw new Exception("Wrong chunk checksum");
+            body=new{audio_received=false};
+        }else if(path.EndsWith("/complete"))body=new{audio_received=true};
+        else throw new Exception("Unexpected upload route");
+        return new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(body),Encoding.UTF8,"application/json")};
     }
 }

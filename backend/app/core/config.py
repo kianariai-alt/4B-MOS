@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -42,8 +42,23 @@ class Settings(BaseSettings):
     CLINIC_TIMEZONE: str = "Asia/Tehran"
     PILOT_ENFORCEMENT_ENABLED: bool = False
 
+    AUDIO_PIPELINE_ENABLED: bool = False
+    AUDIO_ENCRYPTION_KEY: SecretStr | None = None
+    AUDIO_KEY_ID: str = Field(default="audio-v1", min_length=1, max_length=80, pattern=r"^[A-Za-z0-9_.-]+$")
+    SPEECH_MODEL_DIRECTORY: str = ""
+    SPEECH_MODEL_ID: str = Field(default="local-whisper", min_length=1, max_length=200)
+    SPEECH_LEASE_SECONDS: int = Field(default=3600, ge=60, le=14400)
+
     @model_validator(mode="after")
     def validate_production(self):
+        if self.AUDIO_PIPELINE_ENABLED:
+            import base64
+            try:
+                decoded=base64.b64decode(self.AUDIO_ENCRYPTION_KEY.get_secret_value(), validate=True) if self.AUDIO_ENCRYPTION_KEY else b""
+            except ValueError:
+                decoded=b""
+            if len(decoded)!=32:
+                raise ValueError("Enabled audio pipeline requires its own 32-byte base64 encryption key.")
         if self.ENVIRONMENT == "production":
             if self.DEBUG:
                 raise ValueError("DEBUG must be disabled in production.")

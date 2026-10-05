@@ -54,6 +54,9 @@ REQUIRED_DATABASE_TABLES = frozenset(
         "visit_consent_events",
         "physician_question_events",
         "visit_recording_events",
+        "recording_audio_transfers",
+        "recording_audio_chunks",
+        "recording_text_events",
     }
 )
 

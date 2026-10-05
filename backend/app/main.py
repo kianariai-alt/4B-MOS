@@ -58,6 +58,8 @@ def create_application() -> FastAPI:
             response.headers["X-Content-Type-Options"] = "nosniff"
             response.headers["X-Frame-Options"] = "DENY"
 
+        if "/recordings/" in request.url.path:
+            response.headers["Cache-Control"] = "no-store"
         return response
 
     application.include_router(

@@ -106,3 +106,5 @@ from backend.app.models.reception import ReceptionRevision, VisitConsentEvent
 from backend.app.models.physician_questions import PhysicianQuestionEvent
 
 from backend.app.models.recording import VisitRecordingEvent
+
+from backend.app.models.recording_media import RecordingAudioTransfer, RecordingAudioChunk, RecordingTextEvent

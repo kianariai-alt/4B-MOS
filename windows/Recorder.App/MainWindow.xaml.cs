@@ -10,6 +10,13 @@ using NAudio.Wave;
 namespace Mos.Recorder.App;
 public partial class MainWindow : Window
 {
+    private sealed record RecordedClip(PendingCapture Capture,string Label);
+    private string? _displayDraftSha;
+    private JsonElement? _media;
+    private object? _reviewCommand;
+    private readonly DispatcherTimer _textTimer=new(){Interval=TimeSpan.FromSeconds(5)};
+    private bool _textChecking;
+    private long _textGeneration;
     private MosClient? _client;
     private Journal? _journal;
     private readonly WindowsProtection _protection=new();
@@ -29,7 +36,8 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-        InitializeComponent();_timer.Tick+=Heartbeat;
+        InitializeComponent();_timer.Tick+=Heartbeat;_textTimer.Tick+=TextHeartbeat;
+        ReviewCheck.Checked+=(_,_)=>RefreshButtons();ReviewCheck.Unchecked+=(_,_)=>RefreshButtons();ReviewBox.TextChanged+=(_,_)=>RefreshButtons();
         AcknowledgeBox.Checked+=(_,_)=>RefreshButtons();
         AcknowledgeBox.Unchecked+=(_,_)=>RefreshButtons();
         VisitBox.TextChanged+=(_,_)=>{if(_microphone is null){_access=null;_visitId=null;VisitText.Text="";RefreshButtons();}};
@@ -44,7 +52,13 @@ public partial class MainWindow : Window
         LoginButton.IsEnabled=!_busy;
         StartButton.IsEnabled=!_busy && !recording && _access is { } access && access.GetProperty("can_record").GetBoolean() && AcknowledgeBox.IsChecked==true && Microphones.SelectedIndex>=0;
         StopButton.IsEnabled=recording && !_captureStopping;
-        foreach(var node in new System.Windows.Controls.Control[]{LoadButton,VisitBox,Microphones,AcknowledgeBox,SyncButton,LogoutButton})node.IsEnabled=!_busy && !recording;
+        foreach(var node in new System.Windows.Controls.Control[]{LoadButton,VisitBox,Microphones,AcknowledgeBox,SyncButton,LogoutButton,RecordingsBox,UploadButton,TranscribeButton,TextLoadButton,ReviewButton,ReviewCheck,ReviewBox})node.IsEnabled=!_busy && !recording;
+        ReviewBox.IsReadOnly=_reviewCommand is not null;
+        bool clip=RecordingsBox.SelectedItem is RecordedClip;
+        UploadButton.IsEnabled=!_busy && !recording && clip;
+        TextLoadButton.IsEnabled=!_busy && !recording && clip;
+        TranscribeButton.IsEnabled=!_busy && !recording && clip;
+        ReviewButton.IsEnabled=!_busy && !recording && _media is { } m && m.GetProperty("latest_draft").ValueKind!=JsonValueKind.Null && ReviewCheck.IsChecked==true && !string.IsNullOrWhiteSpace(ReviewBox.Text);
     }
     private async Task Run(Func<Task> action)
     {
@@ -67,7 +81,7 @@ public partial class MainWindow : Window
         finally{PasswordBox.Clear();}
         _client?.Dispose();_client=candidate;
         _journal=new Journal(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"4B-MOS","Recorder"),candidate.Server,candidate.UserId!,_protection);
-        IdentityText.Text=candidate.DisplayName;LoginPanel.Visibility=Visibility.Collapsed;VisitPanel.Visibility=Visibility.Visible;
+        ReloadClips();IdentityText.Text=candidate.DisplayName;LoginPanel.Visibility=Visibility.Collapsed;VisitPanel.Visibility=Visibility.Visible;
         Message("ورود انجام شد. ابتدا ویزیت و رضایت ضبط را بررسی کنید؛ ضبط‌های معلق را نیز می‌توانید ثبت کنید.");
     });
     private async void LoadClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
@@ -84,7 +98,7 @@ public partial class MainWindow : Window
     private async void StartClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
         if(_client is null || _journal is null || _visitId is null || AcknowledgeBox.IsChecked!=true)return;
         if(_journal.Load().Count!=0){Message("ابتدا پایان ضبط‌های معلق این حساب را ثبت کنید.");return;}
-        string visit=_visitId,path=MosClient.VisitPath(visit);
+        ClearText();string visit=_visitId,path=MosClient.VisitPath(visit);
         var access=await _client.Get(path+"/access");
         if(!access.GetProperty("can_record").GetBoolean()){_access=access;Message("اجازه ضبط تغییر کرده است؛ ویزیت را دوباره بررسی کنید.");return;}
         string recording=Guid.NewGuid().ToString("D"),key=Guid.NewGuid().ToString("D"),consent=access.GetProperty("consent_sha256").GetString()!;
@@ -131,7 +145,7 @@ public partial class MainWindow : Window
             long bytes;
             lock(_audioLock){
                 if(_captureStopping || _encrypted is null)return;
-                if(_encrypted.PcmBytes+buffer.Length>460800000){Dispatcher.BeginInvoke(new Action(async()=>await StopCapture("duration_limit")));return;}
+                if(_encrypted.PcmBytes+buffer.Length>57600000){Dispatcher.BeginInvoke(new Action(async()=>await StopCapture("duration_limit")));return;}
                 _encrypted.Append(buffer);bytes=_encrypted.PcmBytes;
             }
             Dispatcher.BeginInvoke(new Action(()=>{if(generation!=_captureGeneration || _captureStopping)return;LevelBar.Value=peak*100;CaptureText.Text=$"مدت صوت ذخیره‌شده: {TimeSpan.FromSeconds(bytes/32000.0):hh\\:mm\\:ss}";}));
@@ -170,7 +184,7 @@ public partial class MainWindow : Window
             lock(_audioLock){result=_encrypted!.Complete(reason);_encrypted=null;}
             _pending=_pending with{FilePath=result.FilePath,PcmBytes=result.PcmBytes,EncryptedFileSha256=result.EncryptedFileSha256,Reason=reason};
             _journal.Save(_pending);
-            try{await SyncOne(_pending);Message("صوت رمزگذاری‌شده محفوظ است و پایان ضبط در MOS ثبت شد. تبدیل گفتار هنوز فعال نیست.");}
+            try{await SyncOne(_pending);Message("صوت رمزگذاری‌شده محفوظ است و پایان ضبط در MOS ثبت شد. می‌توانید از بخش ضبط‌های تکمیل‌شده، انتقال صوت را انجام دهید.");}
             catch{Message("ضبط متوقف و صوت رمزگذاری‌شده محفوظ شد؛ پایان ضبط هنوز در صف ثبت MOS است.");}
         }catch{Message("ضبط متوقف شد؛ فایل ناتمام محفوظ است. پس از ورود دوباره، ثبت ضبط‌های معلق را انجام دهید.");}
         finally{
@@ -203,16 +217,81 @@ public partial class MainWindow : Window
             _journal.Save(item);
         }
         await _client.Post(path+"/finish",new{recording_id=item.Context.RecordingId,expected_version=item.FinishVersion!.Value,request_key=item.FinishRequestKey,reason=item.Reason,pcm_bytes=item.PcmBytes,encrypted_file_sha256=item.EncryptedFileSha256});
-        _journal.Acknowledge(item.Context.RecordingId);if(_pending?.Context.RecordingId==item.Context.RecordingId)_pending=null;
+        _journal.Acknowledge(item.Context.RecordingId);ReloadClips();if(_pending?.Context.RecordingId==item.Context.RecordingId)_pending=null;
     }
     private async void SyncClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
         foreach(var pending in _journal!.Load())await SyncOne(pending);
         _access=null;_visitId=null;Message("ثبت پایان ضبط‌های معلق انجام شد؛ فایل‌های صوتی محلی حفظ شده‌اند.");
     });
+    private void ReloadClips()
+    {
+        ClearText();RecordingsBox.Items.Clear();
+        foreach(var item in _journal!.Completed().Where(c=>c.Reason=="finished" && c.PcmBytes>0 && c.FilePath is not null).OrderByDescending(c=>c.Context.StartedAt))
+            RecordingsBox.Items.Add(new RecordedClip(item,$"{item.Context.StartedAt.LocalDateTime:g} | {item.Context.VisitId} | {item.PcmBytes/32000} ثانیه"));
+    }
+    private void ClearText()
+    {
+        _textGeneration++;_textTimer.Stop();_displayDraftSha=null;_media=null;_reviewCommand=null;
+        if(DraftBox is null)return;
+        DraftBox.Clear();ReviewBox.Clear();ReviewCheck.IsChecked=false;MediaStateText.Text="";
+    }
+    private void RecordingSelectionChanged(object sender,System.Windows.Controls.SelectionChangedEventArgs e){ClearText();RefreshButtons();}
+    private async void UploadClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
+        if(RecordingsBox.SelectedItem is not RecordedClip clip)return;
+        ClearText();Message("انتقال صوت در حال انجام است؛ در صورت قطع ارتباط، ارسال بعدی از قطعه باقی‌مانده ادامه می‌یابد.");
+        var status=await AudioUploader.Upload(_client!,clip.Capture,_protection);
+        MediaStateText.Text="صوت با کنترل کامل checksum دریافت شد.";
+        Message(status.GetProperty("transcription_enabled").GetBoolean()?"صوت دریافت شد؛ اکنون می‌توانید تبدیل گفتار را درخواست کنید.":"صوت دریافت شد؛ موتور گفتار هنوز روی سرور آماده نشده است.");
+    });
+    private async Task LoadText(RecordedClip clip)
+    {
+        long generation=_textGeneration;
+        var workspace=await _client!.Get(AudioUploader.MediaPath(clip.Capture.Context)+"/text");
+        if(generation!=_textGeneration || !ReferenceEquals(RecordingsBox.SelectedItem,clip))return;
+        _media=workspace;MediaStateText.Text=workspace.GetProperty("state").GetString() switch{
+            "queued"=>"در صف تبدیل گفتار", "running"=>"در حال تبدیل گفتار", "draft"=>"پیش‌نویس آماده مرور", "reviewed"=>"متن مرورشده ثبت شده", "failed"=>"تبدیل گفتار کامل نشد؛ می‌توانید دوباره درخواست کنید", _=>"متن هنوز آماده نیست"
+        };
+        var draft=workspace.GetProperty("latest_draft");
+        if(draft.ValueKind!=JsonValueKind.Null){
+            string text=draft.GetProperty("content").GetProperty("text").GetString()!;
+            if(_displayDraftSha!=draft.GetProperty("sha256").GetString()){
+                _displayDraftSha=draft.GetProperty("sha256").GetString();
+                DraftBox.Text=string.Join("\n",draft.GetProperty("content").GetProperty("segments").EnumerateArray().Select(s=>$"[{TimeSpan.FromSeconds(s.GetProperty("start").GetDouble()):hh\\:mm\\:ss}] گوینده نامشخص: {s.GetProperty("text").GetString()}"));var review=workspace.GetProperty("latest_review");
+                ReviewBox.Text=review.ValueKind!=JsonValueKind.Null?review.GetProperty("edited_text").GetString():text;
+                ReviewCheck.IsChecked=false;_reviewCommand=null;
+            }
+        }
+        _textTimer.Start();RefreshButtons();
+    }
+    private async void TextLoadClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
+        if(RecordingsBox.SelectedItem is not RecordedClip clip)return;
+        try{await LoadText(clip);}catch{ClearText();throw;}
+    });
+    private async void TranscribeClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
+        if(RecordingsBox.SelectedItem is not RecordedClip clip)return;
+        ClearText();string path=AudioUploader.MediaPath(clip.Capture.Context);
+        var status=await _client!.Get(path);
+        if(!status.GetProperty("transcription_enabled").GetBoolean()){Message("مدل گفتار محلی روی سرور آماده نیست؛ مدیر فنی باید آن را تنظیم کند.");return;}
+        await _client.Post(path+"/transcribe",new{request_key=Guid.NewGuid().ToString("D"),expected_version=status.GetProperty("version").GetInt32()});
+        await LoadText(clip);Message("درخواست ثبت شد؛ این برنامه وضعیت را پیگیری می‌کند.");
+    });
+    private async void ReviewClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
+        if(RecordingsBox.SelectedItem is not RecordedClip clip || _media is not { } media || ReviewCheck.IsChecked!=true)return;
+        _reviewCommand??=new{request_key=Guid.NewGuid().ToString("D"),expected_version=media.GetProperty("version").GetInt32(),expected_draft_sha256=media.GetProperty("latest_draft").GetProperty("sha256").GetString(),edited_text=ReviewBox.Text.Trim(),statement_fa="متن را با گفتگوی ویزیت تطبیق داده‌ام و اصلاحات لازم را انجام داده‌ام."};
+        try{await _client!.Post(AudioUploader.MediaPath(clip.Capture.Context)+"/review",_reviewCommand);_reviewCommand=null;ReviewCheck.IsChecked=false;await LoadText(clip);Message("متن مرورشده پزشک جدا از پیش‌نویس ثبت شد.");}
+        catch(MosApiException error) when(error.Status==System.Net.HttpStatusCode.Conflict){_reviewCommand=null;throw;}
+    });
+    private async void TextHeartbeat(object? sender,EventArgs e)
+    {
+        if(_textChecking || _busy || _microphone is not null || RecordingsBox.SelectedItem is not RecordedClip clip)return;
+        _textChecking=true;long generation=_textGeneration;
+        try{await LoadText(clip);}catch{if(generation==_textGeneration){ClearText();Message("دسترسی یا ارتباط قابل تأیید نیست؛ متن از صفحه پاک شد. برای دریافت مجدد وضعیت را بررسی کنید.");}}
+        finally{_textChecking=false;}
+    }
     private void LogoutClick(object sender,RoutedEventArgs e)
     {
         if(_microphone is not null)return;
-        _client?.Dispose();_client=null;_journal=null;_pending=null;_access=null;_visitId=null;
+        ClearText();RecordingsBox.Items.Clear();_client?.Dispose();_client=null;_journal=null;_pending=null;_access=null;_visitId=null;
         IdentityText.Text="";VisitText.Text="";CaptureText.Text="";VisitBox.Clear();UsernameBox.Clear();PasswordBox.Clear();AcknowledgeBox.IsChecked=false;
         LoginPanel.Visibility=Visibility.Visible;VisitPanel.Visibility=Visibility.Collapsed;RefreshButtons();Message("از حساب خارج شدید؛ فایل‌های رمزگذاری‌شده حذف نشده‌اند.");
     }
@@ -221,6 +300,6 @@ public partial class MainWindow : Window
         if(_allowClose)return;
         if(_busy){e.Cancel=true;Message("منتظر پایان اقدام جاری بمانید؛ سپس برنامه را ببندید.");return;}
         if(_microphone is not null){e.Cancel=true;await StopCapture("app_closing");_allowClose=true;Close();return;}
-        _timer.Stop();_client?.Dispose();
+        _timer.Stop();ClearText();_client?.Dispose();
     }
 }
