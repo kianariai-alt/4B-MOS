@@ -1101,3 +1101,55 @@ def test_postgresql_recording_start_writers_serialize_and_bind_consent(postgresq
     with Session(postgresql_engine) as db:
         assert len(list(db.scalars(select(VisitRecordingEvent))))==1
         assert len(list(db.scalars(select(AuditLog).where(AuditLog.entity_type=='visit_recording_events'))))==1
+
+
+def test_postgresql_audio_retries_serialize_without_duplicate_chunks(postgresql_engine,monkeypatch):
+    import base64,hashlib
+    from pydantic import SecretStr
+    from datetime import datetime,timezone
+    from backend.app.schemas.reception import ReceptionCreate,ConsentCreate
+    from backend.app.schemas.recording import RecordingStart,RecordingFinish
+    from backend.app.schemas.recording_media import InitializeAudio,CompleteAudio,TextCommand
+    from backend.app.services.reception import ReceptionService
+    from backend.app.services.recording import RecordingService
+    from backend.app.services.recording_media import RecordingMediaService as Media,MediaConflictError
+    from backend.app.models.recording_media import RecordingAudioChunk,RecordingTextEvent
+    monkeypatch.setattr(settings,'AUDIO_PIPELINE_ENABLED',True)
+    monkeypatch.setattr(settings,'AUDIO_ENCRYPTION_KEY',SecretStr(base64.b64encode(b'k'*32).decode()))
+    monkeypatch.setattr('backend.app.services.recording_media._speech_ready',lambda:True)
+    context=_seed_clinical_context(postgresql_engine);visit=context['visit_id'];recording=_id();pcm=b'\1\2'*16000;sha=hashlib.sha256(pcm).hexdigest()
+    with Session(postgresql_engine) as db:
+        doctor=User(username='media_pg_doctor',display_name='Synthetic',password_hash='hash',role='physician')
+        db.add(doctor);db.commit();owner=doctor.id;admin=db.get(User,context['admin_ids'][0])
+        ReceptionService.save_intake(db,visit,ReceptionCreate(patient_reported_complaint='Synthetic',assigned_physician_id=owner,expected_version=0,request_key='media-assign'),actor=admin)
+        consent=ReceptionService.record_consent(db,visit,ConsentCreate(purpose='audio_recording',state='granted',document_version='FA-1',evidence_reference='SYNTHETIC-MEDIA',confirmed_at=datetime.now(timezone.utc),expected_version=0,request_key='media-consent'),actor=admin)
+        RecordingService.start(db,visit,RecordingStart(recording_id=recording,expected_version=0,request_key='media-start',expected_consent_sha256=consent.sha256),actor=doctor)
+        RecordingService.finish(db,visit,RecordingFinish(recording_id=recording,expected_version=1,request_key='media-finish',reason='finished',pcm_bytes=len(pcm),encrypted_file_sha256='a'*64),actor=doctor)
+        Media.initialize(db,visit,recording,InitializeAudio(request_key='media-init',pcm_bytes=len(pcm),pcm_sha256=sha,encrypted_file_sha256='a'*64),actor=doctor)
+    rendezvous=Barrier(2)
+    def put():
+        with Session(postgresql_engine) as db:
+            actor=db.get(User,owner);rendezvous.wait(timeout=10)
+            return Media.put_chunk(db,visit,recording,0,pcm,sha,actor=actor).next_chunk_index
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures=[pool.submit(put) for _ in range(2)]
+        assert [f.result(timeout=20) for f in futures]==[1,1]
+    with Session(postgresql_engine) as db:
+        assert len(list(db.scalars(select(RecordingAudioChunk))))==1
+        assert len(list(db.scalars(select(AuditLog).where(AuditLog.entity_type=='recording_audio_chunks'))))==1
+        actor=db.get(User,owner)
+        Media.complete(db,visit,recording,CompleteAudio(request_key='media-complete',expected_pcm_sha256=sha),actor=actor)
+        Media.enqueue(db,visit,recording,TextCommand(expected_version=1,request_key='media-queue'),actor=actor)
+    rendezvous=Barrier(2)
+    def claim():
+        with Session(postgresql_engine) as db:
+            rendezvous.wait(timeout=10);return Media.claim(db,visit,recording)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures=[pool.submit(claim) for _ in range(2)]
+        claims=[f.result(timeout=20) for f in futures]
+        assert sum(c is not None for c in claims)==1
+    with Session(postgresql_engine) as db:
+        claim=next(c for c in claims if c)
+        assert bytes(Media.read_pcm(db,claim))==pcm
+        Media.finish_job(db,visit,recording,claim,error_code='engine_failed')
+        assert [r.action for r in db.scalars(select(RecordingTextEvent).order_by(RecordingTextEvent.version))]==['audio_received','queued','started','failed']

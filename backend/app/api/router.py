@@ -240,3 +240,6 @@ api_router.include_router(screening_router)
 
 from backend.app.api.routes.recording import router as recording_router
 api_router.include_router(recording_router)
+
+from backend.app.api.routes.recording_media import router as recording_media_router
+api_router.include_router(recording_media_router)

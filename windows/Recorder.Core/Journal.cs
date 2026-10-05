@@ -22,10 +22,12 @@ public sealed class Journal
         using(var output=new FileStream(temp,FileMode.Create,FileAccess.Write,FileShare.None)) {output.Write(encrypted);output.Flush(true);}
         File.Move(temp,target,overwrite:true);
     }
-    public IReadOnlyList<PendingCapture> Load()
+    public IReadOnlyList<PendingCapture> Load()=>Read("*.pending");
+    public IReadOnlyList<PendingCapture> Completed()=>Read("*.receipt");
+    private IReadOnlyList<PendingCapture> Read(string pattern)
     {
         var items=new List<PendingCapture>();
-        foreach(string path in Directory.EnumerateFiles(_directory,"*.pending")) {
+        foreach(string path in Directory.EnumerateFiles(_directory,pattern)) {
             byte[] plain=_protector.Unprotect(File.ReadAllBytes(path));
             try {var item=JsonSerializer.Deserialize<PendingCapture>(plain)??throw new InvalidDataException("Invalid journal.");items.Add(item);}
             finally {CryptographicOperations.ZeroMemory(plain);}
