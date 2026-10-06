@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private string? _displayDraftSha;
     private JsonElement? _media;
     private object? _reviewCommand;
+    private long _metricsGeneration;
     private readonly DispatcherTimer _textTimer=new(){Interval=TimeSpan.FromSeconds(5)};
     private bool _textChecking;
     private long _textGeneration;
@@ -37,7 +38,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();_timer.Tick+=Heartbeat;_textTimer.Tick+=TextHeartbeat;
-        ReviewCheck.Checked+=(_,_)=>RefreshButtons();ReviewCheck.Unchecked+=(_,_)=>RefreshButtons();ReviewBox.TextChanged+=(_,_)=>RefreshButtons();
+        ReviewCheck.Checked+=(_,_)=>RefreshButtons();ReviewCheck.Unchecked+=(_,_)=>RefreshButtons();ReviewBox.TextChanged+=(_,_)=>{ClearMetrics();RefreshButtons();};
         AcknowledgeBox.Checked+=(_,_)=>RefreshButtons();
         AcknowledgeBox.Unchecked+=(_,_)=>RefreshButtons();
         VisitBox.TextChanged+=(_,_)=>{if(_microphone is null){_access=null;_visitId=null;VisitText.Text="";RefreshButtons();}};
@@ -52,12 +53,13 @@ public partial class MainWindow : Window
         LoginButton.IsEnabled=!_busy;
         StartButton.IsEnabled=!_busy && !recording && _access is { } access && access.GetProperty("can_record").GetBoolean() && AcknowledgeBox.IsChecked==true && Microphones.SelectedIndex>=0;
         StopButton.IsEnabled=recording && !_captureStopping;
-        foreach(var node in new System.Windows.Controls.Control[]{LoadButton,VisitBox,Microphones,AcknowledgeBox,SyncButton,LogoutButton,RecordingsBox,UploadButton,TranscribeButton,TextLoadButton,ReviewButton,ReviewCheck,ReviewBox})node.IsEnabled=!_busy && !recording;
+        foreach(var node in new System.Windows.Controls.Control[]{LoadButton,VisitBox,Microphones,AcknowledgeBox,SyncButton,LogoutButton,RecordingsBox,UploadButton,TranscribeButton,TextLoadButton,ReviewButton,ReviewCheck,ReviewBox,MetricsButton})node.IsEnabled=!_busy && !recording;
         ReviewBox.IsReadOnly=_reviewCommand is not null;
         bool clip=RecordingsBox.SelectedItem is RecordedClip;
         UploadButton.IsEnabled=!_busy && !recording && clip;
         TextLoadButton.IsEnabled=!_busy && !recording && clip;
         TranscribeButton.IsEnabled=!_busy && !recording && clip;
+        MetricsButton.IsEnabled=!_busy && !recording && SavedReviewMatchesEditor();
         ReviewButton.IsEnabled=!_busy && !recording && _media is { } m && m.GetProperty("latest_draft").ValueKind!=JsonValueKind.Null && ReviewCheck.IsChecked==true && !string.IsNullOrWhiteSpace(ReviewBox.Text);
     }
     private async Task Run(Func<Task> action)
@@ -231,7 +233,7 @@ public partial class MainWindow : Window
     }
     private void ClearText()
     {
-        _textGeneration++;_textTimer.Stop();_displayDraftSha=null;_media=null;_reviewCommand=null;
+        ClearMetrics();_textGeneration++;_textTimer.Stop();_displayDraftSha=null;_media=null;_reviewCommand=null;
         if(DraftBox is null)return;
         DraftBox.Clear();ReviewBox.Clear();ReviewCheck.IsChecked=false;MediaStateText.Text="";
     }
@@ -248,6 +250,8 @@ public partial class MainWindow : Window
         long generation=_textGeneration;
         var workspace=await _client!.Get(AudioUploader.MediaPath(clip.Capture.Context)+"/text");
         if(generation!=_textGeneration || !ReferenceEquals(RecordingsBox.SelectedItem,clip))return;
+        if(_media is { } last && workspace.GetProperty("version").GetInt32()<last.GetProperty("version").GetInt32())return;
+        if(_media is not { } previous || !SameTextPair(previous,workspace))ClearMetrics();
         _media=workspace;MediaStateText.Text=workspace.GetProperty("state").GetString() switch{
             "queued"=>"در صف تبدیل گفتار", "running"=>"در حال تبدیل گفتار", "draft"=>"پیش‌نویس آماده مرور", "reviewed"=>"متن مرورشده ثبت شده", "failed"=>"تبدیل گفتار کامل نشد؛ می‌توانید دوباره درخواست کنید", _=>"متن هنوز آماده نیست"
         };
@@ -280,6 +284,44 @@ public partial class MainWindow : Window
         _reviewCommand??=new{request_key=Guid.NewGuid().ToString("D"),expected_version=media.GetProperty("version").GetInt32(),expected_draft_sha256=media.GetProperty("latest_draft").GetProperty("sha256").GetString(),edited_text=ReviewBox.Text.Trim(),statement_fa="متن را با گفتگوی ویزیت تطبیق داده‌ام و اصلاحات لازم را انجام داده‌ام."};
         try{await _client!.Post(AudioUploader.MediaPath(clip.Capture.Context)+"/review",_reviewCommand);_reviewCommand=null;ReviewCheck.IsChecked=false;await LoadText(clip);Message("متن مرورشده پزشک جدا از پیش‌نویس ثبت شد.");}
         catch(MosApiException error) when(error.Status==System.Net.HttpStatusCode.Conflict){_reviewCommand=null;throw;}
+    });
+    private static string? TextHash(JsonElement workspace,string property)
+    {
+        var item=workspace.GetProperty(property);
+        return item.ValueKind==JsonValueKind.Null?null:item.GetProperty("sha256").GetString();
+    }
+    private static bool SameTextPair(JsonElement left,JsonElement right)=>
+        TextHash(left,"latest_draft")==TextHash(right,"latest_draft") && TextHash(left,"latest_review")==TextHash(right,"latest_review");
+    private bool SavedReviewMatchesEditor()
+    {
+        if(_media is not { } media || _reviewCommand is not null || RecordingsBox.SelectedItem is not RecordedClip)return false;
+        var draft=media.GetProperty("latest_draft");var review=media.GetProperty("latest_review");
+        return draft.ValueKind!=JsonValueKind.Null && review.ValueKind!=JsonValueKind.Null &&
+            review.GetProperty("draft_sha256").GetString()==draft.GetProperty("sha256").GetString() &&
+            ReviewBox.Text.Trim()==review.GetProperty("edited_text").GetString();
+    }
+    private void ClearMetrics()
+    {
+        _metricsGeneration++;
+        if(MetricsPanel is null)return;
+        MetricsPanel.Visibility=Visibility.Collapsed;MetricsText.Text="";
+    }
+    private async void MetricsClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
+        if(!SavedReviewMatchesEditor() || _media is not { } saved || RecordingsBox.SelectedItem is not RecordedClip clip)return;
+        ClearMetrics();long generation=_metricsGeneration,textGeneration=_textGeneration;
+        var draft=saved.GetProperty("latest_draft");var review=saved.GetProperty("latest_review");
+        try{
+            var response=await _client!.Get(AudioUploader.MediaPath(clip.Capture.Context)+"/text/revision-metrics");
+            if(generation!=_metricsGeneration || textGeneration!=_textGeneration || !ReferenceEquals(RecordingsBox.SelectedItem,clip) || _media is not { } current || !SameTextPair(saved,current))return;
+            var metrics=RevisionMetrics.Parse(response,clip.Capture.Context.RecordingId,draft.GetProperty("sha256").GetString()!,review.GetProperty("sha256").GetString()!,review.GetProperty("edited_text").GetString()!,draft.GetProperty("content").GetProperty("text").GetString()!);
+            MetricsText.Text=metrics.SummaryFa;MetricsPanel.Visibility=Visibility.Visible;
+            Message("گزارش دو نسخه ثبت‌شده دریافت شد؛ این گزارش سنجش دقت بالینی نیست.");
+        }catch(MosApiException error) when(error.Status==System.Net.HttpStatusCode.NotFound){ClearMetrics();Message("گزارش اصلاحات روی این نسخه سرور در دسترس نیست؛ سرور MOS باید به نسخه جدید به‌روزرسانی شود.");}
+        catch(MosApiException error) when(error.Status==System.Net.HttpStatusCode.Conflict){ClearMetrics();Message("نسخه متن تغییر کرده یا مقایسه در این اندازه ممکن نیست؛ وضعیت متن را دوباره دریافت کنید.");}
+        catch(MosApiException error) when(error.Status is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized){ClearText();throw;}
+        catch(InvalidDataException){ClearMetrics();Message("گزارش با نسخه متن نمایش‌داده‌شده سازگار نیست؛ وضعیت متن را دوباره دریافت کنید.");}
+        catch(HttpRequestException){ClearText();throw;}
+        catch(TaskCanceledException){ClearText();throw;}
     });
     private async void TextHeartbeat(object? sender,EventArgs e)
     {

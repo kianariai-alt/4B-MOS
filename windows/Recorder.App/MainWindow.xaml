@@ -1,6 +1,6 @@
 <Window x:Class="Mos.Recorder.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="4B — دستیار ویزیت" Width="800" Height="800" MinWidth="640" MinHeight="640" FlowDirection="RightToLeft" FontFamily="Segoe UI" FontSize="15" Background="#F4F6FA" Closing="WindowClosing">
 <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28">
-<Border Background="#112943" CornerRadius="12" Padding="20"><StackPanel><TextBlock Text="4B | دستیار ویزیت ویندوز" Foreground="White" FontSize="26" FontWeight="Bold"/><TextBlock Foreground="#E9CC85" Text="نسخه آزمایشی — ضبط امن، انتقال صوت و مرور متن"/></StackPanel></Border>
+<Border Background="#112943" CornerRadius="12" Padding="20"><StackPanel><TextBlock Text="4B | دستیار ویزیت ویندوز" Foreground="White" FontSize="26" FontWeight="Bold"/><TextBlock Foreground="#E9CC85" Text="نسخه آزمایشی ۰٫۳ — ضبط امن، مرور متن و گزارش اصلاحات"/></StackPanel></Border>
 <StackPanel x:Name="LoginPanel" Margin="0,20,0,0">
 <TextBlock Text="آدرس سرور MOS"/><TextBox x:Name="ServerBox" Text="https://mos.example.com/" FlowDirection="LeftToRight"/>
 <TextBlock Text="نام کاربری پزشک"/><TextBox x:Name="UsernameBox" FlowDirection="LeftToRight"/>
@@ -29,6 +29,12 @@
 <TextBox x:Name="ReviewBox" AcceptsReturn="True" Height="180" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
 <CheckBox x:Name="ReviewCheck" Content="متن را با گفتگوی ویزیت تطبیق داده‌ام و اصلاحات لازم را انجام داده‌ام." Margin="0,8"/>
 <Button x:Name="ReviewButton" Content="ثبت متن مرورشده در MOS" Click="ReviewClick" HorizontalAlignment="Left"/>
+<Button x:Name="MetricsButton" Content="نمایش گزارش اختلاف متن ثبت‌شده" Click="MetricsClick" HorizontalAlignment="Left" Margin="0,10" IsEnabled="False"/>
+<Border x:Name="MetricsPanel" Visibility="Collapsed" Background="#FFF8E9" CornerRadius="8" Padding="16" Margin="0,8">
+<StackPanel><TextBlock Text="گزارش آخرین متن ثبت‌شده پزشک و پیش‌نویس متناظر" FontWeight="Bold" TextWrapping="Wrap"/>
+<TextBlock x:Name="MetricsText" Margin="0,10" TextWrapping="Wrap"/>
+<TextBlock Text="این اعداد میزان اختلاف نوشتاری را نشان می‌دهند؛ دقت بالینی گفتار نیستند. صفر بودن اختلاف، جای تطبیق با صوت را نمی‌گیرد. تغییر عدد را با گفتگوی ویزیت بررسی کنید." TextWrapping="Wrap" Foreground="#72531D"/>
+</StackPanel></Border>
 <TextBlock Text="این مرحله تشخیص خودکار یا آموزش مدل ایجاد نمی‌کند. متن تأییدشده جدا از پیش‌نویس نگهداری می‌شود." Foreground="#5A6473" Margin="0,8"/>
 </StackPanel>
 <Border Background="White" Padding="16" CornerRadius="8" Margin="0,20"><TextBlock x:Name="StatusText" Text="برای شروع، سرور کلینیک و حساب پزشک را وارد کنید." AutomationProperties.LiveSetting="Polite"/></Border>
