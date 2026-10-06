@@ -273,3 +273,19 @@ class RecordingMediaService:
         _content(draft,transfer)
         _append(db,transfer,rows,'review',payload.request_key,actor,payload.model_dump(mode='json'),content={'edited_text':payload.edited_text,'statement_fa':payload.statement_fa},details={'draft_sha256':draft.sha256})
         return RecordingMediaService.workspace(db,visit_id,recording_id,actor=actor)
+
+
+    @staticmethod
+    def revision_metrics(db,visit_id,recording_id,*,actor):
+        from backend.app.schemas.speech_evaluation import RevisionMetricsRead
+        from backend.app.services.speech_evaluation import compare_text, MAX_TEXT_CHARACTERS
+        workspace=RecordingMediaService.workspace(db,visit_id,recording_id,actor=actor)
+        draft,review=workspace.latest_draft,workspace.latest_review
+        if draft is None or review is None or review.draft_sha256!=draft.sha256:
+            raise MediaConflictError('A matching physician review and draft are required.')
+        if max(len(draft.content.text),len(review.edited_text))>MAX_TEXT_CHARACTERS:
+            raise MediaConflictError('Text exceeds the bounded comparison limit.')
+        try:comparison=compare_text(review.edited_text,draft.content.text)
+        except ValueError as error:raise MediaConflictError('Text exceeds the bounded normalized comparison limit.') from error
+        return RevisionMetricsRead(recording_id=recording_id,draft_sha256=draft.sha256,
+            review_sha256=review.sha256,comparison=comparison)
