@@ -1,6 +1,6 @@
 <Window x:Class="Mos.Recorder.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="4B — دستیار ویزیت" Width="800" Height="800" MinWidth="640" MinHeight="640" FlowDirection="RightToLeft" FontFamily="Segoe UI" FontSize="15" Background="#F4F6FA" Closing="WindowClosing">
 <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28">
-<Border Background="#112943" CornerRadius="12" Padding="20"><StackPanel><TextBlock Text="4B | دستیار ویزیت ویندوز" Foreground="White" FontSize="26" FontWeight="Bold"/><TextBlock Foreground="#E9CC85" Text="نسخه آزمایشی ۰٫۳ — ضبط امن، مرور متن و گزارش اصلاحات"/></StackPanel></Border>
+<Border Background="#112943" CornerRadius="12" Padding="20"><StackPanel><TextBlock Text="4B | دستیار ویزیت ویندوز" Foreground="White" FontSize="26" FontWeight="Bold"/><TextBlock Foreground="#E9CC85" Text="نسخه آزمایشی ۰٫۴ — ضبط امن، پخش صوت و مرور متن"/></StackPanel></Border>
 <StackPanel x:Name="LoginPanel" Margin="0,20,0,0">
 <TextBlock Text="آدرس سرور MOS"/><TextBox x:Name="ServerBox" Text="https://mos.example.com/" FlowDirection="LeftToRight"/>
 <TextBlock Text="نام کاربری پزشک"/><TextBox x:Name="UsernameBox" FlowDirection="LeftToRight"/>
@@ -22,6 +22,8 @@
 <TextBlock Text="ضبط‌های تکمیل‌شده این حساب" FontWeight="Bold"/>
 <ComboBox x:Name="RecordingsBox" DisplayMemberPath="Label" Margin="0,8" SelectionChanged="RecordingSelectionChanged"/>
 <WrapPanel><Button x:Name="UploadButton" Content="انتقال امن صوت به MOS" Click="UploadClick"/><Button x:Name="TranscribeButton" Content="درخواست تبدیل گفتار" Click="TranscribeClick"/><Button x:Name="TextLoadButton" Content="دریافت وضعیت و متن" Click="TextLoadClick"/></WrapPanel>
+<WrapPanel><Button x:Name="PlayButton" Content="پخش صوت اصلی" Click="PlayClick"/><Button x:Name="PlayStopButton" Content="توقف پخش" Click="PlayStopClick" IsEnabled="False"/></WrapPanel>
+<TextBlock x:Name="PlaybackText" Margin="0,8"/>
 <TextBlock x:Name="MediaStateText" Margin="0,8"/>
 <TextBlock Text="پیش‌نویس ماشینی — هویت گویندگان مشخص نشده است"/>
 <TextBox x:Name="DraftBox" IsReadOnly="True" AcceptsReturn="True" Height="140" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>

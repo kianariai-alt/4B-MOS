@@ -100,6 +100,33 @@ try{
         Throws(()=>AudioUploader.Upload(client,item with{EncryptedFileSha256=new string('0',64)},protector).GetAwaiter().GetResult());
         Throws(()=>AudioUploader.Upload(client,item with{Reason="interrupted"},protector).GetAwaiter().GetResult());
     });
+    Test("Playback buffer verifies context and complete PCM before exposure",()=>{
+        var item=new PendingCapture(context,"start","finish",result.FilePath,result.PcmBytes,result.EncryptedFileSha256,"finished",1);
+        using var buffer=VerifiedAudioBuffer.Load(item,context.Server,context.PhysicianId,protector);
+        Check(buffer.Duration==TimeSpan.FromSeconds(2),"Wrong playback duration");
+        using var input=buffer.OpenRead();using var copy=new MemoryStream();input.CopyTo(copy);
+        Check(copy.ToArray().SequenceEqual(pcm.Concat(pcm)),"Playback PCM mismatch");
+        Throws(()=>VerifiedAudioBuffer.Load(item,"https://other.example/",context.PhysicianId,protector));
+        Throws(()=>VerifiedAudioBuffer.Load(item,context.Server,Guid.NewGuid().ToString(),protector));
+        Throws(()=>VerifiedAudioBuffer.Load(item with{Context=context with{ConsentSha256=new string('b',64)}},context.Server,context.PhysicianId,protector));
+        Throws(()=>VerifiedAudioBuffer.Load(item with{PcmBytes=item.PcmBytes-2},context.Server,context.PhysicianId,protector));
+        Throws(()=>VerifiedAudioBuffer.Load(item with{Reason="interrupted"},context.Server,context.PhysicianId,protector));
+        Throws(()=>VerifiedAudioBuffer.Load(item with{EncryptedFileSha256=new string('0',64)},context.Server,context.PhysicianId,protector));
+    });
+    Test("Playback rejects authenticated-file hash of a truncated capture",()=>{
+        string file=Path.Combine(root,"playback-truncated.4baudio");File.WriteAllBytes(file,File.ReadAllBytes(result.FilePath)[..^30]);
+        string sha=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file))).ToLowerInvariant();
+        var item=new PendingCapture(context,"start","finish",file,result.PcmBytes,sha,"finished",1);
+        Throws(()=>VerifiedAudioBuffer.Load(item,context.Server,context.PhysicianId,protector));
+    });
+    Test("Disposed playback closes readers and cannot reopen or export buffer",()=>{
+        var item=new PendingCapture(context,"start","finish",result.FilePath,result.PcmBytes,result.EncryptedFileSha256,"finished",1);
+        var buffer=VerifiedAudioBuffer.Load(item,context.Server,context.PhysicianId,protector);
+        var input=(MemoryStream)buffer.OpenRead();Check(!input.TryGetBuffer(out _),"PCM array publicly exposed");
+        Throws(()=>buffer.OpenRead());buffer.Dispose();buffer.Dispose();
+        Throws(()=>input.ReadByte());Throws(()=>buffer.OpenRead());
+        Check(!Directory.EnumerateFiles(root,"*.wav",SearchOption.AllDirectories).Any(),"Plain WAV created");
+    });
     JsonElement MetricsPayload(string recordedId,string draftSha,string reviewSha,object? rate)=>JsonSerializer.SerializeToElement(new{
         recording_id=recordedId,draft_sha256=draftSha,review_sha256=reviewSha,comparison_kind="physician_revision_distance",reference_verified_against_audio=false,
         comparison=new{normalization_version="fa-text-v1",reference_sha256=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("الف"))).ToLowerInvariant(),candidate_sha256=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("الف ب ج"))).ToLowerInvariant(),reference_words=1,word_edit_distance=2,word_edit_rate=rate,reference_characters=3,character_edit_distance=2,character_edit_rate=2.0/3,numeric_sequence_changed=true,numeric_tokens_missing=1,numeric_tokens_added=1,clinical_accuracy_established=false,authorizes_diagnosis=false,training_performed=false}});
