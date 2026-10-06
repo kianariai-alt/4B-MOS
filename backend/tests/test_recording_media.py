@@ -179,3 +179,26 @@ def test_regrant_does_not_reauthorize_old_recording(client,db_session):
     consent(client,root,state='withdrawn',version=1,key='withdraw-for-media')
     consent(client,root,state='granted',version=2,key='new-media-grant')
     assert client.get(url,headers=h).status_code==403
+
+
+def test_revision_metrics_requires_review_and_current_access(client,db_session):
+    h,d,v,root,r,url,claim,content=draft(client,db_session)
+    assert client.get(url+'/text/revision-metrics',headers=h).status_code==409
+    workspace=client.get(url+'/text',headers=h).json()
+    review=dict(expected_version=4,request_key='metrics-review-0001',expected_draft_sha256=workspace['latest_draft']['sha256'],edited_text='متن ساختگی برای آزمون ۵',statement_fa='متن را با گفتگوی ویزیت تطبیق دادم و اصلاح کردم.')
+    assert client.post(url+'/review',headers=h,json=review).status_code==201
+    before=list(db_session.scalars(select(RecordingTextEvent)))
+    result=client.get(url+'/text/revision-metrics',headers=h)
+    assert result.status_code==200,result.text
+    body=result.json()
+    assert body['comparison_kind']=='physician_revision_distance'
+    assert body['reference_verified_against_audio'] is False
+    assert body['comparison']['numeric_sequence_changed'] is True
+    assert body['comparison']['word_edit_distance']==1
+    assert 'متن' not in result.text
+    assert result.headers['cache-control']=='no-store'
+    assert len(list(db_session.scalars(select(RecordingTextEvent))))==len(before)
+    other=create_role_headers(client,username='metrics-other',role='physician')
+    assert client.get(url+'/text/revision-metrics',headers=other).status_code==403
+    consent(client,root,state='withdrawn',version=1,key='metrics-withdraw')
+    assert client.get(url+'/text/revision-metrics',headers=h).status_code==403

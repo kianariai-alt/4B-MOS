@@ -56,3 +56,10 @@ def transcribe(visit_id:str,recording_id:str,payload:TextCommand,actor:User=Depe
 @router.post('/review',response_model=MediaWorkspace,status_code=201)
 def review(visit_id:str,recording_id:str,payload:ReviewText,actor:User=Depends(require_roles('physician')),db:Session=Depends(get_db)):
     return call(Service.review,db,visit_id,recording_id,payload,actor=actor)
+
+
+from backend.app.schemas.speech_evaluation import RevisionMetricsRead
+
+@router.get('/text/revision-metrics',response_model=RevisionMetricsRead)
+def revision_metrics(visit_id:str,recording_id:str,actor:User=Depends(require_roles('physician')),db:Session=Depends(get_db)):
+    return call(Service.revision_metrics,db,visit_id,recording_id,actor=actor)

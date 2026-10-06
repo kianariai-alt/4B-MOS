@@ -1,0 +1,215 @@
+{
+  "dataset_id": "4b-synthetic-text-v1",
+  "dataset_kind": "synthetic",
+  "authorized_for_evaluation": true,
+  "cases": [
+    {
+      "case_id": "synthetic-001",
+      "category": "orthography",
+      "reference_verified": true,
+      "reference": "كِتاب شماره ١٢",
+      "candidate": "کتاب شماره ۱۲",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-002",
+      "category": "orthography",
+      "reference_verified": true,
+      "reference": "می‌روم",
+      "candidate": "می روم",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-003",
+      "category": "orthography",
+      "reference_verified": true,
+      "reference": "عدد ۵٫۵",
+      "candidate": "عدد 5.5",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-004",
+      "category": "orthography",
+      "reference_verified": true,
+      "reference": "عدد ۱٬۲۰۰",
+      "candidate": "عدد 1200",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-005",
+      "category": "numbers",
+      "reference_verified": true,
+      "reference": "عدد ۵",
+      "candidate": "عدد ۱۰",
+      "protected_phrases": [
+        "۵"
+      ]
+    },
+    {
+      "case_id": "synthetic-006",
+      "category": "numbers",
+      "reference_verified": true,
+      "reference": "عدد ۵ و ۱۰",
+      "candidate": "عدد ۱۰ و ۵",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-007",
+      "category": "numbers",
+      "reference_verified": true,
+      "reference": "عدد ۵ و ۵",
+      "candidate": "عدد ۵",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-008",
+      "category": "numbers",
+      "reference_verified": true,
+      "reference": "عدد منفی -۵",
+      "candidate": "عدد منفی ۵",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-009",
+      "category": "numbers",
+      "reference_verified": true,
+      "reference": "مدت ساختگی ۳ روز",
+      "candidate": "مدت ساختگی ۳۰ روز",
+      "protected_phrases": [
+        "۳ روز"
+      ]
+    },
+    {
+      "case_id": "synthetic-010",
+      "category": "numbers",
+      "reference_verified": true,
+      "reference": "مقدار ساختگی ۵٫۵",
+      "candidate": "مقدار ساختگی ۵۵",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-011",
+      "category": "negation",
+      "reference_verified": true,
+      "reference": "علامت ساختگی نیست",
+      "candidate": "علامت ساختگی است",
+      "protected_phrases": [
+        "نیست"
+      ]
+    },
+    {
+      "case_id": "synthetic-012",
+      "category": "negation",
+      "reference_verified": true,
+      "reference": "در این مثال چیزی گزارش نشده",
+      "candidate": "در این مثال چیزی گزارش شده",
+      "protected_phrases": [
+        "نشده"
+      ]
+    },
+    {
+      "case_id": "synthetic-013",
+      "category": "negation",
+      "reference_verified": true,
+      "reference": "عبارت فرضی بدون تغییر",
+      "candidate": "عبارت فرضی با تغییر",
+      "protected_phrases": [
+        "بدون"
+      ]
+    },
+    {
+      "case_id": "synthetic-014",
+      "category": "terms",
+      "reference_verified": true,
+      "reference": "داروی الف در متن ساختگی",
+      "candidate": "داروی ب در متن ساختگی",
+      "protected_phrases": [
+        "داروی الف"
+      ]
+    },
+    {
+      "case_id": "synthetic-015",
+      "category": "terms",
+      "reference_verified": true,
+      "reference": "زانو راست در جمله ساختگی",
+      "candidate": "زانو چپ در جمله ساختگی",
+      "protected_phrases": [
+        "راست"
+      ]
+    },
+    {
+      "case_id": "synthetic-016",
+      "category": "terms",
+      "reference_verified": true,
+      "reference": "نام نمونه الف",
+      "candidate": "نام نمونه الف",
+      "protected_phrases": [
+        "نمونه الف"
+      ]
+    },
+    {
+      "case_id": "synthetic-017",
+      "category": "noise",
+      "reference_verified": true,
+      "reference": "یک دو سه چهار",
+      "candidate": "یک سه چهار",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-018",
+      "category": "noise",
+      "reference_verified": true,
+      "reference": "یک دو سه چهار",
+      "candidate": "یک دو سه چهار پنج شش",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-019",
+      "category": "noise",
+      "reference_verified": true,
+      "reference": "گفتگوی ساختگی برای آزمون",
+      "candidate": "",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-020",
+      "category": "general",
+      "reference_verified": true,
+      "reference": "عبارت کامل ساختگی",
+      "candidate": "عبارت کامل ساختگی",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-021",
+      "category": "general",
+      "reference_verified": true,
+      "reference": "ابتدا پرسش سپس پاسخ",
+      "candidate": "ابتدا پاسخ سپس پرسش",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-022",
+      "category": "general",
+      "reference_verified": true,
+      "reference": "واژه واژه واژه",
+      "candidate": "واژه واژه",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-023",
+      "category": "general",
+      "reference_verified": true,
+      "reference": "متن با نقطه.",
+      "candidate": "متن با نقطه",
+      "protected_phrases": []
+    },
+    {
+      "case_id": "synthetic-024",
+      "category": "general",
+      "reference_verified": true,
+      "reference": "فارسی و ENGLISH",
+      "candidate": "فارسی و english",
+      "protected_phrases": []
+    }
+  ]
+}
