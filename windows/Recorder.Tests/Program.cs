@@ -100,6 +100,42 @@ try{
         Throws(()=>AudioUploader.Upload(client,item with{EncryptedFileSha256=new string('0',64)},protector).GetAwaiter().GetResult());
         Throws(()=>AudioUploader.Upload(client,item with{Reason="interrupted"},protector).GetAwaiter().GetResult());
     });
+    JsonElement MetricsPayload(string recordedId,string draftSha,string reviewSha,object? rate)=>JsonSerializer.SerializeToElement(new{
+        recording_id=recordedId,draft_sha256=draftSha,review_sha256=reviewSha,comparison_kind="physician_revision_distance",reference_verified_against_audio=false,
+        comparison=new{normalization_version="fa-text-v1",reference_sha256=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("الف"))).ToLowerInvariant(),candidate_sha256=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("الف ب ج"))).ToLowerInvariant(),reference_words=1,word_edit_distance=2,word_edit_rate=rate,reference_characters=3,character_edit_distance=2,character_edit_rate=2.0/3,numeric_sequence_changed=true,numeric_tokens_missing=1,numeric_tokens_added=1,clinical_accuracy_established=false,authorizes_diagnosis=false,training_performed=false}});
+    string draftHash=new string('a',64),reviewHash=new string('b',64);
+    Test("Revision metrics bind exact saved recording and text hashes",()=>{
+        var payload=MetricsPayload(context.RecordingId,draftHash,reviewHash,2.0);
+        var metrics=RevisionMetrics.Parse(payload,context.RecordingId,draftHash,reviewHash,"الف","الف ب ج");
+        Check(metrics.WordEdits==2 && metrics.NumericSequenceChanged,"Metric values lost");
+        Check(metrics.SummaryFa.Contains("تفاوت واژه‌ای") && !metrics.SummaryFa.Contains("الف"),"Unexpected report content");
+        // A rate above 100% is valid; never clamp it into an accuracy score.
+        Check(metrics.ReferenceWords==1,"Unexpected reference length");
+        Throws(()=>RevisionMetrics.Parse(payload,Guid.NewGuid().ToString(),draftHash,reviewHash,"الف","الف ب ج"));
+        Throws(()=>RevisionMetrics.Parse(payload,context.RecordingId,new string('c',64),reviewHash,"الف","الف ب ج"));
+        Throws(()=>RevisionMetrics.Parse(payload,context.RecordingId,draftHash,new string('c',64),"الف","الف ب ج"));
+        Throws(()=>RevisionMetrics.Parse(payload,context.RecordingId,draftHash,reviewHash,"متن دیگر","الف ب ج"));
+    });
+    Test("Malformed rates and unsupported reports are rejected",()=>{
+        foreach(object? rate in new object?[]{-1.0,0.5,null,"not-a-number"}){
+            var payload=MetricsPayload(context.RecordingId,draftHash,reviewHash,rate);
+            Throws(()=>RevisionMetrics.Parse(payload,context.RecordingId,draftHash,reviewHash,"الف","الف ب ج"));
+        }
+        string json=MetricsPayload(context.RecordingId,draftHash,reviewHash,2.0).GetRawText();
+        foreach(string changed in new[]{json.Replace("fa-text-v1","unknown-v9"),json.Replace("\"clinical_accuracy_established\":false","\"clinical_accuracy_established\":true"),json.Replace("\"word_edit_distance\":2","\"word_edit_distance\":-2")}){
+            using var document=JsonDocument.Parse(changed);
+            Throws(()=>RevisionMetrics.Parse(document.RootElement,context.RecordingId,draftHash,reviewHash,"الف","الف ب ج"));
+        }
+        Throws(()=>RevisionMetrics.Parse(JsonSerializer.SerializeToElement(new{}),context.RecordingId,draftHash,reviewHash,"الف","الف ب ج"));
+    });
+    Test("Undefined revision rates remain undefined",()=>{
+        // Construct a valid empty-reference report rather than interpreting it as zero.
+        var payload=JsonSerializer.SerializeToElement(new{
+            recording_id=context.RecordingId,draft_sha256=draftHash,review_sha256=reviewHash,comparison_kind="physician_revision_distance",reference_verified_against_audio=false,
+            comparison=new{normalization_version="fa-text-v1",reference_sha256=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("."))).ToLowerInvariant(),candidate_sha256=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("الف"))).ToLowerInvariant(),reference_words=0,word_edit_distance=1,word_edit_rate=(double?)null,reference_characters=0,character_edit_distance=3,character_edit_rate=(double?)null,numeric_sequence_changed=false,numeric_tokens_missing=0,numeric_tokens_added=0,clinical_accuracy_established=false,authorizes_diagnosis=false,training_performed=false}});
+        var metrics=RevisionMetrics.Parse(payload,context.RecordingId,draftHash,reviewHash,".","الف");
+        Check(metrics.SummaryFa.Contains("قابل محاسبه نیست"),"Undefined rate shown as zero");
+    });
     Console.WriteLine($"{passed} recorder core tests passed. DPAPI: {(OperatingSystem.IsWindows()?"real Windows CurrentUser":"test protector; Windows CI verifies DPAPI")}.");
 }finally{Directory.Delete(root,recursive:true);}
 
