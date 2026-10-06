@@ -65,6 +65,9 @@ def test_protected_phrase_must_be_present_and_matches_whole_tokens():
     result=compare_text('نیست', 'نیستم', ('نیست',))
     assert result['protected_phrase_count_changes']==1
     with pytest.raises(ValueError,match='limit'):tokens('ا'*(MAX_TEXT_CHARACTERS+1))
+    # Case folding and compatibility normalization can expand input length.
+    with pytest.raises(ValueError,match='limit'):tokens('ß'*(MAX_TEXT_CHARACTERS//2+1))
+    with pytest.raises(ValueError,match='limit'):tokens('ﷺ'*(MAX_TEXT_CHARACTERS//2))
 
 
 def test_weighted_report_counts_and_no_text_exports():

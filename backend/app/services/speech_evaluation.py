@@ -17,10 +17,11 @@ def tokens(value: str) -> list[str]:
     if len(value) > MAX_TEXT_CHARACTERS:
         raise ValueError('Text comparison limit exceeded.')
     normalized = unicodedata.normalize('NFKC', value).translate(_DIGITS).translate(_LETTERS)
+    normalized = _DIACRITICS.sub('', normalized).casefold()
     if len(normalized) > MAX_TEXT_CHARACTERS:
         raise ValueError('Normalized text comparison limit exceeded.')
     normalized = re.sub(r'(?<=\d)٬(?=\d)', '', normalized)
-    return _WORDS.findall(_DIACRITICS.sub('', normalized).casefold())
+    return _WORDS.findall(normalized)
 
 
 def edit_distance(reference, candidate) -> int:
