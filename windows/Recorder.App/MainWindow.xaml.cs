@@ -10,6 +10,13 @@ using NAudio.Wave;
 namespace Mos.Recorder.App;
 public partial class MainWindow : Window
 {
+    private WaveOutEvent? _speaker;
+    private RawSourceWaveStream? _playStream;
+    private VerifiedAudioBuffer? _playBuffer;
+    private RecordedClip? _playingClip;
+    private long _playGeneration;
+    private bool _playLoading,_playChecking;
+    private readonly DispatcherTimer _playTimer=new(){Interval=TimeSpan.FromSeconds(5)};
     private sealed record RecordedClip(PendingCapture Capture,string Label);
     private string? _displayDraftSha;
     private JsonElement? _media;
@@ -37,7 +44,7 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-        InitializeComponent();_timer.Tick+=Heartbeat;_textTimer.Tick+=TextHeartbeat;
+        InitializeComponent();_timer.Tick+=Heartbeat;_textTimer.Tick+=TextHeartbeat;_playTimer.Tick+=PlaybackHeartbeat;
         ReviewCheck.Checked+=(_,_)=>RefreshButtons();ReviewCheck.Unchecked+=(_,_)=>RefreshButtons();ReviewBox.TextChanged+=(_,_)=>{ClearMetrics();RefreshButtons();};
         AcknowledgeBox.Checked+=(_,_)=>RefreshButtons();
         AcknowledgeBox.Unchecked+=(_,_)=>RefreshButtons();
@@ -54,6 +61,8 @@ public partial class MainWindow : Window
         StartButton.IsEnabled=!_busy && !recording && _access is { } access && access.GetProperty("can_record").GetBoolean() && AcknowledgeBox.IsChecked==true && Microphones.SelectedIndex>=0;
         StopButton.IsEnabled=recording && !_captureStopping;
         foreach(var node in new System.Windows.Controls.Control[]{LoadButton,VisitBox,Microphones,AcknowledgeBox,SyncButton,LogoutButton,RecordingsBox,UploadButton,TranscribeButton,TextLoadButton,ReviewButton,ReviewCheck,ReviewBox,MetricsButton})node.IsEnabled=!_busy && !recording;
+        PlayButton.IsEnabled=!_busy && !recording && _speaker is null && RecordingsBox.SelectedItem is RecordedClip;
+        PlayStopButton.IsEnabled=_speaker is not null || _playLoading;
         ReviewBox.IsReadOnly=_reviewCommand is not null;
         bool clip=RecordingsBox.SelectedItem is RecordedClip;
         UploadButton.IsEnabled=!_busy && !recording && clip;
@@ -233,9 +242,59 @@ public partial class MainWindow : Window
     }
     private void ClearText()
     {
-        ClearMetrics();_textGeneration++;_textTimer.Stop();_displayDraftSha=null;_media=null;_reviewCommand=null;
+        StopPlayback();ClearMetrics();_textGeneration++;_textTimer.Stop();_displayDraftSha=null;_media=null;_reviewCommand=null;
         if(DraftBox is null)return;
         DraftBox.Clear();ReviewBox.Clear();ReviewCheck.IsChecked=false;MediaStateText.Text="";
+    }
+    private void StopPlayback()
+    {
+        _playGeneration++;_playTimer.Stop();_playLoading=false;_playingClip=null;
+        var speaker=_speaker;_speaker=null;
+        try{speaker?.Stop();}finally{
+            speaker?.Dispose();_playStream?.Dispose();_playStream=null;
+            _playBuffer?.Dispose();_playBuffer=null;
+        }
+        if(PlaybackText is not null)PlaybackText.Text="";
+    }
+    private static async Task CheckPlaybackAccess(MosClient client,RecordedClip clip)
+    {
+        if(client.Server!=clip.Capture.Context.Server || client.UserId!=clip.Capture.Context.PhysicianId)throw new InvalidDataException("Wrong playback account.");
+        var status=await client.Get(AudioUploader.MediaPath(clip.Capture.Context));
+        if(status.GetProperty("recording_id").GetString()!=clip.Capture.Context.RecordingId)throw new InvalidDataException("Wrong recording authorization.");
+    }
+    private async void PlayClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
+        if(_client is not { } client || RecordingsBox.SelectedItem is not RecordedClip clip)return;
+        StopPlayback();long generation=_playGeneration;_playLoading=true;RefreshButtons();
+        VerifiedAudioBuffer? buffer=null;
+        try{
+            await CheckPlaybackAccess(client,clip);
+            if(generation!=_playGeneration)return;
+            buffer=await Task.Run(()=>VerifiedAudioBuffer.Load(clip.Capture,client.Server,client.UserId!,_protection));
+            // Recheck after decryption, before handing any samples to the device.
+            await CheckPlaybackAccess(client,clip);
+            if(generation!=_playGeneration || !ReferenceEquals(RecordingsBox.SelectedItem,clip) || !ReferenceEquals(_client,client))return;
+            _playBuffer=buffer;buffer=null;
+            _playStream=new RawSourceWaveStream(_playBuffer.OpenRead(),new WaveFormat(16000,16,1));
+            var speaker=new WaveOutEvent();_speaker=speaker;
+            speaker.PlaybackStopped+=(_,args)=>Dispatcher.BeginInvoke(new Action(()=>{
+                if(!ReferenceEquals(_speaker,speaker))return;
+                StopPlayback();RefreshButtons();
+                if(args.Exception is not null)Message("پخش صوت کامل نشد؛ دستگاه خروجی را بررسی کنید.");
+            }));
+            speaker.Init(_playStream);_playingClip=clip;_playLoading=false;
+            PlaybackText.Text=$"پخش صوت اصلی — مدت {_playBuffer.Duration:mm\\:ss}";
+            speaker.Play();_playTimer.Start();
+        }catch{if(generation==_playGeneration)ClearText();throw;}
+        finally{buffer?.Dispose();if(generation==_playGeneration)_playLoading=false;RefreshButtons();}
+    });
+    private void PlayStopClick(object sender,RoutedEventArgs e){StopPlayback();RefreshButtons();}
+    private async void PlaybackHeartbeat(object? sender,EventArgs e)
+    {
+        if(_playChecking || _speaker is null || _playingClip is not { } clip || _client is not { } client)return;
+        _playChecking=true;long generation=_playGeneration;
+        try{await CheckPlaybackAccess(client,clip);}
+        catch{if(generation==_playGeneration){ClearText();RefreshButtons();Message("دسترسی یا ارتباط قابل تأیید نیست؛ پخش متوقف و متن از صفحه پاک شد.");}}
+        finally{_playChecking=false;}
     }
     private void RecordingSelectionChanged(object sender,System.Windows.Controls.SelectionChangedEventArgs e){ClearText();RefreshButtons();}
     private async void UploadClick(object sender,RoutedEventArgs e)=>await Run(async()=>{
