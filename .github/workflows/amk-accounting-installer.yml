@@ -26,6 +26,7 @@ jobs:
           $b64 = Get-Content "amk-build/AMK_Accounting_Windows_Stage05.base64.txt" -Raw
           [IO.File]::WriteAllBytes("$PWD/AMK_Accounting_Windows_Stage05.zip", [Convert]::FromBase64String($b64))
           Expand-Archive -Path "$PWD/AMK_Accounting_Windows_Stage05.zip" -DestinationPath "$PWD/amk-src" -Force
+          Set-Content -Path "$PWD/amk-src/AMK.Accounting.Windows/GlobalUsings.cs" -Value "global using System.IO;" -Encoding utf8
           Get-ChildItem "$PWD/amk-src/AMK.Accounting.Windows"
 
       - name: Restore
