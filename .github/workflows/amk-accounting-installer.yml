@@ -1,0 +1,69 @@
+name: AMK Windows Installer
+
+on:
+  push:
+    branches:
+      - build/amk-accounting-installer
+  workflow_dispatch:
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Recreate source archive
+        shell: pwsh
+        run: |
+          $b64 = Get-Content "amk-build/AMK_Accounting_Windows_Stage05.base64.txt" -Raw
+          [IO.File]::WriteAllBytes("$PWD/AMK_Accounting_Windows_Stage05.zip", [Convert]::FromBase64String($b64))
+          Expand-Archive -Path "$PWD/AMK_Accounting_Windows_Stage05.zip" -DestinationPath "$PWD/amk-src" -Force
+          Get-ChildItem "$PWD/amk-src/AMK.Accounting.Windows"
+
+      - name: Restore
+        shell: pwsh
+        working-directory: amk-src/AMK.Accounting.Windows
+        run: dotnet restore
+
+      - name: Publish Windows x64 self-contained
+        shell: pwsh
+        working-directory: amk-src/AMK.Accounting.Windows
+        run: |
+          dotnet publish AMK.Accounting.Windows.csproj -c Release -r win-x64 --self-contained true -o publish/win-x64 -p:PublishSingleFile=false
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        working-directory: amk-src/AMK.Accounting.Windows
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "C:\Program Files\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found." }
+          & $iscc "Installer\AMKAccounting.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Package portable build
+        shell: pwsh
+        working-directory: amk-src/AMK.Accounting.Windows
+        run: Compress-Archive -Path publish/win-x64/* -DestinationPath AMK-Accounting-Portable-win-x64.zip -Force
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AMK-Accounting-Installer
+          path: |
+            amk-src/AMK.Accounting.Windows/Installer/Output/AMK-Accounting-Setup.exe
+            amk-src/AMK.Accounting.Windows/AMK-Accounting-Portable-win-x64.zip
+          if-no-files-found: error
+          retention-days: 14
