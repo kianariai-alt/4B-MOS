@@ -30,7 +30,7 @@ jobs:
           $bytes = [Convert]::FromBase64String($encoded)
           [IO.File]::WriteAllBytes('AMK_source.zip', $bytes)
           $hash = (Get-FileHash 'AMK_source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($hash -ne '85ae75f02a0e979bcb07c814b2ea0035243b54f9f2dc4fb3977a4df2bb3ee0f5') {
+          if ($hash -ne '6d985be4c7f5ae20ca2f4e254a002ffced1032090d9df1ab7cc6947b3f5dbfba') {
             throw "AMK source integrity verification failed. SHA256: $hash"
           }
           Expand-Archive -LiteralPath 'AMK_source.zip' -DestinationPath '.' -Force
