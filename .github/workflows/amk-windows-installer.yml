@@ -1,0 +1,71 @@
+name: AMK Windows installer v0.5.2
+
+on:
+  push:
+    branches:
+      - build/amk-accounting-installer
+    paths:
+      - 'amk-build/**'
+      - '.github/workflows/amk-windows-installer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout isolated source branch
+        uses: actions/checkout@v4
+      - name: Prepare .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore AMK source archive
+        shell: pwsh
+        run: |
+          $encoded = (Get-Content -Raw 'amk-build/AMK_Source_v0.5.2.b64') -replace '\s',''
+          $bytes = [Convert]::FromBase64String($encoded)
+          [IO.File]::WriteAllBytes('AMK_source.zip', $bytes)
+          $hash = (Get-FileHash 'AMK_source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne '85ae75f02a0e979bcb07c814b2ea0035243b54f9f2dc4fb3977a4df2bb3ee0f5') {
+            throw "AMK source integrity verification failed. SHA256: $hash"
+          }
+          Expand-Archive -LiteralPath 'AMK_source.zip' -DestinationPath '.' -Force
+          if (-not (Test-Path 'AMK.Accounting.Windows/AMK.Accounting.Windows.csproj')) {
+            throw 'AMK project not found after extraction'
+          }
+      - name: Restore and publish Windows 64-bit
+        shell: pwsh
+        run: |
+          dotnet restore 'AMK.Accounting.Windows/AMK.Accounting.Windows.csproj' -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet restore failed' }
+          dotnet publish 'AMK.Accounting.Windows/AMK.Accounting.Windows.csproj' -c Release -r win-x64 --self-contained true -o 'AMK.Accounting.Windows/publish/win-x64' -p:PublishSingleFile=false --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
+      - name: Prepare Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
+          }
+      - name: Build Setup executable
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc 'AMK.Accounting.Windows/Installer/AMKAccounting.iss'
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed' }
+          $setup = 'AMK.Accounting.Windows/Installer/Output/AMK-Accounting-Setup.exe'
+          if (-not (Test-Path $setup)) { throw 'Expected setup file missing' }
+          Get-Item $setup | Select-Object Name, Length
+          Get-FileHash $setup -Algorithm SHA256
+      - name: Publish downloadable installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AMK-Accounting-Setup-v0.5.2-win-x64
+          path: AMK.Accounting.Windows/Installer/Output/AMK-Accounting-Setup.exe
+          retention-days: 21
+          if-no-files-found: error
