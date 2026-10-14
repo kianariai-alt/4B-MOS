@@ -56,7 +56,11 @@ def _read(row):
         or p.get("request_key") != row.request_key
         or p.get("recorded_by") != row.recorded_by
         or p.get("created_at")
-        != row.created_at.replace(tzinfo=timezone.utc).isoformat()
+        != (
+            row.created_at.astimezone(timezone.utc)
+            if row.created_at.tzinfo is not None
+            else row.created_at.replace(tzinfo=timezone.utc)
+        ).isoformat()
     ):
         raise ReceptionConflictError("Reception evidence integrity check failed.")
     return EvidenceRead(

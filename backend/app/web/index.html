@@ -12,6 +12,7 @@
     <title>4B-MOS | کنسول بالینی</title>
     <link rel="stylesheet" href="/app/app.css">
     <script src="/app/app.js" defer></script>
+    <script src="/app/clinical-intake.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
@@ -278,6 +279,38 @@
           ></p>
 
           <div id="copilot-content" hidden>
+            <section id="clinical-intake-editor" class="evidence-section" aria-labelledby="clinical-intake-heading" hidden>
+              <div class="section-heading"><h3 id="clinical-intake-heading">شرح‌حال و معاینهٔ پزشک</h3></div>
+              <p class="muted">ابتدا پیش‌نویس را ذخیره کنید؛ تأیید نهایی پس از بازبینی پزشک انجام می‌شود. خالی بودن سابقه، دارو یا حساسیت به معنی نبود آن نیست.</p>
+              <p id="clinical-intake-status" class="muted"></p>
+              <p id="clinical-intake-message" class="notice" role="status" aria-live="polite" hidden></p>
+              <button id="clinical-intake-reload" class="button button-secondary" type="button">بازخوانی شرح‌حال ذخیره‌شده</button>
+              <form id="clinical-intake-form" class="evidence-brief-form">
+                <label>شکایت اصلی<textarea name="chief_complaint" minlength="3" maxlength="5000" required></textarea></label>
+                <label>شرح بیماری فعلی<textarea name="history_present_illness" minlength="3" maxlength="20000" required></textarea></label>
+                <label>ناحیهٔ بدن<select name="body_region" required><option value="">انتخاب کنید</option><option value="knee">زانو</option><option value="hip">لگن</option><option value="shoulder">شانه</option><option value="spine">ستون فقرات</option><option value="ankle">مچ پا</option><option value="foot">پا</option><option value="hand">دست</option><option value="elbow">آرنج</option><option value="skin">پوست</option><option value="hair">مو</option><option value="other">سایر</option></select></label>
+                <label>سمت درگیری<select name="laterality"><option value="unknown">نامشخص</option><option value="right">راست</option><option value="left">چپ</option><option value="bilateral">دوطرفه</option><option value="midline">خط وسط</option><option value="not_applicable">کاربرد ندارد</option></select></label>
+                <label>تاریخ شروع علائم (میلادی؛ اختیاری)<input name="symptom_onset_date" type="date"></label>
+                <label>شدت درد از صفر تا ده (خالی = ثبت نشده)<input name="pain_score" type="number" min="0" max="10" step="1"></label>
+                <label>محدودیت‌های عملکردی؛ هر مورد در یک خط<textarea name="functional_limitations"></textarea></label>
+                <label>سوابق و بیماری‌های زمینه‌ای؛ هر مورد در یک خط<textarea name="relevant_history"></textarea></label>
+                <label>داروهای فعلی؛ هر مورد در یک خط<textarea name="current_medications"></textarea></label>
+                <label>حساسیت‌ها؛ هر مورد در یک خط<textarea name="allergies"></textarea></label>
+                <label>یافته‌های معاینه<textarea name="exam_findings" maxlength="20000"></textarea></label>
+                <label>علائم هشدار؛ هر مورد در یک خط<textarea name="red_flags"></textarea></label>
+                <label>برداشت بالینی پزشک<textarea name="clinical_impression" maxlength="10000"></textarea></label>
+                <label>هدف مراقبت<textarea name="care_goal" maxlength="5000"></textarea></label>
+                <button id="clinical-intake-save" class="button button-primary" type="submit">ذخیرهٔ پیش‌نویس شرح‌حال</button>
+              </form>
+              <div id="clinical-intake-finalize-section" hidden>
+                <label><input id="clinical-intake-acknowledge" type="checkbox"> شرح‌حال ذخیره‌شده را شخصاً بررسی کرده‌ام و تأیید می‌کنم.</label>
+                <button id="clinical-intake-finalize" class="button button-primary" type="button" disabled>تأیید نهایی شرح‌حال و به‌روزرسانی پزشک‌یار</button>
+              </div>
+              <div id="clinical-intake-correction-section" hidden>
+                <label>دلیل اصلاح شرح‌حال نهایی<textarea id="clinical-intake-revision-reason" minlength="10" maxlength="5000"></textarea></label>
+                <button id="clinical-intake-correction" class="button button-secondary" type="button">ایجاد پیش‌نویس اصلاحی با حفظ نسخهٔ قبلی</button>
+              </div>
+            </section>
             <section class="evidence-section" aria-labelledby="copilot-summary-heading">
               <div class="section-heading">
                 <div>

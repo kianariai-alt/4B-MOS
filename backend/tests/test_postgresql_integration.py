@@ -197,6 +197,39 @@ def _seed_clinical_context(engine, *, treatment_count: int = 2) -> dict:
     }
 
 
+def test_postgresql_reception_reload_in_tehran_timezone(postgresql_engine):
+    from datetime import datetime, timezone
+    from backend.app.schemas.reception import ReceptionCreate, ConsentCreate
+    from backend.app.services.reception import ReceptionService
+
+    seeded = _seed_clinical_context(postgresql_engine, treatment_count=0)
+    with Session(postgresql_engine) as db:
+        db.execute(text("SET TIME ZONE 'Asia/Tehran'"))
+        try:
+            actor = db.get(User, seeded["admin_ids"][0])
+            ReceptionService.save_intake(db, seeded["visit_id"], ReceptionCreate(
+                patient_reported_complaint="Synthetic timezone test",
+                expected_version=0, request_key="timezone-intake",
+            ), actor=actor)
+            db.expire_all()
+            assert ReceptionService.workspace(db, seeded["visit_id"]).intake_version == 1
+            ReceptionService.record_consent(db, seeded["visit_id"], ConsentCreate(
+                purpose="care", state="granted", document_version="TEST-1",
+                evidence_reference="SYNTHETIC-TIMEZONE-REFERENCE",
+                confirmed_at=datetime.now(timezone.utc), expected_version=0,
+                request_key="timezone-consent",
+            ), actor=actor)
+            db.expire_all()
+            workspace = ReceptionService.workspace(db, seeded["visit_id"])
+            assert workspace.consent_version == 1
+            assert ReceptionService.consent_granted(db, seeded["visit_id"], "care")
+            assert not ReceptionService.consent_granted(db, seeded["visit_id"], "audio_recording")
+        finally:
+            db.rollback()
+            db.execute(text("SET TIME ZONE 'UTC'"))
+            db.commit()
+
+
 def _sqlstate(conflict: Exception) -> str | None:
     database_error = conflict.__cause__
     original = getattr(database_error, "orig", None)

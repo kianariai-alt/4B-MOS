@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from backend.app.api.dependencies import require_roles
@@ -164,6 +164,7 @@ def replace_clinical_intake(
     payload: ClinicalIntakeContent,
     actor: User = Depends(require_roles(*AUTHOR_ROLES)),
     db: Session = Depends(get_db),
+    expected_content_sha256: str | None = Header(default=None, alias="If-Match"),
 ) -> ClinicalIntakeRead:
     try:
         return ClinicalContextService.update_intake(
@@ -171,6 +172,7 @@ def replace_clinical_intake(
             intake_id,
             payload,
             actor=actor,
+            expected_content_sha256=expected_content_sha256,
         )
     except CLINICAL_ERRORS as error:
         _translate_error(error)
@@ -184,12 +186,14 @@ def finalize_clinical_intake(
     intake_id: str,
     actor: User = Depends(require_roles(*FINALIZE_ROLES)),
     db: Session = Depends(get_db),
+    expected_content_sha256: str | None = Header(default=None, alias="If-Match"),
 ) -> ClinicalIntakeRead:
     try:
         return ClinicalContextService.finalize_intake(
             db,
             intake_id,
             actor=actor,
+            expected_content_sha256=expected_content_sha256,
         )
     except CLINICAL_ERRORS as error:
         _translate_error(error)
