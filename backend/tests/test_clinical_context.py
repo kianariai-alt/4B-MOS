@@ -164,6 +164,25 @@ def test_current_context_exposes_canonical_guard_digest(client, visit):
     ]
 
 
+def test_intake_browser_cannot_overwrite_or_finalize_an_unreviewed_change(client, visit):
+    original = create_intake(client, visit["id"])
+    endpoint = f"/api/v1/clinical-intakes/{original['id']}"
+    original_header = {"If-Match": original["content_sha256"]}
+    changed = client.put(endpoint, json=intake_payload(pain_score=8), headers=original_header)
+    assert changed.status_code == 200
+    current = changed.json()
+    assert current["content_sha256"] != original["content_sha256"]
+    stale_save = client.put(endpoint, json=intake_payload(pain_score=2), headers=original_header)
+    assert stale_save.status_code == 409
+    stale_final = client.post(endpoint + "/finalize", headers=original_header)
+    assert stale_final.status_code == 409
+    assert client.get(endpoint).json()["status"] == "draft"
+    assert client.get(endpoint).json()["pain_score"] == 8
+    reviewed = client.post(endpoint + "/finalize", headers={"If-Match": current["content_sha256"]})
+    assert reviewed.status_code == 200
+    assert reviewed.json()["status"] == "final"
+
+
 def test_intake_is_structured_deduplicated_and_hashed(client, visit):
     intake = create_intake(client, visit["id"])
 

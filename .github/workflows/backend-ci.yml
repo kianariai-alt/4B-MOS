@@ -69,7 +69,18 @@ jobs:
 
       - name: Validate clinical console JavaScript
         if: ${{ matrix.python-version == '3.14' }}
-        run: node --check backend/app/web/app.js
+        run: |
+          node --check backend/app/web/app.js
+          node --check backend/app/web/clinical-intake.js
+
+      - name: Test clinical console behavior
+        if: ${{ matrix.python-version == '3.14' }}
+        run: |
+          npm ci --prefix backend/tests/ui --ignore-scripts --no-audit --no-fund
+          export MOS_UI_QA_MODULES="$PWD/backend/tests/ui/node_modules"
+          node backend/tests/reception_ui_qa.cjs
+          node backend/tests/physician_question_ui_qa.cjs
+          node backend/tests/clinical_intake_ui_qa.cjs
 
       - name: Verify migrations on a fresh database
         run: |

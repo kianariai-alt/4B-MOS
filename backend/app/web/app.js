@@ -2474,6 +2474,7 @@ function setWorkspace(workspace) {
 }
 
 function showLogin() {
+  if (typeof resetClinicalIntakeEditor === "function") resetClinicalIntakeEditor();
   resetReception();
   document.querySelector("#reception-workspace").hidden = true;
   document.querySelector("#reception-tab").hidden = true;
@@ -3857,6 +3858,7 @@ async function loadCopilotWorkspace(visitId) {
   }
 
   const requestGeneration = sessionGeneration;
+  if (typeof resetClinicalIntakeEditor === "function") resetClinicalIntakeEditor();
   currentCopilotVisitId = normalizedVisitId;
   currentCopilotSnapshot = null;
   currentTreatmentRoadmap = null;
@@ -3883,6 +3885,8 @@ async function loadCopilotWorkspace(visitId) {
       return;
     }
     renderCopilotSnapshot(snapshot);
+    if (typeof loadClinicalIntakeEditor === "function") await loadClinicalIntakeEditor(normalizedVisitId, requestGeneration);
+    if (!accessToken || requestGeneration !== sessionGeneration) return;
     try {
       const roadmap = await apiRequest(
         `/visits/${encodeURIComponent(normalizedVisitId)}/treatment-options-roadmap`,
@@ -3908,7 +3912,11 @@ async function loadCopilotWorkspace(visitId) {
         "p",
         "context-warning",
         roadmapError instanceof ApiError && roadmapError.status === 409
-          ? "نقشه‌راه به‌دلیل ناسازگاری یا ناکافی بودن زمینهٔ ساختاریافته تولید نشد."
+          ? (roadmapError.message === "A final structured clinical intake is required before building a treatment options roadmap."
+            ? "برای نقشه‌راه، فرم شرح‌حال پزشک را در همین صفحه ذخیره و پس از بازبینی تأیید نهایی کنید."
+            : roadmapError.message === "A structured body region is required before building a treatment options roadmap."
+              ? "ناحیهٔ بدن در شرح‌حال نهایی مشخص نشده است؛ نسخهٔ اصلاحی شرح‌حال لازم است."
+              : "نقشه‌راه به‌دلیل ناسازگاری زمینهٔ ساختاریافته تولید نشد؛ شرح‌حال و ارزیابی ایمنی را بازخوانی کنید.")
           : "دریافت نقشه‌راه گزینه‌های درمانی ممکن نشد.",
       ));
       showCopilotMessage(
@@ -4808,6 +4816,7 @@ function canReadReception() { return Boolean(currentUser && ["admin", "operator"
 function canWriteReception() { return Boolean(currentUser && ["admin", "operator", "physician"].includes(currentUser.role)); }
 function receptionMessage(message) {
   const node = document.querySelector("#reception-message"); node.textContent = message; node.hidden = !message;
+  if (message) node.scrollIntoView?.({block: "nearest", behavior: "smooth"});
 }
 function resetReception() {
   resetPhysicianBank();
@@ -4850,7 +4859,15 @@ async function receptionAction(callback) {
   catch (error) {
     if (!active()) return;
     if (error instanceof ApiError && error.status === 401) { showLogin(); return; }
-    if (error instanceof ApiError && error.status === 409) receptionMessage("اطلاعات یا نسخه تغییر کرده است؛ پذیرش را دوباره باز کنید. مقادیر واردشده برای بررسی حفظ شده‌اند.");
+    if (error instanceof ApiError && error.status === 409) {
+      const messages = {
+        "Assigned physician must be an active physician.": "شناسهٔ پزشک مقصد معتبر نیست یا حساب پزشک فعال نیست؛ شناسهٔ حساب دارای نقش پزشک را وارد کنید.",
+        "Version changed; reload before submitting.": "نسخهٔ پذیرش تغییر کرده است؛ پذیرش را دوباره باز کنید و سپس تغییرات را بررسی کنید.",
+        "Reception evidence integrity check failed.": "بررسی یکپارچگی پذیرش ناموفق بود؛ ثبت را تکرار نکنید و با پشتیبانی تماس بگیرید.",
+        "New reception revisions require an open visit.": "این ویزیت باز نیست و پذیرش جدید برای آن قابل ثبت نیست.",
+      };
+      receptionMessage(messages[error.message] || "ثبت پذیرش با تعارض روبه‌رو شد؛ پذیرش را دوباره باز کنید. مقادیر واردشده حفظ شده‌اند.");
+    }
     else receptionMessage("اقدام کامل نشد. داده را بررسی کنید؛ پیش از ایجاد دوباره پرونده یا ویزیت، وجود آن را بررسی کنید.");
   } finally {
     if (active()) {

@@ -291,6 +291,43 @@ textarea {
   line-height: 1.8;
 }
 
+#clinical-intake-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+#clinical-intake-form label,
+#clinical-intake-correction-section label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--text-primary, #f5f5f5);
+}
+
+#clinical-intake-form label:nth-child(-n+2),
+#clinical-intake-form label:nth-child(11),
+#clinical-intake-form label:nth-child(13),
+#clinical-intake-form > button {
+  grid-column: 1 / -1;
+}
+
+#clinical-intake-finalize-section,
+#clinical-intake-correction-section {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+#clinical-intake-finalize-section[hidden],
+#clinical-intake-correction-section[hidden] {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  #clinical-intake-form { grid-template-columns: minmax(0, 1fr); }
+}
+
 textarea:focus {
   border-color: var(--aqua-400);
   box-shadow: 0 0 0 3px rgba(91, 212, 207, 0.13);

@@ -472,6 +472,7 @@ class ClinicalContextService:
         payload: ClinicalIntakeContent,
         *,
         actor: User | None,
+        expected_content_sha256: str | None = None,
     ) -> ClinicalIntakeRead:
         actor = ClinicalContextService._require_actor(actor, AUTHOR_ROLES)
         intake = ClinicalContextService._require_intake(
@@ -480,6 +481,8 @@ class ClinicalContextService:
             for_update=True,
         )
         ClinicalContextService._verify_intake(intake)
+        if expected_content_sha256 is not None and expected_content_sha256 != intake.content_sha256:
+            raise ClinicalContextConflictError("Clinical intake changed; reload before saving or finalizing.")
         if intake.status != "draft":
             raise ClinicalContextConflictError(
                 "Only a draft clinical intake can be edited."
@@ -522,6 +525,7 @@ class ClinicalContextService:
         intake_id: str,
         *,
         actor: User | None,
+        expected_content_sha256: str | None = None,
     ) -> ClinicalIntakeRead:
         actor = ClinicalContextService._require_actor(actor, FINALIZE_ROLES)
         intake = ClinicalContextService._require_intake(
@@ -530,6 +534,8 @@ class ClinicalContextService:
             for_update=True,
         )
         ClinicalContextService._verify_intake(intake)
+        if expected_content_sha256 is not None and expected_content_sha256 != intake.content_sha256:
+            raise ClinicalContextConflictError("Clinical intake changed; reload before saving or finalizing.")
         if intake.status != "draft":
             raise ClinicalContextConflictError(
                 "Only a draft clinical intake can be finalized."
