@@ -10,6 +10,7 @@ function dom(file) {
   d.window.Headers = Headers;
   d.window.HTMLElement.prototype.scrollIntoView = () => {};
   d.window.confirm = () => true;
+  d.window.eval(fs.readFileSync(root+'/patient_web/solar-date.js','utf8'));
   return d;
 }
 const content = {first_name:'Synthetic',last_name:'Patient',complaint:'<img src=x onerror=alert(1)>',entry_mode:'clinic_arrival',conditions:[],medications:[],allergies:[],other_specialists:[],pain_score:null,laterality:'unknown',marketing_opt_in:false};
@@ -32,12 +33,13 @@ const record = {id:'request-1', receipt:'MOS-SYNTHETIC', state:'submitted', cont
   w.eval(fs.readFileSync(root+'/patient_web/portal.js','utf8'));await tick();
   assert.equal($('intake').hidden,false);
   assert.equal($('intake').elements.marketing_opt_in.checked,false);
-  const f=$('intake');f.elements.first_name.value='Synthetic';f.elements.last_name.value='Patient';
+  const f=$('intake');f.elements.date_of_birth.value='۱۳۷۰/۰۵/۲۱';f.elements.symptom_onset_date.value='۱۴۰۳/۱۲/۳۰';f.elements.first_name.value='Synthetic';f.elements.last_name.value='Patient';
   $('next').click();assert.match($('step-label').textContent,/۲/);
   f.elements.complaint.value=content.complaint;f.elements.body_region.value='knee';f.elements.body_region.dispatchEvent(new w.Event('change'));
   assert.match($('followup-hint').textContent,/زانو/);
   $('next').click();$('next').click();f.elements.processing_consent.checked=true;
   await f.onsubmit(new w.Event('submit',{cancelable:true}));
+  assert.equal(sent.date_of_birth,'1991-08-12');assert.equal(sent.symptom_onset_date,'2025-03-20');
   assert.equal(sent.pain_score,null);assert.equal(sent.marketing_opt_in,false);assert.equal(sent.processing_consent,true);
   assert.equal($('receipt').hidden,false);assert.equal($('receipt-code').textContent,record.receipt);
   assert.equal(w.document.querySelector('#review img'),null);

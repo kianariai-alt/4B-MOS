@@ -16,6 +16,7 @@ w.fetch=async (url, options)=>{
  return {ok:true,headers:new Headers({'Content-Type':'application/json'}),json:async()=>structuredClone(snapshot)};
 };
 w.assert=assert;w.requests=requests;w.resolveRequest=()=>resolveDelayed();
+w.eval(fs.readFileSync(root+'/../patient_web/solar-date.js','utf8'));
 w.eval(fs.readFileSync(root+'/app.js','utf8')+`\n
 (async()=>{
  const check=window.assert;
@@ -35,12 +36,12 @@ w.eval(fs.readFileSync(root+'/app.js','utf8')+`\n
  await new Promise(r=>setTimeout(r,10));
  check.equal(receptionSnapshot.intake_version,1);
  check.equal(document.querySelector('#reception-content img'),null);
- const form=document.querySelector('#reception-consent-form');form.elements.purpose.value='marketing';form.elements.state.value='declined';form.elements.document_version.value='FA-1';form.elements.evidence_reference.value='SYNTHETIC-DOC';form.elements.confirmed_at.value='2026-01-01T12:00:00';form.elements.acknowledge.checked=true;
+ const form=document.querySelector('#reception-consent-form');form.elements.purpose.value='marketing';form.elements.state.value='declined';form.elements.document_version.value='FA-1';form.elements.evidence_reference.value='SYNTHETIC-DOC';form.elements.confirmed_at.value='۱۴۰۴/۱۰/۱۱ ۱۲:۰۰:۰۰';form.elements.acknowledge.checked=true;
  form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await new Promise(r=>setTimeout(r,10));
  check.equal(receptionSnapshot.consents.find(c=>c.purpose==='marketing').state,'declined');
  check.equal(receptionSnapshot.consents.find(c=>c.purpose==='audio_recording').state,'unknown');
  const command=JSON.parse(window.requests.find(r=>r.url.endsWith('/consents')).options.body);
- check.equal(command.expected_version,0);check.ok(command.request_key);check.ok(command.confirmed_at.endsWith('Z'));
+ check.equal(command.expected_version,0);check.ok(command.request_key);check.equal(command.confirmed_at,'2026-01-01T08:30:00.000Z');
  const pending=receptionAction(active=>fetchReception('delayed-visit',active));await new Promise(r=>setTimeout(r,5));showLogin();window.resolveRequest();await pending;
  check.equal(receptionSnapshot,null);check.equal(document.querySelector('#reception-content').hidden,true);check.equal(document.querySelector('#reception-complaint').value,'');
  currentUser={id:'nurse-1',role:'nurse',display_name:'Synthetic nurse'};accessToken='synthetic-token';showConsole();setWorkspace('reception');renderReception(${JSON.stringify(snapshot)});

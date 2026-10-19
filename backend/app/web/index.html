@@ -11,6 +11,7 @@
     >
     <title>4B-MOS | کنسول بالینی</title>
     <link rel="stylesheet" href="/app/app.css">
+    <script src="/patient/solar-date.js" defer></script>
     <script src="/app/app.js" defer></script>
     <script src="/app/clinical-intake.js" defer></script>
   </head>
@@ -291,7 +292,7 @@
                 <label>شرح بیماری فعلی<textarea name="history_present_illness" minlength="3" maxlength="20000" required></textarea></label>
                 <label>ناحیهٔ بدن<select name="body_region" required><option value="">انتخاب کنید</option><option value="knee">زانو</option><option value="hip">لگن</option><option value="shoulder">شانه</option><option value="spine">ستون فقرات</option><option value="ankle">مچ پا</option><option value="foot">پا</option><option value="hand">دست</option><option value="elbow">آرنج</option><option value="skin">پوست</option><option value="hair">مو</option><option value="other">سایر</option></select></label>
                 <label>سمت درگیری<select name="laterality"><option value="unknown">نامشخص</option><option value="right">راست</option><option value="left">چپ</option><option value="bilateral">دوطرفه</option><option value="midline">خط وسط</option><option value="not_applicable">کاربرد ندارد</option></select></label>
-                <label>تاریخ شروع علائم (میلادی؛ اختیاری)<input name="symptom_onset_date" type="date"></label>
+                <label>تاریخ شروع علائم (شمسی؛ اختیاری)<input name="symptom_onset_date" type="text" data-solar-date data-solar-past inputmode="numeric" maxlength="10" dir="ltr" placeholder="۱۴۰۵/۰۷/۲۷"></label>
                 <label>شدت درد از صفر تا ده (خالی = ثبت نشده)<input name="pain_score" type="number" min="0" max="10" step="1"></label>
                 <label>محدودیت‌های عملکردی؛ هر مورد در یک خط<textarea name="functional_limitations"></textarea></label>
                 <label>سوابق و بیماری‌های زمینه‌ای؛ هر مورد در یک خط<textarea name="relevant_history"></textarea></label>
@@ -965,8 +966,8 @@
               <input id="pilot-enroll-clinician-sha" name="decision_sha256" minlength="64" maxlength="64" required />
               <label for="pilot-enroll-consent-ref">ارجاع سند رضایت بیمار</label>
               <input id="pilot-enroll-consent-ref" name="consent_reference" minlength="8" maxlength="500" required />
-              <label for="pilot-enroll-consent-at">تاریخ و زمان واقعی تأیید رضایت</label>
-              <input id="pilot-enroll-consent-at" name="consent_confirmed_at" type="datetime-local" required />
+              <label for="pilot-enroll-consent-at">تاریخ و ساعت واقعی تأیید رضایت (شمسی، تهران)</label>
+              <input id="pilot-enroll-consent-at" name="consent_confirmed_at" type="text" data-solar-datetime dir="ltr" placeholder="۱۴۰۵/۰۷/۲۷ ۱۵:۳۰" required />
               <label for="pilot-enroll-statement">اظهار پزشک درباره eligibility و مستندات رضایت</label>
               <textarea id="pilot-enroll-statement" name="statement" minlength="20" maxlength="5000" rows="3" required></textarea>
               <button class="button button-secondary" type="submit">ثبت ویزیت در پایلوت</button>
@@ -1045,7 +1046,7 @@
                 <label for="reception-consent-state">تصمیم بیمار</label><select id="reception-consent-state" name="state" required><option value="">انتخاب کنید</option><option value="granted">موافقت</option><option value="declined">عدم موافقت</option><option value="withdrawn">پس‌گرفتن رضایت</option></select>
                 <label for="reception-consent-document">نسخه متن رضایت</label><input id="reception-consent-document" name="document_version" maxlength="100" required>
                 <label for="reception-consent-reference">ارجاع مدرک تأییدشده</label><input id="reception-consent-reference" name="evidence_reference" minlength="8" maxlength="500" required>
-                <label for="reception-consent-time">زمان واقعی اعلام تصمیم بیمار</label><input id="reception-consent-time" name="confirmed_at" type="datetime-local" step="1" required>
+                <label for="reception-consent-time">زمان واقعی اعلام تصمیم بیمار (شمسی، تهران)</label><input id="reception-consent-time" name="confirmed_at" type="text" data-solar-datetime dir="ltr" placeholder="۱۴۰۵/۰۷/۲۷ ۱۵:۳۰:۰۰" required>
                 <label><input name="acknowledge" type="checkbox" required> تصمیم بیمار و مدرک مرتبط را بررسی و ثبت می‌کنم.</label>
                 <button class="button button-primary" type="submit">ثبت تصمیم بیمار</button>
               </form>

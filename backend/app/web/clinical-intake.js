@@ -36,7 +36,9 @@ function resetClinicalIntakeEditor() {
 function clinicalEditorContent() {
   const content = {};
   for (const name of clinicalTextFields) {
-    content[name] = clinicalEditorForm.elements[name].value.trim() || null;
+    content[name] = name === "symptom_onset_date"
+      ? MosSolarDate.readDate(clinicalEditorForm.elements[name])
+      : clinicalEditorForm.elements[name].value.trim() || null;
   }
   for (const name of clinicalListFields) {
     const seen = new Set();
@@ -81,7 +83,11 @@ function renderClinicalEditor(record) {
     option.dataset.existingRegion = "true";
     region.append(option);
   }
-  for (const name of clinicalTextFields) clinicalEditorForm.elements[name].value = record?.[name] ?? (name === "laterality" ? "unknown" : "");
+  for (const name of clinicalTextFields) {
+    const input = clinicalEditorForm.elements[name];
+    input.setCustomValidity("");
+    input.value = name === "symptom_onset_date" ? MosSolarDate.toSolar(record?.[name]) : record?.[name] ?? (name === "laterality" ? "unknown" : "");
+  }
   for (const name of clinicalListFields) clinicalEditorForm.elements[name].value = (record?.[name] || []).join("\n");
   clinicalEditorForm.elements.pain_score.value = record?.pain_score ?? "";
   clinicalEditorSavedContent = JSON.stringify(clinicalEditorContent());

@@ -23,6 +23,7 @@ w.fetch = async (url, options={}) => {
 w.getRequests = () => requests;
 w.resolveDelayed = () => delayedResolve();
 w.setFailRead = value => { failRead=value; };
+w.eval(fs.readFileSync(root+'/../patient_web/solar-date.js','utf8'));
 w.eval(fs.readFileSync(root + '/app.js', 'utf8') + '\n' + fs.readFileSync(root + '/clinical-intake.js', 'utf8') + `
 (async () => {
   const check=window.assert, wait=()=>new Promise(resolve=>setTimeout(resolve,10));
@@ -33,10 +34,14 @@ w.eval(fs.readFileSync(root + '/app.js', 'utf8') + '\n' + fs.readFileSync(root +
   clinicalEditorForm.elements.chief_complaint.value='<img src=x onerror=alert(1)> Synthetic complaint';
   clinicalEditorForm.elements.history_present_illness.value='Synthetic physician history';
   clinicalEditorForm.elements.body_region.value='knee';
+  clinicalEditorForm.elements.symptom_onset_date.value='۱۴۰۳/۱۲/۳۰';
   clinicalEditorForm.elements.current_medications.value=['One','One','Two'].join(String.fromCharCode(10));
   clinicalEditorForm.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})); await wait();
   let posted=window.getRequests().find(item=>item.options.method==='POST');
   check.equal(JSON.parse(posted.options.body).pain_score,null);
+  check.equal(JSON.parse(posted.options.body).symptom_onset_date,'2025-03-20');
+  check.equal(clinicalEditorForm.elements.symptom_onset_date.value,'1403/12/30');
+  check.equal(clinicalEditorDirty(),false);
   check.deepEqual(JSON.parse(posted.options.body).current_medications,['One','Two']);
   check.equal(clinicalEditorRecord.status,'draft');
   check.equal(document.querySelector('#clinical-intake-finalize').disabled,true);
