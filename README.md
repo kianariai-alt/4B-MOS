@@ -178,3 +178,13 @@ post-pilot report remains an evidence summary, not a clinical conclusion.
 The [Persian engineering handoff](docs/FINAL_RELEASE_HANDOFF_FA.md) lists
 deployment prerequisites and explicitly distinguishes merged code from live
 clinical deployment.
+# Experimental Clinical Intelligence Integration
+
+The opt-in integration preview composes finalized clinical and imaging records,
+approved Registry references and Physician Copilot provenance into immutable
+snapshots for physician review. It is disabled by default
+(`CLINICAL_INTEGRATION_ENABLED=false`) and never authorizes treatment.
+
+See the [architecture and handoff](docs/CLINICAL_INTELLIGENCE_INTEGRATION.md),
+[shared contract 1.0.0](docs/contracts/unified-clinical-data-v1.md), and
+[verification record](docs/CLINICAL_INTEGRATION_VERIFICATION.md).

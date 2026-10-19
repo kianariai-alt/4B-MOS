@@ -140,6 +140,60 @@ def _id() -> str:
     return str(uuid.uuid4())
 
 
+def test_postgresql_clinical_integration_retries_preserve_one_run_review_and_audit(postgresql_engine):
+    from sqlalchemy import func
+    from backend.app.models.clinical_integration import ClinicalIntegrationRun, ClinicalIntegrationReview
+    from backend.app.schemas.clinical_integration import IntegrationRunCreate, IntegrationReviewCreate
+    from backend.app.services.clinical_integration.service import ClinicalIntegrationService
+
+    context = _seed_clinical_context(postgresql_engine, treatment_count=0)
+    visit_id, actor_id = context["visit_id"], context["admin_ids"][0]
+    with Session(postgresql_engine) as db:
+        actor = db.get(User, actor_id)
+        actor.role = "physician"
+        db.commit()
+        digest = clinical_context_digest(ClinicalContextService.get_current_context(db, visit_id))
+    request = IntegrationRunCreate(request_key="same-concurrent-request", expected_clinical_context_sha256=digest)
+    gate = Barrier(2)
+
+    def create():
+        with Session(postgresql_engine) as db:
+            gate.wait(timeout=10)
+            try:
+                return ClinicalIntegrationService.create(db, visit_id, request, actor=db.get(User, actor_id))
+            except ClinicalRecordWriteConflictError:
+                return ClinicalIntegrationService.create(db, visit_id, request, actor=db.get(User, actor_id))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first, second = list(pool.map(lambda _: create(), range(2)))
+    assert first.id == second.id
+    assert first.result_sha256 == second.result_sha256
+    assert first.result.workflow_state == "blocked"  # Empty inputs never become a clinical finding.
+    request = IntegrationReviewCreate(
+        request_key="same-concurrent-review", expected_result_sha256=first.result_sha256,
+        action="defer", rationale="Synthetic physician defers the incomplete summary.",
+    )
+    gate = Barrier(2)
+
+    def review():
+        with Session(postgresql_engine) as db:
+            gate.wait(timeout=10)
+            try:
+                return ClinicalIntegrationService.review(db, visit_id, first.id, request, actor=db.get(User, actor_id))
+            except ClinicalRecordWriteConflictError:
+                return ClinicalIntegrationService.review(db, visit_id, first.id, request, actor=db.get(User, actor_id))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        reviews = list(pool.map(lambda _: review(), range(2)))
+    assert reviews[0] == reviews[1]
+    with Session(postgresql_engine) as db:
+        assert db.scalar(select(func.count()).select_from(ClinicalIntegrationRun)) == 1
+        assert db.scalar(select(func.count()).select_from(ClinicalIntegrationReview)) == 1
+        assert db.scalar(select(func.count()).select_from(AuditLog).where(
+            AuditLog.entity_type == "clinical_integration",
+        )) == 2
+
+
 def test_portal_concurrent_submission_and_acceptance(postgresql_engine, monkeypatch):
     import base64
     from datetime import datetime, timedelta, timezone
