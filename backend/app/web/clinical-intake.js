@@ -24,6 +24,7 @@ function resetClinicalIntakeEditor() {
   clinicalEditorSavedContent = null;
   clinicalEditorBusy = false;
   clinicalEditorForm.reset();
+  document.querySelector("#clinical-patient-source")?.remove();
   document.querySelector("#clinical-intake-editor").hidden = true;
   document.querySelector("#clinical-intake-status").textContent = "";
   document.querySelector("#clinical-intake-acknowledge").checked = false;
@@ -130,6 +131,51 @@ async function loadClinicalIntakeEditor(visitId, generation = sessionGeneration)
     if (!active()) return;
     const record = [...records].sort((a, b) => b.version - a.version)[0] || null;
     renderClinicalEditor(record);
+    try {
+      const source = await apiRequest(`/portal-staff/visits/${encodeURIComponent(visitId)}/patient-report`);
+      if (!active() || !source?.content) return;
+      const panel = document.createElement("section");
+      panel.id = "clinical-patient-source";
+      const title = document.createElement("h3");
+      title.textContent = "اطلاعات ارسالی بیمار — نیازمند بررسی پزشک";
+      panel.append(title);
+      const details = document.createElement("pre");
+      details.style.whiteSpace = "pre-wrap";
+      const data = source.content;
+      details.textContent = [data.complaint, data.symptom_history,
+        ...(data.other_specialists || []).map(value => "پزشک همکار: " + value),
+        ...(source.messages || []).map(message => (message.from === "patient" ? "بیمار: " : "پزشک: ") + message.text),
+        ...((Array.isArray(source.interview?.answers) ? source.interview.answers : []).map(answer => JSON.stringify(answer)))
+      ].filter(Boolean).join("\n\n");
+      panel.append(details);
+      for (const file of source.attachments || []) {
+        const label = document.createElement("p");
+        label.textContent = file.name + " — مشاهده در صندوق درخواست‌های بیماران";
+        panel.append(label);
+      }
+      clinicalEditorForm.before(panel);
+      // Seed only a new, untouched editor. Existing clinician records always win.
+      if (!record && !clinicalEditorDirty()) {
+        const seed = {
+          chief_complaint: data.complaint,
+          history_present_illness: data.symptom_history,
+          body_region: data.body_region, laterality: data.laterality,
+          symptom_onset_date: data.symptom_onset_date, pain_score: data.pain_score,
+          relevant_history: data.conditions, allergies: data.allergies,
+          current_medications: (data.medications || []).map(medication =>
+            [medication.name, medication.dose_as_reported, medication.frequency_as_reported,
+              medication.use_status === "stopped" ? "قطع‌شده به اظهار بیمار" : ""].filter(Boolean).join(" — ")),
+        };
+        renderClinicalEditor(seed);
+        clinicalEditorRecord = null;
+        document.querySelector("#clinical-intake-status").textContent = "اطلاعات بیمار در فرم قرار گرفت؛ پس از بررسی و تکمیل، پیش‌نویس را ذخیره کنید.";
+        document.querySelector("#clinical-intake-finalize-section").hidden = true;
+      }
+    } catch (sourceError) {
+      if (!active()) return;
+      if (!(sourceError instanceof ApiError && sourceError.status === 404))
+        clinicalEditorMessage("اطلاعات درگاه بیمار بارگذاری نشد؛ دسترسی صندوق درخواست‌ها و اتصال سامانه را بررسی کنید.");
+    }
   } catch (error) {
     if (!active()) return;
     // Show the reload control, but prevent creating records after a failed read.
