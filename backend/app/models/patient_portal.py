@@ -72,3 +72,14 @@ class PortalThrottle(Base):
     __tablename__ = "portal_throttle"
     bucket: Mapped[str] = mapped_column(String(64), primary_key=True)
     count: Mapped[int] = mapped_column(Integer)
+
+
+class PortalInterview(Base):
+    __tablename__ = "portal_interviews"
+    __table_args__ = (CheckConstraint("version >= 0", name="ck_portal_interview_version"),)
+    request_id: Mapped[str] = mapped_column(String(36), ForeignKey("portal_requests.id", ondelete="RESTRICT"), primary_key=True)
+    physician_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="RESTRICT"))
+    bank_sha256: Mapped[str] = mapped_column(String(64))
+    encrypted_snapshot: Mapped[bytes] = mapped_column(LargeBinary)
+    encrypted_answers: Mapped[bytes] = mapped_column(LargeBinary)
+    version: Mapped[int] = mapped_column(Integer, default=0)

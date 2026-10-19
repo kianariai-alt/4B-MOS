@@ -161,12 +161,15 @@ def submit(db, session, payload):
             encrypted_content=encrypt(raw, "request:" + row_id))
         db.add(row)
         db.flush()
+        from backend.app.services.portal_interview import create as create_interview
+        create_interview(db, row, data)
         audit(db, row, "patient_submitted")
         return receipt(row)
     return run_write(db, command)
 
 
 def workspace(db, row, actor=None):
+    from backend.app.services.portal_interview import view as interview_view
     data = content(row)
     messages = list(db.scalars(select(PortalMessage).where(PortalMessage.request_id == row.id).order_by(PortalMessage.created_at, PortalMessage.id)))
     files = list(db.scalars(select(PortalAttachment).where(PortalAttachment.request_id == row.id).order_by(PortalAttachment.created_at)))
@@ -175,7 +178,8 @@ def workspace(db, row, actor=None):
         "messages": [{"id": m.id, "from": "clinician" if m.author_id else "patient", "text": decrypt(m.encrypted_content, "message:" + m.id).decode(), "created_at": utc(m.created_at).isoformat()} for m in messages],
         "attachments": [{"id": f.id, "size": f.size, "name": "مدرک تصویری " + str(i + 1)} for i, f in enumerate(files)],
         "missing_information": [label for field, label in (("medications", "داروهای مصرفی ثبت نشده‌اند"), ("allergies", "اطلاعات حساسیت ثبت نشده است"), ("conditions", "سوابق بیماری ثبت نشده است"), ("other_specialists", "پزشکان همکار مشخص نشده‌اند")) if not data.get(field)],
-        "clinical_status": "اظهارات بیمار؛ نیازمند بررسی پزشک؛ فاقد تشخیص و مجوز درمان"}
+        "clinical_status": "اظهارات بیمار؛ نیازمند بررسی پزشک؛ فاقد تشخیص و مجوز درمان",
+        "interview": interview_view(db, row)}
     if actor:
         audit(db, row, "staff_viewed", actor)
         db.commit()

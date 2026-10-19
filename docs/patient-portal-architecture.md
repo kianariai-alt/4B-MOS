@@ -4,7 +4,10 @@ Status: a feature-gated single-installation pilot is implemented. It includes
 temporary patient sessions, encrypted submissions/images/messages, staff grants,
 audited review, and identity-checked conversion into reception and a visit. It is
 disabled by default. There is no verified patient account, OTP provider, SaaS tenant
-isolation, autonomous clinical assessment or cross-clinic authorization.
+isolation, autonomous clinical assessment or cross-clinic authorization. Optional
+region-to-physician mappings attach a snapshot of an approved bank at submission;
+the patient answers bounded conditional questions with unknown/decline choices.
+Bank retirement or replacement stops new answers to that snapshot.
 
 ## Product flow
 
@@ -15,8 +18,8 @@ of remote treatment. Admission receipts are not credentials.
 
 First release: Persian mobile-first arrival/remote form, staff queue, rewritten
 JPEG/PNG uploads, clinician-authored follow-up questions and a source-labelled
-summary of patient statements. Later releases: PDF/DICOM, reviewed automatic
-question branching, verified patient accounts and a shared-care workspace.
+summary of patient statements and approved-bank conditional question branching.
+Later releases: PDF/DICOM, verified patient accounts and a shared-care workspace.
 A request must be durable before issuing a receipt.
 Repeat submission with the same tenant/session/request key returns the same receipt;
 reuse with different content must conflict. No duplicate visits on retry.

@@ -10,6 +10,23 @@ from backend.tests.test_treatment_options_roadmap import create_role_headers, cr
 
 pytestmark=pytest.mark.usefixtures('authenticated_admin')
 
+def test_recording_and_media_integrity_preserve_tehran_instant(client, db_session):
+    from datetime import timedelta
+    from backend.app.services.recording import _read, RecordingConflictError
+    from backend.app.services.recording_media import _time
+    h, p, v, root = setup(client, db_session)
+    approved = consent(client, root)
+    first = client.post(root + '/recordings/start', headers=h, json=start_command(approved['sha256'])).json()
+    row = db_session.get(VisitRecordingEvent, first['id'])
+    original = row.created_at.replace(tzinfo=timezone.utc) if row.created_at.tzinfo is None else row.created_at
+    row.created_at = original.astimezone(timezone(timedelta(hours=3, minutes=30)))
+    assert _read(row).created_at == row.payload['created_at']
+    assert _time(row) == row.payload['created_at']
+    row.created_at += timedelta(seconds=1)
+    with pytest.raises(RecordingConflictError):
+        _read(row)
+    db_session.rollback()
+
 def setup(client,db):
     headers=create_role_headers(client,username='recording_physician',role='physician')
     doctor=db.scalar(select(User).where(User.username=='recording_physician'))

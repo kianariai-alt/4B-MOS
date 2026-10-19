@@ -12,7 +12,7 @@ from backend.app.api.dependencies import get_current_user
 from backend.app.core.config import settings
 from backend.app.db.session import get_db
 from backend.app.models.patient_portal import PortalAttachment, PortalRequest, PortalSession
-from backend.app.schemas.patient_portal import PatientRequestCreate, PortalLinkCreate, PortalMessageCreate
+from backend.app.schemas.patient_portal import PatientRequestCreate, PortalLinkCreate, PortalMessageCreate, PortalAnswerCreate
 from backend.app.services import patient_portal as svc
 
 
@@ -47,7 +47,7 @@ def patient_session(request: Request, db: Session = Depends(get_db)):
     if request.method != "GET":
         if not secrets.compare_digest(request.headers.get("x-portal-csrf", ""), session.csrf_token):
             raise HTTPException(403, "نشست نامعتبر است؛ صفحه را دوباره باز کنید.")
-        svc.throttle(db, "session:" + session.id, 80)
+        svc.throttle(db, "session:" + session.id, 200)
     return session
 
 
@@ -105,6 +105,12 @@ def view(request_id: str, session=Depends(patient_session), db: Session = Depend
 @router.post("/requests/{request_id}/messages", status_code=201)
 def reply(request_id: str, payload: PortalMessageCreate, session=Depends(patient_session), db: Session = Depends(get_db)):
     return svc.add_message(db, svc.owned(db, request_id, session), payload)
+
+
+@router.post("/requests/{request_id}/interview-answers")
+def interview_answer(request_id: str, payload: PortalAnswerCreate, session=Depends(patient_session), db: Session = Depends(get_db)):
+    from backend.app.services.portal_interview import answer
+    return answer(db, svc.owned(db, request_id, session), payload)
 
 
 @router.post("/requests/{request_id}/attachments", status_code=201)

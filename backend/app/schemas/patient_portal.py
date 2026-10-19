@@ -83,3 +83,11 @@ class PortalLinkCreate(PortalModel):
         if value is not True:
             raise ValueError("Staff must verify patient identity before linking.")
         return value
+
+
+class PortalAnswerCreate(PortalModel):
+    request_key: str = Field(min_length=8, max_length=100, pattern=r"^[A-Za-z0-9_.-]+$")
+    expected_version: int = Field(ge=0, strict=True)
+    question_id: str = Field(min_length=1, max_length=80)
+    state: Literal["answered", "unknown", "declined"]
+    value: str | None = Field(default=None, min_length=1, max_length=3000)

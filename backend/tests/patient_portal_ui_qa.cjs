@@ -13,7 +13,8 @@ function dom(file) {
   return d;
 }
 const content = {first_name:'Synthetic',last_name:'Patient',complaint:'<img src=x onerror=alert(1)>',entry_mode:'clinic_arrival',conditions:[],medications:[],allergies:[],other_specialists:[],pain_score:null,laterality:'unknown',marketing_opt_in:false};
-const record = {id:'request-1', receipt:'MOS-SYNTHETIC', state:'submitted', content, messages:[],attachments:[],missing_information:['Synthetic missing detail'],visit_id:null};
+const record = {id:'request-1', receipt:'MOS-SYNTHETIC', state:'submitted', content, messages:[],attachments:[],missing_information:['Synthetic missing detail'],visit_id:null,
+  interview:{available:true,accepting_answers:true,complete:false,version:0,title:'Synthetic approved bank',bank_sha256:'synthetic-hash',answers:[],next_question:{id:'one',text_fa:'<img src=x> Synthetic question?',purpose_fa:'Synthetic purpose',answer_type:'yes_no',choices:[]}}};
 
 (async()=>{
   const d=dom('patient_web/index.html'), w=d.window, $=id=>w.document.getElementById(id);
@@ -23,6 +24,7 @@ const record = {id:'request-1', receipt:'MOS-SYNTHETIC', state:'submitted', cont
     if(url.endsWith('/info'))return response({clinic_name:'Synthetic clinic',notice_version:'portal-processing-v1'});
     if(url.endsWith('/session'))return response({csrf_token:'synthetic-csrf',requests:[]});
     if(url.endsWith('/logout'))return response({closed:true});
+    if(url.endsWith('/interview-answers'))return response({...record.interview,next_question:null,complete:true,version:1});
     if(url.endsWith('/requests')&&options.method==='POST'){sent=JSON.parse(options.body);return response(record,201);}
     if(url.endsWith('/requests/request-1'))return readsDelayed?new Promise(resolve=>{delayed=()=>resolve(response(record));}):response(record);
     throw new Error('Unexpected request '+url);
@@ -41,6 +43,11 @@ const record = {id:'request-1', receipt:'MOS-SYNTHETIC', state:'submitted', cont
   assert.equal(w.document.querySelector('#review img'),null);
   const post=calls.find(x=>x.options.body&&x.url.endsWith('/requests'));
   assert.equal(post.options.headers.get('X-Portal-CSRF'),'synthetic-csrf');
+  assert.equal($('interview').hidden,false);assert.equal($('interview-question').querySelector('img'),null);
+  $('interview-choice').value='yes';$('interview-answer').click();await tick();
+  const answer=calls.find(x=>x.url.endsWith('/interview-answers'));
+  assert.equal(JSON.parse(answer.options.body).value,'yes');assert.equal(JSON.parse(answer.options.body).expected_version,0);
+  assert.equal($('interview').hidden,true);
   readsDelayed=true;$('refresh').click();await tick();await $('logout').onclick();delayed();await tick();
   assert.equal($('receipt').hidden,true);assert.equal($('receipt-code').textContent,'');assert.equal(f.elements.first_name.value,'');
   assert.equal(w.localStorage.length,0);assert.equal(w.sessionStorage.length,0);

@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     PATIENT_PORTAL_ORIGIN: str = "http://127.0.0.1:8000"
     PATIENT_PORTAL_NAME: str = Field(default="کلینیک 4B", min_length=1, max_length=120)
     PATIENT_PORTAL_KEY: SecretStr | None = None
+    PATIENT_PORTAL_QUESTION_BANKS: dict[str, str] = Field(default_factory=dict)
     AUDIO_ENCRYPTION_KEY: SecretStr | None = None
     AUDIO_KEY_ID: str = Field(default="audio-v1", min_length=1, max_length=80, pattern=r"^[A-Za-z0-9_.-]+$")
     SPEECH_MODEL_DIRECTORY: str = ""
