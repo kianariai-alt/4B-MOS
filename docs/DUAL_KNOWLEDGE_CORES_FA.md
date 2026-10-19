@@ -56,3 +56,17 @@
 - این PR تنها API خواندنی و ماژول آزمون‌پذیر جدید می‌افزاید و migration دیتابیس ندارد.
 - آزمون واحد: `python -m pytest backend/tests/test_dual_knowledge_cores.py -q`.
 - بررسی کامل CI و پذیرش انتشار بالینی باید مستقل انجام شود؛ pass شدن تست برنامه‌نویسی جای تأیید بالینی نیست.
+
+
+## نخستین صف منابع برای بررسی تخصصی (هنوز وارد دانش approved نشده‌اند)
+
+| هسته | منبع اولیه | وظیفه استخراج |
+| --- | --- | --- |
+| ارتوپدی | [ACR/Arthritis Foundation OA 2019](https://pmc.ncbi.nlm.nih.gov/articles/PMC10518852/) | تفکیک توصیه، مخالفت، درجه شواهد و جمعیت هدف |
+| ارتوپدی | [AAOS Non-Arthroplasty Knee OA 2021](https://new.aaos.org/quality/quality-programs/osteoarthritis-of-the-knee/) | استخراج توصیه‌های مربوط به OA و تطبیق با سایر راهنماها |
+| تصویربرداری | [ACR Appropriateness Criteria: Chronic Knee Pain](https://acsearch.acr.org/docs/69432/Narrative/) | سناریوهای تصمیم درباره نیاز به تصویربرداری |
+| تصویربرداری | [MOAKS 2011](https://pmc.ncbi.nlm.nih.gov/articles/PMC4058435/) | تعریف ساختار و معیارهای تحقیقاتی MRI زانو |
+| تصویربرداری | [RSNA RadLex](https://www.rsna.org/practice-tools/data-tools-and-standards/radlex-radiology-lexicon) | واژگان دارای کد برای ویژگی‌ها و ساختارهای تصویری |
+| فنی مشترک | [DICOM PS3.18](https://dicom.nema.org/medical/dicom/current/output/chtml/part18/PS3.18.html) | تعریف قرارداد QIDO-RS / WADO-RS و متادیتا |
+
+هر گزاره علمی باید با لینک، تاریخ نسخه، جمعیت هدف، شرایط کاربرد، درجه شواهد، محدودیت و بررسی مستقل ذخیره شود. اسناد بالینی یکسان فرض نمی‌شوند: اختلاف توصیه‌ها باید صریح ثبت شود، نه با میانگین‌گیری یا انتخاب سلیقه‌ای حذف شود. هنگام استفاده از MOAKS نیز باید تصریح شود که ابزار درجه‌بندی ساختاری پژوهشی است و به‌تنهایی مجوز تصمیم درمانی محسوب نمی‌شود.
