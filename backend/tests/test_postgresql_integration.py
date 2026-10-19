@@ -140,6 +140,64 @@ def _id() -> str:
     return str(uuid.uuid4())
 
 
+def test_portal_concurrent_submission_and_acceptance(postgresql_engine, monkeypatch):
+    import base64
+    from datetime import datetime, timedelta, timezone
+    from fastapi import HTTPException
+    from pydantic import SecretStr
+    from sqlalchemy import func
+    from backend.app.models.patient_portal import PortalAccess, PortalRequest, PortalSession
+    from backend.app.schemas.patient_portal import PatientRequestCreate, PortalLinkCreate
+    from backend.app.services import patient_portal as portal
+
+    monkeypatch.setattr(settings, "PATIENT_PORTAL_ENABLED", True)
+    monkeypatch.setattr(settings, "PATIENT_PORTAL_KEY", SecretStr(base64.b64encode(bytes(range(32))).decode()))
+    with Session(postgresql_engine) as db:
+        patient_session = PortalSession(token_hash="a" * 64, csrf_token="b" * 64, expires_at=datetime.now(timezone.utc) + timedelta(hours=1))
+        actor = User(username="portal-pg", display_name="Synthetic staff", password_hash="unused", role="operator")
+        db.add_all([patient_session, actor]); db.flush()
+        db.add(PortalAccess(user_id=actor.id, active=True))
+        session_id, actor_id = patient_session.id, actor.id
+        db.commit()
+    payload = PatientRequestCreate(request_key="concurrent-portal", entry_mode="clinic_arrival", first_name="Synthetic", last_name="Patient", complaint="Synthetic complaint", processing_notice_version=portal.NOTICE_VERSION, processing_consent=True)
+    gate = Barrier(2)
+    def submit():
+        with Session(postgresql_engine) as db:
+            session = db.get(PortalSession, session_id)
+            gate.wait(timeout=10)
+            try:
+                return portal.submit(db, session, payload)
+            except HTTPException as error:
+                assert error.status_code == 409
+                return portal.submit(db, db.get(PortalSession, session_id), payload)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda _: submit(), range(2)))
+    assert results[0] == results[1]
+    request_id = results[0]["id"]
+    gate = Barrier(2)
+    def accept():
+        with Session(postgresql_engine) as db:
+            row = db.get(PortalRequest, request_id)
+            actor = db.get(User, actor_id)
+            gate.wait(timeout=10)
+            try:
+                return portal.accept(db, row, PortalLinkCreate(identity_checked=True), actor)
+            except HTTPException as error:
+                assert error.status_code == 409
+                return portal.accept(db, db.get(PortalRequest, request_id), PortalLinkCreate(identity_checked=True), db.get(User, actor_id))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        accepted = list(pool.map(lambda _: accept(), range(2)))
+    assert accepted[0] == accepted[1]
+    with Session(postgresql_engine) as db:
+        assert db.scalar(select(func.count()).select_from(PortalRequest)) == 1
+        assert db.scalar(select(func.count()).select_from(Patient)) == 1
+        assert db.scalar(select(func.count()).select_from(Visit)) == 1
+        db.execute(text("SET LOCAL TIME ZONE 'Asia/Tehran'"))
+        row = db.get(PortalRequest, request_id)
+        assert portal.content(row)["complaint"] == "Synthetic complaint"
+        assert portal.workspace(db, row)["created_at"].endswith("+00:00")
+
+
 def _seed_clinical_context(engine, *, treatment_count: int = 2) -> dict:
     patient_id = _id()
     visit_id = _id()

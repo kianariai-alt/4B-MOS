@@ -65,6 +65,22 @@ def add_admin(db: Session, *, active: bool = True) -> None:
     db.commit()
 
 
+def test_portal_preflight_requires_inbox_access(preflight_database):
+    import base64
+    from backend.app.models.patient_portal import PortalAccess
+    db, _ = preflight_database
+    add_admin(db)
+    config = production_settings(PATIENT_PORTAL_ENABLED=True, PATIENT_PORTAL_KEY=base64.b64encode(bytes(range(32))).decode())
+    report = build_preflight_report(db, config)
+    assert any(check.code == "portal_staff_access_missing" for check in report.checks)
+    admin = db.scalar(select(User))
+    db.add(PortalAccess(user_id=admin.id, active=True))
+    db.commit()
+    report = build_preflight_report(db, config)
+    assert report.ready
+    assert "patient_portal_loopback_test_only" in report.warnings
+
+
 def checks_by_name(report):
     return {check.name: check for check in report.checks}
 

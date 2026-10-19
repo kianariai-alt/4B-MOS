@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
+from backend.app.core.database_revision import EXPECTED_DATABASE_REVISION
 from backend.app.models.patient import Patient
 from backend.app.models.visit import Visit
 from backend.app.models.treatment import Treatment
@@ -60,7 +61,7 @@ def test_upgrade_preserves_existing_data_and_round_trips(tmp_path, monkeypatch):
         command.upgrade(config, "head")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT patient_code FROM patients WHERE id = 'migration-patient'")) == "MIG-001"
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "f0c3d6b1a275"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == EXPECTED_DATABASE_REVISION
     finally:
         engine.dispose()
 
@@ -269,7 +270,7 @@ def test_login_throttle_migration_defaults_and_refuses_security_state_loss(
             assert tuple(row) == (0, None, None)
             assert connection.scalar(text(
                 "SELECT version_num FROM alembic_version"
-            )) == "f0c3d6b1a275"
+            )) == EXPECTED_DATABASE_REVISION
 
         command.downgrade(config, "d9a4c7e2f1b6")
         columns = {column["name"] for column in inspect(engine).get_columns("users")}

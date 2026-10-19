@@ -72,6 +72,8 @@ jobs:
         run: |
           node --check backend/app/web/app.js
           node --check backend/app/web/clinical-intake.js
+          node --check backend/app/web/portal-inbox.js
+          node --check backend/app/patient_web/portal.js
 
       - name: Test clinical console behavior
         if: ${{ matrix.python-version == '3.14' }}
@@ -81,6 +83,7 @@ jobs:
           node backend/tests/reception_ui_qa.cjs
           node backend/tests/physician_question_ui_qa.cjs
           node backend/tests/clinical_intake_ui_qa.cjs
+          node backend/tests/patient_portal_ui_qa.cjs
 
       - name: Verify migrations on a fresh database
         run: |

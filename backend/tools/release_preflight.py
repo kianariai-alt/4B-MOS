@@ -21,6 +21,7 @@ from backend.app.core.database_revision import EXPECTED_DATABASE_REVISION
 from backend.app.core.readiness import database_readiness_issues
 from backend.app.db.session import SessionLocal
 from backend.app.models.user import User
+from backend.app.models.patient_portal import PortalAccess
 
 
 CheckStatus = Literal["pass", "fail", "blocked"]
@@ -138,9 +139,24 @@ def build_preflight_report(
             )
         )
 
+    if config.PATIENT_PORTAL_ENABLED:
+        if not database_ready:
+            checks.append(PreflightCheck("patient_portal", "blocked", "database_schema_not_ready"))
+        else:
+            try:
+                members = db.scalar(select(func.count()).select_from(PortalAccess).join(User, User.id == PortalAccess.user_id)
+                    .where(PortalAccess.active.is_(True), User.is_active.is_(True), User.role.in_(("admin", "operator", "physician"))))
+                checks.append(PreflightCheck("patient_portal", "pass" if members else "fail",
+                    "portal_staff_access_present" if members else "portal_staff_access_missing"))
+            except SQLAlchemyError:
+                db.rollback()
+                checks.append(PreflightCheck("patient_portal", "fail", "portal_access_check_failed"))
+
     warnings: tuple[str, ...] = ()
     if dialect == "sqlite":
         warnings = ("sqlite_serializes_database_writers",)
+    if config.PATIENT_PORTAL_ENABLED and not config.PATIENT_PORTAL_ORIGIN.startswith("https://"):
+        warnings += ("patient_portal_loopback_test_only",)
 
     ready = all(check.status == "pass" for check in checks)
     return PreflightReport(
