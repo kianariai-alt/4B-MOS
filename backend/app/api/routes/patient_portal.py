@@ -133,6 +133,16 @@ def withdraw(request_id: str, session=Depends(patient_session), db: Session = De
     return svc.run_write(db, command)
 
 
+@staff_router.get("/visits/{visit_id}/patient-report")
+def visit_patient_report(visit_id: str, actor=Depends(staff), db: Session = Depends(get_db)):
+    """Read the linked patient source without creating a clinical assertion."""
+    row = db.scalar(select(PortalRequest).where(
+        PortalRequest.visit_id == visit_id,
+        PortalRequest.state == "linked",
+    ).order_by(PortalRequest.created_at.desc(), PortalRequest.id).limit(1))
+    return svc.workspace(db, row, actor) if row else None
+
+
 @staff_router.get("/requests")
 def inbox(limit: int = Query(default=30, ge=1, le=100), offset: int = Query(default=0, ge=0),
           actor=Depends(staff), db: Session = Depends(get_db)):

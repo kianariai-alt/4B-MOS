@@ -103,6 +103,13 @@ def test_staff_requires_explicit_grant_and_audits_acceptance(portal, client, adm
     assert client.post(STAFF + "/requests/" + result["id"] + "/accept", json={"identity_checked": False}, headers=write).status_code == 422
     accepted = client.post(STAFF + "/requests/" + result["id"] + "/accept", json={"identity_checked": True}, headers=write)
     assert accepted.status_code == 200, accepted.text
+    visit_source = STAFF + "/visits/" + accepted.json()["visit_id"] + "/patient-report"
+    report = client.get(visit_source, headers=admin_headers)
+    assert report.status_code == 200
+    assert report.json()["content"]["complaint"] == "Synthetic knee complaint"
+    assert client.get(STAFF + "/visits/unlinked/patient-report", headers=admin_headers).json() is None
+    assert client.get(visit_source).status_code == 401
+
     assert client.post(STAFF + "/requests/" + result["id"] + "/accept", json={"identity_checked": True}, headers=write).json() == accepted.json()
     assert db_session.scalar(select(func.count()).select_from(Patient)) == 1
     assert db_session.scalar(select(func.count()).select_from(Visit)) == 1

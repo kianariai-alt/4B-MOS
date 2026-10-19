@@ -12,6 +12,7 @@ let records = [], requests = [], delayedResolve = null, failRead = false;
 const response = (data, status=200) => ({ok:status<400, status, headers:new Headers({'Content-Type':'application/json'}), json:async()=>structuredClone(data)});
 w.fetch = async (url, options={}) => {
   requests.push({url, options});
+  if (url.includes('/portal-staff/visits/')) return response({content:{complaint:'Patient supplied complaint',symptom_history:'Patient history',body_region:'knee',laterality:'left',pain_score:0,conditions:['Reported condition'],medications:[{name:'Reported medicine'}],allergies:[]},messages:[{from:'patient',text:'Patient follow-up'}],attachments:[]});
   if (url.includes('delayed-visit')) return new Promise(resolve => { delayedResolve = () => resolve(response([{...records[0], chief_complaint:'OLD VISIT'}])); });
   if ((options.method || 'GET') === 'GET') return failRead ? response({detail:'Conflict'}, 409) : response(records);
   const content = options.body ? JSON.parse(options.body) : {};
@@ -30,7 +31,11 @@ w.eval(fs.readFileSync(root + '/app.js', 'utf8') + '\n' + fs.readFileSync(root +
   currentUser={id:'doctor-1', role:'physician', display_name:'Synthetic doctor'};
   accessToken='synthetic-token'; currentCopilotVisitId='visit-a';
   await loadClinicalIntakeEditor('visit-a');
-  check.equal(clinicalEditorForm.elements.pain_score.value,'');
+  check.equal(clinicalEditorForm.elements.pain_score.value,'0');
+  check.equal(clinicalEditorForm.elements.chief_complaint.value,'Patient supplied complaint');
+  check.equal(clinicalEditorRecord,null);
+  check.ok(document.querySelector('#clinical-patient-source').textContent.includes('Patient follow-up'));
+  clinicalEditorForm.elements.pain_score.value='';
   clinicalEditorForm.elements.chief_complaint.value='<img src=x onerror=alert(1)> Synthetic complaint';
   clinicalEditorForm.elements.history_present_illness.value='Synthetic physician history';
   clinicalEditorForm.elements.body_region.value='knee';
