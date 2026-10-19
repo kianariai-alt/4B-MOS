@@ -35,7 +35,7 @@ def _authorize(db,visit_id,recording_id,actor,*,configuration=True):
         raise MediaConflictError('Only normally completed recordings can be transferred.')
     return start,finish
 
-def _time(row):return row.created_at.replace(tzinfo=timezone.utc).isoformat()
+def _time(row):return recording._utc(row.created_at).isoformat()
 def _verify(row,fields):
     body=row.payload
     if not isinstance(body,dict) or evidence_digest(body)!=row.sha256 or any(body.get(k)!=getattr(row,k) for k in fields):

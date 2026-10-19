@@ -25,7 +25,8 @@ def _authorize(db, physician_id, actor, write=False):
 
 def _read(row):
     p = row.payload
-    if not isinstance(p, dict) or evidence_digest(p) != row.sha256 or any(p.get(k) != getattr(row,k) for k in ("id", "physician_id", "version", "action", "request_key", "recorded_by")) or p.get("created_at") != row.created_at.replace(tzinfo=timezone.utc).isoformat():
+    stored_at = row.created_at.astimezone(timezone.utc) if row.created_at.tzinfo else row.created_at.replace(tzinfo=timezone.utc)
+    if not isinstance(p, dict) or evidence_digest(p) != row.sha256 or any(p.get(k) != getattr(row,k) for k in ("id", "physician_id", "version", "action", "request_key", "recorded_by")) or p.get("created_at") != stored_at.isoformat():
         raise QuestionBankConflictError("Question bank integrity check failed.")
     return BankEventRead(**p, sha256=row.sha256)
 

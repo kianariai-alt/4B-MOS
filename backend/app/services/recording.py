@@ -30,9 +30,12 @@ def _visit(db, visit_id):
 
 def _read(row):
     body=row.payload
-    if not isinstance(body,dict) or evidence_digest(body)!=row.sha256 or any(body.get(k)!=getattr(row,k) for k in ("id","visit_id","recording_id","version","action","recorded_by","request_key")) or body.get("created_at")!=row.created_at.replace(tzinfo=timezone.utc).isoformat():
+    if not isinstance(body,dict) or evidence_digest(body)!=row.sha256 or any(body.get(k)!=getattr(row,k) for k in ("id","visit_id","recording_id","version","action","recorded_by","request_key")) or body.get("created_at")!=_utc(row.created_at).isoformat():
         raise RecordingConflictError("Recording history integrity check failed.")
     return RecordingEventRead(**body,sha256=row.sha256)
+
+def _utc(value):
+    return value.astimezone(timezone.utc) if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 def _rows(db, visit_id):
     rows=list(db.scalars(select(VisitRecordingEvent).where(VisitRecordingEvent.visit_id==visit_id).order_by(VisitRecordingEvent.version)))
@@ -107,7 +110,7 @@ class RecordingService:
         reason=None
         if active is None or active.id!=start.id: reason="session_changed"
         elif visit.status!="open": reason="visit_closed"
-        elif datetime.now(timezone.utc)-start.created_at.replace(tzinfo=timezone.utc)>timedelta(hours=4): reason="duration_limit"
+        elif datetime.now(timezone.utc)-_utc(start.created_at)>timedelta(hours=4): reason="duration_limit"
         else:
             try: consent=_assigned(db,visit_id,actor)
             except RecordingAuthorizationError: reason="session_changed"

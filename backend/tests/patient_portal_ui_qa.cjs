@@ -1,0 +1,78 @@
+const fs = require('fs');
+const path = require('path');
+const assert = require('node:assert/strict');
+const {JSDOM} = require(process.env.MOS_UI_QA_MODULES ? path.join(process.env.MOS_UI_QA_MODULES, 'jsdom') : 'jsdom');
+const root = path.resolve(__dirname, '../app');
+const tick = () => new Promise(resolve => setTimeout(resolve, 10));
+const response = (data, status=200) => ({ok:status<400, status, json:async()=>structuredClone(data)});
+function dom(file) {
+  const d = new JSDOM(fs.readFileSync(root+'/'+file,'utf8'), {url:'https://portal.example/patient/',runScripts:'outside-only'});
+  d.window.Headers = Headers;
+  d.window.HTMLElement.prototype.scrollIntoView = () => {};
+  d.window.confirm = () => true;
+  return d;
+}
+const content = {first_name:'Synthetic',last_name:'Patient',complaint:'<img src=x onerror=alert(1)>',entry_mode:'clinic_arrival',conditions:[],medications:[],allergies:[],other_specialists:[],pain_score:null,laterality:'unknown',marketing_opt_in:false};
+const record = {id:'request-1', receipt:'MOS-SYNTHETIC', state:'submitted', content, messages:[],attachments:[],missing_information:['Synthetic missing detail'],visit_id:null,
+  interview:{available:true,accepting_answers:true,complete:false,version:0,title:'Synthetic approved bank',bank_sha256:'synthetic-hash',answers:[],next_question:{id:'one',text_fa:'<img src=x> Synthetic question?',purpose_fa:'Synthetic purpose',answer_type:'yes_no',choices:[]}}};
+
+(async()=>{
+  const d=dom('patient_web/index.html'), w=d.window, $=id=>w.document.getElementById(id);
+  let sent=null, delayed=null, readsDelayed=false, calls=[];
+  w.fetch=async(url,options={})=>{
+    calls.push({url,options});
+    if(url.endsWith('/info'))return response({clinic_name:'Synthetic clinic',notice_version:'portal-processing-v1'});
+    if(url.endsWith('/session'))return response({csrf_token:'synthetic-csrf',requests:[]});
+    if(url.endsWith('/logout'))return response({closed:true});
+    if(url.endsWith('/interview-answers'))return response({...record.interview,next_question:null,complete:true,version:1});
+    if(url.endsWith('/requests')&&options.method==='POST'){sent=JSON.parse(options.body);return response(record,201);}
+    if(url.endsWith('/requests/request-1'))return readsDelayed?new Promise(resolve=>{delayed=()=>resolve(response(record));}):response(record);
+    throw new Error('Unexpected request '+url);
+  };
+  w.eval(fs.readFileSync(root+'/patient_web/portal.js','utf8'));await tick();
+  assert.equal($('intake').hidden,false);
+  assert.equal($('intake').elements.marketing_opt_in.checked,false);
+  const f=$('intake');f.elements.first_name.value='Synthetic';f.elements.last_name.value='Patient';
+  $('next').click();assert.match($('step-label').textContent,/۲/);
+  f.elements.complaint.value=content.complaint;f.elements.body_region.value='knee';f.elements.body_region.dispatchEvent(new w.Event('change'));
+  assert.match($('followup-hint').textContent,/زانو/);
+  $('next').click();$('next').click();f.elements.processing_consent.checked=true;
+  await f.onsubmit(new w.Event('submit',{cancelable:true}));
+  assert.equal(sent.pain_score,null);assert.equal(sent.marketing_opt_in,false);assert.equal(sent.processing_consent,true);
+  assert.equal($('receipt').hidden,false);assert.equal($('receipt-code').textContent,record.receipt);
+  assert.equal(w.document.querySelector('#review img'),null);
+  const post=calls.find(x=>x.options.body&&x.url.endsWith('/requests'));
+  assert.equal(post.options.headers.get('X-Portal-CSRF'),'synthetic-csrf');
+  assert.equal($('interview').hidden,false);assert.equal($('interview-question').querySelector('img'),null);
+  $('interview-choice').value='yes';$('interview-answer').click();await tick();
+  const answer=calls.find(x=>x.url.endsWith('/interview-answers'));
+  assert.equal(JSON.parse(answer.options.body).value,'yes');assert.equal(JSON.parse(answer.options.body).expected_version,0);
+  assert.equal($('interview').hidden,true);
+  readsDelayed=true;$('refresh').click();await tick();await $('logout').onclick();delayed();await tick();
+  assert.equal($('receipt').hidden,true);assert.equal($('receipt-code').textContent,'');assert.equal(f.elements.first_name.value,'');
+  assert.equal(w.localStorage.length,0);assert.equal(w.sessionStorage.length,0);
+  w.close();
+
+  const s=dom('web/portal-inbox.html'), sw=s.window, q=id=>sw.document.getElementById(id);
+  let accepted=null, pending=null, delay=false;
+  sw.fetch=async(url,options={})=>{
+    if(url.endsWith('/auth/login'))return response({access_token:'synthetic-token'});
+    if(url.endsWith('/auth/me'))return response({role:'physician'});
+    if(url.includes('/portal-staff/requests?'))return response([record]);
+    if(url.endsWith('/accept')){accepted=JSON.parse(options.body);return response({visit_id:'visit-synthetic'});}
+    if(url.endsWith('/requests/request-1'))return delay?new Promise(resolve=>{pending=()=>resolve(response(record));}):response(record);
+    throw new Error('Unexpected staff request '+url);
+  };
+  sw.eval(fs.readFileSync(root+'/web/portal-inbox.js','utf8'));
+  q('username').value='synthetic';q('password').value='not-real';await q('login').onsubmit(new sw.Event('submit',{cancelable:true}));
+  q('queue').querySelector('button').click();await tick();
+  assert.equal(q('detail').hidden,false);assert.equal(q('summary').querySelector('img'),null);assert.match(q('summary').textContent,/<img/);
+  await q('accept').onsubmit(new sw.Event('submit',{cancelable:true}));assert.equal(accepted,null);
+  q('identity-checked').checked=true;await q('accept').onsubmit(new sw.Event('submit',{cancelable:true}));
+  assert.deepEqual(accepted,{identity_checked:true,existing_patient_id:null});
+  delay=true;q('queue').querySelector('button').click();await tick();q('logout').click();pending();await tick();
+  assert.equal(q('detail').hidden,true);assert.equal(q('summary').textContent,'');assert.equal(q('password').value,'');
+  assert.equal(sw.localStorage.length,0);assert.equal(sw.sessionStorage.length,0);
+  sw.close();
+  process.stdout.write('Patient portal and staff inbox UI QA passed\n');
+})().catch(error=>{console.error(error);process.exitCode=1;});

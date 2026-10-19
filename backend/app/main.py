@@ -10,6 +10,7 @@ from backend.app.db.transactions import ClinicalWriteConflictError
 
 
 CLINICAL_CONSOLE_DIRECTORY = Path(__file__).resolve().parent / "web"
+PATIENT_PORTAL_DIRECTORY = Path(__file__).resolve().parent / "patient_web"
 
 CLINICAL_CONSOLE_CSP = "; ".join(
     (
@@ -48,7 +49,10 @@ def create_application() -> FastAPI:
     ):
         response = await call_next(request)
 
-        if request.url.path == "/app" or request.url.path.startswith("/app/"):
+        if (request.url.path == "/app" or request.url.path.startswith("/app/")
+                or request.url.path == "/patient" or request.url.path.startswith("/patient/")
+                or request.url.path.startswith(settings.API_V1_PREFIX + "/patient-portal")
+                or request.url.path.startswith(settings.API_V1_PREFIX + "/portal-staff")):
             response.headers["Cache-Control"] = "no-store"
             response.headers["Content-Security-Policy"] = CLINICAL_CONSOLE_CSP
             response.headers["Permissions-Policy"] = (
@@ -75,6 +79,8 @@ def create_application() -> FastAPI:
         ),
         name="clinical-console",
     )
+
+    application.mount("/patient", StaticFiles(directory=PATIENT_PORTAL_DIRECTORY, html=True), name="patient-portal")
 
     return application
 

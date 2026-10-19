@@ -46,6 +46,7 @@ tmp/
 temp/
 *.bak
 *.old
+.env.portal-setup.tmp
 
 # OS
 .DS_Store
