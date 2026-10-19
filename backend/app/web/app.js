@@ -386,20 +386,7 @@ function toPersianNumber(value) {
 }
 
 function formatDateTime(value) {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return new Intl.DateTimeFormat("fa-IR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return MosSolarDate.formatDateTime(value);
 }
 
 function formatMinutes(value) {
@@ -1756,7 +1743,7 @@ async function enrollPilotVisit() {
           clinician_decision_id: form.elements.decision_id.value.trim(),
           expected_clinician_decision_sha256: form.elements.decision_sha256.value.trim(),
           consent_evidence_reference: form.elements.consent_reference.value.trim(),
-          consent_confirmed_at: new Date(form.elements.consent_confirmed_at.value).toISOString(),
+          consent_confirmed_at: MosSolarDate.fromSolarTime(form.elements.consent_confirmed_at.value),
           clinician_statement: form.elements.statement.value.trim(),
         }),
       },
@@ -1955,11 +1942,17 @@ function createPilotReleaseDecisionForm(packageItem) {
 
   const startsAt = document.createElement("input");
   startsAt.name = "starts_at";
-  startsAt.type = "datetime-local";
+  startsAt.type = "text";
+  startsAt.dataset.solarDatetime = "";
+  startsAt.dir = "ltr";
+  startsAt.placeholder = "۱۴۰۵/۰۷/۲۷ ۱۵:۳۰";
 
   const expiresAt = document.createElement("input");
   expiresAt.name = "expires_at";
-  expiresAt.type = "datetime-local";
+  expiresAt.type = "text";
+  expiresAt.dataset.solarDatetime = "";
+  expiresAt.dir = "ltr";
+  expiresAt.placeholder = "۱۴۰۵/۰۷/۲۷ ۱۵:۳۰";
 
   const maxVisits = document.createElement("input");
   maxVisits.name = "max_enrolled_visits";
@@ -1986,8 +1979,8 @@ function createPilotReleaseDecisionForm(packageItem) {
 
   form.append(
     createPilotField("Decision", action),
-    createPilotField("شروع scope", startsAt),
-    createPilotField("پایان scope", expiresAt),
+    createPilotField("شروع بازه (شمسی، تهران)", startsAt),
+    createPilotField("پایان بازه (شمسی، تهران)", expiresAt),
     createPilotField("حداکثر ویزیت پایلوت", maxVisits),
     createPilotField("Protocol codes", protocolCodes),
     createPilotField("Rationale", rationale),
@@ -2032,8 +2025,8 @@ async function createPilotReleaseDecision(form) {
       );
       return;
     }
-    payload.starts_at = new Date(form.elements.starts_at.value).toISOString();
-    payload.expires_at = new Date(form.elements.expires_at.value).toISOString();
+    payload.starts_at = MosSolarDate.fromSolarTime(form.elements.starts_at.value);
+    payload.expires_at = MosSolarDate.fromSolarTime(form.elements.expires_at.value);
     payload.max_enrolled_visits = Number(form.elements.max_enrolled_visits.value);
     payload.allowed_protocol_codes = codes;
   }
@@ -2882,7 +2875,7 @@ function renderClinicalContext(context) {
       ["شرح بیماری فعلی", intake.history_present_illness],
       ["ناحیه", intake.body_region],
       ["سمت", lateralityLabels[intake.laterality] || intake.laterality],
-      ["شروع علائم", intake.symptom_onset_date],
+      ["شروع علائم", MosSolarDate.formatDate(intake.symptom_onset_date)],
       ["امتیاز درد", intake.pain_score === null ? null : toPersianNumber(intake.pain_score)],
       ["محدودیت عملکردی", intake.functional_limitations],
       ["سابقهٔ مرتبط", intake.relevant_history],
@@ -4912,7 +4905,9 @@ document.querySelector("#reception-consent-form").addEventListener("submit", eve
   event.preventDefault(); if (!canWriteReception() || !receptionSnapshot) return;
   const form = event.currentTarget; if (!form.reportValidity()) return;
   const command = Object.fromEntries(new FormData(form)); delete command.acknowledge;
-  const confirmed = new Date(command.confirmed_at);
+  let confirmed;
+  try { confirmed = new Date(MosSolarDate.fromSolarTime(command.confirmed_at)); }
+  catch (error) { receptionMessage(error.message); return; }
   if (Number.isNaN(confirmed.getTime()) || confirmed.getTime() > Date.now()) { receptionMessage("زمان واقعی تصمیم بیمار را وارد کنید؛ زمان آینده قابل ثبت نیست."); return; }
   command.confirmed_at = confirmed.toISOString(); command.expected_version = receptionSnapshot.consent_version;
   const id = receptionSnapshot.visit_id; const endpoint = `/visits/${encodeURIComponent(id)}/reception/consents`;

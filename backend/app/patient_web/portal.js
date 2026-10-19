@@ -20,7 +20,8 @@
   function data() {
     const out = {request_key:requestKey, processing_notice_version:notice};
     for (const name of ["entry_mode","first_name","last_name","complaint","laterality"]) out[name] = form.elements[name].value.trim();
-    for (const name of ["contact_phone","date_of_birth","symptom_onset_date","symptom_history","body_region"]) out[name] = form.elements[name].value.trim() || null;
+    for (const name of ["contact_phone","symptom_history","body_region"]) out[name] = form.elements[name].value.trim() || null;
+    for (const name of ["date_of_birth","symptom_onset_date"]) out[name] = MosSolarDate.readDate(form.elements[name]);
     out.pain_score = form.elements.pain_score.value === "" ? null : Number(form.elements.pain_score.value);
     for (const name of ["conditions","allergies","other_specialists"]) out[name] = lines(name);
     out.medications = lines("medications").map(name=>({name, use_status:"taking"}));
@@ -31,9 +32,9 @@
     document.querySelectorAll("[data-step]").forEach(el=>el.hidden=Number(el.dataset.step)!==step);
     $("step-label").textContent = ["۱ / ۴ · آشنایی","۲ / ۴ · علائم","۳ / ۴ · سوابق","۴ / ۴ · مرور و ارسال"][step];
     $("back").hidden = step === 0; $("next").hidden = step === 3; $("submit").hidden = step !== 3;
-    if (step===3) { const d=data(); $("review").textContent=`${d.first_name} ${d.last_name}\nنوع درخواست: ${d.entry_mode==="clinic_arrival"?"حضور در کلینیک":"بررسی از راه دور"}\nتماس: ${d.contact_phone||"ثبت نشده"}\nشکایت: ${d.complaint}\nشرح علائم: ${d.symptom_history||"ثبت نشده"}\nشدت درد: ${d.pain_score===null?"ثبت نشده":d.pain_score}\nسوابق: ${d.conditions.join("، ")||"ثبت نشده"}\nداروها: ${d.medications.map(x=>x.name).join("، ")||"ثبت نشده"}\nحساسیت‌ها: ${d.allergies.join("، ")||"ثبت نشده"}\nسایر متخصصان: ${d.other_specialists.join("، ")||"ثبت نشده"}`; }
+    if (step===3) { const d=data(); $("review").textContent=`${d.first_name} ${d.last_name}\nنوع درخواست: ${d.entry_mode==="clinic_arrival"?"حضور در کلینیک":"بررسی از راه دور"}\nتماس: ${d.contact_phone||"ثبت نشده"}\nتاریخ تولد: ${MosSolarDate.formatDate(d.date_of_birth)}\nشروع علائم: ${MosSolarDate.formatDate(d.symptom_onset_date)}\nشکایت: ${d.complaint}\nشرح علائم: ${d.symptom_history||"ثبت نشده"}\nشدت درد: ${d.pain_score===null?"ثبت نشده":d.pain_score}\nسوابق: ${d.conditions.join("، ")||"ثبت نشده"}\nداروها: ${d.medications.map(x=>x.name).join("، ")||"ثبت نشده"}\nحساسیت‌ها: ${d.allergies.join("، ")||"ثبت نشده"}\nسایر متخصصان: ${d.other_specialists.join("، ")||"ثبت نشده"}`; }
   }
-  function validStep() { for (const el of document.querySelector(`[data-step="${step}"]`).querySelectorAll("input,select,textarea")) if (!el.reportValidity()) return false; return true; }
+  function validStep() { for (const el of document.querySelector(`[data-step="${step}"]`).querySelectorAll("input,select,textarea")) {if (el.hasAttribute("data-solar-date")) MosSolarDate.validate(el);if (!el.reportValidity()) return false;} return true; }
   $("next").onclick=()=>{if(validStep()){step++;showStep();form.scrollIntoView({block:"start",behavior:"smooth"});}};
   $("back").onclick=()=>{step--;showStep();};
   form.elements.body_region.onchange=()=>{

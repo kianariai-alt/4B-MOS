@@ -17,6 +17,7 @@ w.fetch=async(url,options={})=>{
  }
  return {ok:true,headers:new Headers({'Content-Type':'application/json'}),json:async()=>structuredClone(snapshot)};
 };w.requests=requests;
+w.eval(fs.readFileSync(root+'/../patient_web/solar-date.js','utf8'));
 w.eval(fs.readFileSync(root+'/app.js','utf8')+`\n(async()=>{
  const check=window.assert;
  currentUser={id:'doctor',role:'physician',display_name:'Synthetic doctor'};accessToken='synthetic';showConsole();
