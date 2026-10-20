@@ -45,8 +45,10 @@ jobs:
       - name: Verify clean replacement and dependency safety
         shell: pwsh
         run: |
-          & '.\published\AMK.SafeReplace.exe' --selftest
-          if ($LASTEXITCODE -ne 0) { Write-Host ('Exit code: '+$LASTEXITCODE); Get-ChildItem -Recurse -Filter 'AMK_SelfTest_*.txt' | ForEach-Object { Write-Host ('Diagnostic: '+$_.FullName); Get-Content $_.FullName }; throw 'Migration and safeguard tests failed' }
+          $exe=(Resolve-Path '.\published\AMK.SafeReplace.exe').Path
+          $test=Start-Process -FilePath $exe -ArgumentList '--selftest' -Wait -PassThru -NoNewWindow
+          Write-Host ('Exit code: '+$test.ExitCode)
+          if ($test.ExitCode -ne 0) { Get-ChildItem -Recurse -Filter 'AMK_SelfTest_*.txt' | ForEach-Object { Write-Host ('Diagnostic: '+$_.FullName); Get-Content $_.FullName }; throw 'Migration and safeguard tests failed' }
           Write-Host 'Safety tests succeeded.'
       - name: Upload Windows executable (source only, no patient data)
         uses: actions/upload-artifact@v4
