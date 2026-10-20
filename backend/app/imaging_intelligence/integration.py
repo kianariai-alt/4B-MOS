@@ -21,7 +21,7 @@ from .models import canonical_digest
 from .series import SERIES_SCHEMA_VERSION, StudyAssessment
 
 
-INTEGRATION_REFERENCE_COMMIT = "abb60d24f79efe498a19faaa9d7bc16967061ef7"
+INTEGRATION_REFERENCE_COMMIT = "8129085ffea310a62778fa2c8b87f47a198d0956"
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}\Z")
 

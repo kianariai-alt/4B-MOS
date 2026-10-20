@@ -23,13 +23,12 @@ from backend.tools.imaging_series_demo import generate_synthetic_series
 pytestmark = pytest.mark.usefixtures("authenticated_admin")
 
 
-@pytest.mark.parametrize("dependency", ["study", "clinical", "binding"])
-def test_changed_sidecar_invalidates_saved_run_and_blocks_review(
-        client, db_session, visit, inputs, physician, tmp_path, dependency):
-    fixture = generate_synthetic_series(tmp_path)
+def build_synthetic_gate(db_session, visit_id, directory):
+    """Bind generated DICOM metadata to the authoritative synthetic DB fixture."""
+    fixture = generate_synthetic_series(directory)
     study = StudySeriesValidator(SeriesMetadataReader(reference_key=SYNTHETIC_REFERENCE_KEY)).read(
         fixture.files, expected=(fixture.expected,))
-    copilot = PhysicianCopilotService.get_snapshot(db_session, visit["id"])
+    copilot = PhysicianCopilotService.get_snapshot(db_session, visit_id)
     context_sha = copilot.manifest.clinical_context_sha256
     bundle = source_bundle(db_session, copilot.clinical_context, context_sha)
     source = next(x.source for x in bundle.core_input.observations if x.observation.category == "imaging")
@@ -37,6 +36,13 @@ def test_changed_sidecar_invalidates_saved_run_and_blocks_review(
                   binding=ReportSeriesBinding(source.record_id, source.version, source.content_sha256,
                                               context_sha, study.series[0].sha256),
                   clinical=ClinicalInput(("assessment_context", "clinical_review"), "KNEE", "L"))
+    return values, bundle.core_input
+
+
+@pytest.mark.parametrize("dependency", ["study", "clinical", "binding"])
+def test_changed_sidecar_invalidates_saved_run_and_blocks_review(
+        client, db_session, visit, inputs, physician, tmp_path, dependency):
+    values, context = build_synthetic_gate(db_session, visit["id"], tmp_path)
     adapter = GatedImagingRecordAdapter(**values)
     adapters = local_adapters() | {"imaging": adapter}
     app.dependency_overrides[get_integration_adapters] = lambda: adapters
@@ -47,13 +53,13 @@ def test_changed_sidecar_invalidates_saved_run_and_blocks_review(
     assert saved["result"]["workflow_state"] == "awaiting_physician_review"
 
     if dependency == "study":
-        values["study"] = replace(study, status="invalid")
+        values["study"] = replace(values["study"], status="invalid")
     elif dependency == "clinical":
         values["clinical"] = ClinicalInput()
     else:
         values["binding"] = replace(values["binding"], series_sha256="f"*64)
     adapters["imaging"] = GatedImagingRecordAdapter(**values)
-    assert adapters["imaging"].collect(bundle.core_input).status == "unavailable"
+    assert adapters["imaging"].collect(context).status == "unavailable"
     current = client.get(run_url(visit, saved)).json()
     assert current["freshness"] == "stale"
     assert "imaging_component_changed" in current["invalidation_reasons"]

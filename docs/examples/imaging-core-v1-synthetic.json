@@ -2,7 +2,7 @@
   "core_output": {
     "clinical_context_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "component": {
-      "artifact_sha256": "5970e9a981ff7c8e7800248416b121cae74a41fd807fd1abf52dc1e0843ba1af",
+      "artifact_sha256": "417dc402bdde77bf371dd6896a363c193cc32a93c8d32f364162c1d4a5bf79a6",
       "component_id": "4b-imaging-series-record-gate",
       "kind": "adapter",
       "version": "1.0.1"
