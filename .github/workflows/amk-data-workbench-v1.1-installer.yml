@@ -1,0 +1,76 @@
+name: AMK Accounting v1.1 Data Workbench Installer
+
+on:
+  push:
+    branches:
+      - build/amk-accounting-installer
+    paths:
+      - 'amk-build/AMK_Accounting_v1.1_DataWorkbench_Source.b64'
+      - '.github/workflows/amk-data-workbench-v1.1-installer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout isolated archive importer source
+        uses: actions/checkout@v4
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Verify source integrity and unpack
+        shell: pwsh
+        run: |
+          $b64 = (Get-Content -Raw 'amk-build/AMK_Accounting_v1.1_DataWorkbench_Source.b64').Trim()
+          [IO.File]::WriteAllBytes('AMK_Accounting_v1.1_DataWorkbench_Source.zip', [Convert]::FromBase64String($b64))
+          $hash = (Get-FileHash 'AMK_Accounting_v1.1_DataWorkbench_Source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne 'c3bd56cc55a408a026228cbcfcfcb2bcfba3ee6093d41c5b9aea3f4a29e6951f') {
+            throw "Source integrity verification failed: $hash"
+          }
+          Expand-Archive 'AMK_Accounting_v1.1_DataWorkbench_Source.zip' '.' -Force
+          if (!(Test-Path 'AMK.Accounting.Windows/AMK.Accounting.Windows.csproj')) {
+            throw 'C# project missing after extracting verified archive'
+          }
+      - name: Restore NuGet packages
+        shell: pwsh
+        run: |
+          dotnet restore 'AMK.Accounting.Windows/AMK.Accounting.Windows.csproj' -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed' }
+      - name: Compile self-contained Windows x64 application
+        shell: pwsh
+        run: |
+          dotnet publish 'AMK.Accounting.Windows/AMK.Accounting.Windows.csproj' -c Release -r win-x64 --self-contained true -o 'AMK.Accounting.Windows/publish/win-x64' -p:PublishSingleFile=false --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'Windows publish failed' }
+          if (!(Test-Path 'AMK.Accounting.Windows/publish/win-x64/AMK.Accounting.Windows.exe')) {
+            throw 'Missing Windows executable'
+          }
+      - name: Prepare Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup install failed' }
+          }
+      - name: Compile Windows installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc 'AMK.Accounting.Windows/Installer/AMKAccounting.iss'
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup compilation failed' }
+          $path='AMK.Accounting.Windows/Installer/Output/AMK-Accounting-Setup.exe'
+          if (!(Test-Path $path)) { throw "Setup exe not found: $path" }
+          Get-Item $path | Select-Object Name, Length
+          Get-FileHash $path -Algorithm SHA256
+      - name: Upload tested-build installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AMK-Accounting-v1.1-DataWorkbench-Windows64
+          path: AMK.Accounting.Windows/Installer/Output/AMK-Accounting-Setup.exe
+          retention-days: 21
+          if-no-files-found: error
