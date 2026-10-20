@@ -29,7 +29,7 @@ jobs:
           $b64 = (Get-Content -Raw 'amk-build/AMK_Accounting_v0.7_Source.b64').Trim()
           [IO.File]::WriteAllBytes('AMK_Accounting_v0.7_Source.zip', [Convert]::FromBase64String($b64))
           $hash = (Get-FileHash 'AMK_Accounting_v0.7_Source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($hash -ne 'a7ebea99c430155ae65e30dac080a71dd8a8318410685c8525e4948c1a4aba67') {
+          if ($hash -ne '000d3bf46d75abdd2487837b186f89b919904d6cc2fdf28d7f7df4c845388f1c') {
             throw "Source integrity verification failed: $hash"
           }
           Expand-Archive 'AMK_Accounting_v0.7_Source.zip' '.' -Force
