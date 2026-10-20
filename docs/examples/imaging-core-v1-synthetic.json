@@ -1,0 +1,125 @@
+{
+  "core_output": {
+    "clinical_context_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "component": {
+      "artifact_sha256": "417dc402bdde77bf371dd6896a363c193cc32a93c8d32f364162c1d4a5bf79a6",
+      "component_id": "4b-imaging-series-record-gate",
+      "kind": "adapter",
+      "version": "1.0.1"
+    },
+    "contract_version": "1.0.0",
+    "core": "imaging",
+    "findings": [
+      {
+        "confidence": null,
+        "finding_id": "c99a24d68161714397951c6dcc2258816b3f866d33478d833325d47219fafd65",
+        "observation": {
+          "absent_reason": null,
+          "body_site": null,
+          "boolean_value": true,
+          "category": "imaging",
+          "code": "SYNTHETIC_ONLY",
+          "code_system": "LOCAL",
+          "code_system_uri": null,
+          "code_system_version": null,
+          "coded_display": null,
+          "coded_system": null,
+          "coded_value": null,
+          "datetime_value": null,
+          "display_name": "Synthetic recorded observation",
+          "integer_value": null,
+          "interpretation": null,
+          "method": null,
+          "note": null,
+          "observed_at": null,
+          "quantity_value": null,
+          "reference_high": null,
+          "reference_low": null,
+          "reference_text": null,
+          "specimen": null,
+          "string_value": null,
+          "unit_code": null,
+          "unit_display": null,
+          "value_type": "boolean"
+        },
+        "origin": "record",
+        "source": {
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "field": "observation",
+          "observation_id": "synthetic-imaging-observation",
+          "record_id": "synthetic-report",
+          "record_type": "paraclinical_report",
+          "version": 1
+        }
+      }
+    ],
+    "generated_at": "2026-10-20T00:00:00Z",
+    "status": "available",
+    "valid_until": "2026-10-20T01:00:00Z",
+    "visit_id": "synthetic-visit"
+  },
+  "scope": "actual_v1_contract_adapter_only",
+  "synthetic_only": true,
+  "validation": {
+    "adapter_id": "4b.data-validation.rules",
+    "adapter_version": "1.0.0",
+    "blocked_finding_references": [],
+    "eligible_finding_references": [],
+    "finding_checks": [],
+    "input_sha256": "bc590b224a13ecdbadd0cdd96078f864e2ba780fb15c7ac3890930af8657318c",
+    "is_diagnosis": false,
+    "is_treatment_recommendation": false,
+    "missing_clinical_fields": [],
+    "missing_imaging_fields": [],
+    "next_steps": [],
+    "policy_version": "series-record-gate-v1",
+    "result_sha256": "12baed44d23724f8018d58b51ad8de5d2c67e908ae781fdbacaaf900955a7849",
+    "rules_sha256": "7f24920fe2d6979c0211ab04280b9095b9c5946cf67a28d5aa2974c7edb15d0b",
+    "scope": "data_validation_only",
+    "status": "data_ready",
+    "traces": [
+      {
+        "codes": [],
+        "outcome": "passed",
+        "rule_id": "input_schema",
+        "rule_version": "1.0.0"
+      },
+      {
+        "codes": [],
+        "outcome": "passed",
+        "rule_id": "clinical_completeness",
+        "rule_version": "1.0.0"
+      },
+      {
+        "codes": [],
+        "outcome": "passed",
+        "rule_id": "imaging_completeness",
+        "rule_version": "1.0.0"
+      },
+      {
+        "codes": [],
+        "outcome": "passed",
+        "rule_id": "context_consistency",
+        "rule_version": "1.0.0"
+      },
+      {
+        "codes": [],
+        "outcome": "not_applicable",
+        "rule_id": "finding_verification",
+        "rule_version": "1.0.0"
+      },
+      {
+        "codes": [],
+        "outcome": "not_applicable",
+        "rule_id": "finding_provenance",
+        "rule_version": "1.0.0"
+      },
+      {
+        "codes": [],
+        "outcome": "passed",
+        "rule_id": "finding_completeness",
+        "rule_version": "1.0.0"
+      }
+    ]
+  }
+}

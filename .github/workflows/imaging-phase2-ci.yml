@@ -1,0 +1,241 @@
+name: Imaging Phase 2
+on:
+  pull_request:
+    branches: [main, feature/imaging-intelligence]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: imaging-phase2-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  offline:
+    name: Series, drafts and actual v1 contract (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ['3.12', '3.14']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: 8129085ffea310a62778fa2c8b87f47a198d0956
+          path: .integration-reference
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r backend/requirements-imaging-review.txt
+      - name: Run offline tests against the actual pinned PR44 schema
+        env:
+          MOS_INTEGRATION_CONTRACT_FILE: ${{ github.workspace }}/.integration-reference/backend/app/schemas/clinical_integration.py
+        run: python -m unittest discover -s backend/tests/imaging_intelligence -v
+      - run: python -m backend.tools.imaging_series_demo
+      - run: python -m backend.tools.imaging_knowledge_drafts
+      - run: python -m compileall -q backend
+  integration:
+    name: Actual PR44 composition engine
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ENVIRONMENT: test
+      DATABASE_URL: sqlite://
+      DEBUG: 'false'
+      SECRET_KEY: synthetic-imaging-compatibility-only-20261020
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: 8129085ffea310a62778fa2c8b87f47a198d0956
+          path: .integration-reference
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt -r backend/requirements-imaging.txt
+      - run: python -m backend.tools.imaging_integration_demo --reference-root .integration-reference
+  composition:
+    name: Combined PR43/44 backend (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      ENVIRONMENT: test
+      DATABASE_URL: sqlite://
+      BOOTSTRAP_ENABLED: 'true'
+      DEBUG: 'false'
+      SECRET_KEY: synthetic-composition-only-20261020
+      KNOWLEDGE_REFERENCE: 3fafc6224d17209ee47373aede4bf9dedfa76a72
+      INTEGRATION_REFERENCE: 8129085ffea310a62778fa2c8b87f47a198d0956
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Compose reviewed commits in the disposable runner only
+        run: |
+          git config user.name '4B synthetic compatibility CI'
+          git config user.email 'synthetic-ci@4b-mos.invalid'
+          git rev-parse HEAD
+          git merge --no-ff --no-edit "$KNOWLEDGE_REFERENCE"
+          git merge --no-ff --no-edit "$INTEGRATION_REFERENCE"
+          git status --porcelain
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: Exercise actual saved-run freshness and physician approval boundary
+        run: python -m pytest backend/tests/test_imaging_integration_freshness.py -q
+      - name: Test complete composed backend with in-memory synthetic fixtures
+        run: python -m pytest backend/tests -q -ra
+      - run: python -m compileall -q backend
+  postgresql-composition:
+    name: Combined PostgreSQL 18 imaging (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    services:
+      postgres:
+        image: postgres:18.6-bookworm
+        env:
+          POSTGRES_DB: mos_imaging_ci
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mos_imaging_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      ENVIRONMENT: test
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/mos_imaging_ci
+      TEST_POSTGRESQL_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/mos_imaging_ci
+      MOS_SYNTHETIC_POSTGRESQL_ONLY: '1'
+      DATABASE_LOCK_TIMEOUT_MS: '250'
+      BOOTSTRAP_ENABLED: 'true'
+      DEBUG: 'false'
+      SECRET_KEY: synthetic-postgresql-composition-only-20261020
+      KNOWLEDGE_REFERENCE: 3fafc6224d17209ee47373aede4bf9dedfa76a72
+      INTEGRATION_REFERENCE: 8129085ffea310a62778fa2c8b87f47a198d0956
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Compose reviewed commits in the disposable runner only
+        run: |
+          git config user.name '4B synthetic compatibility CI'
+          git config user.email 'synthetic-ci@4b-mos.invalid'
+          git merge --no-ff --no-edit "$KNOWLEDGE_REFERENCE"
+          git merge --no-ff --no-edit "$INTEGRATION_REFERENCE"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: Guard the dedicated synthetic database before schema setup
+        run: |
+          python - <<'PY'
+          import os
+          from sqlalchemy.engine import make_url
+          url = make_url(os.environ['DATABASE_URL'])
+          assert os.environ['ENVIRONMENT'] == 'test'
+          assert os.environ['MOS_SYNTHETIC_POSTGRESQL_ONLY'] == '1'
+          assert os.environ['DATABASE_URL'] == os.environ['TEST_POSTGRESQL_URL']
+          assert url.drivername == 'postgresql+psycopg'
+          assert (url.host, url.port, url.database) == ('127.0.0.1', 5432, 'mos_imaging_ci')
+          PY
+      - name: Initialize and check only the fresh disposable CI schema
+        run: |
+          python -m alembic upgrade head
+          python -m alembic check
+      - name: Run existing PostgreSQL locking and concurrency tests
+        run: python -m pytest backend/tests/test_postgresql_integration.py -q -ra
+      - name: Run real PostgreSQL imaging freshness, replay and rollback tests
+        run: python -m pytest backend/tests/test_imaging_postgresql.py -q -ra
+  laboratory:
+    name: Orthanc DICOMweb and OHIF browser
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements-imaging-review.txt
+      - name: Start isolated synthetic services
+        run: |
+          docker compose -f deploy/imaging-lab/compose.yaml up -d
+          docker compose -f deploy/imaging-lab/compose.yaml port ohif 8042
+          docker compose -f deploy/imaging-lab/compose.yaml port ohif 80
+      - name: Wait for synthetic lab identity
+        run: |
+          python - <<'PY'
+          import time
+          from backend.app.imaging_intelligence.synthetic_lab import SyntheticDicomWebLab, SyntheticLabError
+          lab = SyntheticDicomWebLab()
+          try:
+              for attempt in range(45):
+                  try:
+                      lab.assert_synthetic_lab()
+                      break
+                  except SyntheticLabError:
+                      if attempt == 44:
+                          raise
+                      time.sleep(1)
+          finally:
+              lab.close()
+          PY
+      - name: Synthetic STOW-QIDO-WADO and local series validation
+        run: python -m backend.tools.imaging_lab_demo
+      - name: Install a pinned browser test runtime
+        run: |
+          npm install --prefix /tmp/4b-browser playwright@1.56.1 --ignore-scripts --no-audit --no-fund
+          /tmp/4b-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Render generated slices in the real OHIF viewer
+        env:
+          NODE_PATH: /tmp/4b-browser/node_modules
+        run: node backend/tests/imaging_lab_browser.cjs
+      - name: Diagnose lab failure
+        if: ${{ failure() }}
+        run: docker compose -f deploy/imaging-lab/compose.yaml logs --tail 100
+      - name: Remove disposable synthetic services
+        if: ${{ always() }}
+        run: docker compose -f deploy/imaging-lab/compose.yaml down --volumes
+  monai:
+    name: Real MONAI synthetic Dice evaluation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pip install -r backend/requirements-imaging-models.txt
+      - run: python -c 'import monai, torch; print(monai.__version__, torch.__version__)'
+      - run: python -m unittest backend.tests.imaging_intelligence.test_model_evaluation -v
+      - run: |
+          python - <<'PY'
+          import json
+          from backend.app.imaging_intelligence.model_evaluation import MonaiDiceEvaluationAdapter, synthetic_evaluation_case
+          print(json.dumps(MonaiDiceEvaluationAdapter().evaluate(synthetic_evaluation_case()), sort_keys=True))
+          PY

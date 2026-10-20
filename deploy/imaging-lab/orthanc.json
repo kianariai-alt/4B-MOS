@@ -1,0 +1,21 @@
+{
+  "Name": "4B-MOS-SYNTHETIC-ONLY",
+  "StorageDirectory": "/var/lib/orthanc/db",
+  "IndexDirectory": "/var/lib/orthanc/db",
+  "RemoteAccessAllowed": true,
+  "AuthenticationEnabled": false,
+  "DicomServerEnabled": false,
+  "HttpServerEnabled": true,
+  "HttpPort": 8042,
+  "HttpDescribeErrors": false,
+  "Plugins": ["/usr/local/share/orthanc/plugins/"],
+  "DicomWeb": {
+    "Enable": true,
+    "Root": "/dicom-web/",
+    "EnableWado": true,
+    "WadoRoot": "/wado",
+    "StudiesMetadata": "Full",
+    "SeriesMetadata": "Full",
+    "Servers": {}
+  }
+}
