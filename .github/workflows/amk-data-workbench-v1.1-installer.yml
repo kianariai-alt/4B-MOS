@@ -29,7 +29,7 @@ jobs:
           $b64 = (Get-Content -Raw 'amk-build/AMK_Accounting_v1.1_DataWorkbench_Source.b64').Trim()
           [IO.File]::WriteAllBytes('AMK_Accounting_v1.1_DataWorkbench_Source.zip', [Convert]::FromBase64String($b64))
           $hash = (Get-FileHash 'AMK_Accounting_v1.1_DataWorkbench_Source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($hash -ne 'c3bd56cc55a408a026228cbcfcfcb2bcfba3ee6093d41c5b9aea3f4a29e6951f') {
+          if ($hash -ne '16f170f79cb1c029a112c727605341d69eeaa1992d04ac5f82f39060a6c2ab81') {
             throw "Source integrity verification failed: $hash"
           }
           Expand-Archive 'AMK_Accounting_v1.1_DataWorkbench_Source.zip' '.' -Force
@@ -49,6 +49,12 @@ jobs:
           if (!(Test-Path 'AMK.Accounting.Windows/publish/win-x64/AMK.Accounting.Windows.exe')) {
             throw 'Missing Windows executable'
           }
+      - name: Run isolated SQLite workbench smoke tests
+        shell: pwsh
+        run: |
+          if (!(Test-Path 'AMK.Workbench.Tests/AMK.Workbench.Tests.csproj')) { throw 'WorkBench self-tests missing' }
+          dotnet run --project 'AMK.Workbench.Tests/AMK.Workbench.Tests.csproj' -c Release -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw 'Workbench tests failed' }
       - name: Prepare Inno Setup
         shell: pwsh
         run: |
