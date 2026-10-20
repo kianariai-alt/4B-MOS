@@ -76,6 +76,8 @@ def test_unknown_and_declined_remain_gaps_without_automatic_reasking(state):
     result = selected(context(answer("fever", state=state)))
     assert "fever" not in candidate_fields(result)
     assert any(item.field == "fever" and item.reason == state for item in result.information_gaps)
+    assert next(item for item in result.information_gaps if item.field == "fever").requires_physician_review
+    assert state + ":fever" in result.review_reasons
     assert result.unverified_findings[0].state == state
 
 

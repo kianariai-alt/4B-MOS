@@ -9,7 +9,7 @@
   "pack_manifest_sha256": "e2c417280f15f76bb69555521deceff4aa550b98f9a1f6d1294a25a9e64f7879",
   "adapter_version": "1.0.0",
   "adapter_sha256": "327c1cb2dc9f673ed2705b7d075032fd4b6970473ccd13054f6d34d50cef46c7",
-  "question_rules_sha256": "2e336fc71fc1c28274d5d0218c39af002cdb4c56079045f44d1b9c67d535e502",
+  "question_rules_sha256": "943807c6765a314dbe463b3ae5d608fffc0ca8929cad0f6e9208503a89079d5b",
   "structured_symptoms": [
     {
       "field": "onset",
@@ -1655,5 +1655,5 @@
   "is_recommendation": false,
   "is_clinical_clearance": false,
   "authorizes_treatment": false,
-  "result_sha256": "917b56c60f4391fe56f51034a5657f9da5fee0deffc28a4806253d5cc78c096f"
+  "result_sha256": "12067eb4517caf040588f818f555c69e7014116e72f7df1a669ae85d7da9c2a5"
 }

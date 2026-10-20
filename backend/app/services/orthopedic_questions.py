@@ -172,8 +172,10 @@ def select_questions(context: OrthopedicQuestionContext, pack) -> OrthopedicQues
                 continue
             reason = reasons.get(field, "missing")
             clarify = reason in {"incomplete", "contradictory", "unverified"}
-            gaps.append(InformationGap(field=field, reason=reason, requires_physician_review=clarify))
+            gaps.append(InformationGap(field=field, reason=reason,
+                                       requires_physician_review=reason != "missing"))
             if reason in {"unknown", "declined"}:
+                review.append(reason + ":" + field)
                 continue
             if clarify:
                 review.append(reason + ":" + field)

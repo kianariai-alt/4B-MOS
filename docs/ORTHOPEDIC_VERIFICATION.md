@@ -37,10 +37,14 @@ python -m backend.tools.orthopedic_knowledge_demo --write-artifacts
 git diff --check
 ```
 
-Focused tests, compilation, schema/demo generation and whitespace checks pass.
-The exact full-suite and GitHub CI results, final commit SHA and PR URL are
-recorded in the PR delivery report because those results are obtained after this
-artifact is committed. The existing Starlette/httpx deprecation warning remains.
+The focused suite passes **73 tests**. A full local regression run passed
+**806 tests**, with **18 PostgreSQL tests skipped** and no failures, in 329.61s.
+Two additional exported-Schema cases and the final unknown/declined review
+refinement are covered by the 73-test focused rerun; GitHub CI runs the complete
+final tree. Compilation, schema/demo generation and whitespace checks pass.
+The actual GitHub CI results and final commit SHA are recorded in
+[Draft PR #47](https://github.com/kianariai-alt/4B-MOS/pull/47).
+Existing Starlette/httpx and SQLite datetime deprecation warnings remain.
 Local Python is 3.12.14; PostgreSQL, Python 3.14 and production-container checks
 must be read from their actual CI jobs, not inferred from the local SQLite tests.
 
