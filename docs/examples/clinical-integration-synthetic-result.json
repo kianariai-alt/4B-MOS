@@ -90,7 +90,7 @@
       "review_status": "confirmed_source",
       "approval": {
         "physician_user_id": "synthetic-physician",
-        "reviewed_at": "2026-10-19T20:11:12.052598Z",
+        "reviewed_at": "2026-10-20T08:44:50.142848Z",
         "scope": "source_record_finalization"
       },
       "usable_as_confirmed_finding": true
@@ -142,7 +142,7 @@
       "review_status": "confirmed_source",
       "approval": {
         "physician_user_id": "synthetic-physician",
-        "reviewed_at": "2026-10-19T20:11:12.052598Z",
+        "reviewed_at": "2026-10-20T08:44:50.142848Z",
         "scope": "source_record_finalization"
       },
       "usable_as_confirmed_finding": true
@@ -163,8 +163,8 @@
         "artifact_sha256": "2cb4067c2d735f7cbcd0cf8723bec716ebedd51ac3e08aaaa4bd4d94d83f0756",
         "kind": "adapter"
       },
-      "generated_at": "2026-10-19T20:11:12.052949Z",
-      "valid_until": "2026-10-20T20:11:12.052949Z",
+      "generated_at": "2026-10-20T08:44:50.143218Z",
+      "valid_until": "2026-10-21T08:44:50.143218Z",
       "status": "available",
       "findings": [
         {
@@ -222,8 +222,8 @@
         "artifact_sha256": "a5d994bab34bc284a30ffdacd40040ae799dcb9cbdf694f0c7eb781f47e53278",
         "kind": "adapter"
       },
-      "generated_at": "2026-10-19T20:11:12.053175Z",
-      "valid_until": "2026-10-20T20:11:12.053175Z",
+      "generated_at": "2026-10-20T08:44:50.143459Z",
+      "valid_until": "2026-10-21T08:44:50.143459Z",
       "status": "available",
       "findings": [
         {
@@ -276,17 +276,19 @@
       "code": "synthetic_demo_not_clinically_validated",
       "severity": "warning",
       "core": null,
-      "finding_ids": []
+      "finding_ids": [],
+      "source_references": []
     },
     {
       "code": "no_knowledge_selected",
       "severity": "warning",
       "core": null,
-      "finding_ids": []
+      "finding_ids": [],
+      "source_references": []
     }
   ],
   "provenance": {
-    "engine_version": "clinical-integration-1.0.0",
+    "engine_version": "clinical-integration-1.0.1",
     "clinical_context_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "copilot_snapshot_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "safety_rule_set_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -305,12 +307,12 @@
       }
     ],
     "core_output_sha256s": [
-      "46295e5ae3a9cdd9e53a39a14950e92203fcf4747ac51adf5ded170587389a46",
-      "9e23ee096813a717d26f4d2a46df496b811eab39e811525538cab80c9ed9f3a9"
+      "10c5216807219295fc9c3eed322cf6407572dd02696889d2f4da7e7fbb8705e9",
+      "8724ef56a90ce7bc1303dc6f3ec6dee772b145dd08229ab5482dde754cf8ca1e"
     ]
   },
-  "generated_at": "2026-10-19T20:11:12.052598Z",
-  "valid_until": "2026-10-20T20:11:12.052598Z",
+  "generated_at": "2026-10-20T08:44:50.142848Z",
+  "valid_until": "2026-10-21T08:44:50.142848Z",
   "workflow_state": "awaiting_physician_review",
   "is_diagnosis": false,
   "is_recommendation": false,

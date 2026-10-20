@@ -181,3 +181,70 @@ Official references reviewed for this design:
 [GuidanceResponse](https://hl7.org/fhir/R4/guidanceresponse.html),
 [Provenance](https://hl7.org/fhir/R4/provenance.html),
 [AuditEvent](https://hl7.org/fhir/R4/auditevent.html).
+# Read-only snapshot and decision exchange additions
+
+The still-unreleased v1 draft now rejects unknown nested observation fields and
+inconsistent review claims. Engine `clinical-integration-1.0.1` also blocks
+partial/empty producer coverage and outputs older than its 24-hour administrative
+review window, even when a producer claims a later expiry. This is a validation
+correction before v1 release; producers must re-run the published JSON Schema.
+
+`GET /api/v1/visits/{visit_id}/clinical-intelligence` is an independent, read-only
+view guarded by the existing preview flag and admin/physician roles. It creates
+no run, audit event or physician approval. Its contract is
+[`unified-clinical-snapshot-1.0.0.schema.json`](unified-clinical-snapshot-1.0.0.schema.json).
+The optional decision port uses
+[`unified-clinical-decision-1.0.0.schema.json`](unified-clinical-decision-1.0.0.schema.json).
+Neither port implements specialist inference. No decision model is registered
+for patient records; an absent model is explicitly `missing`.
+
+The snapshot carries the existing `DecisionSupportResult`, source-report review
+inventory, Safety evaluation identity/digests, alerts/rule references, requirements,
+dependency manifest and semantic SHA-256. Only clinician-selected evidence from
+current-context briefs is considered, then independently revalidated in Registry.
+Historical briefs remain marked historical; fact applicability is not inferred.
+
+Report review is scoped to **source-record finalization**: finalization by a
+physician is `verified`; a draft or administrator-finalized report is `unverified`;
+`entered_in_error` is `rejected`; `superseded` is `invalid` for current use. These
+states do not assert specialist verification of DICOM or an AI interpretation.
+Corrupt source records fail closed with a controlled error. A producer cannot
+submit its own trusted approval. Model-specific authenticated review transport
+remains a dependency of the specialist workstreams.
+
+`snapshot_sha256` hashes `clinical-intelligence-semantic-v1`, the response with
+`snapshot_sha256` and `observed_at` omitted, result `generated_at`/`valid_until`
+omitted, and adapter-kind core read timestamps omitted. Model-kind timestamps
+remain. `result.provenance.core_output_sha256s` is replaced in this projection
+with `provenance_manifest.core_semantic_sha256s`. All source values, review states,
+limitations, component identities, issue codes and other dependencies remain.
+The manifest hashes its own fields excluding `manifest_sha256`. Both use the
+existing sorted-key, compact UTF-8 canonical JSON serializer with non-finite
+numbers rejected. Lists retain contract order. Adapter timestamps mean read
+execution time; meaningful image acquisition or artifact validity must remain
+explicit source/model dependencies in future producer versions.
+
+Repeated reads of unchanged dependencies therefore have the same semantic hash.
+This hash does **not** attest to excluded execution times, sign the payload or
+guarantee clinical correctness. Persisted Run hashes retain their existing,
+distinct full-snapshot integrity semantics. Dependency changes during collection,
+including ordinary Safety review changes not present in the Copilot digest,
+return a conflict. Read-only snapshots always require physician review; real
+review must use the authenticated audited Run/Review flow.
+
+The provenance manifest contains digests and deployment identities only, with
+no patient IDs, clinical text or source URLs. The full clinical result is an
+authorized internal response, not a public manifest or technical log.
+
+Run the fixed, fabricated knee/MRI prototype locally with:
+
+```sh
+python -m backend.tools.clinical_intelligence_demo
+```
+
+It uses all three exact-fixture-only mock adapters and returns a blocked,
+unreviewed, non-diagnostic snapshot without a database, network, trained model,
+MONAI, Bayesian package or paid service. The sample is
+[`clinical-intelligence-knee-mri-snapshot.json`](../examples/clinical-intelligence-knee-mri-snapshot.json).
+See the [Persian workstream handoff](../CLINICAL_INTELLIGENCE_HANDOFF_FA.md).
+

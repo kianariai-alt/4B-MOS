@@ -22,6 +22,10 @@ from backend.app.services.clinical_integration.service import (
 )
 from backend.app.services.medical_knowledge import MedicalKnowledgeIntegrityError, MedicalKnowledgeNotFoundError
 from backend.app.services.clinical_safety import ClinicalSafetyRuleUnavailableError
+from backend.app.schemas.clinical_intelligence import IntegratedClinicalSnapshot
+from backend.app.schemas.clinical_decision_exchange import DecisionModelResult
+from backend.app.services.clinical_integration.read_only import get_clinical_intelligence
+from sqlalchemy.exc import SQLAlchemyError
 
 
 def require_enabled(response: Response):
@@ -32,6 +36,11 @@ def require_enabled(response: Response):
 
 def get_integration_adapters():
     return local_adapters()
+
+
+def get_decision_adapter():
+    # No model or synthetic adapter is registered for real patient records.
+    return None
 
 
 router = APIRouter(tags=["Clinical Integration Preview"], dependencies=[Depends(require_enabled)])
@@ -52,12 +61,29 @@ def translate(error):
     raise HTTPException(status_code=409, detail="Integration dependencies changed or failed validation; reload for review.") from error
 
 
+@router.get("/visits/{visit_id}/clinical-intelligence", response_model=IntegratedClinicalSnapshot)
+def clinical_intelligence(
+    visit_id: str, actor: User = Depends(require_roles("admin", "physician")),
+    db: Session = Depends(get_db), adapters=Depends(get_integration_adapters),
+    decision_adapter=Depends(get_decision_adapter),
+):
+    try:
+        return get_clinical_intelligence(db, visit_id, actor=actor, adapters=adapters,
+                                         decision_adapter=decision_adapter)
+    except SQLAlchemyError as error:
+        raise HTTPException(status_code=503, detail="Integration dependencies are unavailable.") from error
+    except (*ERRORS, ValueError) as error:
+        translate(error)
+
+
 @router.get("/clinical-integration/contract")
 def contract(_actor: User = Depends(require_roles("admin", "physician"))):
     return {
         "contract_version": CONTRACT_VERSION,
         "core_output": CoreOutput.model_json_schema(),
         "decision_support_result": DecisionSupportResult.model_json_schema(),
+        "decision_model_result": DecisionModelResult.model_json_schema(),
+        "integrated_clinical_snapshot": IntegratedClinicalSnapshot.model_json_schema(),
     }
 
 
