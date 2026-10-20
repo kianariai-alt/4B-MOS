@@ -1,0 +1,357 @@
+{
+  "$defs": {
+    "ComponentVersion": {
+      "additionalProperties": false,
+      "properties": {
+        "component_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Component Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "adapter",
+            "model",
+            "rule"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component_id",
+        "version",
+        "artifact_sha256",
+        "kind"
+      ],
+      "title": "ComponentVersion",
+      "type": "object"
+    },
+    "DecisionSignal": {
+      "additionalProperties": false,
+      "description": "Only bounded research/input-quality scores are supported in this release.",
+      "properties": {
+        "code": {
+          "enum": [
+            "input_completeness",
+            "input_consistency",
+            "research_score"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "value": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Value",
+          "type": "number"
+        },
+        "interpretation": {
+          "const": "not_clinically_validated",
+          "default": "not_clinically_validated",
+          "title": "Interpretation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "value"
+      ],
+      "title": "DecisionSignal",
+      "type": "object"
+    },
+    "KnowledgeReference": {
+      "additionalProperties": false,
+      "properties": {
+        "fact_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Fact Id",
+          "type": "string"
+        },
+        "fact_key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "evidence_grade": {
+          "title": "Evidence Grade",
+          "type": "string"
+        },
+        "source_ids": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid To"
+        },
+        "status": {
+          "const": "approved",
+          "default": "approved",
+          "title": "Status",
+          "type": "string"
+        },
+        "applicability": {
+          "const": "not_assessed",
+          "default": "not_assessed",
+          "title": "Applicability",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fact_id",
+        "fact_key",
+        "version",
+        "content_sha256",
+        "evidence_grade",
+        "source_ids"
+      ],
+      "title": "KnowledgeReference",
+      "type": "object"
+    },
+    "RecordReference": {
+      "additionalProperties": false,
+      "properties": {
+        "record_type": {
+          "enum": [
+            "clinical_intake",
+            "paraclinical_report"
+          ],
+          "title": "Record Type",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "observation_id": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observation Id"
+        },
+        "field": {
+          "enum": [
+            "exam_findings",
+            "pain_score",
+            "observation"
+          ],
+          "title": "Field",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_type",
+        "record_id",
+        "version",
+        "content_sha256",
+        "field"
+      ],
+      "title": "RecordReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "result_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Result Id",
+      "type": "string"
+    },
+    "visit_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Visit Id",
+      "type": "string"
+    },
+    "clinical_context_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Clinical Context Sha256",
+      "type": "string"
+    },
+    "component": {
+      "$ref": "#/$defs/ComponentVersion"
+    },
+    "source_references": {
+      "items": {
+        "$ref": "#/$defs/RecordReference"
+      },
+      "maxItems": 1000,
+      "minItems": 1,
+      "title": "Source References",
+      "type": "array"
+    },
+    "knowledge": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/KnowledgeReference"
+      },
+      "maxItems": 50,
+      "title": "Knowledge",
+      "type": "array"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "valid_until": {
+      "format": "date-time",
+      "title": "Valid Until",
+      "type": "string"
+    },
+    "signals": {
+      "items": {
+        "$ref": "#/$defs/DecisionSignal"
+      },
+      "maxItems": 3,
+      "minItems": 1,
+      "title": "Signals",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "maxLength": 500,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 30,
+      "minItems": 1,
+      "title": "Limitations",
+      "type": "array"
+    },
+    "origin": {
+      "const": "ai_generated",
+      "default": "ai_generated",
+      "title": "Origin",
+      "type": "string"
+    },
+    "review_status": {
+      "const": "unverified",
+      "default": "unverified",
+      "title": "Review Status",
+      "type": "string"
+    },
+    "usable_as_confirmed_finding": {
+      "const": false,
+      "default": false,
+      "title": "Usable As Confirmed Finding",
+      "type": "boolean"
+    },
+    "is_diagnosis": {
+      "const": false,
+      "default": false,
+      "title": "Is Diagnosis",
+      "type": "boolean"
+    },
+    "is_recommendation": {
+      "const": false,
+      "default": false,
+      "title": "Is Recommendation",
+      "type": "boolean"
+    },
+    "is_clinical_clearance": {
+      "const": false,
+      "default": false,
+      "title": "Is Clinical Clearance",
+      "type": "boolean"
+    },
+    "authorizes_treatment": {
+      "const": false,
+      "default": false,
+      "title": "Authorizes Treatment",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "result_id",
+    "visit_id",
+    "clinical_context_sha256",
+    "component",
+    "source_references",
+    "generated_at",
+    "valid_until",
+    "signals",
+    "limitations"
+  ],
+  "title": "DecisionModelResult",
+  "type": "object"
+}

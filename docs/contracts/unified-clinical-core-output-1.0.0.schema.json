@@ -1,0 +1,581 @@
+{
+  "$defs": {
+    "ComponentVersion": {
+      "additionalProperties": false,
+      "properties": {
+        "component_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Component Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "adapter",
+            "model",
+            "rule"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component_id",
+        "version",
+        "artifact_sha256",
+        "kind"
+      ],
+      "title": "ComponentVersion",
+      "type": "object"
+    },
+    "CoreFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/RecordReference"
+        },
+        "observation": {
+          "$ref": "#/$defs/IntegrationObservation"
+        },
+        "origin": {
+          "enum": [
+            "record",
+            "model"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        }
+      },
+      "required": [
+        "finding_id",
+        "source",
+        "observation",
+        "origin"
+      ],
+      "title": "CoreFinding",
+      "type": "object"
+    },
+    "IntegrationObservation": {
+      "additionalProperties": false,
+      "description": "Strict transport view of the existing typed observation contract.\n\nExisting local observation objects are copied through validation; unsupported\nproducer fields must fail rather than silently lose quality or review data.",
+      "properties": {
+        "category": {
+          "enum": [
+            "laboratory",
+            "imaging",
+            "pathology",
+            "vital_sign",
+            "clinical_test",
+            "other"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "code_system": {
+          "enum": [
+            "LOINC",
+            "SNOMED_CT",
+            "LOCAL",
+            "OTHER"
+          ],
+          "title": "Code System",
+          "type": "string"
+        },
+        "code_system_uri": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code System Uri"
+        },
+        "code_system_version": {
+          "anyOf": [
+            {
+              "maxLength": 50,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code System Version"
+        },
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "display_name": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Display Name",
+          "type": "string"
+        },
+        "value_type": {
+          "enum": [
+            "quantity",
+            "string",
+            "boolean",
+            "integer",
+            "coded",
+            "datetime",
+            "absent"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        },
+        "quantity_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quantity Value"
+        },
+        "string_value": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "String Value"
+        },
+        "boolean_value": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Boolean Value"
+        },
+        "integer_value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Integer Value"
+        },
+        "coded_value": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coded Value"
+        },
+        "coded_system": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coded System"
+        },
+        "coded_display": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coded Display"
+        },
+        "datetime_value": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Datetime Value"
+        },
+        "absent_reason": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Absent Reason"
+        },
+        "unit_code": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Code"
+        },
+        "unit_display": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Display"
+        },
+        "reference_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Low"
+        },
+        "reference_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference High"
+        },
+        "reference_text": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Text"
+        },
+        "interpretation": {
+          "anyOf": [
+            {
+              "enum": [
+                "normal",
+                "low",
+                "high",
+                "critical_low",
+                "critical_high",
+                "abnormal",
+                "indeterminate"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Interpretation"
+        },
+        "body_site": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Site"
+        },
+        "specimen": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Specimen"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Method"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        }
+      },
+      "required": [
+        "category",
+        "code_system",
+        "code",
+        "display_name",
+        "value_type"
+      ],
+      "title": "IntegrationObservation",
+      "type": "object"
+    },
+    "RecordReference": {
+      "additionalProperties": false,
+      "properties": {
+        "record_type": {
+          "enum": [
+            "clinical_intake",
+            "paraclinical_report"
+          ],
+          "title": "Record Type",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "observation_id": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observation Id"
+        },
+        "field": {
+          "enum": [
+            "exam_findings",
+            "pain_score",
+            "observation"
+          ],
+          "title": "Field",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_type",
+        "record_id",
+        "version",
+        "content_sha256",
+        "field"
+      ],
+      "title": "RecordReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "core": {
+      "enum": [
+        "orthopedic",
+        "imaging"
+      ],
+      "title": "Core",
+      "type": "string"
+    },
+    "visit_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Visit Id",
+      "type": "string"
+    },
+    "clinical_context_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Clinical Context Sha256",
+      "type": "string"
+    },
+    "component": {
+      "$ref": "#/$defs/ComponentVersion"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "valid_until": {
+      "format": "date-time",
+      "title": "Valid Until",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "available",
+        "missing",
+        "unavailable"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "findings": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/CoreFinding"
+      },
+      "maxItems": 1000,
+      "title": "Findings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "core",
+    "visit_id",
+    "clinical_context_sha256",
+    "component",
+    "generated_at",
+    "valid_until",
+    "status"
+  ],
+  "title": "CoreOutput",
+  "type": "object"
+}

@@ -1,0 +1,1964 @@
+{
+  "$defs": {
+    "ClinicalAssessmentReference": {
+      "additionalProperties": false,
+      "properties": {
+        "intake_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Intake Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "status": {
+          "const": "final",
+          "default": "final",
+          "title": "Status",
+          "type": "string"
+        },
+        "body_region": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Region"
+        },
+        "laterality": {
+          "anyOf": [
+            {
+              "enum": [
+                "left",
+                "right",
+                "bilateral",
+                "midline",
+                "not_applicable",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Laterality"
+        }
+      },
+      "required": [
+        "intake_id",
+        "version",
+        "content_sha256"
+      ],
+      "title": "ClinicalAssessmentReference",
+      "type": "object"
+    },
+    "ClinicalCaseReference": {
+      "additionalProperties": false,
+      "properties": {
+        "visit_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Visit Id",
+          "type": "string"
+        },
+        "clinical_context_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Clinical Context Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "visit_id",
+        "clinical_context_sha256"
+      ],
+      "title": "ClinicalCaseReference",
+      "type": "object"
+    },
+    "ClinicalEvidenceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "brief_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Brief Id",
+          "type": "string"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "clinical_context_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Clinical Context Sha256",
+          "type": "string"
+        },
+        "knowledge_set_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Knowledge Set Sha256",
+          "type": "string"
+        },
+        "context_matches": {
+          "title": "Context Matches",
+          "type": "boolean"
+        },
+        "knowledge_status": {
+          "const": "historical_snapshot_only",
+          "default": "historical_snapshot_only",
+          "title": "Knowledge Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "brief_id",
+        "content_sha256",
+        "clinical_context_sha256",
+        "knowledge_set_sha256",
+        "context_matches"
+      ],
+      "title": "ClinicalEvidenceReference",
+      "type": "object"
+    },
+    "ClinicalSafetyStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "missing",
+            "stale",
+            "alerts_present",
+            "no_alerts",
+            "no_active_rules"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "evaluation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SafetyEvaluationReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "alerts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SafetyAlertReference"
+          },
+          "title": "Alerts",
+          "type": "array"
+        },
+        "evaluated_rule_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Evaluated Rule Count",
+          "type": "integer"
+        },
+        "open_escalation_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Open Escalation Count",
+          "type": "integer"
+        },
+        "is_clinical_clearance": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Clearance",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "ClinicalSafetyStatus",
+      "type": "object"
+    },
+    "ComponentVersion": {
+      "additionalProperties": false,
+      "properties": {
+        "component_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Component Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "adapter",
+            "model",
+            "rule"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component_id",
+        "version",
+        "artifact_sha256",
+        "kind"
+      ],
+      "title": "ComponentVersion",
+      "type": "object"
+    },
+    "CoreFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/RecordReference"
+        },
+        "observation": {
+          "$ref": "#/$defs/IntegrationObservation"
+        },
+        "origin": {
+          "enum": [
+            "record",
+            "model"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        }
+      },
+      "required": [
+        "finding_id",
+        "source",
+        "observation",
+        "origin"
+      ],
+      "title": "CoreFinding",
+      "type": "object"
+    },
+    "CoreOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "core": {
+          "enum": [
+            "orthopedic",
+            "imaging"
+          ],
+          "title": "Core",
+          "type": "string"
+        },
+        "visit_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Visit Id",
+          "type": "string"
+        },
+        "clinical_context_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Clinical Context Sha256",
+          "type": "string"
+        },
+        "component": {
+          "$ref": "#/$defs/ComponentVersion"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "valid_until": {
+          "format": "date-time",
+          "title": "Valid Until",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "missing",
+            "unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "findings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CoreFinding"
+          },
+          "maxItems": 1000,
+          "title": "Findings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "core",
+        "visit_id",
+        "clinical_context_sha256",
+        "component",
+        "generated_at",
+        "valid_until",
+        "status"
+      ],
+      "title": "CoreOutput",
+      "type": "object"
+    },
+    "DecisionModelReference": {
+      "additionalProperties": false,
+      "description": "Consumer-owned validation result; model output always remains unverified.",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "missing",
+            "unavailable",
+            "invalid",
+            "expired"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComponentVersion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DecisionModelResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "result_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result Sha256"
+        },
+        "issue_codes": {
+          "default": [],
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Issue Codes",
+          "type": "array"
+        },
+        "usable_as_confirmed_finding": {
+          "const": false,
+          "default": false,
+          "title": "Usable As Confirmed Finding",
+          "type": "boolean"
+        },
+        "is_clinical_clearance": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Clearance",
+          "type": "boolean"
+        },
+        "authorizes_treatment": {
+          "const": false,
+          "default": false,
+          "title": "Authorizes Treatment",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "DecisionModelReference",
+      "type": "object"
+    },
+    "DecisionModelResult": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "result_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Result Id",
+          "type": "string"
+        },
+        "visit_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Visit Id",
+          "type": "string"
+        },
+        "clinical_context_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Clinical Context Sha256",
+          "type": "string"
+        },
+        "component": {
+          "$ref": "#/$defs/ComponentVersion"
+        },
+        "source_references": {
+          "items": {
+            "$ref": "#/$defs/RecordReference"
+          },
+          "maxItems": 1000,
+          "minItems": 1,
+          "title": "Source References",
+          "type": "array"
+        },
+        "knowledge": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/KnowledgeReference"
+          },
+          "maxItems": 50,
+          "title": "Knowledge",
+          "type": "array"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "valid_until": {
+          "format": "date-time",
+          "title": "Valid Until",
+          "type": "string"
+        },
+        "signals": {
+          "items": {
+            "$ref": "#/$defs/DecisionSignal"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Signals",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 30,
+          "minItems": 1,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "origin": {
+          "const": "ai_generated",
+          "default": "ai_generated",
+          "title": "Origin",
+          "type": "string"
+        },
+        "review_status": {
+          "const": "unverified",
+          "default": "unverified",
+          "title": "Review Status",
+          "type": "string"
+        },
+        "usable_as_confirmed_finding": {
+          "const": false,
+          "default": false,
+          "title": "Usable As Confirmed Finding",
+          "type": "boolean"
+        },
+        "is_diagnosis": {
+          "const": false,
+          "default": false,
+          "title": "Is Diagnosis",
+          "type": "boolean"
+        },
+        "is_recommendation": {
+          "const": false,
+          "default": false,
+          "title": "Is Recommendation",
+          "type": "boolean"
+        },
+        "is_clinical_clearance": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Clearance",
+          "type": "boolean"
+        },
+        "authorizes_treatment": {
+          "const": false,
+          "default": false,
+          "title": "Authorizes Treatment",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "result_id",
+        "visit_id",
+        "clinical_context_sha256",
+        "component",
+        "source_references",
+        "generated_at",
+        "valid_until",
+        "signals",
+        "limitations"
+      ],
+      "title": "DecisionModelResult",
+      "type": "object"
+    },
+    "DecisionSignal": {
+      "additionalProperties": false,
+      "description": "Only bounded research/input-quality scores are supported in this release.",
+      "properties": {
+        "code": {
+          "enum": [
+            "input_completeness",
+            "input_consistency",
+            "research_score"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "value": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Value",
+          "type": "number"
+        },
+        "interpretation": {
+          "const": "not_clinically_validated",
+          "default": "not_clinically_validated",
+          "title": "Interpretation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "value"
+      ],
+      "title": "DecisionSignal",
+      "type": "object"
+    },
+    "DecisionSupportResult": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "patient": {
+          "$ref": "#/$defs/PatientReference"
+        },
+        "visit": {
+          "$ref": "#/$defs/VisitReference"
+        },
+        "assessment": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClinicalAssessmentReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "imaging_studies": {
+          "items": {
+            "$ref": "#/$defs/ImagingStudyReference"
+          },
+          "title": "Imaging Studies",
+          "type": "array"
+        },
+        "raw_record_references": {
+          "items": {
+            "$ref": "#/$defs/RecordReference"
+          },
+          "title": "Raw Record References",
+          "type": "array"
+        },
+        "confirmed_findings": {
+          "items": {
+            "$ref": "#/$defs/IntegratedFinding"
+          },
+          "title": "Confirmed Findings",
+          "type": "array"
+        },
+        "unreviewed_findings": {
+          "items": {
+            "$ref": "#/$defs/IntegratedFinding"
+          },
+          "title": "Unreviewed Findings",
+          "type": "array"
+        },
+        "knowledge": {
+          "items": {
+            "$ref": "#/$defs/KnowledgeReference"
+          },
+          "title": "Knowledge",
+          "type": "array"
+        },
+        "evidence_briefs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ClinicalEvidenceReference"
+          },
+          "title": "Evidence Briefs",
+          "type": "array"
+        },
+        "cores": {
+          "items": {
+            "$ref": "#/$defs/CoreOutput"
+          },
+          "title": "Cores",
+          "type": "array"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/IntegrationIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "valid_until": {
+          "format": "date-time",
+          "title": "Valid Until",
+          "type": "string"
+        },
+        "workflow_state": {
+          "enum": [
+            "blocked",
+            "awaiting_physician_review"
+          ],
+          "title": "Workflow State",
+          "type": "string"
+        },
+        "is_diagnosis": {
+          "const": false,
+          "default": false,
+          "title": "Is Diagnosis",
+          "type": "boolean"
+        },
+        "is_recommendation": {
+          "const": false,
+          "default": false,
+          "title": "Is Recommendation",
+          "type": "boolean"
+        },
+        "is_clinical_clearance": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Clearance",
+          "type": "boolean"
+        },
+        "authorizes_treatment": {
+          "const": false,
+          "default": false,
+          "title": "Authorizes Treatment",
+          "type": "boolean"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "patient",
+        "visit",
+        "assessment",
+        "imaging_studies",
+        "raw_record_references",
+        "confirmed_findings",
+        "unreviewed_findings",
+        "knowledge",
+        "cores",
+        "issues",
+        "provenance",
+        "generated_at",
+        "valid_until",
+        "workflow_state"
+      ],
+      "title": "DecisionSupportResult",
+      "type": "object"
+    },
+    "ImagingReviewReference": {
+      "additionalProperties": false,
+      "description": "Review of a local report, not of DICOM identity or model interpretation.\n\nentered_in_error maps to rejected source; superseded maps to invalid for\ncurrent use. Neither mapping claims a radiologist reviewed an AI model.",
+      "properties": {
+        "report_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Report Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "source_status": {
+          "enum": [
+            "draft",
+            "final",
+            "superseded",
+            "entered_in_error"
+          ],
+          "title": "Source Status",
+          "type": "string"
+        },
+        "review_status": {
+          "enum": [
+            "verified",
+            "unverified",
+            "rejected",
+            "invalid"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "physician_user_id": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Physician User Id"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        },
+        "review_scope": {
+          "const": "source_record_finalization",
+          "default": "source_record_finalization",
+          "title": "Review Scope",
+          "type": "string"
+        },
+        "eligible_as_current_source": {
+          "title": "Eligible As Current Source",
+          "type": "boolean"
+        },
+        "dicom_identity_verified": {
+          "const": false,
+          "default": false,
+          "title": "Dicom Identity Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "report_id",
+        "version",
+        "content_sha256",
+        "source_status",
+        "review_status",
+        "eligible_as_current_source"
+      ],
+      "title": "ImagingReviewReference",
+      "type": "object"
+    },
+    "ImagingStudyReference": {
+      "additionalProperties": false,
+      "description": "A local report proxy, not a claim of verified DICOM identity or modality.",
+      "properties": {
+        "report_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Report Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "modality": {
+          "default": "unknown",
+          "enum": [
+            "unknown",
+            "DX",
+            "CR",
+            "MR",
+            "CT"
+          ],
+          "title": "Modality",
+          "type": "string"
+        },
+        "dicom_identity_verified": {
+          "const": false,
+          "default": false,
+          "title": "Dicom Identity Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "report_id",
+        "version",
+        "content_sha256"
+      ],
+      "title": "ImagingStudyReference",
+      "type": "object"
+    },
+    "IntegratedFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "core": {
+          "enum": [
+            "orthopedic",
+            "imaging"
+          ],
+          "title": "Core",
+          "type": "string"
+        },
+        "finding": {
+          "$ref": "#/$defs/CoreFinding"
+        },
+        "review_status": {
+          "enum": [
+            "confirmed_source",
+            "unreviewed_model",
+            "unreviewed_source"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "approval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PhysicianApproval"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "usable_as_confirmed_finding": {
+          "title": "Usable As Confirmed Finding",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "core",
+        "finding",
+        "review_status",
+        "usable_as_confirmed_finding"
+      ],
+      "title": "IntegratedFinding",
+      "type": "object"
+    },
+    "IntegrationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "warning",
+            "blocking"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "core": {
+          "anyOf": [
+            {
+              "enum": [
+                "orthopedic",
+                "imaging"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Core"
+        },
+        "finding_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Finding Ids",
+          "type": "array"
+        },
+        "source_references": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RecordReference"
+          },
+          "title": "Source References",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "severity"
+      ],
+      "title": "IntegrationIssue",
+      "type": "object"
+    },
+    "IntegrationObservation": {
+      "additionalProperties": false,
+      "description": "Strict transport view of the existing typed observation contract.\n\nExisting local observation objects are copied through validation; unsupported\nproducer fields must fail rather than silently lose quality or review data.",
+      "properties": {
+        "category": {
+          "enum": [
+            "laboratory",
+            "imaging",
+            "pathology",
+            "vital_sign",
+            "clinical_test",
+            "other"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "code_system": {
+          "enum": [
+            "LOINC",
+            "SNOMED_CT",
+            "LOCAL",
+            "OTHER"
+          ],
+          "title": "Code System",
+          "type": "string"
+        },
+        "code_system_uri": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code System Uri"
+        },
+        "code_system_version": {
+          "anyOf": [
+            {
+              "maxLength": 50,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code System Version"
+        },
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "display_name": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Display Name",
+          "type": "string"
+        },
+        "value_type": {
+          "enum": [
+            "quantity",
+            "string",
+            "boolean",
+            "integer",
+            "coded",
+            "datetime",
+            "absent"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        },
+        "quantity_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quantity Value"
+        },
+        "string_value": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "String Value"
+        },
+        "boolean_value": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Boolean Value"
+        },
+        "integer_value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Integer Value"
+        },
+        "coded_value": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coded Value"
+        },
+        "coded_system": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coded System"
+        },
+        "coded_display": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coded Display"
+        },
+        "datetime_value": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Datetime Value"
+        },
+        "absent_reason": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Absent Reason"
+        },
+        "unit_code": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Code"
+        },
+        "unit_display": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Display"
+        },
+        "reference_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Low"
+        },
+        "reference_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference High"
+        },
+        "reference_text": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Text"
+        },
+        "interpretation": {
+          "anyOf": [
+            {
+              "enum": [
+                "normal",
+                "low",
+                "high",
+                "critical_low",
+                "critical_high",
+                "abnormal",
+                "indeterminate"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Interpretation"
+        },
+        "body_site": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Site"
+        },
+        "specimen": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Specimen"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Method"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        }
+      },
+      "required": [
+        "category",
+        "code_system",
+        "code",
+        "display_name",
+        "value_type"
+      ],
+      "title": "IntegrationObservation",
+      "type": "object"
+    },
+    "KnowledgeReference": {
+      "additionalProperties": false,
+      "properties": {
+        "fact_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Fact Id",
+          "type": "string"
+        },
+        "fact_key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "evidence_grade": {
+          "title": "Evidence Grade",
+          "type": "string"
+        },
+        "source_ids": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid To"
+        },
+        "status": {
+          "const": "approved",
+          "default": "approved",
+          "title": "Status",
+          "type": "string"
+        },
+        "applicability": {
+          "const": "not_assessed",
+          "default": "not_assessed",
+          "title": "Applicability",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fact_id",
+        "fact_key",
+        "version",
+        "content_sha256",
+        "evidence_grade",
+        "source_ids"
+      ],
+      "title": "KnowledgeReference",
+      "type": "object"
+    },
+    "PatientReference": {
+      "additionalProperties": false,
+      "description": "Existing internal patient ID only; never sent to a core adapter.",
+      "properties": {
+        "patient_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Patient Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "patient_id"
+      ],
+      "title": "PatientReference",
+      "type": "object"
+    },
+    "PhysicianApproval": {
+      "additionalProperties": false,
+      "description": "Source finalization attribution, checked against server records.",
+      "properties": {
+        "physician_user_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Physician User Id",
+          "type": "string"
+        },
+        "reviewed_at": {
+          "format": "date-time",
+          "title": "Reviewed At",
+          "type": "string"
+        },
+        "scope": {
+          "const": "source_record_finalization",
+          "default": "source_record_finalization",
+          "title": "Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "physician_user_id",
+        "reviewed_at"
+      ],
+      "title": "PhysicianApproval",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "engine_version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "clinical_context_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Clinical Context Sha256",
+          "type": "string"
+        },
+        "copilot_snapshot_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Copilot Snapshot Sha256",
+          "type": "string"
+        },
+        "safety_rule_set_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Safety Rule Set Sha256",
+          "type": "string"
+        },
+        "components": {
+          "items": {
+            "$ref": "#/$defs/ComponentVersion"
+          },
+          "title": "Components",
+          "type": "array"
+        },
+        "core_output_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Core Output Sha256S",
+          "type": "array"
+        }
+      },
+      "required": [
+        "engine_version",
+        "clinical_context_sha256",
+        "copilot_snapshot_sha256",
+        "safety_rule_set_sha256",
+        "components",
+        "core_output_sha256s"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "ProvenanceManifest": {
+      "additionalProperties": false,
+      "description": "Opaque dependency digests only; no patient IDs, text or source URLs.",
+      "properties": {
+        "engine_version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "clinical_context_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Clinical Context Sha256",
+          "type": "string"
+        },
+        "copilot_snapshot_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Copilot Snapshot Sha256",
+          "type": "string"
+        },
+        "safety_rule_set_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Safety Rule Set Sha256",
+          "type": "string"
+        },
+        "safety_evaluation_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Safety Evaluation Sha256"
+        },
+        "components": {
+          "items": {
+            "$ref": "#/$defs/ComponentVersion"
+          },
+          "title": "Components",
+          "type": "array"
+        },
+        "core_semantic_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Core Semantic Sha256S",
+          "type": "array"
+        },
+        "knowledge_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Knowledge Sha256S",
+          "type": "array"
+        },
+        "imaging_review_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Imaging Review Sha256",
+          "type": "string"
+        },
+        "decision_reference_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Decision Reference Sha256",
+          "type": "string"
+        },
+        "manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Manifest Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "engine_version",
+        "clinical_context_sha256",
+        "copilot_snapshot_sha256",
+        "safety_rule_set_sha256",
+        "safety_evaluation_sha256",
+        "components",
+        "core_semantic_sha256s",
+        "knowledge_sha256s",
+        "imaging_review_sha256",
+        "decision_reference_sha256",
+        "manifest_sha256"
+      ],
+      "title": "ProvenanceManifest",
+      "type": "object"
+    },
+    "RecordReference": {
+      "additionalProperties": false,
+      "properties": {
+        "record_type": {
+          "enum": [
+            "clinical_intake",
+            "paraclinical_report"
+          ],
+          "title": "Record Type",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "observation_id": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observation Id"
+        },
+        "field": {
+          "enum": [
+            "exam_findings",
+            "pain_score",
+            "observation"
+          ],
+          "title": "Field",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_type",
+        "record_id",
+        "version",
+        "content_sha256",
+        "field"
+      ],
+      "title": "RecordReference",
+      "type": "object"
+    },
+    "SafetyAlertReference": {
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "rule_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "rule_version": {
+          "minimum": 1,
+          "title": "Rule Version",
+          "type": "integer"
+        },
+        "rule_content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Rule Content Sha256",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "high",
+            "critical"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "required_action": {
+          "enum": [
+            "document",
+            "review_before_proceeding",
+            "urgent_clinical_review"
+          ],
+          "title": "Required Action",
+          "type": "string"
+        },
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "acknowledged",
+            "escalated",
+            "assessed"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "finding_id",
+        "rule_id",
+        "rule_version",
+        "rule_content_sha256",
+        "severity",
+        "required_action",
+        "review_status"
+      ],
+      "title": "SafetyAlertReference",
+      "type": "object"
+    },
+    "SafetyEvaluationReference": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluation_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Evaluation Id",
+          "type": "string"
+        },
+        "result_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Result Sha256",
+          "type": "string"
+        },
+        "clinical_context_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Clinical Context Sha256",
+          "type": "string"
+        },
+        "rule_set_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Rule Set Sha256",
+          "type": "string"
+        },
+        "engine_version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evaluation_id",
+        "result_sha256",
+        "clinical_context_sha256",
+        "rule_set_sha256",
+        "engine_version",
+        "created_at"
+      ],
+      "title": "SafetyEvaluationReference",
+      "type": "object"
+    },
+    "VisitReference": {
+      "additionalProperties": false,
+      "properties": {
+        "visit_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Visit Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "open",
+            "completed",
+            "cancelled"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "visit_id",
+        "status"
+      ],
+      "title": "VisitReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "imaging_unavailable",
+        "degraded",
+        "awaiting_physician_review"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "clinical_context_reference": {
+      "$ref": "#/$defs/ClinicalCaseReference"
+    },
+    "result": {
+      "$ref": "#/$defs/DecisionSupportResult"
+    },
+    "imaging_review": {
+      "items": {
+        "$ref": "#/$defs/ImagingReviewReference"
+      },
+      "title": "Imaging Review",
+      "type": "array"
+    },
+    "decision_model_reference": {
+      "$ref": "#/$defs/DecisionModelReference"
+    },
+    "safety_status": {
+      "$ref": "#/$defs/ClinicalSafetyStatus"
+    },
+    "review_requirements": {
+      "items": {
+        "maxLength": 100,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Review Requirements",
+      "type": "array"
+    },
+    "data_limitations": {
+      "items": {
+        "maxLength": 100,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Data Limitations",
+      "type": "array"
+    },
+    "provenance_manifest": {
+      "$ref": "#/$defs/ProvenanceManifest"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "snapshot_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Snapshot Sha256",
+      "type": "string"
+    },
+    "hash_scope": {
+      "const": "clinical-intelligence-semantic-v1",
+      "default": "clinical-intelligence-semantic-v1",
+      "title": "Hash Scope",
+      "type": "string"
+    },
+    "review_status": {
+      "const": "requires_physician_review",
+      "default": "requires_physician_review",
+      "title": "Review Status",
+      "type": "string"
+    },
+    "is_diagnosis": {
+      "const": false,
+      "default": false,
+      "title": "Is Diagnosis",
+      "type": "boolean"
+    },
+    "authorizes_treatment": {
+      "const": false,
+      "default": false,
+      "title": "Authorizes Treatment",
+      "type": "boolean"
+    },
+    "is_clinical_clearance": {
+      "const": false,
+      "default": false,
+      "title": "Is Clinical Clearance",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "status",
+    "clinical_context_reference",
+    "result",
+    "imaging_review",
+    "decision_model_reference",
+    "safety_status",
+    "review_requirements",
+    "data_limitations",
+    "provenance_manifest",
+    "observed_at",
+    "snapshot_sha256"
+  ],
+  "title": "IntegratedClinicalSnapshot",
+  "type": "object"
+}

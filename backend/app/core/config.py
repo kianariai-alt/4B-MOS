@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     )
     CLINIC_TIMEZONE: str = "Asia/Tehran"
     PILOT_ENFORCEMENT_ENABLED: bool = False
+    CLINICAL_INTEGRATION_ENABLED: bool = False
 
     AUDIO_PIPELINE_ENABLED: bool = False
     PATIENT_PORTAL_ENABLED: bool = False

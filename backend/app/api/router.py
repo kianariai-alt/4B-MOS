@@ -247,3 +247,6 @@ api_router.include_router(recording_media_router)
 from backend.app.api.routes.patient_portal import router as patient_portal_router, staff_router as portal_staff_router
 api_router.include_router(patient_portal_router)
 api_router.include_router(portal_staff_router)
+
+from backend.app.api.routes.clinical_integration import router as clinical_integration_router
+api_router.include_router(clinical_integration_router)

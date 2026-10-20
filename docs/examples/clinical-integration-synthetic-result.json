@@ -1,0 +1,322 @@
+{
+  "contract_version": "1.0.0",
+  "patient": {
+    "patient_id": "synthetic-patient"
+  },
+  "visit": {
+    "visit_id": "synthetic-visit",
+    "status": "open"
+  },
+  "assessment": {
+    "intake_id": "synthetic-intake",
+    "version": 1,
+    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "final",
+    "body_region": "knee",
+    "laterality": "left"
+  },
+  "imaging_studies": [
+    {
+      "report_id": "synthetic-report",
+      "version": 1,
+      "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "modality": "unknown",
+      "dicom_identity_verified": false
+    }
+  ],
+  "raw_record_references": [
+    {
+      "record_type": "clinical_intake",
+      "record_id": "synthetic-intake",
+      "version": 1,
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observation_id": null,
+      "field": "exam_findings"
+    },
+    {
+      "record_type": "paraclinical_report",
+      "record_id": "synthetic-report",
+      "version": 1,
+      "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "observation_id": "synthetic-imaging-observation",
+      "field": "observation"
+    }
+  ],
+  "confirmed_findings": [
+    {
+      "core": "orthopedic",
+      "finding": {
+        "finding_id": "addb58b98c11d24be52068515c9c49cc80f3970c26d49869487e74154fe58064",
+        "source": {
+          "record_type": "clinical_intake",
+          "record_id": "synthetic-intake",
+          "version": 1,
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "observation_id": null,
+          "field": "exam_findings"
+        },
+        "observation": {
+          "category": "clinical_test",
+          "code_system": "LOCAL",
+          "code_system_uri": null,
+          "code_system_version": null,
+          "code": "INTAKE_EXAM",
+          "display_name": "Synthetic examination",
+          "value_type": "string",
+          "quantity_value": null,
+          "string_value": "Synthetic limited knee movement; not a real patient.",
+          "boolean_value": null,
+          "integer_value": null,
+          "coded_value": null,
+          "coded_system": null,
+          "coded_display": null,
+          "datetime_value": null,
+          "absent_reason": null,
+          "unit_code": null,
+          "unit_display": null,
+          "reference_low": null,
+          "reference_high": null,
+          "reference_text": null,
+          "interpretation": null,
+          "body_site": "left knee",
+          "specimen": null,
+          "method": null,
+          "note": null,
+          "observed_at": null
+        },
+        "origin": "record",
+        "confidence": null
+      },
+      "review_status": "confirmed_source",
+      "approval": {
+        "physician_user_id": "synthetic-physician",
+        "reviewed_at": "2026-10-20T08:44:50.142848Z",
+        "scope": "source_record_finalization"
+      },
+      "usable_as_confirmed_finding": true
+    },
+    {
+      "core": "imaging",
+      "finding": {
+        "finding_id": "c99a24d68161714397951c6dcc2258816b3f866d33478d833325d47219fafd65",
+        "source": {
+          "record_type": "paraclinical_report",
+          "record_id": "synthetic-report",
+          "version": 1,
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "observation_id": "synthetic-imaging-observation",
+          "field": "observation"
+        },
+        "observation": {
+          "category": "imaging",
+          "code_system": "LOCAL",
+          "code_system_uri": null,
+          "code_system_version": null,
+          "code": "SYNTHETIC_EFFUSION",
+          "display_name": "Synthetic imaging finding",
+          "value_type": "boolean",
+          "quantity_value": null,
+          "string_value": null,
+          "boolean_value": true,
+          "integer_value": null,
+          "coded_value": null,
+          "coded_system": null,
+          "coded_display": null,
+          "datetime_value": null,
+          "absent_reason": null,
+          "unit_code": null,
+          "unit_display": null,
+          "reference_low": null,
+          "reference_high": null,
+          "reference_text": null,
+          "interpretation": null,
+          "body_site": "left knee",
+          "specimen": null,
+          "method": null,
+          "note": null,
+          "observed_at": null
+        },
+        "origin": "record",
+        "confidence": null
+      },
+      "review_status": "confirmed_source",
+      "approval": {
+        "physician_user_id": "synthetic-physician",
+        "reviewed_at": "2026-10-20T08:44:50.142848Z",
+        "scope": "source_record_finalization"
+      },
+      "usable_as_confirmed_finding": true
+    }
+  ],
+  "unreviewed_findings": [],
+  "knowledge": [],
+  "evidence_briefs": [],
+  "cores": [
+    {
+      "contract_version": "1.0.0",
+      "core": "orthopedic",
+      "visit_id": "synthetic-visit",
+      "clinical_context_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "component": {
+        "component_id": "4b-orthopedic-final-records",
+        "version": "1.0.0",
+        "artifact_sha256": "2cb4067c2d735f7cbcd0cf8723bec716ebedd51ac3e08aaaa4bd4d94d83f0756",
+        "kind": "adapter"
+      },
+      "generated_at": "2026-10-20T08:44:50.143218Z",
+      "valid_until": "2026-10-21T08:44:50.143218Z",
+      "status": "available",
+      "findings": [
+        {
+          "finding_id": "addb58b98c11d24be52068515c9c49cc80f3970c26d49869487e74154fe58064",
+          "source": {
+            "record_type": "clinical_intake",
+            "record_id": "synthetic-intake",
+            "version": 1,
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "observation_id": null,
+            "field": "exam_findings"
+          },
+          "observation": {
+            "category": "clinical_test",
+            "code_system": "LOCAL",
+            "code_system_uri": null,
+            "code_system_version": null,
+            "code": "INTAKE_EXAM",
+            "display_name": "Synthetic examination",
+            "value_type": "string",
+            "quantity_value": null,
+            "string_value": "Synthetic limited knee movement; not a real patient.",
+            "boolean_value": null,
+            "integer_value": null,
+            "coded_value": null,
+            "coded_system": null,
+            "coded_display": null,
+            "datetime_value": null,
+            "absent_reason": null,
+            "unit_code": null,
+            "unit_display": null,
+            "reference_low": null,
+            "reference_high": null,
+            "reference_text": null,
+            "interpretation": null,
+            "body_site": "left knee",
+            "specimen": null,
+            "method": null,
+            "note": null,
+            "observed_at": null
+          },
+          "origin": "record",
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "contract_version": "1.0.0",
+      "core": "imaging",
+      "visit_id": "synthetic-visit",
+      "clinical_context_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "component": {
+        "component_id": "4b-imaging-final-records",
+        "version": "1.0.0",
+        "artifact_sha256": "a5d994bab34bc284a30ffdacd40040ae799dcb9cbdf694f0c7eb781f47e53278",
+        "kind": "adapter"
+      },
+      "generated_at": "2026-10-20T08:44:50.143459Z",
+      "valid_until": "2026-10-21T08:44:50.143459Z",
+      "status": "available",
+      "findings": [
+        {
+          "finding_id": "c99a24d68161714397951c6dcc2258816b3f866d33478d833325d47219fafd65",
+          "source": {
+            "record_type": "paraclinical_report",
+            "record_id": "synthetic-report",
+            "version": 1,
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "observation_id": "synthetic-imaging-observation",
+            "field": "observation"
+          },
+          "observation": {
+            "category": "imaging",
+            "code_system": "LOCAL",
+            "code_system_uri": null,
+            "code_system_version": null,
+            "code": "SYNTHETIC_EFFUSION",
+            "display_name": "Synthetic imaging finding",
+            "value_type": "boolean",
+            "quantity_value": null,
+            "string_value": null,
+            "boolean_value": true,
+            "integer_value": null,
+            "coded_value": null,
+            "coded_system": null,
+            "coded_display": null,
+            "datetime_value": null,
+            "absent_reason": null,
+            "unit_code": null,
+            "unit_display": null,
+            "reference_low": null,
+            "reference_high": null,
+            "reference_text": null,
+            "interpretation": null,
+            "body_site": "left knee",
+            "specimen": null,
+            "method": null,
+            "note": null,
+            "observed_at": null
+          },
+          "origin": "record",
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "code": "synthetic_demo_not_clinically_validated",
+      "severity": "warning",
+      "core": null,
+      "finding_ids": [],
+      "source_references": []
+    },
+    {
+      "code": "no_knowledge_selected",
+      "severity": "warning",
+      "core": null,
+      "finding_ids": [],
+      "source_references": []
+    }
+  ],
+  "provenance": {
+    "engine_version": "clinical-integration-1.0.1",
+    "clinical_context_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "copilot_snapshot_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "safety_rule_set_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "components": [
+      {
+        "component_id": "4b-orthopedic-final-records",
+        "version": "1.0.0",
+        "artifact_sha256": "2cb4067c2d735f7cbcd0cf8723bec716ebedd51ac3e08aaaa4bd4d94d83f0756",
+        "kind": "adapter"
+      },
+      {
+        "component_id": "4b-imaging-final-records",
+        "version": "1.0.0",
+        "artifact_sha256": "a5d994bab34bc284a30ffdacd40040ae799dcb9cbdf694f0c7eb781f47e53278",
+        "kind": "adapter"
+      }
+    ],
+    "core_output_sha256s": [
+      "10c5216807219295fc9c3eed322cf6407572dd02696889d2f4da7e7fbb8705e9",
+      "8724ef56a90ce7bc1303dc6f3ec6dee772b145dd08229ab5482dde754cf8ca1e"
+    ]
+  },
+  "generated_at": "2026-10-20T08:44:50.142848Z",
+  "valid_until": "2026-10-21T08:44:50.142848Z",
+  "workflow_state": "awaiting_physician_review",
+  "is_diagnosis": false,
+  "is_recommendation": false,
+  "is_clinical_clearance": false,
+  "authorizes_treatment": false,
+  "requires_independent_review": true
+}
