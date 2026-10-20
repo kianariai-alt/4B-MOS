@@ -1,0 +1,59 @@
+name: AMK Single Invoice Safe Correction
+
+on:
+  push:
+    branches:
+      - build/amk-accounting-installer
+    paths:
+      - 'amk-build/AMK_RemoveOne_Source.b64'
+      - '.github/workflows/amk-single-invoice-remove.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Setup dotnet 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Verify and unpack code
+        shell: pwsh
+        run: |
+          $source=(Get-Content -Raw 'amk-build/AMK_RemoveOne_Source.b64').Trim()
+          [IO.File]::WriteAllBytes('source.zip',[Convert]::FromBase64String($source))
+          $sha=(Get-FileHash 'source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '6c1107f4ce5f657ac997fee2ec045ea954cce7cc7182a75f6c44b36f1408546f') { throw "Source integrity mismatch: $sha" }
+          Expand-Archive 'source.zip' '.' -Force
+          if (!(Test-Path 'AMK.RemoveOne/AMK.RemoveOne.csproj')) { throw 'Missing project file' }
+      - name: Build standalone Windows utility
+        shell: pwsh
+        run: |
+          dotnet restore 'AMK.RemoveOne/AMK.RemoveOne.csproj' -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed' }
+          dotnet publish 'AMK.RemoveOne/AMK.RemoveOne.csproj' -c Release -r win-x64 --self-contained true -o 'published' -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
+          if (!(Test-Path 'published/AMK.RemoveOne.exe')) { throw 'Executable missing' }
+      - name: Self-test targeted record correction
+        shell: pwsh
+        run: |
+          $exe=(Resolve-Path 'published/AMK.RemoveOne.exe').Path
+          $test=Start-Process -FilePath $exe -ArgumentList '--selftest' -Wait -PassThru -NoNewWindow
+          Write-Host ('Selftest exit code: '+$test.ExitCode)
+          if ($test.ExitCode -ne 0) {
+            Get-ChildItem -Recurse -Filter 'AMK_RemoveOne_Selftest_Error.txt' | ForEach-Object { Get-Content $_.FullName }
+            throw 'Single-invoice tests failed'
+          }
+      - name: Upload isolated executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: AMK-Remove-One-Invoice-Windows64
+          path: published/AMK.RemoveOne.exe
+          retention-days: 21
+          if-no-files-found: error
