@@ -186,3 +186,9 @@ API is disabled by default; it does not approve knowledge, write patient records
 activate safety rules, select treatment, or replace the existing Registry and
 physician question bank. An offline synthetic demo runs with
 `python -m backend.tools.orthopedic_knowledge_demo`.
+
+For books stored on a local Windows drive, the
+[local orthopedic library reader](docs/LOCAL_ORTHOPEDIC_BOOKS_FA.md) provides
+`Read-Orthopedic-Books.cmd` (default `D:\orthopedic book`). It prepares private,
+page-referenced PDF text locally, with no upload, Registry write, medical
+approval or connection from a cloud session to the user's computer.

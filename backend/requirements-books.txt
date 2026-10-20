@@ -1,0 +1,2 @@
+# Optional offline PDF intake; not needed by the API or production image.
+pypdf==6.21.1
