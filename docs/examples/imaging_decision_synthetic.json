@@ -1,0 +1,434 @@
+{
+  "database_accessed": false,
+  "is_diagnosis": false,
+  "scenarios": {
+    "complete": {
+      "metadata": {
+        "body_region": "KNEE",
+        "dicom_identity_verified": false,
+        "instance_reference": "hmac-sha256:8735aa3aa31e2c80ad4942301c21f79aa17af9ba08497576befeaf5b0ef4864e",
+        "issues": [],
+        "laterality": "L",
+        "metadata_sha256": "092336c46eed48a66d1f69395bcc2e1878f2056aee678266bb60f6bef4056742",
+        "modality": "MR",
+        "pixel_data_validated": false,
+        "reader_version": "1.0.0",
+        "schema_version": "imaging-metadata-v1",
+        "series_reference": "hmac-sha256:cc4d8823cbe29cfd23c10db4aa49acfd1afcb7eda0d221f08283b42c98824f19",
+        "status": "valid",
+        "study_reference": "hmac-sha256:eab5966ef980ed7fdab6aeb86ae9da211b5012fc94244966478134ea9c916113",
+        "technical": {
+          "bits_allocated": 16,
+          "bits_stored": 12,
+          "columns": 4,
+          "high_bit": 11,
+          "image_orientation_patient": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          "number_of_frames": null,
+          "photometric_interpretation": "MONOCHROME2",
+          "pixel_representation": 0,
+          "pixel_spacing": [
+            0.5,
+            0.5
+          ],
+          "rows": 4,
+          "samples_per_pixel": 1,
+          "slice_thickness": 3.0,
+          "sop_class_uid": "1.2.840.10008.5.1.4.1.1.4",
+          "transfer_syntax_uid": "1.2.840.10008.1.2.1"
+        }
+      },
+      "validation": {
+        "adapter_id": "4b.data-validation.rules",
+        "adapter_version": "1.0.0",
+        "blocked_finding_references": [],
+        "eligible_finding_references": [],
+        "finding_checks": [],
+        "input_sha256": "e89f1a4468c6eb28bc9e10654c43ed44cba45a2fb3a41b7053d049a4f4b3feef",
+        "is_diagnosis": false,
+        "is_treatment_recommendation": false,
+        "missing_clinical_fields": [],
+        "missing_imaging_fields": [],
+        "next_steps": [],
+        "policy_version": "data-requirements-v1",
+        "result_sha256": "8b991fa7f881ecf346a5b407c1956f1ced0e651b28ae7298da3c8089a97f18ef",
+        "rules_sha256": "a1783b0739da69f5df2a631fa6c1f4fb31f651bfa5001de258a374f1f9711312",
+        "scope": "data_validation_only",
+        "status": "data_ready",
+        "traces": [
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "input_schema",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "clinical_completeness",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "imaging_completeness",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "context_consistency",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "not_applicable",
+            "rule_id": "finding_verification",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "not_applicable",
+            "rule_id": "finding_provenance",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "finding_completeness",
+            "rule_version": "1.0.0"
+          }
+        ]
+      }
+    },
+    "corrupt": {
+      "metadata": {
+        "body_region": null,
+        "dicom_identity_verified": false,
+        "instance_reference": null,
+        "issues": [
+          {
+            "code": "invalid_dicom_file",
+            "field": "file",
+            "severity": "error"
+          }
+        ],
+        "laterality": null,
+        "metadata_sha256": "06336a05d6950a364564373884d843735f8fb2a6c704b1d84000c0bc351167fd",
+        "modality": null,
+        "pixel_data_validated": false,
+        "reader_version": "1.0.0",
+        "schema_version": "imaging-metadata-v1",
+        "series_reference": null,
+        "status": "invalid",
+        "study_reference": null,
+        "technical": {
+          "bits_allocated": null,
+          "bits_stored": null,
+          "columns": null,
+          "high_bit": null,
+          "image_orientation_patient": null,
+          "number_of_frames": null,
+          "photometric_interpretation": null,
+          "pixel_representation": null,
+          "pixel_spacing": null,
+          "rows": null,
+          "samples_per_pixel": null,
+          "slice_thickness": null,
+          "sop_class_uid": null,
+          "transfer_syntax_uid": null
+        }
+      },
+      "validation": {
+        "adapter_id": "4b.data-validation.rules",
+        "adapter_version": "1.0.0",
+        "blocked_finding_references": [],
+        "eligible_finding_references": [],
+        "finding_checks": [],
+        "input_sha256": "5f5d6c792f1353d807e68b3f13f11a60b9cf9baec0951f698a1b09c7994a3f3d",
+        "is_diagnosis": false,
+        "is_treatment_recommendation": false,
+        "missing_clinical_fields": [],
+        "missing_imaging_fields": [
+          "columns",
+          "instance_reference",
+          "modality",
+          "pixel_spacing",
+          "rows",
+          "series_reference",
+          "study_reference"
+        ],
+        "next_steps": [
+          "reconcile_context_metadata",
+          "resolve_required_imaging_metadata"
+        ],
+        "policy_version": "data-requirements-v1",
+        "result_sha256": "06e9de5bc6566f719afce289c71c38d28c691d400f7273d3df7c9c1c12f4d5ad",
+        "rules_sha256": "a1783b0739da69f5df2a631fa6c1f4fb31f651bfa5001de258a374f1f9711312",
+        "scope": "data_validation_only",
+        "status": "needs_data",
+        "traces": [
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "input_schema",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "clinical_completeness",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [
+              "imaging_metadata_not_valid",
+              "missing_required_imaging_fields",
+              "unresolved_imaging_metadata_issues"
+            ],
+            "outcome": "failed",
+            "rule_id": "imaging_completeness",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [
+              "body_region_does_not_match_requirement",
+              "laterality_does_not_match_requirement",
+              "modality_does_not_match_requirement"
+            ],
+            "outcome": "failed",
+            "rule_id": "context_consistency",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "not_applicable",
+            "rule_id": "finding_verification",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "not_applicable",
+            "rule_id": "finding_provenance",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "finding_completeness",
+            "rule_version": "1.0.0"
+          }
+        ]
+      }
+    },
+    "incomplete": {
+      "metadata": {
+        "body_region": "KNEE",
+        "dicom_identity_verified": false,
+        "instance_reference": "hmac-sha256:8735aa3aa31e2c80ad4942301c21f79aa17af9ba08497576befeaf5b0ef4864e",
+        "issues": [
+          {
+            "code": "missing_required_metadata",
+            "field": "SeriesInstanceUID",
+            "severity": "missing"
+          }
+        ],
+        "laterality": "L",
+        "metadata_sha256": "14e5d76a36fa6d72a340c53ed231b8d459361db3a01eb22c650b1bf28f9a1c0d",
+        "modality": "MR",
+        "pixel_data_validated": false,
+        "reader_version": "1.0.0",
+        "schema_version": "imaging-metadata-v1",
+        "series_reference": null,
+        "status": "incomplete",
+        "study_reference": "hmac-sha256:eab5966ef980ed7fdab6aeb86ae9da211b5012fc94244966478134ea9c916113",
+        "technical": {
+          "bits_allocated": 16,
+          "bits_stored": 12,
+          "columns": 4,
+          "high_bit": 11,
+          "image_orientation_patient": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          "number_of_frames": null,
+          "photometric_interpretation": "MONOCHROME2",
+          "pixel_representation": 0,
+          "pixel_spacing": [
+            0.5,
+            0.5
+          ],
+          "rows": 4,
+          "samples_per_pixel": 1,
+          "slice_thickness": 3.0,
+          "sop_class_uid": "1.2.840.10008.5.1.4.1.1.4",
+          "transfer_syntax_uid": "1.2.840.10008.1.2.1"
+        }
+      },
+      "validation": {
+        "adapter_id": "4b.data-validation.rules",
+        "adapter_version": "1.0.0",
+        "blocked_finding_references": [],
+        "eligible_finding_references": [],
+        "finding_checks": [],
+        "input_sha256": "f7e9a5994cc48e80087e2d234a536ed55a0996989fc8e4644964491dfb7d143d",
+        "is_diagnosis": false,
+        "is_treatment_recommendation": false,
+        "missing_clinical_fields": [],
+        "missing_imaging_fields": [
+          "series_reference"
+        ],
+        "next_steps": [
+          "resolve_required_imaging_metadata"
+        ],
+        "policy_version": "data-requirements-v1",
+        "result_sha256": "3b0c3ea39d4633b9cfdf27b46f04167652b5559bfe3c3bf72486de6abec95404",
+        "rules_sha256": "a1783b0739da69f5df2a631fa6c1f4fb31f651bfa5001de258a374f1f9711312",
+        "scope": "data_validation_only",
+        "status": "needs_data",
+        "traces": [
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "input_schema",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "clinical_completeness",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [
+              "imaging_metadata_not_valid",
+              "missing_required_imaging_fields",
+              "unresolved_imaging_metadata_issues"
+            ],
+            "outcome": "failed",
+            "rule_id": "imaging_completeness",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "context_consistency",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "not_applicable",
+            "rule_id": "finding_verification",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "not_applicable",
+            "rule_id": "finding_provenance",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "finding_completeness",
+            "rule_version": "1.0.0"
+          }
+        ]
+      }
+    },
+    "unverified_finding": {
+      "validation": {
+        "adapter_id": "4b.data-validation.rules",
+        "adapter_version": "1.0.0",
+        "blocked_finding_references": [
+          "hmac-sha256:784695dbb0091cbccbadc62518fc2dc85f2c15a32476db0195470ea17fa6c092"
+        ],
+        "eligible_finding_references": [],
+        "finding_checks": [
+          {
+            "eligible": false,
+            "finding_reference": "hmac-sha256:784695dbb0091cbccbadc62518fc2dc85f2c15a32476db0195470ea17fa6c092",
+            "provenance_codes": [
+              "incomplete_finding_provenance"
+            ],
+            "verification_codes": [
+              "finding_not_verified"
+            ]
+          }
+        ],
+        "input_sha256": "77f82d6c04ad603fe6a736b2f5baaafaf3c4611804b05e7e73b550c79a308537",
+        "is_diagnosis": false,
+        "is_treatment_recommendation": false,
+        "missing_clinical_fields": [],
+        "missing_imaging_fields": [],
+        "next_steps": [
+          "resolve_finding_review_and_provenance"
+        ],
+        "policy_version": "data-requirements-v1",
+        "result_sha256": "291d8a6b88a27bde4c1bcf90798a831aefee9d53de944c8c2a823240c6e0b20d",
+        "rules_sha256": "a1783b0739da69f5df2a631fa6c1f4fb31f651bfa5001de258a374f1f9711312",
+        "scope": "data_validation_only",
+        "status": "needs_data",
+        "traces": [
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "input_schema",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "clinical_completeness",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "imaging_completeness",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "context_consistency",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [
+              "finding_not_verified"
+            ],
+            "outcome": "failed",
+            "rule_id": "finding_verification",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [
+              "incomplete_finding_provenance"
+            ],
+            "outcome": "failed",
+            "rule_id": "finding_provenance",
+            "rule_version": "1.0.0"
+          },
+          {
+            "codes": [],
+            "outcome": "passed",
+            "rule_id": "finding_completeness",
+            "rule_version": "1.0.0"
+          }
+        ]
+      }
+    }
+  },
+  "synthetic_only": true
+}
