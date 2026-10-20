@@ -1,0 +1,2 @@
+# Optional local metadata reader; no model weights, network ingestion or DB dependency.
+pydicom==3.0.1
