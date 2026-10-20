@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from backend.app.decision_intelligence import ClinicalInput
 from backend.app.imaging_intelligence.integration import GatedImagingRecordAdapter, ReportSeriesBinding
@@ -110,6 +111,43 @@ class IntegrationBridgeTests(unittest.TestCase):
             self.adapter(clock=lambda:datetime(2026,10,20)).collect(self.context)
         with self.assertRaises(ValueError):
             self.adapter(contract=type("OtherContract",(),{"CONTRACT_VERSION":"2.0.0"}))
+
+    def test_sidecar_changes_invalidate_component_without_a_report_context_change(self):
+        original = self.adapter().current_version()
+        changes = (
+            {"study": replace(self.study, status="invalid")},
+            {"study": replace(self.study, rejected_input_count=1)},
+            {"clinical": ClinicalInput()},
+            {"binding": replace(self.binding, series_sha256="d"*64)},
+            {"binding": replace(self.binding, report_version=2)},
+        )
+        for change in changes:
+            with self.subTest(change=next(iter(change))):
+                self.assertNotEqual(self.adapter(**change).current_version(), original)
+
+    def test_equivalent_sidecar_and_different_clock_preserve_component(self):
+        original = self.adapter().current_version()
+        equivalent = self.adapter(study=replace(self.study), binding=replace(self.binding),
+                                  clinical=replace(self.clinical),
+                                  clock=lambda:datetime(2026,10,21,tzinfo=timezone.utc))
+        self.assertEqual(equivalent.current_version(), original)
+
+    def test_processing_dependency_changes_invalidate_component(self):
+        original = self.adapter().current_version()
+        read_bytes = Path.read_bytes
+        for relative in ("imaging_intelligence/reader.py", "imaging_intelligence/series.py",
+                         "imaging_intelligence/models.py", "decision_intelligence/adapter.py",
+                         "decision_intelligence/models.py"):
+            def changed(path):
+                content = read_bytes(path)
+                return content + b"\n# synthetic dependency revision\n" if path.as_posix().endswith(relative) else content
+            with self.subTest(dependency=relative), patch.object(Path, "read_bytes", changed):
+                self.assertNotEqual(self.adapter().current_version(), original)
+
+    def test_unreadable_dependency_does_not_expose_path(self):
+        with patch.object(Path, "read_bytes", side_effect=OSError("private/path?secret=value")):
+            with self.assertRaisesRegex(ValueError, "^Adapter dependency manifest is unavailable[.]$"):
+                self.adapter().current_version()
 
 
 if __name__ == '__main__':

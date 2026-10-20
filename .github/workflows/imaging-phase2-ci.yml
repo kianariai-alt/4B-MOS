@@ -59,6 +59,45 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r backend/requirements.txt -r backend/requirements-imaging.txt
       - run: python -m backend.tools.imaging_integration_demo --reference-root .integration-reference
+  composition:
+    name: Combined PR43/44 backend (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      ENVIRONMENT: test
+      DATABASE_URL: sqlite://
+      BOOTSTRAP_ENABLED: 'true'
+      DEBUG: 'false'
+      SECRET_KEY: synthetic-composition-only-20261020
+      KNOWLEDGE_REFERENCE: 3fafc6224d17209ee47373aede4bf9dedfa76a72
+      INTEGRATION_REFERENCE: abb60d24f79efe498a19faaa9d7bc16967061ef7
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Compose reviewed commits in the disposable runner only
+        run: |
+          git config user.name '4B synthetic compatibility CI'
+          git config user.email 'synthetic-ci@4b-mos.invalid'
+          git rev-parse HEAD
+          git merge --no-ff --no-edit "$KNOWLEDGE_REFERENCE"
+          git merge --no-ff --no-edit "$INTEGRATION_REFERENCE"
+          git status --porcelain
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: Exercise actual saved-run freshness and physician approval boundary
+        run: python -m pytest backend/tests/test_imaging_integration_freshness.py -q
+      - name: Test complete composed backend with in-memory synthetic fixtures
+        run: python -m pytest backend/tests -q -ra
+      - run: python -m compileall -q backend
   laboratory:
     name: Orthanc DICOMweb and OHIF browser
     runs-on: ubuntu-24.04

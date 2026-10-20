@@ -11,6 +11,8 @@ import hashlib
 from pathlib import Path
 import re
 
+import pydicom
+
 from backend.app.decision_intelligence import (
     ClinicalInput, EvaluationRequirements, ImagingInput, RuleBasedDecisionAdapter, ValidationRequest,
 )
@@ -92,14 +94,38 @@ class GatedImagingRecordAdapter:
         return RuleBasedDecisionAdapter(requirements).evaluate(ValidationRequest(self.clinical, imaging))
 
     def current_version(self):
+        # PR44's freshness check compares only ComponentVersion for adapter-owned
+        # dependencies. The DICOM sidecar is deliberately absent from CoreInput v1;
+        # bind it here so changing it cannot leave a saved run marked current.
+        validation = self.validation()
         return self.contract.ComponentVersion(
-            component_id="4b-imaging-series-record-gate", version="1.0.0", kind="adapter",
+            component_id="4b-imaging-series-record-gate", version="1.0.1", kind="adapter",
             artifact_sha256=canonical_digest({
-                "source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                "policy": "series-record-gate-v1", "unified_contract": "1.0.0",
+                "source_artifacts": self._source_artifacts(),
+                "pydicom_version": pydicom.__version__,
+                "rules_sha256": validation.rules_sha256,
+                "validation_sha256": validation.result_sha256,
+                "study_sha256": self.study.to_dict()["study_sha256"],
+                "binding_sha256": canonical_digest(asdict(self.binding)),
+                "unified_contract": "1.0.0",
                 "reference_commit": INTEGRATION_REFERENCE_COMMIT,
             }),
         )
+
+    def _source_artifacts(self):
+        app_root = Path(__file__).resolve().parent.parent
+        paths = (
+            "imaging_intelligence/__init__.py", "imaging_intelligence/integration.py",
+            "imaging_intelligence/series.py", "imaging_intelligence/reader.py",
+            "imaging_intelligence/models.py", "decision_intelligence/__init__.py",
+            "decision_intelligence/adapter.py", "decision_intelligence/models.py",
+        )
+        try:
+            artifacts = {name: hashlib.sha256((app_root / name).read_bytes()).hexdigest() for name in paths}
+            artifacts["unified_contract"] = hashlib.sha256(Path(self.contract.__file__).read_bytes()).hexdigest()
+            return artifacts
+        except (OSError, TypeError, AttributeError):
+            raise ValueError("Adapter dependency manifest is unavailable.") from None
 
     def collect(self, context):
         context = self.contract.CoreInput.model_validate(context.model_dump(mode="json"))
