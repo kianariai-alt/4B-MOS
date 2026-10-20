@@ -1,9 +1,10 @@
 // Real OHIF/Chromium rendering of generated data; no external URLs or patient files.
 const { chromium } = require('playwright');
 (async () => {
-  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
+    page.on('pageerror', error => console.error('Synthetic viewer runtime:', error.message.slice(0, 300)));
     const frame = page.waitForResponse(r => r.url().startsWith('http://127.0.0.1:18080/dicom-web/') && r.url().includes('/frames/') && r.status() === 200, { timeout: 90000 });
     await page.goto('http://127.0.0.1:18080/viewer?StudyInstanceUIDs=1.2.826.0.1.3680043.10.543.2001', { waitUntil: 'domcontentloaded' });
     await frame;
