@@ -1,0 +1,130 @@
+name: Imaging Phase 2
+on:
+  pull_request:
+    branches: [main, feature/imaging-intelligence]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: imaging-phase2-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  offline:
+    name: Series, drafts and actual v1 contract (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ['3.12', '3.14']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: abb60d24f79efe498a19faaa9d7bc16967061ef7
+          path: .integration-reference
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r backend/requirements-imaging-review.txt
+      - name: Run offline tests against the actual pinned PR44 schema
+        env:
+          MOS_INTEGRATION_CONTRACT_FILE: ${{ github.workspace }}/.integration-reference/backend/app/schemas/clinical_integration.py
+        run: python -m unittest discover -s backend/tests/imaging_intelligence -v
+      - run: python -m backend.tools.imaging_series_demo
+      - run: python -m backend.tools.imaging_knowledge_drafts
+      - run: python -m compileall -q backend
+  integration:
+    name: Actual PR44 composition engine
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ENVIRONMENT: test
+      DATABASE_URL: sqlite://
+      DEBUG: 'false'
+      SECRET_KEY: synthetic-imaging-compatibility-only-20261020
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: abb60d24f79efe498a19faaa9d7bc16967061ef7
+          path: .integration-reference
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt -r backend/requirements-imaging.txt
+      - run: python -m backend.tools.imaging_integration_demo --reference-root .integration-reference
+  laboratory:
+    name: Orthanc DICOMweb and OHIF browser
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements-imaging-review.txt
+      - name: Start isolated synthetic services
+        run: docker compose -f deploy/imaging-lab/compose.yaml up -d
+      - name: Wait for synthetic lab identity
+        run: |
+          python - <<'PY'
+          import time
+          from backend.app.imaging_intelligence.synthetic_lab import SyntheticDicomWebLab, SyntheticLabError
+          lab = SyntheticDicomWebLab()
+          try:
+              for attempt in range(45):
+                  try:
+                      lab.assert_synthetic_lab()
+                      break
+                  except SyntheticLabError:
+                      if attempt == 44:
+                          raise
+                      time.sleep(1)
+          finally:
+              lab.close()
+          PY
+      - name: Synthetic STOW-QIDO-WADO and local series validation
+        run: python -m backend.tools.imaging_lab_demo
+      - name: Install a pinned browser test runtime
+        run: |
+          npm install --prefix /tmp/4b-browser playwright@1.56.1 --ignore-scripts --no-audit --no-fund
+          /tmp/4b-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Render generated slices in the real OHIF viewer
+        env:
+          NODE_PATH: /tmp/4b-browser/node_modules
+        run: node backend/tests/imaging_lab_browser.cjs
+      - name: Diagnose lab failure
+        if: ${{ failure() }}
+        run: docker compose -f deploy/imaging-lab/compose.yaml logs --tail 100
+      - name: Remove disposable synthetic services
+        if: ${{ always() }}
+        run: docker compose -f deploy/imaging-lab/compose.yaml down --volumes
+  monai:
+    name: Real MONAI synthetic Dice evaluation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pip install -r backend/requirements-imaging-models.txt
+      - run: python -c 'import monai, torch; print(monai.__version__, torch.__version__)'
+      - run: python -m unittest backend.tests.imaging_intelligence.test_model_evaluation -v
+      - run: |
+          python - <<'PY'
+          import json
+          from backend.app.imaging_intelligence.model_evaluation import MonaiDiceEvaluationAdapter, synthetic_evaluation_case
+          print(json.dumps(MonaiDiceEvaluationAdapter().evaluate(synthetic_evaluation_case()), sort_keys=True))
+          PY

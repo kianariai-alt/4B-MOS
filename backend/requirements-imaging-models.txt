@@ -1,0 +1,3 @@
+# Optional synthetic metric evaluation only; no model or dataset downloads.
+monai==1.5.1
+torch==2.8.0

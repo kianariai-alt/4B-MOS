@@ -1,0 +1,35 @@
+name: fourb-imaging-synthetic
+services:
+  orthanc:
+    image: jodogne/orthanc-plugins:1.12.10
+    ports:
+      - "127.0.0.1:18042:8042"
+    volumes:
+      - ./orthanc.json:/etc/orthanc/orthanc.json:ro
+    tmpfs:
+      - /var/lib/orthanc/db:size=128m
+      - /tmp:size=64m
+    mem_limit: 768m
+    cpus: 1
+    networks: [synthetic]
+    security_opt: [no-new-privileges:true]
+  ohif:
+    image: ohif/app:v3.11.0
+    ports:
+      - "127.0.0.1:18080:80"
+    volumes:
+      - ./ohif-config.js:/usr/share/nginx/html/app-config.js:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [orthanc]
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:size=64m
+      - /var/run:size=16m
+      - /tmp:size=32m
+    mem_limit: 512m
+    cpus: 1
+    networks: [synthetic]
+    security_opt: [no-new-privileges:true]
+networks:
+  synthetic:
+    internal: true
