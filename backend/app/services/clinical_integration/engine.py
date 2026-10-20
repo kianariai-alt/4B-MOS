@@ -15,7 +15,7 @@ from backend.app.schemas.clinical_integration import (
 from backend.app.services.clinical_integration.ports import CoreAdapter
 from backend.app.services.session_finalization import evidence_digest
 
-ENGINE_VERSION = "clinical-integration-1.0.0"
+ENGINE_VERSION = "clinical-integration-1.0.1"
 CORE_NAMES = ("orthopedic", "imaging")
 MAX_RUN_AGE = timedelta(hours=24)  # Administrative review window, not a clinical age rule.
 
@@ -55,6 +55,9 @@ def collect_cores(
                 raise ValueError("Core timestamp is in the future.")
             if output.valid_until <= now:
                 issues.append(IntegrationIssue(code="expired_core_output", core=name, severity="blocking"))
+            elif now - output.generated_at > MAX_RUN_AGE:
+                issues.append(IntegrationIssue(code="expired_core_output", core=name, severity="blocking"))
+                output = None
         except (ValidationError, ValueError, TypeError, AttributeError):
             issues.append(IntegrationIssue(code="invalid_core_output", core=name, severity="blocking"))
             output = None
@@ -73,7 +76,7 @@ def collect_cores(
         if output.status != "available":
             issues.append(IntegrationIssue(code=f"core_{output.status}", core=name, severity="blocking"))
         elif not output.findings:
-            issues.append(IntegrationIssue(code="core_has_no_findings", core=name, severity="warning"))
+            issues.append(IntegrationIssue(code="core_has_no_findings", core=name, severity="blocking"))
         outputs.append(output)
     return tuple(outputs), tuple(issues)
 
@@ -140,6 +143,19 @@ def assemble_result(
                     code="finding_requires_physician_review", core=core.core,
                     severity="blocking", finding_ids=(item.finding_id,),
                 ))
+
+    # Producers may only return a subset of their input. Preserve every omitted
+    # source reference explicitly, including omissions caused by invalid values;
+    # partial composition must never appear ready for summary approval.
+    for name in CORE_NAMES:
+        omitted = tuple(item.source for item in context.observations
+                        if ((item.observation.category == "imaging") == (name == "imaging")
+                            and (name, digest_model(item.source)) not in seen_sources))
+        if omitted:
+            problems.append(IntegrationIssue(
+                code="incomplete_core_coverage", core=name, severity="blocking",
+                source_references=omitted,
+            ))
 
     # A narrow data-consistency check, not medical reconciliation: compare only
     # identical terminology/version, body site and typed-value kind across cores.

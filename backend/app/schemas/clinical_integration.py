@@ -20,6 +20,23 @@ class ContractModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, str_strip_whitespace=True)
 
 
+class IntegrationObservation(ParaclinicalObservationInput):
+    """Strict transport view of the existing typed observation contract.
+
+    Existing local observation objects are copied through validation; unsupported
+    producer fields must fail rather than silently lose quality or review data.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, str_strip_whitespace=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def copy_local_observation(cls, value):
+        if isinstance(value, ParaclinicalObservationInput):
+            return value.model_dump()
+        return value
+
+
 class PatientReference(ContractModel):
     """Existing internal patient ID only; never sent to a core adapter."""
 
@@ -77,7 +94,7 @@ class ImagingStudyReference(ContractModel):
 
 class SourceObservation(ContractModel):
     source: RecordReference
-    observation: ParaclinicalObservationInput
+    observation: IntegrationObservation
 
 
 class CoreInput(ContractModel):
@@ -92,7 +109,7 @@ class CoreInput(ContractModel):
 class CoreFinding(ContractModel):
     finding_id: Identifier
     source: RecordReference
-    observation: ParaclinicalObservationInput
+    observation: IntegrationObservation
     origin: Literal["record", "model"]
     confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
 
@@ -144,6 +161,19 @@ class IntegratedFinding(ContractModel):
     approval: PhysicianApproval | None = None
     usable_as_confirmed_finding: bool
 
+    @model_validator(mode="after")
+    def review_matches_origin(self):
+        if self.review_status == "confirmed_source":
+            if (self.finding.origin != "record" or self.approval is None
+                    or not self.usable_as_confirmed_finding):
+                raise ValueError("Only physician-attributed source records can be confirmed.")
+        else:
+            expected = "unreviewed_model" if self.finding.origin == "model" else "unreviewed_source"
+            if (self.review_status != expected or self.approval is not None
+                    or self.usable_as_confirmed_finding):
+                raise ValueError("Unreviewed findings cannot carry approval or confirmation.")
+        return self
+
 
 class KnowledgeReference(ContractModel):
     fact_id: Identifier
@@ -172,6 +202,7 @@ class IntegrationIssue(ContractModel):
     severity: Literal["warning", "blocking"]
     core: CoreName | None = None
     finding_ids: tuple[Identifier, ...] = ()
+    source_references: tuple[RecordReference, ...] = ()
 
 
 class Provenance(ContractModel):
@@ -205,6 +236,22 @@ class DecisionSupportResult(ContractModel):
     is_clinical_clearance: Literal[False] = False
     authorizes_treatment: Literal[False] = False
     requires_independent_review: Literal[True] = True
+
+    @model_validator(mode="after")
+    def review_collections_are_consistent(self):
+        if any(item.review_status != "confirmed_source" for item in self.confirmed_findings):
+            raise ValueError("Confirmed findings must contain only confirmed source records.")
+        if any(item.review_status == "confirmed_source" for item in self.unreviewed_findings):
+            raise ValueError("Confirmed source records cannot be placed in unreviewed findings.")
+        identities = [(item.core, item.finding.finding_id)
+                      for item in self.confirmed_findings + self.unreviewed_findings]
+        if len(identities) != len(set(identities)):
+            raise ValueError("Integrated finding identities must be unique across review collections.")
+        if self.workflow_state == "awaiting_physician_review" and (
+            self.unreviewed_findings or any(issue.severity == "blocking" for issue in self.issues)
+        ):
+            raise ValueError("An incomplete or blocked result cannot be ready for summary approval.")
+        return self
 
 
 class IntegrationRunCreate(ContractModel):

@@ -3,15 +3,21 @@
     "ComponentVersion": {
       "additionalProperties": false,
       "properties": {
-        "artifact_sha256": {
-          "pattern": "^[0-9a-f]{64}$",
-          "title": "Artifact Sha256",
-          "type": "string"
-        },
         "component_id": {
           "maxLength": 100,
           "minLength": 1,
           "title": "Component Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
           "type": "string"
         },
         "kind": {
@@ -21,12 +27,6 @@
             "rule"
           ],
           "title": "Kind",
-          "type": "string"
-        },
-        "version": {
-          "maxLength": 100,
-          "minLength": 1,
-          "title": "Version",
           "type": "string"
         }
       },
@@ -42,6 +42,26 @@
     "CoreFinding": {
       "additionalProperties": false,
       "properties": {
+        "finding_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/RecordReference"
+        },
+        "observation": {
+          "$ref": "#/$defs/IntegrationObservation"
+        },
+        "origin": {
+          "enum": [
+            "record",
+            "model"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
         "confidence": {
           "anyOf": [
             {
@@ -55,26 +75,6 @@
           ],
           "default": null,
           "title": "Confidence"
-        },
-        "finding_id": {
-          "maxLength": 100,
-          "minLength": 1,
-          "title": "Finding Id",
-          "type": "string"
-        },
-        "observation": {
-          "$ref": "#/$defs/ParaclinicalObservationInput"
-        },
-        "origin": {
-          "enum": [
-            "record",
-            "model"
-          ],
-          "title": "Origin",
-          "type": "string"
-        },
-        "source": {
-          "$ref": "#/$defs/RecordReference"
         }
       },
       "required": [
@@ -86,46 +86,10 @@
       "title": "CoreFinding",
       "type": "object"
     },
-    "ParaclinicalObservationInput": {
+    "IntegrationObservation": {
+      "additionalProperties": false,
+      "description": "Strict transport view of the existing typed observation contract.\n\nExisting local observation objects are copied through validation; unsupported\nproducer fields must fail rather than silently lose quality or review data.",
       "properties": {
-        "absent_reason": {
-          "anyOf": [
-            {
-              "maxLength": 100,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Absent Reason"
-        },
-        "body_site": {
-          "anyOf": [
-            {
-              "maxLength": 200,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Body Site"
-        },
-        "boolean_value": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Boolean Value"
-        },
         "category": {
           "enum": [
             "laboratory",
@@ -136,12 +100,6 @@
             "other"
           ],
           "title": "Category",
-          "type": "string"
-        },
-        "code": {
-          "maxLength": 100,
-          "minLength": 1,
-          "title": "Code",
           "type": "string"
         },
         "code_system": {
@@ -180,23 +138,37 @@
           "default": null,
           "title": "Code System Version"
         },
-        "coded_display": {
-          "anyOf": [
-            {
-              "maxLength": 300,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Coded Display"
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
         },
-        "coded_system": {
+        "display_name": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Display Name",
+          "type": "string"
+        },
+        "value_type": {
+          "enum": [
+            "quantity",
+            "string",
+            "boolean",
+            "integer",
+            "coded",
+            "datetime",
+            "absent"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        },
+        "quantity_value": {
           "anyOf": [
             {
-              "maxLength": 100,
+              "type": "number"
+            },
+            {
               "type": "string"
             },
             {
@@ -204,7 +176,44 @@
             }
           ],
           "default": null,
-          "title": "Coded System"
+          "title": "Quantity Value"
+        },
+        "string_value": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "String Value"
+        },
+        "boolean_value": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Boolean Value"
+        },
+        "integer_value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Integer Value"
         },
         "coded_value": {
           "anyOf": [
@@ -219,6 +228,32 @@
           "default": null,
           "title": "Coded Value"
         },
+        "coded_system": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coded System"
+        },
+        "coded_display": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coded Display"
+        },
         "datetime_value": {
           "anyOf": [
             {
@@ -232,23 +267,87 @@
           "default": null,
           "title": "Datetime Value"
         },
-        "display_name": {
-          "maxLength": 300,
-          "minLength": 1,
-          "title": "Display Name",
-          "type": "string"
-        },
-        "integer_value": {
+        "absent_reason": {
           "anyOf": [
             {
-              "type": "integer"
+              "maxLength": 100,
+              "type": "string"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "title": "Integer Value"
+          "title": "Absent Reason"
+        },
+        "unit_code": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Code"
+        },
+        "unit_display": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Display"
+        },
+        "reference_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Low"
+        },
+        "reference_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference High"
+        },
+        "reference_text": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Text"
         },
         "interpretation": {
           "anyOf": [
@@ -270,6 +369,32 @@
           ],
           "default": null,
           "title": "Interpretation"
+        },
+        "body_site": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Site"
+        },
+        "specimen": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Specimen"
         },
         "method": {
           "anyOf": [
@@ -309,129 +434,6 @@
           ],
           "default": null,
           "title": "Observed At"
-        },
-        "quantity_value": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Quantity Value"
-        },
-        "reference_high": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Reference High"
-        },
-        "reference_low": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Reference Low"
-        },
-        "reference_text": {
-          "anyOf": [
-            {
-              "maxLength": 2000,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Reference Text"
-        },
-        "specimen": {
-          "anyOf": [
-            {
-              "maxLength": 200,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Specimen"
-        },
-        "string_value": {
-          "anyOf": [
-            {
-              "maxLength": 20000,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "String Value"
-        },
-        "unit_code": {
-          "anyOf": [
-            {
-              "maxLength": 100,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Unit Code"
-        },
-        "unit_display": {
-          "anyOf": [
-            {
-              "maxLength": 100,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Unit Display"
-        },
-        "value_type": {
-          "enum": [
-            "quantity",
-            "string",
-            "boolean",
-            "integer",
-            "coded",
-            "datetime",
-            "absent"
-          ],
-          "title": "Value Type",
-          "type": "string"
         }
       },
       "required": [
@@ -441,24 +443,34 @@
         "display_name",
         "value_type"
       ],
-      "title": "ParaclinicalObservationInput",
+      "title": "IntegrationObservation",
       "type": "object"
     },
     "RecordReference": {
       "additionalProperties": false,
       "properties": {
+        "record_type": {
+          "enum": [
+            "clinical_intake",
+            "paraclinical_report"
+          ],
+          "title": "Record Type",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
         "content_sha256": {
           "pattern": "^[0-9a-f]{64}$",
           "title": "Content Sha256",
-          "type": "string"
-        },
-        "field": {
-          "enum": [
-            "exam_findings",
-            "pain_score",
-            "observation"
-          ],
-          "title": "Field",
           "type": "string"
         },
         "observation_id": {
@@ -475,24 +487,14 @@
           "default": null,
           "title": "Observation Id"
         },
-        "record_id": {
-          "maxLength": 100,
-          "minLength": 1,
-          "title": "Record Id",
-          "type": "string"
-        },
-        "record_type": {
+        "field": {
           "enum": [
-            "clinical_intake",
-            "paraclinical_report"
+            "exam_findings",
+            "pain_score",
+            "observation"
           ],
-          "title": "Record Type",
+          "title": "Field",
           "type": "string"
-        },
-        "version": {
-          "minimum": 1,
-          "title": "Version",
-          "type": "integer"
         }
       },
       "required": [
@@ -508,14 +510,6 @@
   },
   "additionalProperties": false,
   "properties": {
-    "clinical_context_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Clinical Context Sha256",
-      "type": "string"
-    },
-    "component": {
-      "$ref": "#/$defs/ComponentVersion"
-    },
     "contract_version": {
       "const": "1.0.0",
       "default": "1.0.0",
@@ -530,18 +524,28 @@
       "title": "Core",
       "type": "string"
     },
-    "findings": {
-      "default": [],
-      "items": {
-        "$ref": "#/$defs/CoreFinding"
-      },
-      "maxItems": 1000,
-      "title": "Findings",
-      "type": "array"
+    "visit_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Visit Id",
+      "type": "string"
+    },
+    "clinical_context_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Clinical Context Sha256",
+      "type": "string"
+    },
+    "component": {
+      "$ref": "#/$defs/ComponentVersion"
     },
     "generated_at": {
       "format": "date-time",
       "title": "Generated At",
+      "type": "string"
+    },
+    "valid_until": {
+      "format": "date-time",
+      "title": "Valid Until",
       "type": "string"
     },
     "status": {
@@ -553,16 +557,14 @@
       "title": "Status",
       "type": "string"
     },
-    "valid_until": {
-      "format": "date-time",
-      "title": "Valid Until",
-      "type": "string"
-    },
-    "visit_id": {
-      "maxLength": 100,
-      "minLength": 1,
-      "title": "Visit Id",
-      "type": "string"
+    "findings": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/CoreFinding"
+      },
+      "maxItems": 1000,
+      "title": "Findings",
+      "type": "array"
     }
   },
   "required": [
