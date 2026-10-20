@@ -2,8 +2,6 @@ name: fourb-imaging-synthetic
 services:
   orthanc:
     image: jodogne/orthanc-plugins:1.12.10
-    ports:
-      - "127.0.0.1:18042:8042"
     volumes:
       - ./orthanc.json:/etc/orthanc/orthanc.json:ro
     tmpfs:
@@ -15,8 +13,12 @@ services:
     security_opt: [no-new-privileges:true]
   ohif:
     image: ohif/app:v3.11.0
+    # Serve immutable config directly; the image wrapper rewrites mounted files.
+    entrypoint: [nginx]
+    command: [-g, "daemon off;"]
     ports:
       - "127.0.0.1:18080:80"
+      - "127.0.0.1:18042:8042"
     volumes:
       - ./ohif-config.js:/usr/share/nginx/html/app-config.js:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
@@ -28,8 +30,10 @@ services:
       - /tmp:size=32m
     mem_limit: 512m
     cpus: 1
-    networks: [synthetic]
+    networks: [synthetic, loopback_edge]
     security_opt: [no-new-privileges:true]
 networks:
   synthetic:
     internal: true
+  # Port publishing requires an edge bridge; only the proxy joins it.
+  loopback_edge: {}

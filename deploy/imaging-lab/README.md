@@ -3,7 +3,9 @@
 Use only generated fixtures. This is a loopback-only, disposable development lab,
 not a deployment for a clinic. It has no remote peers, DICOM listener, production
 authentication or patient-file import command. OHIF upload is disabled. The
-Orthanc administrative port remains accessible to local processes, so keep real
+Orthanc remains on an internal backend network. Only the viewer/proxy joins an
+edge bridge to publish loopback ports; port 18042 exposes STOW/QIDO/WADO and the
+read-only lab identity, not the remaining Orthanc administrative API. Keep real
 files out of this lab. Name/UID marker checks are accidental-misrouting guards,
 not authentication or proof of synthetic provenance against a hostile caller.
 

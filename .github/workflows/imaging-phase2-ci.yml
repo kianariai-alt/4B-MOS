@@ -72,7 +72,10 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r backend/requirements-imaging-review.txt
       - name: Start isolated synthetic services
-        run: docker compose -f deploy/imaging-lab/compose.yaml up -d
+        run: |
+          docker compose -f deploy/imaging-lab/compose.yaml up -d
+          docker compose -f deploy/imaging-lab/compose.yaml port ohif 8042
+          docker compose -f deploy/imaging-lab/compose.yaml port ohif 80
       - name: Wait for synthetic lab identity
         run: |
           python - <<'PY'
