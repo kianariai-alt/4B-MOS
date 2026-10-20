@@ -29,7 +29,7 @@ jobs:
           $b64 = (Get-Content -Raw 'amk-build/AMK_Safe_Archive_Replacer_Source.b64').Trim()
           [IO.File]::WriteAllBytes('source.zip', [Convert]::FromBase64String($b64))
           $sha = (Get-FileHash 'source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($sha -ne '2a1b7cfed131d959659b461d8b3f85559359eef1886c398f0d0c1654843fea30') {
+          if ($sha -ne '9f0299b6ef66ecae348dfe7c0d7ab05494d9b06efb54e5a181d739992bfff129') {
             throw "Source checksum mismatch: $sha"
           }
           Expand-Archive 'source.zip' '.' -Force
@@ -46,7 +46,7 @@ jobs:
         shell: pwsh
         run: |
           & '.\published\AMK.SafeReplace.exe' --selftest
-          if ($LASTEXITCODE -ne 0) { if (Test-Path 'published/AMK_SelfTest_Error.txt') { Get-Content 'published/AMK_SelfTest_Error.txt' }; throw 'Migration and safeguard tests failed' }
+          if ($LASTEXITCODE -ne 0) { Write-Host ('Exit code: '+$LASTEXITCODE); Get-ChildItem -Recurse -Filter 'AMK_SelfTest_*.txt' | ForEach-Object { Write-Host ('Diagnostic: '+$_.FullName); Get-Content $_.FullName }; throw 'Migration and safeguard tests failed' }
           Write-Host 'Safety tests succeeded.'
       - name: Upload Windows executable (source only, no patient data)
         uses: actions/upload-artifact@v4
