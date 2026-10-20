@@ -1,0 +1,57 @@
+name: AMK Safe Ledger Archive Replacement Utility
+
+on:
+  push:
+    branches:
+      - build/amk-accounting-installer
+    paths:
+      - 'amk-build/AMK_Safe_Archive_Replacer_Source.b64'
+      - '.github/workflows/amk-safe-archive-replace.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-selftest:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code only
+        uses: actions/checkout@v4
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Verify source and unpack
+        shell: pwsh
+        run: |
+          $b64 = (Get-Content -Raw 'amk-build/AMK_Safe_Archive_Replacer_Source.b64').Trim()
+          [IO.File]::WriteAllBytes('source.zip', [Convert]::FromBase64String($b64))
+          $sha = (Get-FileHash 'source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '5b258de29508184b8ee48651019589dbe3dd3ca5dbbc7904706af2cc09e5052b') {
+            throw "Source checksum mismatch: $sha"
+          }
+          Expand-Archive 'source.zip' '.' -Force
+          if (!(Test-Path 'AMK.SafeReplace/AMK.SafeReplace.csproj')) { throw 'Missing source project' }
+      - name: Build portable Windows executable
+        shell: pwsh
+        run: |
+          dotnet restore 'AMK.SafeReplace/AMK.SafeReplace.csproj' -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed' }
+          dotnet publish 'AMK.SafeReplace/AMK.SafeReplace.csproj' -c Release -r win-x64 --self-contained true -o 'published' -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
+          if (!(Test-Path 'published/AMK.SafeReplace.exe')) { throw 'EXE not produced' }
+      - name: Verify clean replacement and dependency safety
+        shell: pwsh
+        run: |
+          & '.\published\AMK.SafeReplace.exe' --selftest
+          if ($LASTEXITCODE -ne 0) { throw 'Migration and safeguard tests failed' }
+          Write-Host 'Safety tests succeeded.'
+      - name: Upload Windows executable (source only, no patient data)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AMK-SafeArchiveReplace-Windows64
+          path: published/AMK.SafeReplace.exe
+          retention-days: 14
+          if-no-files-found: error
