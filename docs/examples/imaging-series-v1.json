@@ -1,0 +1,223 @@
+{
+  "complete": {
+    "input_count": 3,
+    "is_diagnosis": false,
+    "issues": [],
+    "rejected_input_count": 0,
+    "schema_version": "series-validation-v1",
+    "series": [
+      {
+        "body_region": "KNEE",
+        "common_technical_fields": [
+          "bits_allocated",
+          "bits_stored",
+          "columns",
+          "high_bit",
+          "image_orientation_patient",
+          "photometric_interpretation",
+          "pixel_representation",
+          "pixel_spacing",
+          "rows",
+          "samples_per_pixel",
+          "slice_thickness",
+          "sop_class_uid",
+          "transfer_syntax_uid"
+        ],
+        "completeness": "expected_manifest_matched",
+        "dicom_identity_verified": false,
+        "expected_inventory_sha256": "ee34959ff2215672653675fcb02c320c9002ab835721b6f4671b4aae3df01ddc",
+        "instance_count": 3,
+        "instance_sha256s": [
+          "01f53a7da4bf21a6f43682d71303af7db0702e89210223d4a6c6bb1ac4369af8",
+          "43ebb4724cc71bddcc64a2f27b797782b396dc113e16ab8a7ea52cf4124f24d8",
+          "b50c0664bb69721c0311fd7e92726e9d088cb7b111d7d64ea3c933c3cc5d6aa5"
+        ],
+        "issues": [],
+        "laterality": "L",
+        "modality": "MR",
+        "ordered_instance_references": [
+          "hmac-sha256:f853572b6854dbf4f3d2b5a5486f32bd27fd94025331e448a4b59490d7038692",
+          "hmac-sha256:317bd478ea7f5a1784058b52b578106dcd8476b4eea21ec7789f610bd3a6b8b0",
+          "hmac-sha256:45b4b113b8a5dc4c525ffb954ffda5a4d5e7a17b19a95f6520630865e5c2f4a6"
+        ],
+        "pixel_data_validated": false,
+        "schema_version": "series-validation-v1",
+        "series_reference": "hmac-sha256:5924450c056b78224aa915864894e5c0e5e61e2c9a87036ac3569afeced367fd",
+        "series_sha256": "8ba1c12aefc002fda34f21756a6461a8c3857bb9094210b0dc6bbdcdd7e9236f",
+        "slice_step_mm": 3.0,
+        "status": "valid",
+        "study_reference": "hmac-sha256:7217d53dab635f7c996ab8f7e5d3039035edcc6cf9adf97541a5f472a5c2951b"
+      }
+    ],
+    "status": "valid",
+    "study_sha256": "c9eb9830b473ec4a8bb833019c98d8df4996acb6715ad70d57108a2f03ff024c"
+  },
+  "duplicate_instance": {
+    "input_count": 4,
+    "is_diagnosis": false,
+    "issues": [
+      "duplicate_instance"
+    ],
+    "rejected_input_count": 0,
+    "schema_version": "series-validation-v1",
+    "series": [
+      {
+        "body_region": "KNEE",
+        "common_technical_fields": [
+          "bits_allocated",
+          "bits_stored",
+          "columns",
+          "high_bit",
+          "image_orientation_patient",
+          "photometric_interpretation",
+          "pixel_representation",
+          "pixel_spacing",
+          "rows",
+          "samples_per_pixel",
+          "slice_thickness",
+          "sop_class_uid",
+          "transfer_syntax_uid"
+        ],
+        "completeness": "expected_manifest_matched",
+        "dicom_identity_verified": false,
+        "expected_inventory_sha256": "ee34959ff2215672653675fcb02c320c9002ab835721b6f4671b4aae3df01ddc",
+        "instance_count": 4,
+        "instance_sha256s": [
+          "01f53a7da4bf21a6f43682d71303af7db0702e89210223d4a6c6bb1ac4369af8",
+          "43ebb4724cc71bddcc64a2f27b797782b396dc113e16ab8a7ea52cf4124f24d8",
+          "43ebb4724cc71bddcc64a2f27b797782b396dc113e16ab8a7ea52cf4124f24d8",
+          "b50c0664bb69721c0311fd7e92726e9d088cb7b111d7d64ea3c933c3cc5d6aa5"
+        ],
+        "issues": [
+          "duplicate_instance_number",
+          "repeated_slice_position"
+        ],
+        "laterality": "L",
+        "modality": "MR",
+        "ordered_instance_references": [
+          "hmac-sha256:f853572b6854dbf4f3d2b5a5486f32bd27fd94025331e448a4b59490d7038692",
+          "hmac-sha256:f853572b6854dbf4f3d2b5a5486f32bd27fd94025331e448a4b59490d7038692",
+          "hmac-sha256:317bd478ea7f5a1784058b52b578106dcd8476b4eea21ec7789f610bd3a6b8b0",
+          "hmac-sha256:45b4b113b8a5dc4c525ffb954ffda5a4d5e7a17b19a95f6520630865e5c2f4a6"
+        ],
+        "pixel_data_validated": false,
+        "schema_version": "series-validation-v1",
+        "series_reference": "hmac-sha256:5924450c056b78224aa915864894e5c0e5e61e2c9a87036ac3569afeced367fd",
+        "series_sha256": "e9de40b888cbc2333b18fd22585e4974d0274ebe695cf2910afb106a5acd786f",
+        "slice_step_mm": 3.0,
+        "status": "incomplete",
+        "study_reference": "hmac-sha256:7217d53dab635f7c996ab8f7e5d3039035edcc6cf9adf97541a5f472a5c2951b"
+      }
+    ],
+    "status": "invalid",
+    "study_sha256": "4a1e9ec17a6912d8113f2f435eeda58c5f33c401ece5359e47906436d725b240"
+  },
+  "inventory_unknown": {
+    "input_count": 3,
+    "is_diagnosis": false,
+    "issues": [],
+    "rejected_input_count": 0,
+    "schema_version": "series-validation-v1",
+    "series": [
+      {
+        "body_region": "KNEE",
+        "common_technical_fields": [
+          "bits_allocated",
+          "bits_stored",
+          "columns",
+          "high_bit",
+          "image_orientation_patient",
+          "photometric_interpretation",
+          "pixel_representation",
+          "pixel_spacing",
+          "rows",
+          "samples_per_pixel",
+          "slice_thickness",
+          "sop_class_uid",
+          "transfer_syntax_uid"
+        ],
+        "completeness": "not_established",
+        "dicom_identity_verified": false,
+        "expected_inventory_sha256": null,
+        "instance_count": 3,
+        "instance_sha256s": [
+          "01f53a7da4bf21a6f43682d71303af7db0702e89210223d4a6c6bb1ac4369af8",
+          "43ebb4724cc71bddcc64a2f27b797782b396dc113e16ab8a7ea52cf4124f24d8",
+          "b50c0664bb69721c0311fd7e92726e9d088cb7b111d7d64ea3c933c3cc5d6aa5"
+        ],
+        "issues": [],
+        "laterality": "L",
+        "modality": "MR",
+        "ordered_instance_references": [
+          "hmac-sha256:f853572b6854dbf4f3d2b5a5486f32bd27fd94025331e448a4b59490d7038692",
+          "hmac-sha256:317bd478ea7f5a1784058b52b578106dcd8476b4eea21ec7789f610bd3a6b8b0",
+          "hmac-sha256:45b4b113b8a5dc4c525ffb954ffda5a4d5e7a17b19a95f6520630865e5c2f4a6"
+        ],
+        "pixel_data_validated": false,
+        "schema_version": "series-validation-v1",
+        "series_reference": "hmac-sha256:5924450c056b78224aa915864894e5c0e5e61e2c9a87036ac3569afeced367fd",
+        "series_sha256": "f9937b1bc516b2425a24f918f99531feea3da66662244d0a1547dca8d0a20582",
+        "slice_step_mm": 3.0,
+        "status": "valid",
+        "study_reference": "hmac-sha256:7217d53dab635f7c996ab8f7e5d3039035edcc6cf9adf97541a5f472a5c2951b"
+      }
+    ],
+    "status": "valid",
+    "study_sha256": "d01dbf4f134d83526cfa20c21cb1750b8b42f03596eaca2de8cdfa6286de92fa"
+  },
+  "is_diagnosis": false,
+  "missing_slice": {
+    "input_count": 2,
+    "is_diagnosis": false,
+    "issues": [],
+    "rejected_input_count": 0,
+    "schema_version": "series-validation-v1",
+    "series": [
+      {
+        "body_region": "KNEE",
+        "common_technical_fields": [
+          "bits_allocated",
+          "bits_stored",
+          "columns",
+          "high_bit",
+          "image_orientation_patient",
+          "photometric_interpretation",
+          "pixel_representation",
+          "pixel_spacing",
+          "rows",
+          "samples_per_pixel",
+          "slice_thickness",
+          "sop_class_uid",
+          "transfer_syntax_uid"
+        ],
+        "completeness": "not_established",
+        "dicom_identity_verified": false,
+        "expected_inventory_sha256": "ee34959ff2215672653675fcb02c320c9002ab835721b6f4671b4aae3df01ddc",
+        "instance_count": 2,
+        "instance_sha256s": [
+          "43ebb4724cc71bddcc64a2f27b797782b396dc113e16ab8a7ea52cf4124f24d8",
+          "b50c0664bb69721c0311fd7e92726e9d088cb7b111d7d64ea3c933c3cc5d6aa5"
+        ],
+        "issues": [
+          "expected_instances_mismatch"
+        ],
+        "laterality": "L",
+        "modality": "MR",
+        "ordered_instance_references": [
+          "hmac-sha256:f853572b6854dbf4f3d2b5a5486f32bd27fd94025331e448a4b59490d7038692",
+          "hmac-sha256:317bd478ea7f5a1784058b52b578106dcd8476b4eea21ec7789f610bd3a6b8b0"
+        ],
+        "pixel_data_validated": false,
+        "schema_version": "series-validation-v1",
+        "series_reference": "hmac-sha256:5924450c056b78224aa915864894e5c0e5e61e2c9a87036ac3569afeced367fd",
+        "series_sha256": "fb6fbe68e1f080710cb408be24e6971c84104e3e3c255e8c529f475edb75505f",
+        "slice_step_mm": 3.0,
+        "status": "incomplete",
+        "study_reference": "hmac-sha256:7217d53dab635f7c996ab8f7e5d3039035edcc6cf9adf97541a5f472a5c2951b"
+      }
+    ],
+    "status": "incomplete",
+    "study_sha256": "773e76d10dbd35a765865e54746e8fb7e71d42213e862442673c7d4aeeb30d6c"
+  },
+  "synthetic_only": true
+}
