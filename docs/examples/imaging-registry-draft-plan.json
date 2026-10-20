@@ -1,0 +1,217 @@
+{
+  "approved_fact_count": 0,
+  "database_accessed": false,
+  "drafts": [
+    {
+      "method": "POST",
+      "payload": {
+        "clinical_domain": "imaging_knee_mri",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "fact_key": "IMG_MRI_PLANE_GEOMETRY_V1",
+        "indication": "Independent technical knowledge review only; no clinical ordering, diagnosis or treatment.",
+        "population": "Technical imaging data handling; patient-specific applicability not assessed.",
+        "sources": [
+          {
+            "accessed_at": "2026-10-20",
+            "citation": "DICOM Standards Committee. PS3.3 2026d, C.7.6.2 and C.7.6.2.1.1.",
+            "doi": null,
+            "guideline_version": "2026d; accessed 2026-10-20",
+            "publication_date": null,
+            "publisher": "DICOM Standards Committee",
+            "source_type": "other",
+            "title": "DICOM PS3.3 2026d, Image Plane Module",
+            "url": "https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.7.6.2.html"
+          }
+        ],
+        "statement": "DICOM Image Position (Patient) locates the first voxel in patient coordinates; Image Orientation (Patient) provides row and column direction cosines. Use the pair with pixel spacing for a spatial mapping; file names and InstanceNumber alone are not a patient-space transform.",
+        "therapy_type": null,
+        "title": "Patient-space geometry requires paired position and orientation",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "payload_sha256": "606a3b0b90f080d052edc6a26415d26840187ac93a60317341ec5684f1db1a63",
+      "requires_independent_review": true,
+      "route": "/api/v1/knowledge/facts",
+      "status": "draft"
+    },
+    {
+      "method": "POST",
+      "payload": {
+        "clinical_domain": "imaging_knee_mri",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "fact_key": "IMG_MRI_SPACING_DISTINCTION_V1",
+        "indication": "Independent technical knowledge review only; no clinical ordering, diagnosis or treatment.",
+        "population": "Technical imaging data handling; patient-specific applicability not assessed.",
+        "sources": [
+          {
+            "accessed_at": "2026-10-20",
+            "citation": "DICOM Standards Committee. PS3.3 2026d, C.7.6.2 and C.7.6.2.1.1.",
+            "doi": null,
+            "guideline_version": "2026d; accessed 2026-10-20",
+            "publication_date": null,
+            "publisher": "DICOM Standards Committee",
+            "source_type": "other",
+            "title": "DICOM PS3.3 2026d, Image Plane Module",
+            "url": "https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.7.6.2.html"
+          }
+        ],
+        "statement": "In the DICOM Image Plane Module, Slice Thickness describes nominal thickness, while Spacing Between Slices describes center-to-center separation when present. A stack-processing profile must not substitute thickness for measured inter-plane distance without an explicit assumption.",
+        "therapy_type": null,
+        "title": "Slice thickness and between-slice spacing describe different quantities",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "payload_sha256": "20d9bfeea50c30013cc984a0ce158ab53b6eea0167f7040627048b9f80d5041c",
+      "requires_independent_review": true,
+      "route": "/api/v1/knowledge/facts",
+      "status": "draft"
+    },
+    {
+      "method": "POST",
+      "payload": {
+        "clinical_domain": "imaging_knee_xray",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "fact_key": "IMG_PRIVACY_UIDS_0_V1",
+        "indication": "Independent technical knowledge review only; no clinical ordering, diagnosis or treatment.",
+        "population": "Technical imaging data handling; patient-specific applicability not assessed.",
+        "sources": [
+          {
+            "accessed_at": "2026-10-20",
+            "citation": "DICOM Standards Committee. PS3.15, E.2, Basic Application Level Confidentiality Profile; current edition accessed 2026-10-20.",
+            "doi": null,
+            "guideline_version": "current edition; version requires independent confirmation",
+            "publication_date": null,
+            "publisher": "DICOM Standards Committee",
+            "source_type": "other",
+            "title": "DICOM PS3.15 Basic Application Level Confidentiality Profile",
+            "url": "https://dicom.nema.org/medical/dicom/current/output/chtml/part15/sect_E.2.html"
+          }
+        ],
+        "statement": "DICOM confidentiality handling extends beyond patient name and patient ID to potentially identifying attributes, including instance identifiers and contextual metadata. A minimized metadata export does not de-identify the original DICOM object or pixel annotations.",
+        "therapy_type": null,
+        "title": "Identity minimization includes more than patient name",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "payload_sha256": "e0a8a44cad0cda7326df9e6114a32f9b30f3d5f7662373b5a132c00b3297eba6",
+      "requires_independent_review": true,
+      "route": "/api/v1/knowledge/facts",
+      "status": "draft"
+    },
+    {
+      "method": "POST",
+      "payload": {
+        "clinical_domain": "imaging_knee_mri",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "fact_key": "IMG_PRIVACY_UIDS_1_V1",
+        "indication": "Independent technical knowledge review only; no clinical ordering, diagnosis or treatment.",
+        "population": "Technical imaging data handling; patient-specific applicability not assessed.",
+        "sources": [
+          {
+            "accessed_at": "2026-10-20",
+            "citation": "DICOM Standards Committee. PS3.15, E.2, Basic Application Level Confidentiality Profile; current edition accessed 2026-10-20.",
+            "doi": null,
+            "guideline_version": "current edition; version requires independent confirmation",
+            "publication_date": null,
+            "publisher": "DICOM Standards Committee",
+            "source_type": "other",
+            "title": "DICOM PS3.15 Basic Application Level Confidentiality Profile",
+            "url": "https://dicom.nema.org/medical/dicom/current/output/chtml/part15/sect_E.2.html"
+          }
+        ],
+        "statement": "DICOM confidentiality handling extends beyond patient name and patient ID to potentially identifying attributes, including instance identifiers and contextual metadata. A minimized metadata export does not de-identify the original DICOM object or pixel annotations.",
+        "therapy_type": null,
+        "title": "Identity minimization includes more than patient name",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "payload_sha256": "ca981bfa8f8524d746b53dec8f7ae72533f358720e8f0b688d04b1a9dff43bdd",
+      "requires_independent_review": true,
+      "route": "/api/v1/knowledge/facts",
+      "status": "draft"
+    },
+    {
+      "method": "POST",
+      "payload": {
+        "clinical_domain": "imaging_knee_xray",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "fact_key": "IMG_RADLEX_SCOPE_0_V1",
+        "indication": "Independent technical knowledge review only; no clinical ordering, diagnosis or treatment.",
+        "population": "Technical imaging data handling; patient-specific applicability not assessed.",
+        "sources": [
+          {
+            "accessed_at": "2026-10-20",
+            "citation": "Radiological Society of North America. RadLex radiology lexicon. Official overview accessed 2026-10-20.",
+            "doi": null,
+            "guideline_version": "overview only; terminology release not pinned",
+            "publication_date": null,
+            "publisher": "RSNA",
+            "source_type": "other",
+            "title": "RSNA RadLex radiology lexicon",
+            "url": "https://www.rsna.org/practice-tools/data-tools-and-standards/radlex-radiology-lexicon"
+          }
+        ],
+        "statement": "RSNA RadLex provides a radiology lexicon to support consistent terminology. Any implementation must identify the terminology release and validate local-to-RadLex mappings; this overview does not establish a specific mapping, diagnostic finding or patient applicability.",
+        "therapy_type": null,
+        "title": "RadLex is a controlled radiology terminology resource",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "payload_sha256": "86efd24cd07aced9e534b0c393e92d8b43bf6c34d09bd4494cc36191e8ace272",
+      "requires_independent_review": true,
+      "route": "/api/v1/knowledge/facts",
+      "status": "draft"
+    },
+    {
+      "method": "POST",
+      "payload": {
+        "clinical_domain": "imaging_knee_mri",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "fact_key": "IMG_RADLEX_SCOPE_1_V1",
+        "indication": "Independent technical knowledge review only; no clinical ordering, diagnosis or treatment.",
+        "population": "Technical imaging data handling; patient-specific applicability not assessed.",
+        "sources": [
+          {
+            "accessed_at": "2026-10-20",
+            "citation": "Radiological Society of North America. RadLex radiology lexicon. Official overview accessed 2026-10-20.",
+            "doi": null,
+            "guideline_version": "overview only; terminology release not pinned",
+            "publication_date": null,
+            "publisher": "RSNA",
+            "source_type": "other",
+            "title": "RSNA RadLex radiology lexicon",
+            "url": "https://www.rsna.org/practice-tools/data-tools-and-standards/radlex-radiology-lexicon"
+          }
+        ],
+        "statement": "RSNA RadLex provides a radiology lexicon to support consistent terminology. Any implementation must identify the terminology release and validate local-to-RadLex mappings; this overview does not establish a specific mapping, diagnostic finding or patient applicability.",
+        "therapy_type": null,
+        "title": "RadLex is a controlled radiology terminology resource",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "payload_sha256": "274e31ccbb8feaa9477fc42182206d5798c6bfba4dc6608c935a485e6b38ffeb",
+      "requires_independent_review": true,
+      "route": "/api/v1/knowledge/facts",
+      "status": "draft"
+    }
+  ],
+  "dry_run": true,
+  "source_review_queue": [
+    {
+      "candidate_questions": [
+        "Confirm the current revision and compare it with the 2018 document.",
+        "Extract scenario, population, modality, rating, evidence and exceptions with section-level provenance."
+      ],
+      "reason": "Direct full-text request returned HTTP 403. Search results expose both Revised 2018 and Update 2026 references; no scenario rating was imported.",
+      "source_key": "ACR_CHRONIC_KNEE_PAIN",
+      "status": "needs_full_text_and_version_review",
+      "url": "https://acsearch.acr.org/docs/69432/Narrative/"
+    }
+  ]
+}
