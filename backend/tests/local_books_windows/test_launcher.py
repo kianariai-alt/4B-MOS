@@ -87,7 +87,7 @@ class WindowsLocalBookLauncherSmoke(unittest.TestCase):
         manifests = list(cls.local_app_data.rglob("manifest.json"))
         if len(manifests) != 1:
             raise AssertionError(f"Expected one private extraction manifest, found {manifests}")
-        cls.run = manifests[0].parent
+        cls.run_directory = manifests[0].parent
         cls.manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
         cls.reader_python = cls.checkout / ".venv-books" / "Scripts" / "python.exe"
         cls.script = cls.checkout / "backend" / "tools" / "local_orthopedic_library.py"
@@ -122,7 +122,7 @@ class WindowsLocalBookLauncherSmoke(unittest.TestCase):
         self.assertEqual(book["source_file_sha256"], hashlib.sha256(self.source_bytes).hexdigest())
         self.assertEqual(book["status"], "text_extracted")
         self.assertEqual(book["page_record_count"], 1)
-        pages_path = self.run / book["pages_artifact"]
+        pages_path = self.run_directory / book["pages_artifact"]
         self.assertEqual(book["pages_artifact_sha256"], digest(pages_path))
         page = json.loads(pages_path.read_text(encoding="utf-8"))
         self.assertEqual(page["pdf_page_number"], 1)
@@ -131,13 +131,13 @@ class WindowsLocalBookLauncherSmoke(unittest.TestCase):
         self.assertFalse(page["is_approved_medical_knowledge"])
         self.assertFalse(page["printed_page_number_verified"])
 
-        verified = self.verify_cli(self.run)
+        verified = self.verify_cli(self.run_directory)
         self.assertEqual(verified.returncode, 0, verified.stdout + verified.stderr)
         self.assertIn("not medical approval", verified.stdout)
 
     def test_verification_cli_rejects_changed_page_artifact(self):
         copied_run = self.root / "changed copy آزمون"
-        shutil.copytree(self.run, copied_run)
+        shutil.copytree(self.run_directory, copied_run)
         book = self.manifest["books"][0]
         page_path = copied_run / book["pages_artifact"]
         page = json.loads(page_path.read_text(encoding="utf-8"))

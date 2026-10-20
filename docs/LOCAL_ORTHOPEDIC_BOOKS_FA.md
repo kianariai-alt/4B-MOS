@@ -77,4 +77,4 @@ python -m pip install -r backend/requirements.txt -r backend/requirements-dev.tx
 python -m pytest backend/tests/test_local_orthopedic_library.py backend/tests/test_local_orthopedic_library_review.py -q
 ```
 
-تست‌ها فقط PDF ساختگی تولید می‌کنند. اجرای واقعی CMD روی Windows و خواندن کتاب‌های واقعی نیازمند رایانهٔ کاربر است؛ نتیجهٔ تست Linux یا CI به‌معنی انجام این دو کار نیست.
+تست‌ها فقط PDF ساختگی تولید می‌کنند. workflow جداگانهٔ Windows خود فایل CMD را در مسیر فارسی و فاصله‌دار با نصب اولیهٔ وابستگی می‌آزماید؛ نتیجهٔ واقعی آن در PR ثبت می‌شود. خواندن کتاب‌های واقعی درایو D همچنان نیازمند اجرای محلی روی رایانهٔ کاربر است و از تست ساختگی استنتاج نمی‌شود.
