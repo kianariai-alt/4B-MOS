@@ -1,0 +1,111 @@
+name: Clinical core handoff compatibility
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feature/clinical-intelligence-integration
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: clinical-handoff-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  ENVIRONMENT: test
+  DATABASE_URL: sqlite://
+  DEBUG: "false"
+  BOOTSTRAP_ENABLED: "true"
+  SECRET_KEY: synthetic-clinical-handoff-only-20261020
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  handoff:
+    name: Current integration and pinned specialist cores (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.14"]
+    steps:
+      - name: Check out the current integration proposal
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Read audited specialist revision pins
+        id: pins
+        run: |
+          python - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          manifest = json.loads(Path('backend/compatibility/specialist_pins.json').read_text())
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              for name in ('imaging', 'orthopedic'):
+                  revision = manifest['producers'][name]['revision']
+                  assert re.fullmatch('[0-9a-f]{40}', revision)
+                  output.write(f'{name}={revision}\n')
+          PY
+
+      - name: Read-only checkout of the audited imaging producer
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.pins.outputs.imaging }}
+          path: .handoff-sources/imaging
+          persist-credentials: false
+
+      - name: Read-only checkout of the audited orthopedic producer
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.pins.outputs.orthopedic }}
+          path: .handoff-sources/orthopedic
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install integration and optional compatibility dependencies
+        run: >-
+          python -m pip install
+          -r backend/requirements.txt
+          -r backend/requirements-dev.txt
+          -r backend/requirements-clinical-handoff.txt
+
+      - name: Verify the integration proposal independently
+        run: python -m pytest backend/tests -q
+
+      - name: Verify pinned source blobs and compose a disposable tree
+        run: |
+          python -m backend.tools.compose_clinical_handoff \
+            --integration-root "$GITHUB_WORKSPACE" \
+            --imaging-root "$GITHUB_WORKSPACE/.handoff-sources/imaging" \
+            --orthopedic-root "$GITHUB_WORKSPACE/.handoff-sources/orthopedic" \
+            --output "$RUNNER_TEMP/clinical-handoff-composition" \
+            > "$RUNNER_TEMP/clinical-handoff-composition-receipt.json"
+
+      - name: Run real producer, API, trust-boundary and full composition tests
+        working-directory: ${{ runner.temp }}/clinical-handoff-composition
+        run: |
+          python -m compileall -q backend
+          python -m pytest backend/tests backend/compatibility -q -ra
+          python -m backend.tools.clinical_handoff_report \
+            > "$RUNNER_TEMP/clinical-handoff-report.json"
+          cat "$RUNNER_TEMP/clinical-handoff-report.json"
+
+      - name: Retain digest-only compatibility receipts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: clinical-handoff-receipts-python-${{ matrix.python }}
+          path: |
+            ${{ runner.temp }}/clinical-handoff-composition-receipt.json
+            ${{ runner.temp }}/clinical-handoff-report.json
+          retention-days: 14

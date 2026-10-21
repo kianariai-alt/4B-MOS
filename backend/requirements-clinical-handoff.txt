@@ -1,0 +1,3 @@
+# Optional offline/CI verification only; no production adapter registration.
+pydicom==3.0.1
+jsonschema==4.26.0

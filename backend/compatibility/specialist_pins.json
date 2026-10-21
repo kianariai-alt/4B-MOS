@@ -1,0 +1,150 @@
+{
+  "manifest_version": "1.0.0",
+  "integration_base_revision": "8129085ffea310a62778fa2c8b87f47a198d0956",
+  "protected_integration_paths": [
+    "backend/app/schemas/clinical_integration.py",
+    "backend/app/services/clinical_integration/engine.py",
+    "backend/app/services/clinical_integration/service.py",
+    "backend/app/services/clinical_integration/read_only.py",
+    "backend/app/api/routes/clinical_integration.py",
+    "backend/app/core/config.py",
+    "backend/app/api/router.py",
+    "backend/app/models/clinical_integration.py"
+  ],
+  "producers": {
+    "imaging": {
+      "revision": "bb41f4b6dbe6a92ac4e656355a99913b1b6d5a96",
+      "files": [
+        {
+          "path": "backend/app/decision_intelligence/__init__.py",
+          "git_blob_sha1": "a0db18933192044495907bf46ed3d65099428720"
+        },
+        {
+          "path": "backend/app/decision_intelligence/adapter.py",
+          "git_blob_sha1": "5a8d2913147deab019bc208317d031b47d89686f"
+        },
+        {
+          "path": "backend/app/decision_intelligence/models.py",
+          "git_blob_sha1": "3f96df9c8fe1b5026335204bd2b399ad435ca5fa"
+        },
+        {
+          "path": "backend/app/imaging_intelligence/__init__.py",
+          "git_blob_sha1": "ffe6c6822e00d031f864b7af3a5fc44ab446d4d4"
+        },
+        {
+          "path": "backend/app/imaging_intelligence/decision_projection.py",
+          "git_blob_sha1": "a13af6a93268f0121562ee03f0c8dc249ba41ba9"
+        },
+        {
+          "path": "backend/app/imaging_intelligence/integration.py",
+          "git_blob_sha1": "34cf6c65c33f552b374e63b6f55926eb41cc9f44"
+        },
+        {
+          "path": "backend/app/imaging_intelligence/models.py",
+          "git_blob_sha1": "f5963231c15775a6ca1405275d2a2c059eafd271"
+        },
+        {
+          "path": "backend/app/imaging_intelligence/reader.py",
+          "git_blob_sha1": "ade2c089bc3679a4a6a9c7493dd698ad358dacec"
+        },
+        {
+          "path": "backend/app/imaging_intelligence/series.py",
+          "git_blob_sha1": "9180e87743c68461e158952313c24ee50d2614a4"
+        },
+        {
+          "path": "backend/tests/imaging_intelligence/__init__.py",
+          "git_blob_sha1": "51d555dca341faa569f67e1522a49fe2a348be43"
+        },
+        {
+          "path": "backend/tests/imaging_intelligence/synthetic_dicom.py",
+          "git_blob_sha1": "a7450b85a9007113e849165310e6838076cc8850"
+        },
+        {
+          "path": "backend/tests/imaging_intelligence/test_integration_bridge.py",
+          "git_blob_sha1": "fbde09d695deb822ca0eac9e6102de2e7c386355"
+        },
+        {
+          "path": "backend/tests/imaging_intelligence/test_series_validation.py",
+          "git_blob_sha1": "215ece8ac00fabd1014780bb8828e44b49f311c4"
+        },
+        {
+          "path": "backend/tests/test_imaging_integration_freshness.py",
+          "git_blob_sha1": "69aa17721bc958bbd16865a3fc23dba5ba2ab0ea"
+        },
+        {
+          "path": "backend/tools/imaging_metadata_demo.py",
+          "git_blob_sha1": "8d65ae0f4a0412f49e256d9ccfebf681926802bf"
+        },
+        {
+          "path": "backend/tools/imaging_series_demo.py",
+          "git_blob_sha1": "8db79922fd93c274bdb912ce71b41569f2d20c23"
+        },
+        {
+          "path": "docs/examples/imaging-core-v1-synthetic.json",
+          "git_blob_sha1": "b40cf27cdfc357219536587f28d30c69d8b81a82"
+        }
+      ]
+    },
+    "orthopedic": {
+      "revision": "7e41e079de4cb021c45ade9cf0abc2f8aa8a5499",
+      "files": [
+        {
+          "path": "backend/app/knowledge/knee_v1.json",
+          "git_blob_sha1": "d2c96eebc14ef4e1fcbf57c213a5e6e548b8881f"
+        },
+        {
+          "path": "backend/app/schemas/orthopedic_adapter.py",
+          "git_blob_sha1": "7b950bfa28807254bd307b529f524f038384ea56"
+        },
+        {
+          "path": "backend/app/schemas/orthopedic_knowledge.py",
+          "git_blob_sha1": "9e3f357fedd9c8bf79f6af0fc49fdf77a47c49d8"
+        },
+        {
+          "path": "backend/app/schemas/orthopedic_questions.py",
+          "git_blob_sha1": "b664dc063657adc2673d27bd9d0145b210f509cc"
+        },
+        {
+          "path": "backend/app/services/orthopedic_adapter.py",
+          "git_blob_sha1": "1ce6b67f6cf42253a35bbc1b3c89095eb867ed8f"
+        },
+        {
+          "path": "backend/app/services/orthopedic_knowledge.py",
+          "git_blob_sha1": "b738623f2330b218536e834fb27691087309ac88"
+        },
+        {
+          "path": "backend/app/services/orthopedic_questions.py",
+          "git_blob_sha1": "cbe8844193cd0180ca0d0c15b4d4076481d255c1"
+        },
+        {
+          "path": "backend/tests/test_orthopedic_questions.py",
+          "git_blob_sha1": "6a6fe5aae3e3838be2de2aa5c3a792bedb9a7685"
+        },
+        {
+          "path": "backend/tests/test_orthopedic_review.py",
+          "git_blob_sha1": "e4535b55b0a7dffdbccea06af614743c8e9214e5"
+        },
+        {
+          "path": "backend/tools/orthopedic_knowledge_demo.py",
+          "git_blob_sha1": "1a71477989adada047c1b700e02d10caf0c0ca2a"
+        },
+        {
+          "path": "docs/contracts/orthopedic-decision-knowledge-1.0.0.schema.json",
+          "git_blob_sha1": "85d89003b93325719defe239e1c3ce8ad31632be"
+        },
+        {
+          "path": "docs/contracts/orthopedic-knee-pack-1.0.0.schema.json",
+          "git_blob_sha1": "af1f74629dc33015d5610905ba8570abd8c71b43"
+        },
+        {
+          "path": "docs/contracts/orthopedic-question-context-1.0.0.schema.json",
+          "git_blob_sha1": "7e2fc10f8a0191550f0b57024b8c8f6511d9f773"
+        },
+        {
+          "path": "docs/examples/orthopedic-knee-synthetic-preview.json",
+          "git_blob_sha1": "65552fbcc26669d9f2e5f5f08cbce7854847debc"
+        }
+      ]
+    }
+  }
+}
