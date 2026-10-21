@@ -11,7 +11,9 @@ on:
       - ready_for_review
     paths:
       - Read-Orthopedic-Books.cmd
+      - Prepare-Orthopedic-Book-Handoff.cmd
       - backend/tools/local_orthopedic_library.py
+      - backend/tools/orthopedic_book_handoff.py
       - backend/requirements-books.txt
       - backend/tests/local_books_windows/**
       - .github/workflows/local-books-windows.yml
@@ -20,7 +22,9 @@ on:
       - main
     paths:
       - Read-Orthopedic-Books.cmd
+      - Prepare-Orthopedic-Book-Handoff.cmd
       - backend/tools/local_orthopedic_library.py
+      - backend/tools/orthopedic_book_handoff.py
       - backend/requirements-books.txt
       - backend/tests/local_books_windows/**
       - .github/workflows/local-books-windows.yml
