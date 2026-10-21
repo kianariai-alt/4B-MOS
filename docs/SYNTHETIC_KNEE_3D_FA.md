@@ -56,7 +56,7 @@ output باید پوشه‌ای جدید باشد. برای CT، output جدید
 
 ```bash
 python -m unittest discover -s backend/tests/imaging_3d -v
-python -m pip install playwright==1.56.1
+python -m pip install playwright==1.56.0
 python -m playwright install --with-deps chromium
 python backend/tests/imaging_3d_browser.py \
   --artifact /tmp/4b-knee-mr --screenshot /tmp/knee-preview.png

@@ -50,7 +50,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.12'
-      - run: python -m pip install -r backend/requirements-imaging-3d.txt playwright==1.56.1
+      - run: python -m pip install -r backend/requirements-imaging-3d.txt playwright==1.56.0
       - run: npm install --prefix /tmp/4b-knee-node three@0.180.0 --ignore-scripts --no-audit --no-fund
       - run: python -m playwright install --with-deps chromium
       - name: Generate DICOM, verify its voxel round trip, extract real surfaces
