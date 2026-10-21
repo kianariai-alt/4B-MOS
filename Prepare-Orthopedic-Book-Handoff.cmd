@@ -11,6 +11,9 @@ if not "%~1"=="" set "MOS_HANDOFF_SOURCE=%~1"
 set "MOS_HANDOFF_PYTHON=%~dp0.venv-books\Scripts\python.exe"
 set "MOS_HANDOFF_PYTHON_ARGS="
 if not exist "%MOS_HANDOFF_PYTHON%" goto try_py
+rem Do not invoke an empty/corrupt placeholder: Windows may show a modal error
+rem before CMD can inspect ERRORLEVEL and try the next installed interpreter.
+for %%F in ("%MOS_HANDOFF_PYTHON%") do if %%~zF LSS 1 goto try_py
 "%MOS_HANDOFF_PYTHON%" -B -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 2)" >nul 2>nul
 if not errorlevel 1 goto python_ready
 
