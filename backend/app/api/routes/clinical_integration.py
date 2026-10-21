@@ -26,6 +26,11 @@ from backend.app.schemas.clinical_intelligence import IntegratedClinicalSnapshot
 from backend.app.schemas.clinical_decision_exchange import DecisionModelResult
 from backend.app.services.clinical_integration.read_only import get_clinical_intelligence
 from sqlalchemy.exc import SQLAlchemyError
+from backend.app.schemas.clinical_study_binding import (
+    StudyBindingCreate, StudyBindingInventory, StudyBindingRead,
+    StudyBindingReview, StudyBindingReviewCreate,
+)
+from backend.app.services.clinical_study_binding import StudyBindingService
 
 
 def require_enabled(response: Response):
@@ -84,7 +89,61 @@ def contract(_actor: User = Depends(require_roles("admin", "physician"))):
         "decision_support_result": DecisionSupportResult.model_json_schema(),
         "decision_model_result": DecisionModelResult.model_json_schema(),
         "integrated_clinical_snapshot": IntegratedClinicalSnapshot.model_json_schema(),
+        "study_binding_create": StudyBindingCreate.model_json_schema(),
+        "study_binding_review_create": StudyBindingReviewCreate.model_json_schema(),
+        "study_binding_inventory": StudyBindingInventory.model_json_schema(),
     }
+
+
+@router.get("/visits/{visit_id}/imaging-study-bindings", response_model=StudyBindingInventory)
+def list_study_bindings(
+    visit_id: str, actor: User = Depends(require_roles("admin", "physician")), db: Session = Depends(get_db),
+):
+    try:
+        return StudyBindingService.list(db, visit_id, actor=actor)
+    except SQLAlchemyError as error:
+        raise HTTPException(status_code=503, detail="Study binding dependencies are unavailable.") from error
+    except (*ERRORS, ValueError) as error:
+        translate(error)
+
+
+@router.get("/visits/{visit_id}/imaging-study-bindings/{binding_id}", response_model=StudyBindingRead)
+def get_study_binding(
+    visit_id: str, binding_id: str, actor: User = Depends(require_roles("admin", "physician")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return StudyBindingService.get(db, visit_id, binding_id, actor=actor)
+    except SQLAlchemyError as error:
+        raise HTTPException(status_code=503, detail="Study binding dependencies are unavailable.") from error
+    except (*ERRORS, ValueError) as error:
+        translate(error)
+
+
+@router.post("/visits/{visit_id}/imaging-study-bindings", response_model=StudyBindingRead, status_code=201)
+def propose_study_binding(
+    visit_id: str, payload: StudyBindingCreate,
+    actor: User = Depends(require_roles("admin", "physician")), db: Session = Depends(get_db),
+):
+    try:
+        return StudyBindingService.create(db, visit_id, payload, actor=actor)
+    except SQLAlchemyError as error:
+        raise HTTPException(status_code=503, detail="Study binding dependencies are unavailable.") from error
+    except (*ERRORS, ValueError) as error:
+        translate(error)
+
+
+@router.post("/visits/{visit_id}/imaging-study-bindings/{binding_id}/reviews", response_model=StudyBindingReview, status_code=201)
+def review_study_binding(
+    visit_id: str, binding_id: str, payload: StudyBindingReviewCreate,
+    actor: User = Depends(require_roles("physician")), db: Session = Depends(get_db),
+):
+    try:
+        return StudyBindingService.review(db, visit_id, binding_id, payload, actor=actor)
+    except SQLAlchemyError as error:
+        raise HTTPException(status_code=503, detail="Study binding dependencies are unavailable.") from error
+    except (*ERRORS, ValueError) as error:
+        translate(error)
 
 
 @router.post("/visits/{visit_id}/clinical-integration/runs", response_model=IntegrationRunRead, status_code=201)

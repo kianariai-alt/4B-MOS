@@ -47,6 +47,8 @@ def test_integration_migration_preserves_old_rows_checks_metadata_and_guards_dow
             command.downgrade(config, "a1d4e7f0b386")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT COUNT(*) FROM clinical_integration_runs")) == 1
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == EXPECTED_DATABASE_REVISION
+            # The empty binding revision downgrades first; b12 then protects
+            # its own retained integration evidence against the next downgrade.
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b12f6c8d4a90"
     finally:
         engine.dispose()

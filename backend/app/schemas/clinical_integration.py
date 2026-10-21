@@ -293,6 +293,7 @@ class IntegrationRunRead(ContractModel):
     freshness: Literal["current", "stale", "unverifiable"]
     invalidation_reasons: tuple[str, ...]
     reviews: tuple[PhysicianReview, ...]
+    study_bindings_sha256: Digest | None = None
 
 
 class IntegrationRunSnapshot(ContractModel):
@@ -301,6 +302,8 @@ class IntegrationRunSnapshot(ContractModel):
     created_by_user_id: Identifier
     created_at: AwareDatetime
     result: DecisionSupportResult
+    # Persistence metadata, not an extension of either producer's 1.0 envelope.
+    study_bindings_sha256: Digest | None = None
 
 
 class IntegrationAuditEvent(ContractModel):

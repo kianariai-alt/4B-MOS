@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import AwareDatetime, Field, model_validator
 
 from backend.app.schemas.clinical_decision_exchange import DecisionModelReference
+from backend.app.schemas.clinical_study_binding import StudyBindingInventory
 from backend.app.schemas.clinical_integration import (
     ComponentVersion, ContractModel, DecisionSupportResult, Digest, Identifier,
 )
@@ -99,15 +100,17 @@ class ProvenanceManifest(ContractModel):
     knowledge_sha256s: tuple[Digest, ...]
     imaging_review_sha256: Digest
     decision_reference_sha256: Digest
+    study_bindings_sha256: Digest
     manifest_sha256: Digest
 
 
 class IntegratedClinicalSnapshot(ContractModel):
-    schema_version: Literal["1.0.0"] = "1.0.0"
+    schema_version: Literal["1.1.0"] = "1.1.0"
     status: Literal["imaging_unavailable", "degraded", "awaiting_physician_review"]
     clinical_context_reference: ClinicalCaseReference
     result: DecisionSupportResult
     imaging_review: tuple[ImagingReviewReference, ...]
+    study_bindings: StudyBindingInventory
     decision_model_reference: DecisionModelReference
     safety_status: ClinicalSafetyStatus
     review_requirements: tuple[Identifier, ...]
@@ -115,7 +118,7 @@ class IntegratedClinicalSnapshot(ContractModel):
     provenance_manifest: ProvenanceManifest
     observed_at: AwareDatetime
     snapshot_sha256: Digest
-    hash_scope: Literal["clinical-intelligence-semantic-v1"] = "clinical-intelligence-semantic-v1"
+    hash_scope: Literal["clinical-intelligence-semantic-v2"] = "clinical-intelligence-semantic-v2"
     review_status: Literal["requires_physician_review"] = "requires_physician_review"
     is_diagnosis: Literal[False] = False
     authorizes_treatment: Literal[False] = False

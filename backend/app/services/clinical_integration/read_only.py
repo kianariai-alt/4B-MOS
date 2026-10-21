@@ -15,6 +15,8 @@ from backend.app.services.clinical_integration.engine import assemble_result, co
 from backend.app.services.clinical_integration.service import _require_actor, _visit, _rules_hash, IntegrationConflictError
 from backend.app.services.physician_copilot import PhysicianCopilotService
 from backend.app.services.session_finalization import evidence_digest
+from backend.app.schemas.clinical_study_binding import StudyBindingInventory
+from backend.app.services.clinical_study_binding import binding_inventory, binding_issues
 
 
 def imaging_review_inventory(db, visit_id):
@@ -103,8 +105,10 @@ def get_clinical_intelligence(db, visit_id, *, actor, adapters=None, decision_ad
     rules_hash = _rules_hash(db, now)
     bundle = source_bundle(db, copilot.clinical_context, context_hash)
     images = imaging_review_inventory(db, visit_id)
+    bindings = binding_inventory(db, visit_id, context_sha256=context_hash, now=now)
     cores, core_issues = collect_cores(bundle.core_input, adapters, now=now)
     issues = list(core_issues + bundle.issues)
+    issues.extend(binding_issues(bindings))
 
     # Reuse clinician-selected evidence only; do not imply relevance by listing
     # every fact in a domain. Revalidate each historical selection in Registry.
@@ -138,6 +142,7 @@ def get_clinical_intelligence(db, visit_id, *, actor, adapters=None, decision_ad
         approvals=bundle.approvals, cores=cores, knowledge=knowledge,
         copilot_sha256=copilot.snapshot_sha256, safety_rule_set_sha256=rules_hash,
         issues=tuple(issues), now=now,
+        dependency_valid_until=tuple(item.binding.source_valid_until for item in bindings.bindings),
         evidence_briefs=tuple(ClinicalEvidenceReference(
             brief_id=brief.id, content_sha256=brief.sha256,
             clinical_context_sha256=brief.clinical_context_sha256,
@@ -156,6 +161,8 @@ def get_clinical_intelligence(db, visit_id, *, actor, adapters=None, decision_ad
             or safety_status(current, rules_hash) != safety
             or current_visit.status != result.visit.status or current_visit.patient_id != result.patient.patient_id
             or imaging_review_inventory(db, visit_id) != images or current_knowledge != knowledge
+            or binding_inventory(db, visit_id, context_sha256=current.manifest.clinical_context_sha256,
+                                 now=verified_at).sha256 != bindings.sha256
             or source_bundle(db, current.clinical_context, context_hash).approvals != bundle.approvals):
         raise IntegrationConflictError("Dependencies changed during read-only composition.")
     if any(core.status == "available" and now < core.valid_until <= verified_at for core in cores):
@@ -177,11 +184,13 @@ def get_clinical_intelligence(db, visit_id, *, actor, adapters=None, decision_ad
             raise IntegrationConflictError("Decision deployment is unverifiable.") from error
         if changed:
             raise IntegrationConflictError("Decision deployment changed during composition.")
-    return make_snapshot(result, images=images, decision=decision, safety=safety, now=now)
+    return make_snapshot(result, images=images, decision=decision, safety=safety, now=now, bindings=bindings)
 
 
-def make_snapshot(result, *, images, decision, safety, now):
+def make_snapshot(result, *, images, decision, safety, now, bindings=None):
     """Pure output adapter, shared with the database-free synthetic demo."""
+    if bindings is None:
+        bindings = StudyBindingInventory(bindings=(), sha256=evidence_digest({"schema_version": "1.0.0", "bindings": []}))
     manifest_data = dict(
         engine_version=result.provenance.engine_version,
         clinical_context_sha256=result.provenance.clinical_context_sha256,
@@ -193,6 +202,7 @@ def make_snapshot(result, *, images, decision, safety, now):
         knowledge_sha256s=tuple(item.content_sha256 for item in result.knowledge),
         imaging_review_sha256=evidence_digest({"reviews": [item.model_dump(mode="json") for item in images]}),
         decision_reference_sha256=evidence_digest(decision.model_dump(mode="json")),
+        study_bindings_sha256=bindings.sha256,
     )
     serializable = {**manifest_data, "components": [item.model_dump(mode="json") for item in manifest_data["components"]]}
     manifest = ProvenanceManifest(**manifest_data, manifest_sha256=evidence_digest(serializable))
@@ -201,11 +211,12 @@ def make_snapshot(result, *, images, decision, safety, now):
     snapshot = IntegratedClinicalSnapshot(
         status=status, clinical_context_reference=ClinicalCaseReference(
             visit_id=result.visit.visit_id, clinical_context_sha256=result.provenance.clinical_context_sha256,
-        ), result=result, imaging_review=images, decision_model_reference=decision,
+        ), result=result, imaging_review=images, study_bindings=bindings, decision_model_reference=decision,
         safety_status=safety,
         review_requirements=tuple(sorted({item.code for item in result.issues if item.severity == "blocking"})),
         data_limitations=tuple(sorted({item.code for item in result.issues} | {
             "dicom_identity_not_verified", "knowledge_applicability_not_assessed",
+            "study_association_does_not_verify_model_or_quality",
             "no_automatic_diagnosis_or_treatment", *decision.issue_codes,
         })),
         provenance_manifest=manifest, observed_at=now, snapshot_sha256="0" * 64,
