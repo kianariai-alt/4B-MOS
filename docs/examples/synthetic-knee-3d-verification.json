@@ -1,0 +1,38 @@
+{
+  "ct": {
+    "artifact_sha256": "83fc221a35cc72875e70942cba0916393b8eacc4228d6e390f8203aad1c997cd",
+    "is_clinically_validated": false,
+    "label_source": "analytic_synthetic_ground_truth",
+    "modality": "CT",
+    "schema_version": "synthetic-knee-viewer-v1",
+    "shape_zyx": [
+      64,
+      64,
+      64
+    ],
+    "structures": 8,
+    "synthetic_only": true,
+    "synthetic_pixel_roundtrip_verified": true,
+    "triangles": 35072,
+    "volume_sha256": "bfec894b6fd12c9ef348cd6cc8f127f3b69bfc51e30ee298f92c9af8a9bd3c47",
+    "vtk_version": "9.3.1"
+  },
+  "mr": {
+    "artifact_sha256": "ee1eaf826362c9731db5571c62f35bafa86d18c230d82f46be28dcaae72c8a30",
+    "is_clinically_validated": false,
+    "label_source": "analytic_synthetic_ground_truth",
+    "modality": "MR",
+    "schema_version": "synthetic-knee-viewer-v1",
+    "shape_zyx": [
+      64,
+      64,
+      64
+    ],
+    "structures": 8,
+    "synthetic_only": true,
+    "synthetic_pixel_roundtrip_verified": true,
+    "triangles": 35072,
+    "volume_sha256": "b8513bc357e15fba0e3fcac6856c76047f67c8d9c3e69ef38b7aa2f64414940e",
+    "vtk_version": "9.3.1"
+  }
+}
