@@ -1,0 +1,57 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "request_key": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$",
+      "title": "Request Key",
+      "type": "string"
+    },
+    "expected_binding_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Binding Sha256",
+      "type": "string"
+    },
+    "expected_previous_review_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expected Previous Review Sha256"
+    },
+    "action": {
+      "enum": [
+        "confirm",
+        "reject",
+        "invalidate"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "rationale": {
+      "maxLength": 5000,
+      "minLength": 10,
+      "title": "Rationale",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_key",
+    "expected_binding_sha256",
+    "action",
+    "rationale"
+  ],
+  "title": "StudyBindingReviewCreate",
+  "type": "object"
+}
