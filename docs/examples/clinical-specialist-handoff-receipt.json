@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "scope": "offline_synthetic_contract_handoff",
+  "integration_contract_version": "1.0.0",
+  "integration_engine_version": "clinical-integration-1.0.1",
+  "integration_contract_sha256": "8bbb8ae4d23ed7c0430e258710c3583099cf110bab9e1d510f382843be74bbda",
+  "imaging": {
+    "producer_revision": "bb41f4b6dbe6a92ac4e656355a99913b1b6d5a96",
+    "fixture_sha256": "db0a9db149cd2552cd3112eda0660f593c74c2250f81318c1c5cc040774294c8",
+    "core_contract": "accepted",
+    "readiness_scope": "data_validation_only",
+    "source_review_authority": "not_provided_by_adapter",
+    "fixture_freshness": "historical_fixture_only",
+    "finding_count": 1,
+    "clinical_clearance": false
+  },
+  "orthopedic": {
+    "producer_revision": "7e41e079de4cb021c45ade9cf0abc2f8aa8a5499",
+    "fixture_sha256": "4461f7a2d1e7b53c5f949b23161ae639a964de093d5fb21bab3f7ed4c9153364",
+    "schema_sha256": "0e2659ddece8704d9814e65b6203db59f6c381899bbb5ac3ed98c5f82b22edef",
+    "producer_result_sha256": "12067eb4517caf040588f818f555c69e7014116e72f7df1a669ae85d7da9c2a5",
+    "producer_context_sha256": "99b9402775b55d787783be710e4dad0a5486f6480b4af3c0e16742cb6e861c6b",
+    "clinical_context_binding": "not_established",
+    "core_contract": "incompatible_authoring_preview",
+    "disposition": "draft_quarantined",
+    "approved_fact_count": 0,
+    "draft_evidence_count": 27,
+    "question_count": 17,
+    "finding_review_authority": "not_authenticated_by_answer_state",
+    "safety_evaluation": "not_performed"
+  },
+  "specialist_code_activated_in_api": false,
+  "is_clinical_validation": false,
+  "is_diagnosis": false,
+  "authorizes_treatment": false,
+  "is_clinical_clearance": false,
+  "receipt_sha256": "f323c176eec9cf9dc3dd9f3cb3dac29cbe927d7be892b7eb8c340cbfb5aa8bbb"
+}
