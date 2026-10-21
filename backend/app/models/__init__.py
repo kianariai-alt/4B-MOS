@@ -110,3 +110,4 @@ from backend.app.models.recording import VisitRecordingEvent
 from backend.app.models.recording_media import RecordingAudioTransfer, RecordingAudioChunk, RecordingTextEvent
 from backend.app.models.patient_portal import PortalAccess, PortalSession, PortalRequest, PortalMessage, PortalAttachment, PortalThrottle, PortalInterview
 from backend.app.models.clinical_integration import ClinicalIntegrationRun, ClinicalIntegrationReview
+from backend.app.models.clinical_study_binding import ClinicalStudyBinding, ClinicalStudyBindingReview

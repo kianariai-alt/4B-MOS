@@ -101,7 +101,7 @@ def _reviews(db, record):
     return tuple(result)
 
 
-def _freshness(db, result, *, adapters, now, lock=False):
+def _freshness(db, result, *, adapters, now, lock=False, study_bindings_sha256=None):
     reasons = []
     unverifiable = False
     if result.valid_until <= now:
@@ -118,6 +118,12 @@ def _freshness(db, result, *, adapters, now, lock=False):
             reasons.append("copilot_dependencies_changed")
         if copilot.manifest.clinical_context_sha256 != result.provenance.clinical_context_sha256:
             reasons.append("clinical_context_changed")
+        from backend.app.services.clinical_study_binding import binding_inventory
+        bindings = binding_inventory(db, result.visit.visit_id,
+                                     context_sha256=copilot.manifest.clinical_context_sha256, now=now)
+        if ((study_bindings_sha256 is None and bindings.bindings)
+                or (study_bindings_sha256 is not None and study_bindings_sha256 != bindings.sha256)):
+            reasons.append("study_bindings_changed")
         if _rules_hash(db, now) != result.provenance.safety_rule_set_sha256:
             reasons.append("safety_rules_changed")
         bundle = source_bundle(db, copilot.clinical_context, copilot.manifest.clinical_context_sha256)
@@ -154,10 +160,12 @@ def _read(db, record, *, adapters, lock=False):
     snapshot = _verify_run(record)
     freshness, reasons = _freshness(
         db, snapshot.result, adapters=adapters, now=datetime.now(timezone.utc), lock=lock,
+        study_bindings_sha256=snapshot.study_bindings_sha256,
     )
     return IntegrationRunRead(
         id=record.id, result_sha256=record.result_sha256, result=snapshot.result,
         freshness=freshness, invalidation_reasons=reasons, reviews=_reviews(db, record),
+        study_bindings_sha256=snapshot.study_bindings_sha256,
     )
 
 
@@ -189,6 +197,10 @@ class ClinicalIntegrationService:
         bundle = source_bundle(db, copilot.clinical_context, copilot.manifest.clinical_context_sha256)
         cores, issues = collect_cores(bundle.core_input, adapters, now=now)
         issues = list(issues + bundle.issues)
+        from backend.app.services.clinical_study_binding import binding_inventory, binding_issues
+        bindings = binding_inventory(db, visit_id,
+                                     context_sha256=copilot.manifest.clinical_context_sha256, now=now)
+        issues.extend(binding_issues(bindings))
         safety = copilot.safety_inbox
         if safety.evaluation is None:
             issues.append(IntegrationIssue(code="safety_evaluation_missing", severity="blocking"))
@@ -205,6 +217,7 @@ class ClinicalIntegrationService:
             approvals=bundle.approvals, cores=cores, knowledge=knowledge,
             copilot_sha256=copilot.snapshot_sha256, safety_rule_set_sha256=rules_hash,
             issues=tuple(issues), now=now,
+            dependency_valid_until=tuple(item.binding.source_valid_until for item in bindings.bindings),
             evidence_briefs=tuple(ClinicalEvidenceReference(
                 brief_id=brief.id, content_sha256=brief.sha256,
                 clinical_context_sha256=brief.clinical_context_sha256,
@@ -215,6 +228,7 @@ class ClinicalIntegrationService:
         snapshot = IntegrationRunSnapshot(
             id=str(uuid.uuid4()), request_sha256=request_hash,
             created_by_user_id=actor.id, created_at=now, result=result,
+            study_bindings_sha256=bindings.sha256,
         )
         record = ClinicalIntegrationRun(
             id=snapshot.id, visit_id=visit_id, request_key=payload.request_key,
@@ -260,7 +274,8 @@ class ClinicalIntegrationService:
             raise IntegrationConflictError("Review must reference the exact integration snapshot.")
         # Recheck under shared knowledge locks before recording an approval.
         freshness, _ = _freshness(db, run.result, adapters=local_adapters() if adapters is None else adapters,
-                                 now=datetime.now(timezone.utc), lock=True)
+                                 now=datetime.now(timezone.utc), lock=True,
+                                 study_bindings_sha256=run.study_bindings_sha256)
         if payload.action == "approve_summary" and (
             freshness != "current" or run.result.workflow_state != "awaiting_physician_review"
         ):

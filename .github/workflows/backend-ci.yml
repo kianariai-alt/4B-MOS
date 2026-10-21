@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - feature/clinical-integration-core-compatibility
     types:
       - opened
       - synchronize

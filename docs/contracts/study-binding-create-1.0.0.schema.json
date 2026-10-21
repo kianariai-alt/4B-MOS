@@ -1,0 +1,170 @@
+{
+  "$defs": {
+    "StudyBindingComponent": {
+      "additionalProperties": false,
+      "description": "Versioned component identity; URLs and free-text descriptions are excluded.",
+      "properties": {
+        "component_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$",
+          "title": "Component Id",
+          "type": "string"
+        },
+        "version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$",
+          "title": "Version",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "adapter",
+            "model",
+            "rule"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component_id",
+        "version",
+        "artifact_sha256",
+        "kind"
+      ],
+      "title": "StudyBindingComponent",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "report_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Report Id",
+      "type": "string"
+    },
+    "report_version": {
+      "minimum": 1,
+      "title": "Report Version",
+      "type": "integer"
+    },
+    "report_content_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Report Content Sha256",
+      "type": "string"
+    },
+    "clinical_context_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Clinical Context Sha256",
+      "type": "string"
+    },
+    "opaque_study_reference": {
+      "format": "uuid",
+      "title": "Opaque Study Reference",
+      "type": "string"
+    },
+    "opaque_series_reference": {
+      "format": "uuid",
+      "title": "Opaque Series Reference",
+      "type": "string"
+    },
+    "study_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Study Sha256",
+      "type": "string"
+    },
+    "series_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Series Sha256",
+      "type": "string"
+    },
+    "quality_assessment_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Quality Assessment Sha256",
+      "type": "string"
+    },
+    "modality": {
+      "enum": [
+        "DX",
+        "CR",
+        "MR",
+        "CT"
+      ],
+      "title": "Modality",
+      "type": "string"
+    },
+    "imaging_component": {
+      "$ref": "#/$defs/StudyBindingComponent"
+    },
+    "quality_component": {
+      "$ref": "#/$defs/StudyBindingComponent"
+    },
+    "quality_status": {
+      "enum": [
+        "data_ready",
+        "blocked",
+        "not_assessed"
+      ],
+      "title": "Quality Status",
+      "type": "string"
+    },
+    "source_generated_at": {
+      "format": "date-time",
+      "title": "Source Generated At",
+      "type": "string"
+    },
+    "source_valid_until": {
+      "format": "date-time",
+      "title": "Source Valid Until",
+      "type": "string"
+    },
+    "request_key": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$",
+      "title": "Request Key",
+      "type": "string"
+    },
+    "expected_previous_binding_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expected Previous Binding Sha256"
+    }
+  },
+  "required": [
+    "report_id",
+    "report_version",
+    "report_content_sha256",
+    "clinical_context_sha256",
+    "opaque_study_reference",
+    "opaque_series_reference",
+    "study_sha256",
+    "series_sha256",
+    "quality_assessment_sha256",
+    "modality",
+    "imaging_component",
+    "quality_component",
+    "quality_status",
+    "source_generated_at",
+    "source_valid_until",
+    "request_key"
+  ],
+  "title": "StudyBindingCreate",
+  "type": "object"
+}

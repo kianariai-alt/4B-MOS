@@ -1,0 +1,459 @@
+{
+  "$defs": {
+    "BindingSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "report_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Report Id",
+          "type": "string"
+        },
+        "report_version": {
+          "minimum": 1,
+          "title": "Report Version",
+          "type": "integer"
+        },
+        "report_content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Report Content Sha256",
+          "type": "string"
+        },
+        "clinical_context_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Clinical Context Sha256",
+          "type": "string"
+        },
+        "opaque_study_reference": {
+          "format": "uuid",
+          "title": "Opaque Study Reference",
+          "type": "string"
+        },
+        "opaque_series_reference": {
+          "format": "uuid",
+          "title": "Opaque Series Reference",
+          "type": "string"
+        },
+        "study_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Study Sha256",
+          "type": "string"
+        },
+        "series_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Series Sha256",
+          "type": "string"
+        },
+        "quality_assessment_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Quality Assessment Sha256",
+          "type": "string"
+        },
+        "modality": {
+          "enum": [
+            "DX",
+            "CR",
+            "MR",
+            "CT"
+          ],
+          "title": "Modality",
+          "type": "string"
+        },
+        "imaging_component": {
+          "$ref": "#/$defs/StudyBindingComponent"
+        },
+        "quality_component": {
+          "$ref": "#/$defs/StudyBindingComponent"
+        },
+        "quality_status": {
+          "enum": [
+            "data_ready",
+            "blocked",
+            "not_assessed"
+          ],
+          "title": "Quality Status",
+          "type": "string"
+        },
+        "source_generated_at": {
+          "format": "date-time",
+          "title": "Source Generated At",
+          "type": "string"
+        },
+        "source_valid_until": {
+          "format": "date-time",
+          "title": "Source Valid Until",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "visit_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Visit Id",
+          "type": "string"
+        },
+        "report_key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Report Key",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "previous_binding_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Binding Sha256"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "created_by_user_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Created By User Id",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "report_id",
+        "report_version",
+        "report_content_sha256",
+        "clinical_context_sha256",
+        "opaque_study_reference",
+        "opaque_series_reference",
+        "study_sha256",
+        "series_sha256",
+        "quality_assessment_sha256",
+        "modality",
+        "imaging_component",
+        "quality_component",
+        "quality_status",
+        "source_generated_at",
+        "source_valid_until",
+        "id",
+        "visit_id",
+        "report_key",
+        "revision",
+        "request_sha256",
+        "created_by_user_id",
+        "created_at"
+      ],
+      "title": "BindingSnapshot",
+      "type": "object"
+    },
+    "StudyBindingComponent": {
+      "additionalProperties": false,
+      "description": "Versioned component identity; URLs and free-text descriptions are excluded.",
+      "properties": {
+        "component_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$",
+          "title": "Component Id",
+          "type": "string"
+        },
+        "version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$",
+          "title": "Version",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "adapter",
+            "model",
+            "rule"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component_id",
+        "version",
+        "artifact_sha256",
+        "kind"
+      ],
+      "title": "StudyBindingComponent",
+      "type": "object"
+    },
+    "StudyBindingRead": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "binding": {
+          "$ref": "#/$defs/BindingSnapshot"
+        },
+        "binding_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Binding Sha256",
+          "type": "string"
+        },
+        "reviews": {
+          "items": {
+            "$ref": "#/$defs/StudyBindingReview"
+          },
+          "title": "Reviews",
+          "type": "array"
+        },
+        "review_status": {
+          "enum": [
+            "unverified",
+            "verified",
+            "rejected",
+            "invalid"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "freshness": {
+          "enum": [
+            "current",
+            "stale"
+          ],
+          "title": "Freshness",
+          "type": "string"
+        },
+        "invalidation_reasons": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Invalidation Reasons",
+          "type": "array"
+        },
+        "eligible_for_contextual_link": {
+          "title": "Eligible For Contextual Link",
+          "type": "boolean"
+        },
+        "latest_review_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latest Review Sha256"
+        },
+        "review_scope": {
+          "const": "study_to_visit_association",
+          "default": "study_to_visit_association",
+          "title": "Review Scope",
+          "type": "string"
+        },
+        "dicom_identity_verified": {
+          "const": false,
+          "default": false,
+          "title": "Dicom Identity Verified",
+          "type": "boolean"
+        },
+        "verifies_model_findings": {
+          "const": false,
+          "default": false,
+          "title": "Verifies Model Findings",
+          "type": "boolean"
+        },
+        "quality_assertion_verified": {
+          "const": false,
+          "default": false,
+          "title": "Quality Assertion Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "binding",
+        "binding_sha256",
+        "reviews",
+        "review_status",
+        "freshness",
+        "invalidation_reasons",
+        "eligible_for_contextual_link"
+      ],
+      "title": "StudyBindingRead",
+      "type": "object"
+    },
+    "StudyBindingReview": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "request_key": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$",
+          "title": "Request Key",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "binding_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Binding Id",
+          "type": "string"
+        },
+        "visit_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Visit Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "binding_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Binding Sha256",
+          "type": "string"
+        },
+        "previous_review_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Review Sha256"
+        },
+        "physician_user_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Physician User Id",
+          "type": "string"
+        },
+        "reviewed_at": {
+          "format": "date-time",
+          "title": "Reviewed At",
+          "type": "string"
+        },
+        "action": {
+          "enum": [
+            "confirm",
+            "reject",
+            "invalidate"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "rationale": {
+          "maxLength": 5000,
+          "minLength": 10,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "review_scope": {
+          "const": "study_to_visit_association",
+          "default": "study_to_visit_association",
+          "title": "Review Scope",
+          "type": "string"
+        },
+        "verifies_model_findings": {
+          "const": false,
+          "default": false,
+          "title": "Verifies Model Findings",
+          "type": "boolean"
+        },
+        "dicom_identity_verified": {
+          "const": false,
+          "default": false,
+          "title": "Dicom Identity Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "request_key",
+        "id",
+        "binding_id",
+        "visit_id",
+        "sequence",
+        "binding_sha256",
+        "physician_user_id",
+        "reviewed_at",
+        "action",
+        "rationale"
+      ],
+      "title": "StudyBindingReview",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "bindings": {
+      "items": {
+        "$ref": "#/$defs/StudyBindingRead"
+      },
+      "title": "Bindings",
+      "type": "array"
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "bindings",
+    "sha256"
+  ],
+  "title": "StudyBindingInventory",
+  "type": "object"
+}

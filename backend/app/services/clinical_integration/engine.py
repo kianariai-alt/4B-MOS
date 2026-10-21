@@ -15,7 +15,7 @@ from backend.app.schemas.clinical_integration import (
 from backend.app.services.clinical_integration.ports import CoreAdapter
 from backend.app.services.session_finalization import evidence_digest
 
-ENGINE_VERSION = "clinical-integration-1.0.1"
+ENGINE_VERSION = "clinical-integration-1.1.0"
 CORE_NAMES = ("orthopedic", "imaging")
 MAX_RUN_AGE = timedelta(hours=24)  # Administrative review window, not a clinical age rule.
 
@@ -90,6 +90,7 @@ def assemble_result(
     copilot_sha256: str, safety_rule_set_sha256: str,
     issues: tuple[IntegrationIssue, ...], now: datetime,
     evidence_briefs: tuple[ClinicalEvidenceReference, ...] = (),
+    dependency_valid_until: tuple[datetime, ...] = (),
 ) -> DecisionSupportResult:
     """Accept exact reviewed source values; quarantine every model assertion.
 
@@ -178,7 +179,7 @@ def assemble_result(
         problems.append(IntegrationIssue(code="visit_cancelled", severity="blocking"))
     if not knowledge:
         problems.append(IntegrationIssue(code="no_knowledge_selected", severity="warning"))
-    valid_until = min([now + MAX_RUN_AGE] + [core.valid_until for core in cores])
+    valid_until = min([now + MAX_RUN_AGE, *dependency_valid_until] + [core.valid_until for core in cores])
     return DecisionSupportResult(
         patient=PatientReference(patient_id=patient_id), visit=visit, assessment=assessment,
         imaging_studies=studies,

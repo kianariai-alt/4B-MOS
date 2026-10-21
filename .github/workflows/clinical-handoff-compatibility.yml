@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/clinical-intelligence-integration
+      - feature/clinical-integration-core-compatibility
   workflow_dispatch:
 
 permissions:

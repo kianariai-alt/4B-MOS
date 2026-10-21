@@ -1298,3 +1298,240 @@ def test_postgresql_audio_retries_serialize_without_duplicate_chunks(postgresql_
         assert bytes(Media.read_pcm(db,claim))==pcm
         Media.finish_job(db,visit,recording,claim,error_code='engine_failed')
         assert [r.action for r in db.scalars(select(RecordingTextEvent).order_by(RecordingTextEvent.version))]==['audio_received','queued','started','failed']
+
+
+def _seed_study_binding_context(engine):
+    """Synthetic finalized source records, with no DICOM files or clinic data."""
+    from datetime import datetime, timedelta, timezone
+    from backend.app.schemas.clinical_context import ParaclinicalReportCreate
+    from backend.app.schemas.clinical_study_binding import StudyBindingCreate
+
+    seeded = _seed_clinical_context(engine, treatment_count=0)
+    with Session(engine) as db:
+        for actor_id in seeded["admin_ids"]:
+            db.get(User, actor_id).role = "physician"
+        db.commit()
+        actor = db.get(User, seeded["admin_ids"][0])
+        intake = ClinicalContextService.create_intake(db, seeded["visit_id"], ClinicalIntakeCreate(
+            chief_complaint="Synthetic study-binding concurrency fixture.",
+            history_present_illness="Fabricated history for disposable PostgreSQL tests only.",
+            body_region="knee", laterality="left", exam_findings="Fabricated examination.",
+        ), actor=actor)
+        ClinicalContextService.finalize_intake(db, intake.id, actor=db.get(User, actor.id))
+        report = ClinicalContextService.create_report(db, seeded["visit_id"], ParaclinicalReportCreate(
+            report_key="SYNTHETIC-PG-MRI", category="imaging", title="Fabricated MRI source",
+            observations=[{
+                "category": "imaging", "code_system": "LOCAL", "code": "SYNTHETIC_ONLY",
+                "display_name": "Fabricated source observation", "value_type": "boolean",
+                "boolean_value": True, "body_site": "left knee",
+            }],
+        ), actor=db.get(User, actor.id))
+        report = ClinicalContextService.finalize_report(db, report.id, actor=db.get(User, actor.id))
+        context_sha256 = clinical_context_digest(ClinicalContextService.get_current_context(db, seeded["visit_id"]))
+        now = datetime.now(timezone.utc)
+        payload = StudyBindingCreate(
+            request_key="same-concurrent-study-binding", report_id=report.id,
+            report_version=report.version, report_content_sha256=report.content_sha256,
+            clinical_context_sha256=context_sha256,
+            opaque_study_reference=_id(), opaque_series_reference=_id(),
+            study_sha256="a" * 64, series_sha256="b" * 64, quality_assessment_sha256="c" * 64,
+            modality="MR", imaging_component={
+                "component_id": "synthetic-imaging", "version": "1.0.0",
+                "artifact_sha256": "d" * 64, "kind": "adapter",
+            }, quality_component={
+                "component_id": "synthetic-quality", "version": "1.0.0",
+                "artifact_sha256": "e" * 64, "kind": "rule",
+            }, quality_status="data_ready", source_generated_at=now,
+            source_valid_until=now + timedelta(hours=1),
+        )
+    return seeded, payload
+
+
+def test_postgresql_study_binding_identical_create_and_review_retries_are_idempotent(postgresql_engine):
+    from sqlalchemy import func
+    from backend.app.models.clinical_study_binding import ClinicalStudyBinding, ClinicalStudyBindingReview
+    from backend.app.schemas.clinical_study_binding import StudyBindingReviewCreate
+    from backend.app.services.clinical_study_binding import StudyBindingService
+
+    seeded, payload = _seed_study_binding_context(postgresql_engine)
+    visit_id, actor_id = seeded["visit_id"], seeded["admin_ids"][0]
+    rendezvous = Barrier(2)
+
+    def create():
+        with Session(postgresql_engine) as db:
+            rendezvous.wait(timeout=10)
+            try:
+                return StudyBindingService.create(db, visit_id, payload, actor=db.get(User, actor_id))
+            except ClinicalRecordWriteConflictError:
+                return StudyBindingService.create(db, visit_id, payload, actor=db.get(User, actor_id))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(create) for _ in range(2)]
+        first, second = [future.result(timeout=20) for future in futures]
+    assert first.binding.id == second.binding.id
+    assert first.binding_sha256 == second.binding_sha256
+    assert first.binding.revision == second.binding.revision == 1
+    assert first.review_status == second.review_status == "unverified"
+
+    request = StudyBindingReviewCreate(
+        request_key="same-concurrent-study-review", expected_binding_sha256=first.binding_sha256,
+        action="confirm", rationale="Synthetic physician confirms only the study-to-visit association.",
+    )
+    rendezvous = Barrier(2)
+
+    def review():
+        with Session(postgresql_engine) as db:
+            rendezvous.wait(timeout=10)
+            try:
+                return StudyBindingService.review(db, visit_id, first.binding.id, request, actor=db.get(User, actor_id))
+            except ClinicalRecordWriteConflictError:
+                return StudyBindingService.review(db, visit_id, first.binding.id, request, actor=db.get(User, actor_id))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(review) for _ in range(2)]
+        reviews = [future.result(timeout=20) for future in futures]
+    assert reviews[0] == reviews[1]
+    assert reviews[0].sequence == 1
+    assert reviews[0].previous_review_sha256 is None
+    assert reviews[0].verifies_model_findings is reviews[0].dicom_identity_verified is False
+    with Session(postgresql_engine) as db:
+        assert db.scalar(select(func.count()).select_from(ClinicalStudyBinding)) == 1
+        assert db.scalar(select(func.count()).select_from(ClinicalStudyBindingReview)) == 1
+        assert db.scalar(select(func.count()).select_from(AuditLog).where(
+            AuditLog.entity_type == "clinical_study_binding", AuditLog.entity_id == first.binding.id,
+        )) == 2
+
+
+def test_postgresql_study_binding_proposal_compare_and_swap_has_one_winner(postgresql_engine):
+    from sqlalchemy import func
+    from backend.app.models.clinical_study_binding import ClinicalStudyBinding
+    from backend.app.services.clinical_study_binding import IntegrationConflictError, StudyBindingService
+
+    seeded, payload = _seed_study_binding_context(postgresql_engine)
+    rendezvous = Barrier(2)
+
+    def propose(number):
+        request = payload.model_copy(update={"request_key": f"competing-study-proposal-{number}"})
+        with Session(postgresql_engine) as db:
+            rendezvous.wait(timeout=10)
+            try:
+                result = StudyBindingService.create(db, seeded["visit_id"], request,
+                                                    actor=db.get(User, seeded["admin_ids"][number]))
+                return "created", result.binding.id
+            except (IntegrationConflictError, ClinicalRecordWriteConflictError):
+                return "conflict", None
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(propose, number) for number in range(2)]
+        results = [future.result(timeout=20) for future in futures]
+    assert sorted(item[0] for item in results) == ["conflict", "created"]
+    winner = next(item[1] for item in results if item[0] == "created")
+    with Session(postgresql_engine) as db:
+        rows = list(db.scalars(select(ClinicalStudyBinding)))
+        assert len(rows) == 1
+        assert rows[0].id == winner and rows[0].revision == 1
+        assert db.scalar(select(func.count()).select_from(AuditLog).where(
+            AuditLog.entity_type == "clinical_study_binding",
+        )) == 1
+
+
+def test_postgresql_study_binding_review_compare_and_swap_preserves_linear_history(postgresql_engine):
+    from sqlalchemy import func
+    from backend.app.models.clinical_study_binding import ClinicalStudyBindingReview
+    from backend.app.schemas.clinical_study_binding import StudyBindingReviewCreate
+    from backend.app.services.clinical_study_binding import IntegrationConflictError, StudyBindingService
+    from backend.app.services.session_finalization import evidence_digest
+
+    seeded, payload = _seed_study_binding_context(postgresql_engine)
+    with Session(postgresql_engine) as db:
+        binding = StudyBindingService.create(db, seeded["visit_id"], payload,
+                                             actor=db.get(User, seeded["admin_ids"][0]))
+        confirmed = StudyBindingService.review(db, seeded["visit_id"], binding.binding.id, StudyBindingReviewCreate(
+            request_key="initial-study-confirmation", expected_binding_sha256=binding.binding_sha256,
+            action="confirm", rationale="Synthetic association attestation before concurrent invalidation.",
+        ), actor=db.get(User, seeded["admin_ids"][0]))
+    predecessor = evidence_digest(confirmed.model_dump(mode="json"))
+    rendezvous = Barrier(2)
+
+    def invalidate(number):
+        request = StudyBindingReviewCreate(
+            request_key=f"competing-study-invalidation-{number}",
+            expected_binding_sha256=binding.binding_sha256, expected_previous_review_sha256=predecessor,
+            action="invalidate", rationale="Synthetic concurrent association invalidation for audit testing.",
+        )
+        with Session(postgresql_engine) as db:
+            rendezvous.wait(timeout=10)
+            try:
+                result = StudyBindingService.review(db, seeded["visit_id"], binding.binding.id, request,
+                                                    actor=db.get(User, seeded["admin_ids"][number]))
+                return "created", result.id
+            except (IntegrationConflictError, ClinicalRecordWriteConflictError):
+                return "conflict", None
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(invalidate, number) for number in range(2)]
+        results = [future.result(timeout=20) for future in futures]
+    assert sorted(item[0] for item in results) == ["conflict", "created"]
+    winner = next(item[1] for item in results if item[0] == "created")
+    with Session(postgresql_engine) as db:
+        rows = list(db.scalars(select(ClinicalStudyBindingReview).where(
+            ClinicalStudyBindingReview.binding_id == binding.binding.id,
+        ).order_by(ClinicalStudyBindingReview.sequence)))
+        assert [row.sequence for row in rows] == [1, 2]
+        assert rows[0].id == confirmed.id and rows[1].id == winner
+        assert rows[0].sha256 == predecessor
+        assert rows[1].payload["previous_review_sha256"] == predecessor
+        assert rows[1].payload["action"] == "invalidate"
+        assert db.scalar(select(func.count()).select_from(AuditLog).where(
+            AuditLog.entity_type == "clinical_study_binding", AuditLog.entity_id == binding.binding.id,
+        )) == 3
+
+
+def test_postgresql_study_binding_migration_round_trip_and_evidence_loss_guard(postgresql_engine):
+    """Exercise DDL only in the suffix-guarded disposable PostgreSQL fixture."""
+    from pathlib import Path
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import func
+    from backend.app.models.clinical_study_binding import ClinicalStudyBinding
+    from backend.app.services.clinical_study_binding import StudyBindingService
+
+    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    parent_revision = "b12f6c8d4a90"
+    names = {"clinical_study_bindings", "clinical_study_binding_reviews"}
+    try:
+        # The autouse fixture has already truncated all application evidence.
+        command.downgrade(config, parent_revision)
+        postgresql_engine.dispose()
+        assert not names & set(inspect(postgresql_engine).get_table_names())
+        with postgresql_engine.connect() as connection:
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == parent_revision
+
+        command.upgrade(config, "head")
+        postgresql_engine.dispose()
+        command.check(config)
+        assert names <= set(inspect(postgresql_engine).get_table_names())
+        with postgresql_engine.connect() as connection:
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == EXPECTED_DATABASE_REVISION
+
+        seeded, payload = _seed_study_binding_context(postgresql_engine)
+        with Session(postgresql_engine) as db:
+            binding = StudyBindingService.create(db, seeded["visit_id"], payload,
+                                                 actor=db.get(User, seeded["admin_ids"][0]))
+            assert db.scalar(select(func.count()).select_from(ClinicalStudyBinding)) == 1
+        with pytest.raises(RuntimeError, match="study binding evidence would be lost"):
+            command.downgrade(config, parent_revision)
+        postgresql_engine.dispose()
+        assert names <= set(inspect(postgresql_engine).get_table_names())
+        with postgresql_engine.connect() as connection:
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == EXPECTED_DATABASE_REVISION
+        with Session(postgresql_engine) as db:
+            rows = list(db.scalars(select(ClinicalStudyBinding)))
+            assert len(rows) == 1
+            assert rows[0].id == binding.binding.id
+            assert rows[0].sha256 == binding.binding_sha256
+    finally:
+        # Restore the expected schema before the shared fixture truncates it,
+        # even if a preceding migration assertion failed.
+        command.upgrade(config, "head")
+        postgresql_engine.dispose()

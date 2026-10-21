@@ -257,8 +257,8 @@ def test_published_snapshot_and_decision_schemas_match_producer_contract():
     from pathlib import Path
     from backend.app.schemas.clinical_decision_exchange import DecisionModelResult
     root = Path(__file__).resolve().parents[2]
-    for name, model in (("snapshot", IntegratedClinicalSnapshot), ("decision", DecisionModelResult)):
-        published = json.loads((root / f"docs/contracts/unified-clinical-{name}-1.0.0.schema.json").read_text())
+    for name, version, model in (("snapshot", "1.1.0", IntegratedClinicalSnapshot), ("decision", "1.0.0", DecisionModelResult)):
+        published = json.loads((root / f"docs/contracts/unified-clinical-{name}-{version}.schema.json").read_text())
         assert published == model.model_json_schema()
 
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "status": "degraded",
   "clinical_context_reference": {
     "visit_id": "synthetic-knee-visit",
@@ -315,7 +315,7 @@
       }
     ],
     "provenance": {
-      "engine_version": "clinical-integration-1.0.1",
+      "engine_version": "clinical-integration-1.1.0",
       "clinical_context_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
       "copilot_snapshot_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
       "safety_rule_set_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -348,6 +348,11 @@
     "requires_independent_review": true
   },
   "imaging_review": [],
+  "study_bindings": {
+    "schema_version": "1.0.0",
+    "bindings": [],
+    "sha256": "4533fd0776af2f39991fb685d0e8b61b48699f67ace73682502942ef57f75f02"
+  },
   "decision_model_reference": {
     "schema_version": "1.0.0",
     "status": "available",
@@ -437,10 +442,11 @@
     "no_automatic_diagnosis_or_treatment",
     "no_knowledge_selected",
     "safety_evaluation_missing",
+    "study_association_does_not_verify_model_or_quality",
     "synthetic_fixture_not_clinically_validated"
   ],
   "provenance_manifest": {
-    "engine_version": "clinical-integration-1.0.1",
+    "engine_version": "clinical-integration-1.1.0",
     "clinical_context_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "copilot_snapshot_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "safety_rule_set_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -466,11 +472,12 @@
     "knowledge_sha256s": [],
     "imaging_review_sha256": "857bc02336eacb938dc8dcd86fe6a56561f76db25311a1b1b17f11f393eb29c6",
     "decision_reference_sha256": "17b7116a567eb7086d81b66c2e888e94fdea7b191334d5eee8bb7a2dddfa1da4",
-    "manifest_sha256": "023dadae4087187bd4972fde241dc665fa6b5c94b447c5dff576ee71c9b1ad3a"
+    "study_bindings_sha256": "4533fd0776af2f39991fb685d0e8b61b48699f67ace73682502942ef57f75f02",
+    "manifest_sha256": "6996d24bf8e4e99627d2db6f0bef4ad12422ff9bc58f9673e661484f61644f31"
   },
   "observed_at": "2026-10-19T12:00:00Z",
-  "snapshot_sha256": "8b688a95676d679fcbe93c76df71d41306c820b8f7a1d8b677cccb084a6e25a8",
-  "hash_scope": "clinical-intelligence-semantic-v1",
+  "snapshot_sha256": "95d3307f4de08b89be8d55408eff84e0bbdbbd2747645cdecc717419dbffeb49",
+  "hash_scope": "clinical-intelligence-semantic-v2",
   "review_status": "requires_physician_review",
   "is_diagnosis": false,
   "authorizes_treatment": false,
