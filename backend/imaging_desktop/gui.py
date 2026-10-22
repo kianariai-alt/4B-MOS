@@ -338,6 +338,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.demo_button.clicked.connect(self.load_demo)
         self.fetch_button.clicked.connect(self.load_url)
         self.portal_button.clicked.connect(self.open_portal)
+        self.url.returnPressed.connect(self.open_portal)
         self.cancel_button.clicked.connect(lambda: self.active_job.cancel.set() if self.active_job else None)
         self.series_box.activated.connect(self.select_series)
         self.reset_button.clicked.connect(self.view.reset)

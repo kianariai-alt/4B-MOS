@@ -109,6 +109,7 @@ class SourceTests(Fixture):
 
     def test_https_url_validation_and_same_origin_redirect_policy(self):
         self.assertEqual(validate_https_url("https://hospital.example:8443/download?token=secret"), ("hospital.example", 8443))
+        self.assertEqual(validate_https_url("https://hospital.example:5010/Patient?studyKey=synthetic-only"), ("hospital.example", 5010))
         for url in ("http://hospital.example/data", "file:///tmp/data", "javascript:alert(1)",
                     "https://patient:secret@hospital.example/data", "https://hospital.example/data#secret",
                     "https://hospital.example/\nsecret", "https://hospital.example:99999/data"):

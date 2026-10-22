@@ -1,6 +1,7 @@
 param([switch]$UseCurrentPython)
 $ErrorActionPreference = 'Stop'
 $Repo = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
+$TemplateRoot = Join-Path $Repo 'backend/tools/knee_templates'
 Set-Location $Repo
 if ($UseCurrentPython) {
     $Python = (Get-Command python).Source
@@ -13,7 +14,7 @@ if ($UseCurrentPython) {
 if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
 & $Python -m PyInstaller --noconfirm --clean --windowed --onedir --name 4B-Imaging `
     --paths $Repo --specpath build/imaging-desktop `
-    --add-data "backend/tools/knee_templates;backend/tools/knee_templates" `
+    --add-data "$TemplateRoot;backend/tools/knee_templates" `
     --collect-submodules pydicom.pixels.decoders `
     --hidden-import vtkmodules.vtkRenderingOpenGL2 `
     --hidden-import vtkmodules.vtkRenderingVolumeOpenGL2 `
