@@ -1,0 +1,3 @@
+-r requirements-imaging.txt
+numpy==2.3.5
+vtk==9.3.1

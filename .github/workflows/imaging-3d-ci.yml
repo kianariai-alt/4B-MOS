@@ -1,0 +1,74 @@
+name: Synthetic Knee 3D
+on:
+  pull_request:
+    branches: [main, feature/imaging-intelligence, feature/imaging-series-integration]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: imaging-3d-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  geometry:
+    name: Synthetic DICOM voxels, LPS geometry and VTK surfaces
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: 8129085ffea310a62778fa2c8b87f47a198d0956
+          path: .integration-reference
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements-imaging-3d.txt -r backend/requirements-imaging-review.txt
+      - run: python -c 'import numpy, pydicom; from vtkmodules.vtkFiltersGeneral import vtkDiscreteFlyingEdges3D'
+      - name: Verify physical reconstruction and reject corrupt or mismatched data
+        run: python -m unittest discover -s backend/tests/imaging_3d -v
+      - name: Existing imaging and decision regression suite
+        env:
+          MOS_INTEGRATION_CONTRACT_FILE: ${{ github.workspace }}/.integration-reference/backend/app/schemas/clinical_integration.py
+        run: python -m unittest discover -s backend/tests/imaging_intelligence -v
+      - run: python -m compileall -q backend/app/imaging_intelligence backend/tools backend/tests/imaging_3d
+      - run: node --input-type=module --check < backend/imaging_3d_viewer/app.js
+  browser:
+    name: Actual WebGL2 knee viewer (${{ matrix.modality }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        modality: [MR, CT]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements-imaging-3d.txt playwright==1.56.0
+      - run: npm install --prefix /tmp/4b-knee-node three@0.180.0 --ignore-scripts --no-audit --no-fund
+      - run: python -m playwright install --with-deps chromium
+      - name: Generate DICOM, verify its voxel round trip, extract real surfaces
+        run: >-
+          python -m backend.tools.imaging_knee_3d_demo
+          --output /tmp/4b-knee-bundle/viewer
+          --three-root /tmp/4b-knee-node/node_modules/three
+          --modality ${{ matrix.modality }} --size 96
+      - name: Check real colored pixels, MPR values, clipping, linked point and internal camera
+        run: >-
+          python backend/tests/imaging_3d_browser.py
+          --artifact /tmp/4b-knee-bundle/viewer
+          --screenshot /tmp/4b-knee-bundle/preview.png
+          > /tmp/4b-knee-bundle/browser-verification.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ always() }}
+        with:
+          name: synthetic-knee-3d-${{ matrix.modality }}
+          path: /tmp/4b-knee-bundle
+          if-no-files-found: warn
+          retention-days: 14

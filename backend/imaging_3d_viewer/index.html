@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>4B Imaging · زانوی سه‌بعدی ساختگی</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+  <header><div class="brand" dir="ltr"><span class="brand-icon">4B</span><span>IMAGING <b>LAB</b></span></div><span class="badge">نمونهٔ ساختگی · نسخهٔ پژوهشی</span></header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">از مقطع تا فضای سه‌بعدی</p><h1>داخل زانو را کاوش کنید</h1><p>ساختارها را جدا کنید، برش بزنید و محل هر نقطه را در حجم ببینید.</p></div><div class="notice" role="note"><b>این زانو کاملاً ساختگی است.</b><span>استخوان‌های اصلی از الگوی عمومی و بافت‌های دیگر ساختگی‌اند. رنگ‌ها تقریبی و برچسب‌ها از پیش معلوم‌اند. این نمایش برای تشخیص یا تأیید آناتومی بیمار اعتبارسنجی نشده است.</span></div></div>
+    <div id="error" role="alert" hidden></div>
+    <div class="workspace" id="workspace" aria-busy="true">
+      <aside class="panel structures"><div class="panel-heading"><h2>ساختارهای زانو</h2><span id="structure-count">۱۳ ساختار</span></div><div id="structure-list"></div>
+        <div class="control-block"><label class="toggle"><input id="structure-colors" type="checkbox"> رنگ‌های تفکیکی ساختارها</label><p class="small">نمای پیش‌فرض با رنگ‌های تقریبی بافت‌ها</p></div><div class="control-block"><label for="opacity">میزان دیده‌شدن استخوان‌ها <output id="opacity-value">۱۰۰٪</output></label><input id="opacity" type="range" min="5" max="100" value="100"></div>
+        <div class="control-block"><label class="toggle"><input id="clip" type="checkbox"> برش نمای سه‌بعدی</label><label for="clip-index" class="small">محل صفحهٔ برش</label><input id="clip-index" type="range" min="0" max="63" value="32" disabled></div>
+        <div class="source-note"><span class="status-dot"></span>برچسب‌های مرجع مدل ساختگی<p>مرزبندی بافت از MRI یا CT واقعی در این نمونه انجام نمی‌شود.</p></div>
+      </aside>
+      <section class="panel view-panel" aria-label="نمای سه‌بعدی زانو"><div class="viewer-toolbar"><div class="segmented"><button id="overview" class="active" aria-pressed="true">نمای کامل</button><button id="front" aria-pressed="false">نمای روبه‌رو</button><button id="joint" aria-pressed="false">نمای مفصل</button><button id="inside" aria-pressed="false">داخل مفصل</button></div><span id="modality" class="mono"></span></div><div id="viewport"><div id="loading">در حال بازسازی نمایش…</div><div class="orientation"><span>بالا: S</span><span>مختصات LPS · میلی‌متر</span></div><div id="camera-help" class="camera-help">چرخش: کشیدن ماوس · بزرگ‌نمایی: چرخ ماوس</div></div><div class="viewer-footer"><span><i class="status-dot"></i> متصل به حجم منبع ساختگی</span><span id="spacing" class="mono"></span></div></section>
+      <section class="panel slices"><div class="panel-heading"><h2>مقاطع حجم منبع</h2><label class="small"><input id="overlay" type="checkbox" checked> رنگ‌بندی برچسب‌ها</label></div><p class="small slice-hint">یک نقطه را انتخاب کنید تا محل آن در سه‌بعدی دیده شود.</p>
+        <div class="slice-card"><div class="slice-heading"><label for="slice-z">صفحهٔ عرضی حجم (k)</label><output id="value-z"></output></div><canvas id="slice-canvas-z" aria-label="مقطع عرضی ساختگی"></canvas><input id="slice-z" type="range" value="32" min="0" max="63"></div>
+        <div class="slice-card"><div class="slice-heading"><label for="slice-y">صفحهٔ طولی حجم (j)</label><output id="value-y"></output></div><canvas id="slice-canvas-y" aria-label="مقطع طولی ساختگی"></canvas><input id="slice-y" type="range" value="32" min="0" max="63"></div>
+        <div class="slice-card"><div class="slice-heading"><label for="slice-x">صفحهٔ جانبی حجم (i)</label><output id="value-x"></output></div><canvas id="slice-canvas-x" aria-label="مقطع جانبی ساختگی"></canvas><input id="slice-x" type="range" value="32" min="0" max="63"></div>
+        <div id="voxel-location" class="mono location"></div><div class="window-control"><label for="window-center">مرکز روشنایی</label><input id="window-center" type="range"><label for="window-width">دامنهٔ روشنایی</label><input id="window-width" type="range"></div>
+      </section>
+    </div>
+    <footer><span>الگوی استخوان: OpenSim · CC BY 3.0 · <a href="ANATOMY_ATTRIBUTION.md">منبع و تغییرات</a> · سطح نرم‌شده فقط برای نمایش است.</span><span id="summary" class="mono"></span></footer>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

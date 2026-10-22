@@ -1,0 +1,42 @@
+{
+  "ct": {
+    "anatomy_profile": "generic-left-knee-illustration-v2",
+    "artifact_sha256": "d05de1dd89bc0dc428e7d16bfc8e78850b3909ac28ef1303aed5815f54f16fe9",
+    "display_smoothing_only": true,
+    "is_clinically_validated": false,
+    "label_source": "generic_bone_templates_and_procedural_synthetic_ground_truth",
+    "modality": "CT",
+    "schema_version": "synthetic-knee-viewer-v2",
+    "shape_zyx": [
+      96,
+      96,
+      96
+    ],
+    "structures": 13,
+    "synthetic_only": true,
+    "synthetic_pixel_roundtrip_verified": true,
+    "triangles": 96760,
+    "volume_sha256": "4bc262039d119171622d0d507f12d627849c58c4a170cff663e3a20a6a5d94f5",
+    "vtk_version": "9.3.1"
+  },
+  "mr": {
+    "anatomy_profile": "generic-left-knee-illustration-v2",
+    "artifact_sha256": "bc2df871496ada409ad2dde11c7919dff0943246d48dddadb9937e6cc9782fbe",
+    "display_smoothing_only": true,
+    "is_clinically_validated": false,
+    "label_source": "generic_bone_templates_and_procedural_synthetic_ground_truth",
+    "modality": "MR",
+    "schema_version": "synthetic-knee-viewer-v2",
+    "shape_zyx": [
+      96,
+      96,
+      96
+    ],
+    "structures": 13,
+    "synthetic_only": true,
+    "synthetic_pixel_roundtrip_verified": true,
+    "triangles": 96760,
+    "volume_sha256": "392f9e958e329e3df32fd174879805550c02073a94e9b98c242944e915adcb33",
+    "vtk_version": "9.3.1"
+  }
+}
