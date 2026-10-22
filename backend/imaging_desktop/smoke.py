@@ -14,16 +14,36 @@ from vtkmodules.vtkIOImage import vtkPNGWriter
 from vtkmodules.util.numpy_support import vtk_to_numpy
 
 
+def wait_until(predicate, timeout_ms):
+    # A real Qt event loop releases the GIL so Python QThread workers can run.
+    # Repeated QTest.qWait calls can starve those workers on some PySide builds.
+    loop = QtCore.QEventLoop()
+    poll = QtCore.QTimer()
+    poll.setInterval(20)
+    poll.timeout.connect(lambda: loop.quit() if predicate() else None)
+    deadline = QtCore.QTimer()
+    deadline.setSingleShot(True)
+    deadline.timeout.connect(loop.quit)
+    poll.start()
+    deadline.start(timeout_ms)
+    loop.exec()
+    poll.stop()
+    deadline.stop()
+    return predicate()
+
+
+def process_for(milliseconds):
+    loop = QtCore.QEventLoop()
+    QtCore.QTimer.singleShot(milliseconds, loop.quit)
+    loop.exec()
+
+
 def check_ui(application, window, output):
     output.mkdir(parents=True, exist_ok=True)
     QtTest.QTest.mouseClick(window.demo_button, QtCore.Qt.LeftButton)
-    deadline = time.monotonic()+60
-    while window.loaded is None and time.monotonic() < deadline:
-        QtTest.QTest.qWait(50)
-        if not window.jobs:
-            raise AssertionError("Synthetic import did not produce a volume: "+window.status.text())
-    assert window.loaded is not None, "Synthetic import timed out."
-    QtTest.QTest.qWait(150)
+    wait_until(lambda: window.loaded is not None or not window.jobs, 60000)
+    assert window.loaded is not None, "Synthetic import failed or timed out: "+window.status.text()
+    process_for(150)
     loaded = window.loaded
     original = hashlib.sha256(loaded.voxels.tobytes()).hexdigest()
 
@@ -44,7 +64,7 @@ def check_ui(application, window, output):
     writer.Write()
     position = window.view.renderer.GetActiveCamera().GetPosition()
     QtTest.QTest.mouseClick(window.orbit_button, QtCore.Qt.LeftButton)
-    QtTest.QTest.qWait(180)
+    process_for(180)
     QtTest.QTest.mouseClick(window.orbit_button, QtCore.Qt.LeftButton)
     assert position != window.view.renderer.GetActiveCamera().GetPosition()
     window.view.reset()
@@ -58,7 +78,7 @@ def check_ui(application, window, output):
     np.testing.assert_allclose(window.view.marker.GetPosition(), point)
     old_z = window.cursor[2]
     QtTest.QTest.mouseClick(window.cine_button, QtCore.Qt.LeftButton)
-    QtTest.QTest.qWait(320)
+    process_for(320)
     QtTest.QTest.mouseClick(window.cine_button, QtCore.Qt.LeftButton)
     assert old_z != window.cursor[2]
     _, before_clip = capture()
@@ -76,9 +96,7 @@ def check_ui(application, window, output):
     # A failed replacement clears the old patient volume and source slices.
     window.url.setText("https://user:private@invalid.example/study?secret=never-log")
     QtTest.QTest.mouseClick(window.fetch_button, QtCore.Qt.LeftButton)
-    deadline = time.monotonic()+5
-    while window.jobs and time.monotonic() < deadline:
-        QtTest.QTest.qWait(20)
+    assert wait_until(lambda: not window.jobs, 5000)
     assert window.loaded is None and window.view.loaded is None
     assert all(panel.canvas.image is None for panel in window.slices.values())
     assert not window.url.text() and not window.token.text()
@@ -105,14 +123,10 @@ def check_ui(application, window, output):
                       '<button onclick="document.getElementById(\'download\').hidden=false">Login</button>'
                       f'<a id="download" hidden download="synthetic-only.zip" href="data:application/zip;base64,{encoded}">Download DICOM ZIP</a></body></html>')
     portal.show()
-    deadline = time.monotonic()+20
-    while not completed and time.monotonic() < deadline:
-        QtTest.QTest.qWait(50)
+    wait_until(lambda: bool(completed), 20000)
     assert completed and completed[-1], "Real private browser must load the fixture portal."
     portal.page.runJavaScript("document.getElementById('code').value='fixture';document.getElementById('password').value='fixture';document.querySelector('button').click();document.getElementById('download').click()")
-    deadline = time.monotonic()+40
-    while (window.loaded is None or window.jobs) and time.monotonic() < deadline:
-        QtTest.QTest.qWait(50)
+    wait_until(lambda: window.loaded is not None and not window.jobs, 40000)
     assert window.loaded is not None and temp_paths, "Browser ZIP download must reach the actual importer."
     assert all(not path.exists() for path in temp_paths), "Temporary portal downloads must be deleted after snapshot import."
     portal.grab().save(str(output/"portal-fixture.png"))

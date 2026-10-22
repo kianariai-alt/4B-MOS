@@ -20,4 +20,4 @@ for name in packages:
                 shutil.copyfile(source, file)
                 notices.append(file.name)
     (target/"distribution.txt").write_text(
-        f"{package.metadata['Name']} {package.version}\n"+str(package.metadata)+"\nRetained notices:\n"+"\n".join(notices), encoding="utf-8")
+        f"{package.metadata['Name']} {package.version}\n"+(package.read_text("METADATA") or "")+"\nRetained notices:\n"+"\n".join(notices), encoding="utf-8")
