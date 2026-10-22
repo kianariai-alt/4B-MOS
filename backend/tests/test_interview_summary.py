@@ -62,6 +62,25 @@ class InterviewSummaryTests(unittest.TestCase):
         parsed = InterviewAssistantSummary.model_validate(data)
         self.assertIsNone(parsed.items[0].recorded_at)
 
+    def test_answer_type_unit_and_range_match_the_question_snapshot(self):
+        data = summary_payload()
+        data["unknown_question_ids"] = []
+        data["items"][0].update(state="answered", value="yes")
+        InterviewAssistantSummary.model_validate(data)
+        for value in (0, "invalid"):
+            data["items"][0]["value"] = value
+            with self.assertRaises(ValidationError):
+                InterviewAssistantSummary.model_validate(data)
+        question = data["items"][0]["question_definition"]
+        question.update(answer_type="number", numeric_unit="test-unit", numeric_min=0, numeric_max=10)
+        data["items"][0].update(value=0, unit="test-unit")
+        self.assertEqual(InterviewAssistantSummary.model_validate(data).items[0].value, 0)
+        for value, unit in (("0", "test-unit"), (11, "test-unit"), (-1, "test-unit"),
+                            (0, "wrong-unit"), (0, None)):
+            data["items"][0].update(value=value, unit=unit)
+            with self.assertRaises(ValidationError):
+                InterviewAssistantSummary.model_validate(data)
+
 
 if __name__ == "__main__":
     unittest.main()

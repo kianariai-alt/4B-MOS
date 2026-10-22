@@ -29,6 +29,19 @@ class ReportedInterviewAnswer(Strict):
             raise ValueError("An answered item requires a value.")
         if self.state != "answered" and (self.value is not None or self.unit is not None):
             raise ValueError("Unknown and declined items have no value or unit.")
+        if self.state == "answered":
+            question = self.question_definition
+            if question.answer_type == "number":
+                if (type(self.value) not in (int, float)
+                        or self.unit != question.numeric_unit
+                        or not question.numeric_min <= self.value <= question.numeric_max):
+                    raise ValueError("Numeric answer must match the question's type, unit and bounds.")
+            else:
+                if not isinstance(self.value, str) or not self.value.strip() or self.unit is not None:
+                    raise ValueError("Text and choice answers require a nonempty string and no unit.")
+                choices = ["yes", "no"] if question.answer_type == "yes_no" else question.choices
+                if choices and self.value not in choices:
+                    raise ValueError("Choice answer must match the question's allowed codes.")
         if self.source == "patient_portal" and self.recorded_at is None:
             raise ValueError("New answers require a server timestamp.")
         if (self.question_id != self.question_definition.id

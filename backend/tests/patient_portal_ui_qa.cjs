@@ -19,6 +19,84 @@ const record = {id:'request-1', receipt:'MOS-SYNTHETIC', state:'submitted', cont
 const firstQuestion = record.interview.next_question;
 const numericQuestion = {id:'pain',text_fa:'Synthetic numeric question',purpose_fa:'Synthetic purpose',answer_type:'number',choices:[],numeric_unit:'score',numeric_min:0,numeric_max:10};
 
+async function interviewRaceQA() {
+  const d=dom('patient_web/index.html'),w=d.window,$=id=>w.document.getElementById(id);
+  const snapshot=(version,label)=>({...record.interview,version,next_question:{...numericQuestion,text_fa:label}});
+  const other={...record,id:'request-2',receipt:'MOS-SYNTHETIC-2'};
+  const server={
+    'request-1':{...record,interview:snapshot(1,'Synthetic A initial')},
+    'request-2':{...other,interview:snapshot(1,'Synthetic B initial')}
+  };
+  const reads=[],posts=[];let deferReads=false;
+  w.fetch=async(url,options={})=>{
+    if(url.endsWith('/info'))return response({clinic_name:'Synthetic clinic',notice_version:'portal-processing-v1'});
+    if(url.endsWith('/session'))return response({csrf_token:'synthetic-csrf',requests:[record,other]});
+    if(url.endsWith('/logout'))return response({closed:true});
+    if(url.endsWith('/interview-answers'))return new Promise(resolve=>posts.push({body:JSON.parse(options.body),resolve:data=>resolve(response(data))}));
+    if(url.endsWith('/messages')||url.endsWith('/attachments'))return response({id:'synthetic-action'});
+    const id=url.split('/').at(-1);
+    if(server[id]){
+      const data=structuredClone(server[id]);
+      return deferReads?new Promise(resolve=>reads.push(()=>resolve(response(data)))):response(data);
+    }
+    throw new Error('Unexpected race request '+url);
+  };
+  w.eval(fs.readFileSync(root+'/patient_web/portal.js','utf8'));await tick();
+  const open=index=>$('previous-list').querySelectorAll('button')[index].click();
+  const send=()=>{$('interview-number').value='0';$('interview-answer').click();};
+  const setA=(version,label)=>{server['request-1']={...record,interview:snapshot(version,label)};};
+  open(0);await tick();
+
+  // A read begun before an answer must never replace that answer's view.
+  deferReads=true;setA(1,'Synthetic stale pre-answer read');$('refresh').click();await tick();
+  send();await tick();assert.equal($('interview-answer').disabled,true);
+  reads.shift()();await tick();assert.equal($('interview-question').textContent,'Synthetic A initial');
+  assert.equal($('interview-answer').disabled,true);
+  posts.shift().resolve(snapshot(2,'Synthetic after first answer'));await tick();
+  assert.equal($('interview-question').textContent,'Synthetic after first answer');assert.equal($('interview-answer').disabled,false);
+
+  // Reply/upload refreshes must retain the POST lock. Their newer snapshot
+  // wins if an older POST response arrives afterward.
+  send();await tick();deferReads=false;setA(4,'Synthetic newer reply snapshot');
+  $('reply-text').value='Synthetic reply during answer';await $('reply').onclick();
+  assert.equal($('interview-answer').disabled,true);assert.equal($('interview-question').textContent,'Synthetic after first answer');
+  setA(5,'Synthetic newer upload snapshot');
+  Object.defineProperty($('file'),'files',{configurable:true,value:[new w.File(['synthetic'],'test.png',{type:'image/png'})]});
+  await $('upload').onclick();assert.equal($('interview-answer').disabled,true);
+  posts.shift().resolve(snapshot(3,'Synthetic older POST'));await tick();
+  assert.equal($('interview-question').textContent,'Synthetic newer upload snapshot');assert.equal($('interview-answer').disabled,false);
+
+  // A read initiated during the POST may finish after it with an old version.
+  send();await tick();assert.equal(posts[0].body.expected_version,5);
+  deferReads=true;setA(5,'Synthetic delayed read during POST');$('reply-text').value='Synthetic delayed reply';
+  const reply=$('reply').onclick();await tick();posts.shift().resolve(snapshot(6,'Synthetic newest POST'));await tick();
+  reads.shift()();await reply;assert.equal($('interview-question').textContent,'Synthetic newest POST');
+  assert.equal($('interview-answer').disabled,false);
+
+  send();await tick();deferReads=false;
+  server['request-1']={...record,state:'withdrawn',interview:{...snapshot(7,'Synthetic closed read'),accepting_answers:false}};
+  $('reply-text').value='Synthetic closure check';await $('reply').onclick();
+  assert.equal($('interview-answer').disabled,true);
+  posts.shift().resolve(snapshot(7,'Synthetic earlier open POST'));await tick();
+  assert.equal($('interview').hidden,true,'A later closed snapshot wins over an equal-version open POST');
+
+  // A -> B -> A creates distinct views, even though the request id returns
+  // to A. Neither an old read nor an old POST can mutate the new A view.
+  setA(6,'Synthetic old A read');open(0);await tick();
+  deferReads=false;open(1);await tick();setA(7,'Synthetic reopened A');open(0);await tick();
+  reads.shift()();await tick();assert.equal($('interview-question').textContent,'Synthetic reopened A');
+  send();await tick();const oldPost=posts.shift();
+  open(1);await tick();setA(8,'Synthetic current A view');open(0);await tick();send();await tick();
+  oldPost.resolve(snapshot(9,'Synthetic old A POST'));await tick();
+  assert.equal($('interview-question').textContent,'Synthetic current A view');
+  assert.equal($('interview-answer').disabled,true,'An old view must not release the current POST lock');
+  posts.shift().resolve(snapshot(10,'Synthetic current A POST'));await tick();
+  assert.equal($('interview-question').textContent,'Synthetic current A POST');assert.equal($('interview-answer').disabled,false);
+  send();await tick();await $('logout').onclick();posts.shift().resolve(snapshot(11,'Synthetic after logout'));await tick();
+  assert.equal($('receipt').hidden,true);assert.equal($('interview-question').textContent,'');assert.equal($('interview-answers').textContent,'');
+  d.window.close();
+}
+
 (async()=>{
   const d=dom('patient_web/index.html'), w=d.window, $=id=>w.document.getElementById(id);
   let sent=null, delayed=null, readsDelayed=false, calls=[];
@@ -95,6 +173,8 @@ const numericQuestion = {id:'pain',text_fa:'Synthetic numeric question',purpose_
   p('interview-number').value='0';p('interview-supplementary').value='Synthetic pending detail';p('interview-answer').click();await tick();
   assert.equal(p('interview-answer').disabled,true);await p('logout').onclick();resolveAnswer();await tick();
   assert.equal(p('receipt').hidden,true);assert.equal(p('interview').hidden,true);assert.equal(p('interview-answers').textContent,'');assert.equal(p('interview-number').value,'');assert.equal(p('interview-supplementary').value,'');pw.close();
+
+  await interviewRaceQA();
 
   const s=dom('web/portal-inbox.html'), sw=s.window, q=id=>sw.document.getElementById(id);
   let accepted=null, pending=null, delay=false;

@@ -5,8 +5,28 @@
   let csrf = "", current = null, step = 0, notice = "", requestKey = crypto.randomUUID();
   let messageKey = null, messageText = null, pendingSubmission = null, generation = 0;
   let interview = null, answerKey = null, answerBody = null, editingQuestionId = null, interviewBusy = false;
+  let viewEpoch = 0, readEpoch = 0, operationEpoch = 0, interviewSnapshotOperation = 0, pendingAnswer = null;
   const statuses = {submitted:"در انتظار بررسی کارکنان", linked:"به ویزیت کلینیک متصل شد", withdrawn:"درخواست پس گرفته شد"};
   function status(text) { $("status").textContent = text; }
+  function activeView(epoch, view, id) { return epoch===generation&&view===viewEpoch&&id===current; }
+  function selectRequest(id) {
+    current=id;viewEpoch++;readEpoch++;pendingAnswer=null;interviewBusy=false;
+    interview={available:false,reason:"در حال دریافت پرسش‌نامه…"};interviewSnapshotOperation=0;
+    editingQuestionId=null;answerBody=null;answerKey=null;renderInterview();
+  }
+  function newerSnapshot(first, second) {
+    if(!first)return second;if(!second)return first;
+    // Answer versions never regress. At the same version, a later read may
+    // carry a closure/withdrawal that an earlier POST response did not see.
+    const firstVersion=first.data?.version??-1,secondVersion=second.data?.version??-1;
+    return firstVersion!==secondVersion?(firstVersion>secondVersion?first:second)
+      :first.operation>=second.operation?first:second;
+  }
+  function applyInterviewSnapshot(candidate) {
+    if(!candidate||newerSnapshot(candidate,{data:interview,operation:interviewSnapshotOperation})!==candidate)return;
+    if(pendingAnswer){pendingAnswer.snapshot=newerSnapshot(candidate,pendingAnswer.snapshot);return;}
+    interview=candidate.data;interviewSnapshotOperation=candidate.operation;editingQuestionId=null;renderInterview();
+  }
   async function api(path, options = {}) {
     const headers = new Headers(options.headers || {});
     if (csrf) headers.set("X-Portal-CSRF", csrf);
@@ -44,20 +64,20 @@
   };
   form.addEventListener("input",()=>{if(pendingSubmission){pendingSubmission=null;requestKey=crypto.randomUUID();}});
   form.onsubmit=async(event)=>{event.preventDefault(); if(!validStep())return; const epoch=generation;$("submit").disabled=true;
-    try { if(!pendingSubmission) pendingSubmission=data(); const result=await api("/requests",{method:"POST",body:JSON.stringify(pendingSubmission)});if(epoch!==generation)return;current=result.id;await load();if(epoch!==generation)return;form.hidden=true;status("درخواست ثبت شد. اکنون می‌توانید مدارک را ارسال کنید."); }
+    try { if(!pendingSubmission) pendingSubmission=data(); const result=await api("/requests",{method:"POST",body:JSON.stringify(pendingSubmission)});if(epoch!==generation)return;selectRequest(result.id);await load();if(epoch!==generation)return;form.hidden=true;status("درخواست ثبت شد. اکنون می‌توانید مدارک را ارسال کنید."); }
     catch(error){if(epoch===generation)status(error.message);} finally{if(epoch===generation)$("submit").disabled=false;}
   };
   async function load() {
-    const epoch=generation,id=current;
-    interview={available:false,reason:"در حال دریافت پرسش‌نامه…"};editingQuestionId=null;interviewBusy=false;renderInterview();
+    const epoch=generation,id=current,view=viewEpoch,read=++readEpoch,operation=++operationEpoch;
     const item=await api("/requests/"+id);
-    if(epoch!==generation||id!==current)return;
+    if(!activeView(epoch,view,id)||read!==readEpoch)return false;
     $("receipt").hidden=false; $("receipt-code").textContent=item.receipt; $("request-state").textContent=statuses[item.state]||item.state;
     $("messages").replaceChildren(); for(const message of item.messages){const el=document.createElement("p");el.className="message";el.textContent=(message.from==="clinician"?"پزشک: ":"شما: ")+message.text;$("messages").append(el);}
     if(!item.messages.length)$("messages").textContent="هنوز پرسشی ثبت نشده است. برای مشاهدهٔ پیام‌های جدید، بررسی وضعیت را بزنید.";
     $("files").replaceChildren(); for(const file of item.attachments){const li=document.createElement("li");li.textContent=file.name+" · دریافت شد";$("files").append(li);}
     for(const id of ["upload","reply","withdraw"])$(id).disabled=item.state==="withdrawn";
-    interview=item.interview||{available:false};editingQuestionId=null;renderInterview();
+    applyInterviewSnapshot({data:item.interview||{available:false},operation});
+    return true;
   }
   function interviewQuestion(){
     return editingQuestionId
@@ -104,26 +124,35 @@
     $("interview-answer").textContent=editingQuestionId?"ثبت اصلاح پاسخ":"ثبت پاسخ و پرسش بعدی";
     interviewControls();
   }
-  async function answer(state){const q=interviewQuestion();if(interviewBusy||!interview?.accepting_answers||!q)return;const epoch=generation,id=current;let value=null;
+  async function answer(state){const q=interviewQuestion();if(interviewBusy||!interview?.accepting_answers||!q)return;const epoch=generation,id=current,view=viewEpoch;let value=null;
     if(state==="answered"){
       const raw=q.answer_type==="text"?$("interview-text").value.trim():q.answer_type==="number"?$("interview-number").value.trim():$("interview-choice").value;
       if(raw===""){status("پاسخ را وارد کنید یا گزینهٔ نمی‌دانم را بزنید.");return;}
       value=q.answer_type==="number"?Number(raw):raw;
       if(q.answer_type==="number"&&(!Number.isFinite(value)||!$("interview-number").reportValidity())){status("عدد را با توجه به محدودهٔ سؤال بررسی کنید.");return;}
     }
-    const body={question_id:q.id,expected_version:interview.version,state,value,unit:q.answer_type==="number"&&state==="answered"?(q.numeric_unit||null):null,supplementary_text:$("interview-supplementary").value.trim()||null};const signature=JSON.stringify({id,...body});if(signature!==answerBody){answerBody=signature;answerKey=crypto.randomUUID();}interviewBusy=true;interviewControls();
-    try{const result=await api(`/requests/${id}/interview-answers`,{method:"POST",body:JSON.stringify({...body,request_key:answerKey})});if(epoch!==generation||id!==current)return;interview=result;editingQuestionId=null;renderInterview();status("پاسخ ثبت شد.");}catch(error){if(epoch===generation&&id===current)status(error.message);}finally{if(epoch===generation&&id===current){interviewBusy=false;interviewControls();}}}
+    const body={question_id:q.id,expected_version:interview.version,state,value,unit:q.answer_type==="number"&&state==="answered"?(q.numeric_unit||null):null,supplementary_text:$("interview-supplementary").value.trim()||null};const signature=JSON.stringify({id,...body});if(signature!==answerBody){answerBody=signature;answerKey=crypto.randomUUID();}
+    // A POST invalidates reads begun before it. Later reads may update other
+    // panels, but their interview snapshot waits for this exact POST to finish.
+    readEpoch++;const pending={operation:++operationEpoch,snapshot:null};pendingAnswer=pending;interviewBusy=true;interviewControls();
+    const active=()=>activeView(epoch,view,id)&&pendingAnswer===pending;let result=null,errorMessage=null;
+    try{result=await api(`/requests/${id}/interview-answers`,{method:"POST",body:JSON.stringify({...body,request_key:answerKey})});}catch(error){errorMessage=error.message;}
+    finally{if(active()){
+      const snapshot=newerSnapshot(result?{data:result,operation:pending.operation}:null,pending.snapshot);
+      pendingAnswer=null;interviewBusy=false;applyInterviewSnapshot(snapshot);interviewControls();
+      status(errorMessage||"پاسخ ثبت شد.");
+    }}}
   $("interview-answer").onclick=()=>answer("answered");$("interview-unknown").onclick=()=>answer("unknown");$("interview-decline").onclick=()=>answer("declined");
   $("interview-cancel-edit").onclick=()=>{if(interviewBusy)return;editingQuestionId=null;renderInterview();};
-  $("refresh").onclick=()=>{const epoch=generation;load().then(()=>{if(epoch===generation)status("وضعیت به‌روز شد.");}).catch(error=>{if(epoch===generation)status(error.message);});};
+  $("refresh").onclick=()=>{const epoch=generation,view=viewEpoch,id=current;load().then(loaded=>{if(loaded&&activeView(epoch,view,id))status("وضعیت به‌روز شد.");}).catch(error=>{if(activeView(epoch,view,id))status(error.message);});};
   $("reply").onclick=async()=>{const text=$("reply-text").value.trim();if(text.length<3){status("پاسخ را بنویسید.");return;}$("reply").disabled=true;
-    const epoch=generation,id=current;try{if(text!==messageText){messageKey=crypto.randomUUID();messageText=text;}await api(`/requests/${id}/messages`,{method:"POST",body:JSON.stringify({text,request_key:messageKey})});if(epoch!==generation||id!==current)return;$("reply-text").value="";messageText=null;await load();if(epoch===generation)status("پاسخ ثبت شد.");}catch(error){if(epoch===generation)status(error.message);}finally{if(epoch===generation)$("reply").disabled=$("request-state").textContent===statuses.withdrawn;}};
+    const epoch=generation,id=current,view=viewEpoch;try{if(text!==messageText){messageKey=crypto.randomUUID();messageText=text;}await api(`/requests/${id}/messages`,{method:"POST",body:JSON.stringify({text,request_key:messageKey})});if(!activeView(epoch,view,id))return;$("reply-text").value="";messageText=null;await load();if(activeView(epoch,view,id))status("پاسخ ثبت شد.");}catch(error){if(activeView(epoch,view,id))status(error.message);}finally{if(activeView(epoch,view,id))$("reply").disabled=$("request-state").textContent===statuses.withdrawn;}};
   $("upload").onclick=async()=>{const file=$("file").files[0];if(!file||file.size>5*1024*1024||!["image/png","image/jpeg"].includes(file.type)){status("یک تصویر JPG یا PNG تا ۵ مگابایت انتخاب کنید.");return;}$("upload").disabled=true;
-    const epoch=generation,id=current;try{await api(`/requests/${id}/attachments`,{method:"POST",body:file});if(epoch!==generation||id!==current)return;$("file").value="";await load();if(epoch===generation)status("مدرک دریافت شد.");}catch(error){if(epoch===generation)status(error.message);}finally{if(epoch===generation)$("upload").disabled=$("request-state").textContent===statuses.withdrawn;}};
-  $("withdraw").onclick=async()=>{if(!confirm("درخواست از صف بررسی خارج شود؟"))return;const epoch=generation,id=current;try{await api(`/requests/${id}/withdraw`,{method:"POST"});if(epoch!==generation||id!==current)return;await load();if(epoch===generation)status("درخواست پس گرفته شد.");}catch(error){if(epoch===generation)status(error.message);}};
-  $("logout").onclick=async()=>{generation++;interview=null;answerBody=null;answerKey=null;editingQuestionId=null;interviewBusy=false;$("interview").hidden=true;for(const id of ["interview-question","interview-purpose","interview-status","interview-unit","interview-number-range"])$(id).textContent="";for(const id of ["interview-text","interview-number","interview-supplementary"])$(id).value="";$("interview-choice").replaceChildren();$("interview-answers").replaceChildren();const closing=api("/logout",{method:"POST"});csrf="";current=null;form.reset();form.hidden=true;$("receipt").hidden=true;$("previous").hidden=true;$("previous-list").replaceChildren();$("messages").replaceChildren();$("files").replaceChildren();$("review").textContent="";$("receipt-code").textContent="";$("request-state").textContent="";$("reply-text").value="";$("file").value="";pendingSubmission=null;messageKey=null;messageText=null;$("logout").hidden=true;try{await closing;status("نشست بسته شد. برای ورود جدید، صفحه را دوباره باز کنید.");}catch(error){status("اطلاعات صفحه پاک شد؛ پایان نشست روی سرور تأیید نشد. مرورگر را روی دستگاه مشترک ببندید.");}};
+    const epoch=generation,id=current,view=viewEpoch;try{await api(`/requests/${id}/attachments`,{method:"POST",body:file});if(!activeView(epoch,view,id))return;$("file").value="";await load();if(activeView(epoch,view,id))status("مدرک دریافت شد.");}catch(error){if(activeView(epoch,view,id))status(error.message);}finally{if(activeView(epoch,view,id))$("upload").disabled=$("request-state").textContent===statuses.withdrawn;}};
+  $("withdraw").onclick=async()=>{if(!confirm("درخواست از صف بررسی خارج شود؟"))return;const epoch=generation,id=current,view=viewEpoch;try{await api(`/requests/${id}/withdraw`,{method:"POST"});if(!activeView(epoch,view,id))return;await load();if(activeView(epoch,view,id))status("درخواست پس گرفته شد.");}catch(error){if(activeView(epoch,view,id))status(error.message);}};
+  $("logout").onclick=async()=>{generation++;viewEpoch++;readEpoch++;pendingAnswer=null;interviewSnapshotOperation=0;interview=null;answerBody=null;answerKey=null;editingQuestionId=null;interviewBusy=false;$("interview").hidden=true;for(const id of ["interview-question","interview-purpose","interview-status","interview-unit","interview-number-range"])$(id).textContent="";for(const id of ["interview-text","interview-number","interview-supplementary"])$(id).value="";$("interview-choice").replaceChildren();$("interview-answers").replaceChildren();const closing=api("/logout",{method:"POST"});csrf="";current=null;form.reset();form.hidden=true;$("receipt").hidden=true;$("previous").hidden=true;$("previous-list").replaceChildren();$("messages").replaceChildren();$("files").replaceChildren();$("review").textContent="";$("receipt-code").textContent="";$("request-state").textContent="";$("reply-text").value="";$("file").value="";pendingSubmission=null;messageKey=null;messageText=null;$("logout").hidden=true;try{await closing;status("نشست بسته شد. برای ورود جدید، صفحه را دوباره باز کنید.");}catch(error){status("اطلاعات صفحه پاک شد؛ پایان نشست روی سرور تأیید نشد. مرورگر را روی دستگاه مشترک ببندید.");}};
   async function start(){try{const info=await api("/info");notice=info.notice_version;$("notice-version").textContent=notice;$("clinic-name").textContent=info.clinic_name;const session=await api("/session",{method:"POST"});csrf=session.csrf_token;$("logout").hidden=false;form.hidden=false;
-    if(session.requests.length){$("previous").hidden=false;for(const row of session.requests){const button=document.createElement("button");button.type="button";button.className="quiet";button.textContent=row.receipt+" · "+statuses[row.state];button.onclick=()=>{current=row.id;form.hidden=true;load().catch(error=>status(error.message));};$("previous-list").append(button);}}
+    if(session.requests.length){$("previous").hidden=false;for(const row of session.requests){const button=document.createElement("button");button.type="button";button.className="quiet";button.textContent=row.receipt+" · "+statuses[row.state];button.onclick=()=>{selectRequest(row.id);form.hidden=true;const epoch=generation,view=viewEpoch;load().catch(error=>{if(activeView(epoch,view,row.id))status(error.message);});};$("previous-list").append(button);}}
     status("برای شروع، مراحل زیر را تکمیل کنید.");showStep();}catch(error){status(error.message);}}
   start();
 })();
