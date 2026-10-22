@@ -14,6 +14,7 @@ on:
       - Prepare-Orthopedic-Book-Handoff.cmd
       - backend/tools/local_orthopedic_library.py
       - backend/tools/orthopedic_book_handoff.py
+      - backend/tools/orthopedic_book_page_review.py
       - backend/requirements-books.txt
       - backend/tests/local_books_windows/**
       - .github/workflows/local-books-windows.yml
@@ -25,6 +26,7 @@ on:
       - Prepare-Orthopedic-Book-Handoff.cmd
       - backend/tools/local_orthopedic_library.py
       - backend/tools/orthopedic_book_handoff.py
+      - backend/tools/orthopedic_book_page_review.py
       - backend/requirements-books.txt
       - backend/tests/local_books_windows/**
       - .github/workflows/local-books-windows.yml
