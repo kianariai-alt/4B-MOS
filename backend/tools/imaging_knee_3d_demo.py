@@ -19,6 +19,7 @@ from backend.app.imaging_intelligence.reconstruction import SyntheticVolumeRecon
 from backend.app.imaging_intelligence.surface_reconstruction import reconstruct_surfaces
 from backend.tools.imaging_metadata_demo import SYNTHETIC_REFERENCE_KEY
 from backend.tools.synthetic_knee_fixture import STRUCTURES, generate_knee_dicom
+from backend.tools.knee_anatomy import EXTRA_STRUCTURES, TEMPLATE_ROOT, anatomy_provenance
 
 
 # Immutable r180 source, commit 0af9729d0c143a86a1d725d6e2c3ad83301f3f34.
@@ -48,30 +49,33 @@ def verified_three_assets(root: Path):
         raise ValueError("Verified Three.js 0.180.0 runtime assets are required.") from None
 
 
-def export_synthetic_knee(output: Path, *, three_root: Path, modality="MR", size=64):
+def export_synthetic_knee(output: Path, *, three_root: Path, modality="MR", size=96):
     assets = verified_three_assets(three_root)
     if output.exists():
         raise ValueError("Output directory must be new.")
     with TemporaryDirectory(prefix="4b-generated-knee-") as folder:
-        fixture = generate_knee_dicom(Path(folder), modality=modality, size=size)
+        fixture = generate_knee_dicom(Path(folder), modality=modality, size=size, anatomical=True)
         volume = SyntheticVolumeReconstructor(reference_key=SYNTHETIC_REFERENCE_KEY).reconstruct(fixture.source)
         if not np.array_equal(volume.voxels, fixture.expected_values):
             raise ValueError("Synthetic DICOM pixel round trip failed.")
-        surfaces = reconstruct_surfaces(volume, fixture.labels, label_codes=tuple(range(1, 9)))
+        surfaces = reconstruct_surfaces(volume, fixture.labels, label_codes=tuple(range(1, 14)),
+                                        display_smoothing=True)
+        surfaces["label_source"] = "generic_bone_templates_and_procedural_synthetic_ground_truth"
         voxel_bytes = volume.voxels.tobytes(order="C")
         label_bytes = fixture.labels.tobytes(order="C")
     palette = [{"label": label, "code": code, "title": title, "color": color}
-               for label, code, title, color in STRUCTURES]
+               for label, code, title, color in STRUCTURES + EXTRA_STRUCTURES]
     backend = Path(__file__).resolve().parents[1]
     source_paths = ("app/imaging_intelligence/reconstruction.py", "app/imaging_intelligence/surface_reconstruction.py",
-                    "tools/synthetic_knee_fixture.py", "tools/imaging_knee_3d_demo.py",
+                    "tools/synthetic_knee_fixture.py", "tools/knee_anatomy.py", "tools/imaging_knee_3d_demo.py",
                     "imaging_3d_viewer/app.js", "imaging_3d_viewer/index.html", "imaging_3d_viewer/style.css")
     scene = {
-        "schema_version": "synthetic-knee-viewer-v1", "synthetic_only": True,
+        "schema_version": "synthetic-knee-viewer-v2", "synthetic_only": True,
         "volume": volume.to_manifest(), "surfaces": surfaces, "structures": palette,
         "assets": {"volume.f32": hashlib.sha256(voxel_bytes).hexdigest(),
                    "labels.u8": hashlib.sha256(label_bytes).hexdigest()},
-        "source": "generated_analytic_knee_not_patient_anatomy",
+        "source": "generic_anatomical_phantom_not_patient_anatomy",
+        "anatomy": anatomy_provenance(),
         "segmentation": "known_phantom_labels_not_an_inferred_segmentation",
         "synthetic_pixel_roundtrip_verified": True, "authorizes_treatment": False,
         "is_clinically_validated": False,
@@ -79,7 +83,8 @@ def export_synthetic_knee(output: Path, *, three_root: Path, modality="MR", size
                        "vtk_version": surfaces["vtk_version"], "three_version": "0.180.0",
                        "source_sha256s": {name:hashlib.sha256((backend/name).read_bytes()).hexdigest()
                                            for name in source_paths}, "three_runtime_sha256s": THREE_FILES},
-        "limitations": ["toy_anatomy", "conventional_colors", "no_tissue_texture_or_arthroscopy_equivalence",
+        "limitations": ["generic_unvalidated_illustration", "procedural_soft_tissues", "illustrative_pose",
+                        "display_smoothing_not_for_measurement", "conventional_colors", "no_arthroscopy_equivalence",
                         "no_automatic_segmentation", "no_physiological_motion", "no_patient_file_input"],
     }
     scene["artifact_sha256"] = canonical_digest(scene)
@@ -93,12 +98,15 @@ def export_synthetic_knee(output: Path, *, three_root: Path, modality="MR", size
     (output/"scene.json").write_text(json.dumps(scene, ensure_ascii=False, separators=(",", ":"), allow_nan=False))
     (output/"volume.f32").write_bytes(voxel_bytes)
     (output/"labels.u8").write_bytes(label_bytes)
+    shutil.copyfile(TEMPLATE_ROOT/"ATTRIBUTION.md", output/"ANATOMY_ATTRIBUTION.md")
     (output/"README.txt").write_text(
         "4B-MOS synthetic knee demonstration; no patient data or clinical validation.\n"
-        "All colors and anatomical labels are illustrative ground truth from a toy phantom.\n"
+        "Generic template femur/tibia; illustrative soft tissues and pose; no patient segmentation.\n"
+        "Display smoothing is separate from the original voxel-boundary measurement surfaces.\n"
         "Run inside this folder: python -m http.server 18765 --bind 127.0.0.1\n"
         "Open http://127.0.0.1:18765 in a WebGL2 browser. Direct file:// loading is unsupported.\n"
         "Use W/A/S/D and R/F only while the internal-view canvas is focused.\n"
+        "OpenSim template credits and CC-BY-3.0 license: ANATOMY_ATTRIBUTION.md\n"
         "Third-party Three.js license: vendor/LICENSE\n")
     summary = {
         "schema_version": scene["schema_version"], "synthetic_only": True,
@@ -107,6 +115,7 @@ def export_synthetic_knee(output: Path, *, three_root: Path, modality="MR", size
         "triangles": sum(len(mesh["triangles"]) for mesh in surfaces["meshes"]),
         "artifact_sha256": scene["artifact_sha256"], "volume_sha256": scene["volume"]["volume_sha256"],
         "label_source": surfaces["label_source"], "vtk_version": surfaces["vtk_version"],
+        "anatomy_profile": scene["anatomy"]["profile"], "display_smoothing_only": True,
         "synthetic_pixel_roundtrip_verified": True, "is_clinically_validated": False,
     }
     (output/"verification.json").write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2)+"\n")
@@ -118,7 +127,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--three-root", type=Path, required=True)
     parser.add_argument("--modality", choices=("MR", "CT"), default="MR")
-    parser.add_argument("--size", choices=(32, 48, 64, 96), type=int, default=64)
+    parser.add_argument("--size", choices=(64, 96), type=int, default=96)
     args = parser.parse_args()
     print(json.dumps(export_synthetic_knee(args.output, three_root=args.three_root,
                                           modality=args.modality, size=args.size), sort_keys=True, indent=2))

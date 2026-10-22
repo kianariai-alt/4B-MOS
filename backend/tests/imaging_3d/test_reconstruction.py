@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 try:
     import numpy as np
@@ -19,6 +20,7 @@ from backend.app.imaging_intelligence.reconstruction import (
 from backend.app.imaging_intelligence.surface_reconstruction import reconstruct_surfaces
 from backend.tools.imaging_metadata_demo import SYNTHETIC_REFERENCE_KEY
 from backend.tools.synthetic_knee_fixture import analytic_knee, generate_knee_dicom
+from backend.tools.knee_anatomy import EXTENT_XYZ_MM, anatomical_knee, anatomy_provenance
 
 
 class VolumeTests(unittest.TestCase):
@@ -188,6 +190,19 @@ class SurfaceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             reconstruct_surfaces(self.volume(),labels,label_codes=(1,2))
 
+    def test_display_smoothing_preserves_original_measurements_and_topology(self):
+        reference = reconstruct_surfaces(self.volume(), self.labels(), label_codes=(1, 2))
+        smoothed = reconstruct_surfaces(self.volume(), self.labels(), label_codes=(1, 2), display_smoothing=True)
+        for original, mesh in zip(reference["meshes"], smoothed["meshes"]):
+            self.assertEqual(original, {key: value for key, value in mesh.items() if key != "display"})
+            display = mesh["display"]
+            self.assertFalse(display["for_measurements"])
+            self.assertEqual(len(display["vertices_lps_mm"]), len(mesh["vertices_lps_mm"]))
+            self.assertGreater(display["max_displacement_mm"], 0)
+            self.assertLess(display["max_displacement_mm"], 8)
+        self.assertFalse(smoothed["smoothing_applied"])
+        self.assertTrue(smoothed["display_smoothing_applied"])
+
     def test_phantom_is_deterministic_and_has_no_boundary_labels(self):
         for modality in ("MR","CT"):
             labels,values = analytic_knee(64,modality)
@@ -196,6 +211,64 @@ class SurfaceTests(unittest.TestCase):
             np.testing.assert_array_equal(values,again)
             self.assertEqual(set(np.unique(labels)),set(range(9)))
             self.assertFalse(labels[0].any() or labels[-1].any())
+
+
+class AnatomicalPhantomTests(unittest.TestCase):
+    def test_all_thirteen_structures_are_padded_and_deterministic_at_supported_resolutions(self):
+        for size in (64, 96):
+            with self.subTest(size=size):
+                labels, values = anatomical_knee(size)
+                other, again = anatomical_knee(size)
+                np.testing.assert_array_equal(labels, other)
+                np.testing.assert_array_equal(values, again)
+                self.assertEqual(set(np.unique(labels)), set(range(14)))
+                for face in (labels[0], labels[-1], labels[:, 0], labels[:, -1], labels[:, :, 0], labels[:, :, -1]):
+                    self.assertFalse(face.any())
+                self.assertFalse(labels.flags.writeable or values.flags.writeable)
+        with self.assertRaises(ValueError):
+            anatomical_knee(32)
+
+    def test_illustrated_landmarks_and_meniscus_support_in_physical_coordinates(self):
+        labels, _ = anatomical_knee(96)
+        points = {}
+        for label in range(1, 14):
+            ijk = np.argwhere(labels == label)[:, ::-1]
+            points[label] = ijk*np.asarray(EXTENT_XYZ_MM)/95-np.asarray(EXTENT_XYZ_MM)/2
+        self.assertGreater(points[1][:, 2].min(), points[2][:, 2].max())
+        self.assertLess(points[3][:, 1].mean(), points[1][:, 1].mean()-20)
+        self.assertGreater(points[9][:, 0].mean(), points[2][:, 0].mean()+30)
+        self.assertLess(points[5][:, 0].max(), 0)
+        self.assertGreater(points[6][:, 0].min(), 0)
+        self.assertLess(points[7][:, 1].mean(), points[8][:, 1].mean())
+        for label in (5, 6):
+            # The wedges sit over an actual tibial column, rather than floating rings.
+            for k, j, i in np.argwhere(labels == label):
+                self.assertTrue((labels[:k, j, i] == 2).any())
+            self.assertLess(np.ptp(points[label][:, 2]), 25)
+
+    def test_template_integrity_and_declared_nonclinical_provenance(self):
+        with TemporaryDirectory() as folder:
+            (Path(folder)/"femur_r.vtp").write_text("changed template")
+            with patch("backend.tools.knee_anatomy.TEMPLATE_ROOT", Path(folder)):
+                with self.assertRaisesRegex(ValueError, "integrity check failed"):
+                    anatomical_knee(64)
+        provenance = anatomy_provenance()
+        self.assertFalse(provenance["anatomical_accuracy_validated"])
+        self.assertEqual(provenance["license"], "CC-BY-3.0")
+        self.assertEqual(len(provenance["bone_template_sha256s"]), 2)
+
+    def test_anatomical_mr_ct_dicom_roundtrip_and_fixed_physical_domain(self):
+        for modality in ("MR", "CT"):
+            with TemporaryDirectory() as folder:
+                fixture = generate_knee_dicom(Path(folder), anatomical=True, size=64, modality=modality)
+                volume = SyntheticVolumeReconstructor(reference_key=SYNTHETIC_REFERENCE_KEY).reconstruct(fixture.source)
+                np.testing.assert_array_equal(volume.voxels, fixture.expected_values)
+                np.testing.assert_allclose(np.linalg.norm(volume.affine_lps[:3, :3], axis=0)*63, EXTENT_XYZ_MM)
+                surfaces = reconstruct_surfaces(volume, fixture.labels, label_codes=tuple(range(1, 14)), display_smoothing=True)
+                self.assertEqual(len(surfaces["meshes"]), 13)
+                self.assertTrue(all(mesh["voxel_count"] > 0 for mesh in surfaces["meshes"]))
+        with TemporaryDirectory() as folder, self.assertRaisesRegex(ValueError, "physical domain"):
+            generate_knee_dicom(Path(folder), anatomical=True, size=64, spacing_xyz=(.8, 1, 1.4))
 
 
 if __name__ == '__main__':

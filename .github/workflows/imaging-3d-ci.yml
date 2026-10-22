@@ -58,7 +58,7 @@ jobs:
           python -m backend.tools.imaging_knee_3d_demo
           --output /tmp/4b-knee-bundle/viewer
           --three-root /tmp/4b-knee-node/node_modules/three
-          --modality ${{ matrix.modality }} --size 64
+          --modality ${{ matrix.modality }} --size 96
       - name: Check real colored pixels, MPR values, clipping, linked point and internal camera
         run: >-
           python backend/tests/imaging_3d_browser.py

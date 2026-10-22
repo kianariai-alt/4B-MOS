@@ -24,9 +24,10 @@ async function verifiedBinary(name, sha, expectedLength) {
 async function start() {
   const response = await localFile('scene.json');
   const data = await response.json();
-  if (data.schema_version !== 'synthetic-knee-viewer-v1' || data.synthetic_only !== true ||
+  if (data.schema_version !== 'synthetic-knee-viewer-v2' || data.synthetic_only !== true ||
       data.is_clinically_validated !== false || data.segmentation !== 'known_phantom_labels_not_an_inferred_segmentation' ||
-      data.surfaces.meshes.length !== 8 || data.structures.length !== 8) throw new Error('unsupported_artifact');
+      data.surfaces.meshes.length !== data.structures.length || data.structures.length !== 13 ||
+      data.anatomy?.profile !== 'generic-left-knee-illustration-v2') throw new Error('unsupported_artifact');
   const [nz, ny, nx] = data.volume.shape_zyx;
   if (![nx, ny, nz].every(n => Number.isInteger(n) && n >= 2 && n <= 96)) throw new Error('invalid_grid');
   const affine = data.volume.affine_lps;
@@ -42,8 +43,11 @@ async function start() {
     if (!Number.isFinite(voxels[i])) throw new Error('invalid_voxels');
   }
   const labels = new Uint8Array(labelBuffer);
-  if (!labels.every(value => value <= 8)) throw new Error('invalid_labels');
+  if (!labels.every(value => value <= 13)) throw new Error('invalid_labels');
   const palette = new Map(data.structures.map(item => [item.label, item]));
+  const boneLabels = new Set([1, 2, 3, 9]);
+  const naturalColors = {1:'#ded3bc', 2:'#ded3bc', 3:'#e6dcc8', 4:'#b5d1cd', 5:'#bca999',
+    6:'#bca999', 7:'#dccbb0', 8:'#c7b298', 9:'#ded3bc', 10:'#d3c3ad', 11:'#d3c3ad', 12:'#dfcfb9', 13:'#dfcfb9'};
   const cursor = { x: Math.floor(nx / 2), y: Math.floor(ny / 2), z: Math.floor(nz / 2) };
   const index = (i, j, k) => (k * ny + j) * nx + i;
   function lps(i, j, k) {
@@ -55,6 +59,8 @@ async function start() {
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.localClippingEnabled = true;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
   renderer.domElement.id = 'knee-3d-canvas';
   renderer.domElement.tabIndex = 0;
   renderer.domElement.setAttribute('aria-label', 'مدل سه‌بعدی رنگی زانوی ساختگی');
@@ -65,14 +71,16 @@ async function start() {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = false;
   controls.minDistance = 5;
-  controls.maxDistance = 400;
-  scene.add(new THREE.HemisphereLight(0xe5f6ff, 0x354453, 2.2));
-  const light = new THREE.DirectionalLight(0xfff3e0, 2.8);
+  controls.maxDistance = 800;
+  scene.add(new THREE.HemisphereLight(0xf1f5ff, 0x38404b, 1.4));
+  const light = new THREE.DirectionalLight(0xfff4e5, 3);
   light.position.set(70, -90, 100);
   scene.add(light);
-  const fill = new THREE.DirectionalLight(0x9dd7ff, 1.8);
+  const fill = new THREE.DirectionalLight(0xd7e7ff, .9);
   fill.position.set(-70, 40, 15);
   scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xffffff, 1.5);
+  rim.position.set(20, 80, 90); scene.add(rim);
   const meshes = new Map();
   const clipPlane = new THREE.Plane();
   let mode = 'overview', pending = false, revision = 0;
@@ -92,20 +100,27 @@ async function start() {
         !item.triangles.every(face => face.length === 3 && face.every(i => Number.isInteger(i) && i >= 0 && i < item.vertices_lps_mm.length))) {
       throw new Error('invalid_surface');
     }
+    const displayVertices = item.display?.vertices_lps_mm;
+    if (!displayVertices || item.display.for_measurements !== false ||
+        displayVertices.length !== item.vertices_lps_mm.length ||
+        !displayVertices.every(v => v.length === 3 && v.every(Number.isFinite))) throw new Error('invalid_display_surface');
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(item.vertices_lps_mm.flat(), 3));
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(displayVertices.flat(), 3));
     geometry.setIndex(item.triangles.flat());
     geometry.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({ color: structure.color, roughness: .55,
-      metalness: .02, side: THREE.DoubleSide, transparent: item.label <= 4,
-      opacity: item.label <= 3 ? .55 : item.label === 4 ? .88 : 1, depthWrite: item.label > 4 });
+    const cartilage = item.label === 4;
+    const material = new THREE.MeshPhysicalMaterial({ color: naturalColors[item.label],
+      roughness: cartilage ? .25 : boneLabels.has(item.label) ? .68 : .82,
+      clearcoat: cartilage ? .5 : .08, clearcoatRoughness: .3,
+      metalness: 0, side: THREE.DoubleSide, transparent: false, opacity: 1, depthWrite: true });
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
     meshes.set(item.label, mesh);
     const row = document.createElement('label');
     row.className = 'structure-item';
     const swatch = document.createElement('span');
-    swatch.className = 'swatch'; swatch.style.backgroundColor = structure.color;
+    swatch.className = 'swatch'; swatch.style.backgroundColor = naturalColors[item.label];
+    swatch.id = `swatch-${item.label}`;
     const title = document.createElement('span'); title.textContent = structure.title;
     const code = document.createElement('small'); code.textContent = structure.code; title.append(code);
     const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = true;
@@ -118,13 +133,22 @@ async function start() {
   marker.renderOrder = 100; scene.add(marker);
   function boneOpacity() {
     const value = Number($('opacity').value) / 100;
-    for (const [label, mesh] of meshes) if (label <= 3) {
+    for (const [label, mesh] of meshes) if (boneLabels.has(label)) {
       mesh.material.opacity = value; mesh.material.transparent = value < 1;
       mesh.material.depthWrite = value === 1; mesh.material.needsUpdate = true;
     }
     $('opacity-value').textContent = `${fa(value * 100)}٪`; schedule();
   }
   $('opacity').addEventListener('input', boneOpacity);
+  function colors() {
+    for (const [label, mesh] of meshes) {
+      const color = $('structure-colors').checked ? palette.get(label).color : naturalColors[label];
+      mesh.material.color.set(color); $(`swatch-${label}`).style.backgroundColor = color;
+    }
+    schedule();
+  }
+  $('structure-colors').addEventListener('change', colors);
+  $('structure-count').textContent = `${fa(meshes.size)} ساختار`;
   function clipping() {
     const normal = new THREE.Vector3(...affine.slice(0, 3).map(row => -row[2])).normalize();
     clipPlane.setFromNormalAndCoplanarPoint(normal, lps(0, 0, Number($('clip-index').value)));
@@ -134,25 +158,32 @@ async function start() {
   $('clip-index').max = String(nz - 1); $('clip-index').value = String(cursor.z);
   $('clip-index').addEventListener('input', clipping); $('clip').addEventListener('change', clipping);
   const center = lps((nx - 1) / 2, (ny - 1) / 2, (nz - 1) / 2);
+  const extent = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
+  const viewDistance = Math.max(extent.x, extent.y, extent.z) * 1.85;
   function preset(next) {
     mode = next; controls.enabled = next !== 'inside'; camera.fov = next === 'inside' ? 78 : 37;
     if (next === 'inside') {
-      camera.position.copy(center).add(new THREE.Vector3(0, -8, -5));
-      camera.lookAt(center.clone().add(new THREE.Vector3(0, 6, -2)));
+      camera.position.copy(center).add(new THREE.Vector3(0, -28, 1));
+      camera.lookAt(center.clone().add(new THREE.Vector3(0, 8, 7)));
       $('opacity').value = '15'; boneOpacity();
     } else {
-      camera.position.copy(center).add(next === 'front' ? new THREE.Vector3(0, -160, 10) : new THREE.Vector3(100, -145, 85));
+      const direction = next === 'front' || next === 'joint' ? new THREE.Vector3(0, -1, .08) : new THREE.Vector3(.5, -1, .3);
+      camera.position.copy(center).addScaledVector(direction.normalize(), viewDistance);
       controls.target.copy(center); controls.update();
-      $('opacity').value = '55'; boneOpacity();
+      $('opacity').value = '100'; boneOpacity();
+    }
+    for (const label of [3, 12, 13]) {
+      const visible = next !== 'joint' && next !== 'inside';
+      meshes.get(label).visible = visible; $(`structure-${label}`).checked = visible;
     }
     camera.updateProjectionMatrix();
-    for (const id of ['overview', 'front', 'inside']) {
+    for (const id of ['overview', 'front', 'joint', 'inside']) {
       $(id).classList.toggle('active', id === next); $(id).setAttribute('aria-pressed', String(id === next));
     }
-    $('camera-help').textContent = next === 'inside' ? 'دید داخلیِ مدل ساختگی · نگاه: کشیدن ماوس · حرکت: W A S D · بالا و پایین: R / F' : 'چرخش: کشیدن ماوس · بزرگ‌نمایی: چرخ ماوس';
+    $('camera-help').textContent = next === 'inside' ? 'دید داخلیِ مدل ساختگی · نگاه: کشیدن ماوس · حرکت: W A S D · بالا و پایین: R / F' : next === 'joint' ? 'کشکک و تاندون‌های جلویی پنهان شده‌اند · چرخش: کشیدن ماوس' : 'چرخش: کشیدن ماوس · بزرگ‌نمایی: چرخ ماوس';
     renderer.domElement.focus({ preventScroll: true }); schedule();
   }
-  for (const id of ['overview', 'front', 'inside']) $(id).addEventListener('click', () => preset(id));
+  for (const id of ['overview', 'front', 'joint', 'inside']) $(id).addEventListener('click', () => preset(id));
   renderer.domElement.addEventListener('keydown', event => {
     if (mode !== 'inside' || event.ctrlKey || event.metaKey || event.altKey) return;
     const key = event.key.toLowerCase();

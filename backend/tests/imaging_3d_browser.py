@@ -63,7 +63,8 @@ def check_viewer(artifact: Path, screenshot: Path, *, chromium: str | None = Non
               return count;
             }""")
             assert pixels > 1000, "Real colored surface pixels must be rendered."
-            assert page.locator("#structure-list input:checked").count() == 8
+            assert page.locator("#structure-list input:checked").count() == 13
+            assert page.locator("#opacity").input_value() == "100"
             assert page.get_by_role("note").inner_text().find("کاملاً ساختگی") >= 0
 
             def change(action):
@@ -75,7 +76,17 @@ def check_viewer(artifact: Path, screenshot: Path, *, chromium: str | None = Non
 
             assert change(lambda: page.locator("#structure-4").uncheck()), "Visibility must affect rendering."
             page.locator("#structure-4").check()
-            assert change(lambda: page.locator("#opacity").evaluate("node=>{node.value=100;node.dispatchEvent(new Event('input'))}"))
+            assert change(lambda: page.locator("#opacity").evaluate("node=>{node.value=45;node.dispatchEvent(new Event('input'))}"))
+            page.locator("#overview").click()
+            assert change(lambda: page.locator("#structure-colors").check()), "Palette switch must affect rendering."
+            page.locator("#structure-colors").uncheck()
+            assert change(lambda: page.locator("#joint").click()), "Exposing the joint must affect rendering."
+            for label in (3, 12, 13):
+                assert not page.locator(f"#structure-{label}").is_checked()
+            page.screenshot(path=str(screenshot.with_name("joint-"+screenshot.name)), full_page=True)
+            page.locator("#front").click()
+            page.screenshot(path=str(screenshot.with_name("front-"+screenshot.name)), full_page=True)
+            page.locator("#overview").click()
             assert change(lambda: page.locator("#clip").check()), "Clipping must affect rendering."
             page.locator("#clip").uncheck()
             page.locator("#slice-z").evaluate("node=>{node.value=20;node.dispatchEvent(new Event('input'))}")
@@ -116,7 +127,9 @@ def check_viewer(artifact: Path, screenshot: Path, *, chromium: str | None = Non
             assert page.locator('#workspace').get_attribute('data-ready') is None
             return {"synthetic_only":True, "modality":manifest["volume"]["modality"],
                     "actual_webgl2":True, "colored_surface_pixels":pixels,
-                    "structures":8, "mpr_voxel_checked":True, "physical_aspect_checked":True,
+                    "structures":13, "anatomy_profile":manifest["anatomy"]["profile"],
+                    "natural_palette_checked":True, "exposed_joint_checked":True,
+                    "mpr_voxel_checked":True, "physical_aspect_checked":True,
                     "linked_cursor_checked":True, "clipping_checked":True,
                     "internal_navigation_checked":True, "mobile_layout_checked":True,
                     "corrupt_volume_rejected":True,

@@ -92,8 +92,17 @@ def analytic_knee(size=64, modality="MR"):
 
 
 def generate_knee_dicom(directory: Path, *, modality="MR", size=64,
-                        spacing_xyz=(.8, 1., 1.4), orientation=(1., 0., 0., 0., 1., 0.)):
-    labels, values = analytic_knee(size, modality)
+                        spacing_xyz=None, orientation=(1., 0., 0., 0., 1., 0.), anatomical=False):
+    if anatomical:
+        from backend.tools.knee_anatomy import EXTENT_XYZ_MM, anatomical_knee
+        labels, values = anatomical_knee(size, modality)
+        default_spacing = np.asarray(EXTENT_XYZ_MM)/(size-1)
+        if spacing_xyz is not None and not np.allclose(spacing_xyz, default_spacing):
+            raise ValueError("Anatomical fixture spacing must preserve its physical domain.")
+    else:
+        labels, values = analytic_knee(size, modality)
+        default_spacing = (.8, 1., 1.4)
+    spacing_xyz = default_spacing if spacing_xyz is None else spacing_xyz
     spacing = np.asarray(spacing_xyz, dtype=float)
     iop = np.asarray(orientation, dtype=float)
     if (spacing.shape != (3,) or not np.isfinite(spacing).all() or np.any(spacing <= 0)

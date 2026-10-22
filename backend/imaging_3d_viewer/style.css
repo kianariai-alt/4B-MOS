@@ -215,13 +215,15 @@ input[type=checkbox] {
   margin-left:5px;
 }
 .viewer-toolbar {
-  height:64px;
+  min-height:64px;
+  flex-wrap:wrap;
   border-bottom:1px solid var(--border);
   display:flex;
   align-items:center;
   justify-content:space-between;
   padding:0 15px;
   gap:10px;
+  padding-block:8px;
 }
 .segmented {
   display:flex;
@@ -375,6 +377,9 @@ footer {
   color:#7d91a7;
   font-size:10px;
   line-height:1.9;
+}
+footer a {
+  color:var(--accent);
 }
 #error {
   background:#3d202b;
