@@ -82,7 +82,7 @@ async function interviewRaceQA() {
 
   // A -> B -> A creates distinct views, even though the request id returns
   // to A. Neither an old read nor an old POST can mutate the new A view.
-  setA(6,'Synthetic old A read');open(0);await tick();
+  deferReads=true;setA(6,'Synthetic old A read');open(0);await tick();
   deferReads=false;open(1);await tick();setA(7,'Synthetic reopened A');open(0);await tick();
   reads.shift()();await tick();assert.equal($('interview-question').textContent,'Synthetic reopened A');
   send();await tick();const oldPost=posts.shift();
