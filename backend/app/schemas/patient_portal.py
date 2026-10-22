@@ -5,9 +5,9 @@ never accepted as patient claims. These contracts do not authorize clinical care
 """
 
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class PortalModel(BaseModel):
@@ -90,4 +90,26 @@ class PortalAnswerCreate(PortalModel):
     expected_version: int = Field(ge=0, strict=True)
     question_id: str = Field(min_length=1, max_length=80)
     state: Literal["answered", "unknown", "declined"]
-    value: str | None = Field(default=None, min_length=1, max_length=3000)
+    value: (
+        Annotated[str, Field(strict=True, min_length=1, max_length=3000)]
+        | Annotated[int, Field(strict=True)]
+        | Annotated[float, Field(strict=True, allow_inf_nan=False)]
+        | None
+    ) = None
+    unit: str | None = Field(default=None, min_length=1, max_length=80)
+    supplementary_text: str | None = Field(default=None, min_length=1, max_length=3000)
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def reject_boolean_values(cls, value):
+        if isinstance(value, bool):
+            raise ValueError("Use yes/no codes for a boolean answer.")
+        return value
+
+    @model_validator(mode="after")
+    def explicit_answer_state(self):
+        if self.state == "answered" and self.value is None:
+            raise ValueError("An answered question requires a value.")
+        if self.state != "answered" and (self.value is not None or self.unit is not None):
+            raise ValueError("Unknown and declined answers have no value or unit.")
+        return self

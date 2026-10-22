@@ -1,0 +1,346 @@
+{
+  "schema_version": "4b.orthopedic-research-catalog.v1",
+  "catalog_id": "4b-ortho-sources-20261019-research-v1",
+  "cataloged_on": "2026-10-19",
+  "status": "inactive_research",
+  "clinical_activation": false,
+  "registry_imported": false,
+  "commercial_retrieval": false,
+  "previous_archive": {
+    "name": "4B-Orthopaedic-Sources-20261019-v1.zip",
+    "provenance": "user_handoff",
+    "local_status": "not_available",
+    "sha256": null,
+    "note": "آرشیو و catalog.json قبلی در این محیط موجود نبود؛ SHA256های تحویل قبلی قابل بررسی نبودند."
+  },
+  "sources": [
+    {
+      "id": "aaos-knee-oa-2021",
+      "title": "Management of Osteoarthritis of the Knee (Non-Arthroplasty)",
+      "source_type": "guideline",
+      "knowledge_layer": "current_evidence",
+      "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/osteoarthritis-of-the-knee/oak3cpg.pdf",
+      "publisher": "AAOS",
+      "publication_date": "2021-08-31",
+      "source_version": "2021",
+      "pmcid": null,
+      "metadata_origin": "user_handoff_and_public_metadata",
+      "population_scope": "بزرگسالان مبتلا به آرتروز زانو؛ درمان غیرآرتروپلاستی",
+      "applicability_limits": [
+        "این رکورد جایگزین بازبینی توصیه و موارد منع مصرف برای هر بیمار نیست.",
+        "متن یا تصویر تا دریافت مجوز استفاده در موتور بازیابی محصول وارد نشود."
+      ],
+      "evidence_grade": "ungraded",
+      "last_reviewed_on": null,
+      "clinical_status": "inactive",
+      "registry_status": "not_imported",
+      "acquisition_status": "unavailable_in_session",
+      "artifacts": [],
+      "license_review": {
+        "status": "permission_required",
+        "observed_license": "AAOS permission required for reproduction/retrieval storage",
+        "observation_url": "https://www.aaos.org/globalassets/quality-and-practice-resources/osteoarthritis-of-the-knee/oak3cpg.pdf",
+        "observation_locator": "PDF page 2, Copyright",
+        "observed_on": "2026-10-19",
+        "reviewed_by": null,
+        "reviewed_on": null,
+        "commercial_retrieval_allowed": false,
+        "image_reuse_allowed": false,
+        "notes": "مشاهدهٔ عبارت مجوز با تأیید حقوق استفاده در محصول متفاوت است؛ استثنای تصاویر و حقوق شخص ثالث باید بررسی شود."
+      },
+      "verification": {
+        "checked_on": "2026-10-19",
+        "method": "browser_pdf_metadata",
+        "locator": "PDF pages 1–2 (publication and copyright); page 15 (scope)",
+        "result": "PDF metadata readable through browser; source bytes not saved"
+      }
+    },
+    {
+      "id": "aaos-acute-meniscus-2024",
+      "title": "Acute Isolated Meniscal Pathology",
+      "source_type": "guideline",
+      "knowledge_layer": "current_evidence",
+      "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/acute-meniscal-pathology/amp-cpg.pdf",
+      "publisher": "AAOS",
+      "publication_date": "2024-06-10",
+      "source_version": "2024",
+      "pmcid": null,
+      "metadata_origin": "user_handoff_and_public_metadata",
+      "population_scope": "پاتولوژی حاد منفرد منیسک",
+      "applicability_limits": [
+        "به منیسک دژنراتیو، پارگی ریشه یا آسیب ترکیبی ACL تعمیم داده نشود.",
+        "متن یا تصویر تا دریافت مجوز استفاده در موتور بازیابی محصول وارد نشود."
+      ],
+      "evidence_grade": "ungraded",
+      "last_reviewed_on": null,
+      "clinical_status": "inactive",
+      "registry_status": "not_imported",
+      "acquisition_status": "unavailable_in_session",
+      "artifacts": [],
+      "license_review": {
+        "status": "permission_required",
+        "observed_license": "AAOS permission required for reproduction/retrieval storage",
+        "observation_url": "https://www.aaos.org/globalassets/quality-and-practice-resources/acute-meniscal-pathology/amp-cpg.pdf",
+        "observation_locator": "PDF page 2, Copyright",
+        "observed_on": "2026-10-19",
+        "reviewed_by": null,
+        "reviewed_on": null,
+        "commercial_retrieval_allowed": false,
+        "image_reuse_allowed": false,
+        "notes": "مشاهدهٔ عبارت مجوز با تأیید حقوق استفاده در محصول متفاوت است؛ استثنای تصاویر و حقوق شخص ثالث باید بررسی شود."
+      },
+      "verification": {
+        "checked_on": "2026-10-19",
+        "method": "browser_pdf_metadata",
+        "locator": "PDF pages 1–2 (publication and copyright)",
+        "result": "PDF metadata readable through browser; source bytes not saved"
+      }
+    },
+    {
+      "id": "acr-chronic-knee-pain",
+      "title": "ACR Appropriateness Criteria: Chronic Knee Pain",
+      "source_type": "guideline",
+      "knowledge_layer": "current_evidence",
+      "url": "https://acsearch.acr.org/docs/69432/Narrative/",
+      "publisher": "ACR",
+      "publication_date": null,
+      "source_version": null,
+      "pmcid": null,
+      "metadata_origin": "user_handoff_and_public_metadata",
+      "population_scope": "درد مزمن زانو؛ جمعیت هر variant باید از نسخهٔ جاری بررسی شود.",
+      "applicability_limits": [
+        "نسخه و متن جاری در این اجرا بازیابی نشد.",
+        "توصیه تصویربرداری بدون تطبیق variant و شرح‌حال استخراج نشود."
+      ],
+      "evidence_grade": "ungraded",
+      "last_reviewed_on": null,
+      "clinical_status": "inactive",
+      "registry_status": "not_imported",
+      "acquisition_status": "unavailable_in_session",
+      "artifacts": [],
+      "license_review": {
+        "status": "unverified",
+        "observed_license": null,
+        "observation_url": null,
+        "observation_locator": null,
+        "observed_on": null,
+        "reviewed_by": null,
+        "reviewed_on": null,
+        "commercial_retrieval_allowed": false,
+        "image_reuse_allowed": false,
+        "notes": "مشاهدهٔ عبارت مجوز با تأیید حقوق استفاده در محصول متفاوت است؛ استثنای تصاویر و حقوق شخص ثالث باید بررسی شود."
+      },
+      "verification": {
+        "checked_on": "2026-10-19",
+        "method": "browser_error",
+        "locator": null,
+        "result": "browser open returned internal error; no source bytes available"
+      }
+    },
+    {
+      "id": "pmc11461807-acs-review",
+      "title": "Autologous Conditioned Serum in Knee Osteoarthritis: A Systematic Review of Current Clinical Evidence",
+      "source_type": "systematic_review",
+      "knowledge_layer": "current_evidence",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11461807/",
+      "publisher": null,
+      "publication_date": null,
+      "source_version": null,
+      "pmcid": "PMC11461807",
+      "metadata_origin": "user_handoff_and_public_metadata",
+      "population_scope": "شواهد بالینی ACS در آرتروز زانو؛ دامنه نیازمند بازبینی کامل است.",
+      "applicability_limits": [
+        "درصد اثربخشی یا قاعده درمان از عنوان یا چکیده استخراج نشود.",
+        "شواهد ACS به ترکیب ACS+PL+EXO تعمیم داده نشود."
+      ],
+      "evidence_grade": "ungraded",
+      "last_reviewed_on": null,
+      "clinical_status": "inactive",
+      "registry_status": "not_imported",
+      "acquisition_status": "unavailable_in_session",
+      "artifacts": [],
+      "license_review": {
+        "status": "unverified",
+        "observed_license": null,
+        "observation_url": null,
+        "observation_locator": null,
+        "observed_on": null,
+        "reviewed_by": null,
+        "reviewed_on": null,
+        "commercial_retrieval_allowed": false,
+        "image_reuse_allowed": false,
+        "notes": "مشاهدهٔ عبارت مجوز با تأیید حقوق استفاده در محصول متفاوت است؛ استثنای تصاویر و حقوق شخص ثالث باید بررسی شود."
+      },
+      "verification": {
+        "checked_on": "2026-10-19",
+        "method": "official_indexed_metadata",
+        "locator": null,
+        "result": "official search metadata readable; direct article open returned reCAPTCHA; no source bytes saved"
+      }
+    },
+    {
+      "id": "pmc11371856-pl-review",
+      "title": "Platelet lysate for the treatment of osteoarthritis: a systematic review of preclinical and clinical studies",
+      "source_type": "systematic_review",
+      "knowledge_layer": "current_evidence",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11371856/",
+      "publisher": null,
+      "publication_date": null,
+      "source_version": null,
+      "pmcid": "PMC11371856",
+      "metadata_origin": "user_handoff_and_public_metadata",
+      "population_scope": "مطالعات پیش‌بالینی و بالینی PL در آرتروز",
+      "applicability_limits": [
+        "شواهد حیوانی و انسانی جدا استخراج شوند.",
+        "شواهد PRP، PL و PRGF یکسان فرض نشوند."
+      ],
+      "evidence_grade": "ungraded",
+      "last_reviewed_on": null,
+      "clinical_status": "inactive",
+      "registry_status": "not_imported",
+      "acquisition_status": "unavailable_in_session",
+      "artifacts": [],
+      "license_review": {
+        "status": "unverified",
+        "observed_license": null,
+        "observation_url": null,
+        "observation_locator": null,
+        "observed_on": null,
+        "reviewed_by": null,
+        "reviewed_on": null,
+        "commercial_retrieval_allowed": false,
+        "image_reuse_allowed": false,
+        "notes": "مشاهدهٔ عبارت مجوز با تأیید حقوق استفاده در محصول متفاوت است؛ استثنای تصاویر و حقوق شخص ثالث باید بررسی شود."
+      },
+      "verification": {
+        "checked_on": "2026-10-19",
+        "method": "official_indexed_metadata",
+        "locator": null,
+        "result": "official search metadata readable; direct article open returned reCAPTCHA; no source bytes saved"
+      }
+    },
+    {
+      "id": "pmc8765110-acs-narrative",
+      "title": "Autologous conditioned serum applications in the treatment of musculoskeletal diseases: a narrative review",
+      "source_type": "other",
+      "knowledge_layer": "current_evidence",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8765110/",
+      "publisher": "Future Science OA",
+      "publication_date": "2022-01-12",
+      "source_version": null,
+      "pmcid": "PMC8765110",
+      "metadata_origin": "user_handoff_and_public_metadata",
+      "population_scope": "مرور روایی کاربرد ACS در بیماری‌های اسکلتی عضلانی",
+      "applicability_limits": [
+        "مرور روایی به‌تنهایی اعتبارسنجی قاعده درمان نیست.",
+        "نتایج یک بیماری یا روش آماده‌سازی به همه موارد تعمیم داده نشود."
+      ],
+      "evidence_grade": "ungraded",
+      "last_reviewed_on": null,
+      "clinical_status": "inactive",
+      "registry_status": "not_imported",
+      "acquisition_status": "unavailable_in_session",
+      "artifacts": [],
+      "license_review": {
+        "status": "unverified",
+        "observed_license": "CC BY 4.0 (observed in indexed official metadata; not yet audited against local full text)",
+        "observation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8765110/",
+        "observation_locator": "Copyright and License information",
+        "observed_on": "2026-10-19",
+        "reviewed_by": null,
+        "reviewed_on": null,
+        "commercial_retrieval_allowed": false,
+        "image_reuse_allowed": false,
+        "notes": "مشاهدهٔ عبارت مجوز با تأیید حقوق استفاده در محصول متفاوت است؛ استثنای تصاویر و حقوق شخص ثالث باید بررسی شود."
+      },
+      "verification": {
+        "checked_on": "2026-10-19",
+        "method": "official_indexed_metadata",
+        "locator": "Copyright and License information",
+        "result": "official search metadata readable; direct article open returned reCAPTCHA; no source bytes saved"
+      }
+    },
+    {
+      "id": "pmc12171193-exosome-rat",
+      "title": "Mesenchymal stem cell-derived exosomes for the treatment of knee osteoarthritis: a systematic review and meta-analysis based on rat model",
+      "source_type": "systematic_review",
+      "knowledge_layer": "current_evidence",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12171193/",
+      "publisher": "Frontiers in Pharmacology",
+      "publication_date": "2025-06-02",
+      "source_version": null,
+      "pmcid": "PMC12171193",
+      "metadata_origin": "user_handoff_and_public_metadata",
+      "population_scope": "مدل‌های موش صحرایی آرتروز زانو؛ پیش‌بالینی",
+      "applicability_limits": [
+        "این شواهد اثبات اثربخشی یا ایمنی انسانی نیست.",
+        "دوز و برنامه تزریق حیوانی به بیمار انسانی تبدیل نشود."
+      ],
+      "evidence_grade": "ungraded",
+      "last_reviewed_on": null,
+      "clinical_status": "inactive",
+      "registry_status": "not_imported",
+      "acquisition_status": "unavailable_in_session",
+      "artifacts": [],
+      "license_review": {
+        "status": "unverified",
+        "observed_license": "CC BY (observed in indexed official metadata; not yet audited against local full text)",
+        "observation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12171193/",
+        "observation_locator": "Copyright and License information",
+        "observed_on": "2026-10-19",
+        "reviewed_by": null,
+        "reviewed_on": null,
+        "commercial_retrieval_allowed": false,
+        "image_reuse_allowed": false,
+        "notes": "مشاهدهٔ عبارت مجوز با تأیید حقوق استفاده در محصول متفاوت است؛ استثنای تصاویر و حقوق شخص ثالث باید بررسی شود."
+      },
+      "verification": {
+        "checked_on": "2026-10-19",
+        "method": "official_indexed_metadata",
+        "locator": "Copyright and License information",
+        "result": "official search metadata readable; direct article open returned reCAPTCHA; no source bytes saved"
+      }
+    },
+    {
+      "id": "pmc12380537-ev-review",
+      "title": "Extracellular vesicles in osteoarthritis: mechanisms, therapeutic potential, and diagnostic applications",
+      "source_type": "other",
+      "knowledge_layer": "current_evidence",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12380537/",
+      "publisher": "Frontiers in Immunology",
+      "publication_date": "2025-08-13",
+      "source_version": null,
+      "pmcid": "PMC12380537",
+      "metadata_origin": "user_handoff_and_public_metadata",
+      "population_scope": "مرور مکانیسم و کاربرد بالقوه وزیکول خارج‌سلولی در آرتروز",
+      "applicability_limits": [
+        "کاربرد بالقوه یا سازوکار زیستی تأیید درمان انسانی محسوب نشود.",
+        "شواهد مستقیم ترکیب ACS+PL+EXO از این رکورد نتیجه‌گیری نشود."
+      ],
+      "evidence_grade": "ungraded",
+      "last_reviewed_on": null,
+      "clinical_status": "inactive",
+      "registry_status": "not_imported",
+      "acquisition_status": "unavailable_in_session",
+      "artifacts": [],
+      "license_review": {
+        "status": "unverified",
+        "observed_license": "CC BY (observed in indexed official metadata; not yet audited against local full text)",
+        "observation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12380537/",
+        "observation_locator": "Copyright and License information",
+        "observed_on": "2026-10-19",
+        "reviewed_by": null,
+        "reviewed_on": null,
+        "commercial_retrieval_allowed": false,
+        "image_reuse_allowed": false,
+        "notes": "مشاهدهٔ عبارت مجوز با تأیید حقوق استفاده در محصول متفاوت است؛ استثنای تصاویر و حقوق شخص ثالث باید بررسی شود."
+      },
+      "verification": {
+        "checked_on": "2026-10-19",
+        "method": "official_indexed_metadata",
+        "locator": "Copyright and License information",
+        "result": "official search metadata readable; direct article open returned reCAPTCHA; no source bytes saved"
+      }
+    }
+  ]
+}
