@@ -117,14 +117,20 @@ def check_ui(application, window, output):
     completed, temp_paths = [], []
     portal.downloaded.connect(lambda path, temp: temp_paths.append(path))
     portal.page.loadFinished.connect(completed.append)
-    portal.web.setHtml('<html><body style="background:#132332;color:white;font:20px sans-serif">'
+    fixture_html = ('<div style="background:#132332;color:white;font:20px sans-serif">'
                       '<h2>Synthetic center portal</h2><p>Fixture-only code and password</p>'
                       '<input id="code"><input id="password" type="password">'
                       '<button onclick="document.getElementById(\'download\').hidden=false">Login</button>'
-                      f'<a id="download" hidden download="synthetic-only.zip" href="data:application/zip;base64,{encoded}">Download DICOM ZIP</a></body></html>')
+                      f'<a id="download" hidden download="synthetic-only.zip" href="data:application/zip;base64,{encoded}">Download DICOM ZIP</a></div>')
+    # Keep production navigation policy intact: setHtml internally navigates to
+    # data:, which a real portal must not use as a top-level login origin.
+    portal.web.setUrl(QtCore.QUrl("about:blank"))
     portal.show()
     wait_until(lambda: bool(completed), 20000)
     assert completed and completed[-1], "Real private browser must load the fixture portal."
+    populated = []
+    portal.page.runJavaScript("document.body.innerHTML="+json.dumps(fixture_html), lambda value: populated.append(True))
+    assert wait_until(lambda: bool(populated), 10000)
     portal.page.runJavaScript("document.getElementById('code').value='fixture';document.getElementById('password').value='fixture';document.querySelector('button').click();document.getElementById('download').click()")
     wait_until(lambda: window.loaded is not None and not window.jobs, 40000)
     assert window.loaded is not None and temp_paths, "Browser ZIP download must reach the actual importer."
