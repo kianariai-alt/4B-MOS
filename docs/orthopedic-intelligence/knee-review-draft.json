@@ -1,0 +1,736 @@
+{
+  "schema_version": "4b.knee-review-draft.v1",
+  "content_version": "0.1.0-review.1",
+  "title_fa": "طرح بازبینی مسیر زانو؛ بازسازی مفهومی از خلاصه تحویل",
+  "status": "draft_design_review",
+  "runtime_enabled": false,
+  "registry_imported": false,
+  "clinically_validated": false,
+  "original_artifact": {
+    "name": "4B-Knee-Decision-Design-v1.zip",
+    "availability": "not_available",
+    "verified_sha256": null,
+    "reconstruction_basis": "user_handoff_outline",
+    "mapping_to_original": "unknown"
+  },
+  "scope": {
+    "entry_fa": "بررسی طراحی برای بزرگسال با شکایت زانو؛ تعریف اجرایی ورود هنوز نیازمند متن و تأیید پزشک است.",
+    "minimum_age_years": null,
+    "incomplete_paths_fa": [
+      "تروما به‌صورت کامل",
+      "آسیب ACL",
+      "کودکان",
+      "زانوی پروتزی",
+      "جراحی اخیر"
+    ]
+  },
+  "provenance": {
+    "origin": "user_handoff_unverified",
+    "recorded_on": "2026-10-19",
+    "detail_fa": "صرفاً بازسازی طراحی از خلاصه ارائه‌شده در گفتگو؛ متن کامل روش ویزیت و فایل اصلی ۲۶گرهی دریافت نشده است. عناوین و منابع نیازمند بازبینی مستقل‌اند."
+  },
+  "unresolved_inputs_fa": [
+    "متن کامل روش ویزیت و سؤال‌های پزشک، به‌همراه ترتیب و شروط واقعی؛ هنوز دریافت نشده است.",
+    "تعیین نوع پاسخ، واحد، محدوده، پاسخ‌های نامعلوم و خودداری، و رفتار اصلاح پاسخ برای هر سؤال واقعی.",
+    "بازبینی مسئول بالینی برای متن، شرط، تریاژ، موارد خارج از دامنه و حدود کاربرد هر قاعده.",
+    "بررسی مستقیم نسخه جاری منبع، صفحه یا بخش دقیق، مجوز استفاده متن و تصویر و تاریخ بازبینی؛ لینک پیشنهادی به معنی تأیید نیست.",
+    "دریافت بسته اصلی برای تطبیق واقعی گره‌ها؛ عدد ۲۶ در این نسخه نشان‌دهنده تطبیق با اصل نیست."
+  ],
+  "stages": [
+    {
+      "id": "KNEE-S01",
+      "title_fa": "۱. ورود و مرز کاربرد",
+      "node_ids": [
+        "KNEE-R01",
+        "KNEE-R02"
+      ]
+    },
+    {
+      "id": "KNEE-S02",
+      "title_fa": "۲. دروازه نیاز به رسیدگی فوری و پاسخ نامعلوم",
+      "node_ids": [
+        "KNEE-R03",
+        "KNEE-R04",
+        "KNEE-R05"
+      ]
+    },
+    {
+      "id": "KNEE-S03",
+      "title_fa": "۳. شرح‌حال ساختاریافته",
+      "node_ids": [
+        "KNEE-R06",
+        "KNEE-R07",
+        "KNEE-R08"
+      ]
+    },
+    {
+      "id": "KNEE-S04",
+      "title_fa": "۴. مسیرهای موازی قابل بررسی",
+      "node_ids": [
+        "KNEE-R09",
+        "KNEE-R10",
+        "KNEE-R11"
+      ]
+    },
+    {
+      "id": "KNEE-S05",
+      "title_fa": "۵. معاینه و تصویربرداری هدفمند",
+      "node_ids": [
+        "KNEE-R12",
+        "KNEE-R13",
+        "KNEE-R14"
+      ]
+    },
+    {
+      "id": "KNEE-S06",
+      "title_fa": "۶. دروازه مشترک ایمنی و بیماری‌های زمینه‌ای",
+      "node_ids": [
+        "KNEE-R15",
+        "KNEE-R16",
+        "KNEE-R17"
+      ]
+    },
+    {
+      "id": "KNEE-S07",
+      "title_fa": "۷. مقایسه گزینه‌ها برای بازبینی پزشک",
+      "node_ids": [
+        "KNEE-R18",
+        "KNEE-R19",
+        "KNEE-R20",
+        "KNEE-R21"
+      ]
+    },
+    {
+      "id": "KNEE-S08",
+      "title_fa": "۸. تصمیم پزشک اصلی، هدف و زمان بازبینی",
+      "node_ids": [
+        "KNEE-R22",
+        "KNEE-R23",
+        "KNEE-R24"
+      ]
+    },
+    {
+      "id": "KNEE-S09",
+      "title_fa": "۹. پیامد و عارضه",
+      "node_ids": [
+        "KNEE-R25",
+        "KNEE-R26"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "KNEE-R01",
+      "version": "0.1.0",
+      "title_fa": "مرز ورود بزرگسال با شکایت زانو",
+      "review_purpose_fa": "معیار ورود، تعریف بزرگسال و موارد خارج از دامنه را پزشک مشخص کند؛ هیچ آستانه سنی در این نسخه فرض نشده است.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R02",
+      "version": "0.1.0",
+      "title_fa": "شناسایی مسیرهای کامل‌نشده",
+      "review_purpose_fa": "مسیر مناسب برای تروما، ACL، کودکان، زانوی پروتزی و جراحی اخیر هنوز طراحی و تأیید نشده است.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R03",
+      "version": "0.1.0",
+      "title_fa": "جایگاه بررسی علائم نیازمند رسیدگی فوری",
+      "review_purpose_fa": "متن دقیق سؤال‌ها، نشانه‌ها و نحوه ارجاع باید از متن روش ویزیت و بازبینی مسئول بالینی تهیه شود؛ این جایگاه فهرست علامت اجرایی ندارد.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "nhs-knee-pain"
+      ]
+    },
+    {
+      "id": "KNEE-R04",
+      "version": "0.1.0",
+      "title_fa": "نامعلوم در دروازه رسیدگی فوری",
+      "review_purpose_fa": "پاسخ نامعلوم باید مستقل از خیر و مستقل از سؤال بی‌پاسخ حفظ شود؛ تصمیم بعدی نیازمند طراحی پزشک است.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R05",
+      "version": "0.1.0",
+      "title_fa": "بازبینی مسیر رسیدگی توسط مسئول بالینی",
+      "review_purpose_fa": "مسئول، زمان و پیام متناسب رسیدگی باید تعیین شود؛ این جایگاه تریاژ یا مجوز ادامه خودکار نیست.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R06",
+      "version": "0.1.0",
+      "title_fa": "شکایت، شروع و سیر علائم",
+      "review_purpose_fa": "محتوای پرسش‌های شرح‌حال و شروط نمایش از متن واقعی ویزیت پزشک استخراج شود؛ داده خوداظهاری برچسب جدا داشته باشد.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R07",
+      "version": "0.1.0",
+      "title_fa": "درد و محدودیت عملکرد",
+      "review_purpose_fa": "ابزار اندازه‌گیری، واحد و محدوده پاسخ با پزشک مشخص شود؛ صفر ثبت‌شده از داده ثبت‌نشده جدا بماند.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R08",
+      "version": "0.1.0",
+      "title_fa": "سوابق، داروها و حساسیت‌ها",
+      "review_purpose_fa": "اطلاعات موجود بیمار با منشأ و زمان به خلاصه منتقل شود و برای تصمیم بالینی امکان بازبینی داشته باشد.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R09",
+      "version": "0.1.0",
+      "title_fa": "جایگاه بررسی آسیب حاد",
+      "review_purpose_fa": "یک مسیر احتمالی بررسی است؛ جزئیات تروما و معیارهای ورود و خروج ساخته نشده و عنوان به‌معنی تشخیص نیست.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "aaos-acute-meniscus-2024"
+      ]
+    },
+    {
+      "id": "KNEE-R10",
+      "version": "0.1.0",
+      "title_fa": "جایگاه بررسی الگوی تدریجی سازگار با بررسی آرتروز",
+      "review_purpose_fa": "احتمال مطرح‌شدن این مسیر در کنار مسیرهای دیگر حفظ شود؛ معیار تشخیص یا آستانه درمان تعیین نشده است.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "aaos-knee-oa-2021",
+        "nice-ng226"
+      ]
+    },
+    {
+      "id": "KNEE-R11",
+      "version": "0.1.0",
+      "title_fa": "جایگاه سایر علل یا وضعیت نامشخص",
+      "review_purpose_fa": "مسیر نامشخص و امکان چند مسیر هم‌زمان حفظ شود؛ بیمار به یک تشخیص اجباری نسبت داده نشود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R12",
+      "version": "0.1.0",
+      "title_fa": "یافته‌های معاینه با منشأ تأیید پزشک",
+      "review_purpose_fa": "یافته معاینه از پاسخ بیمار جدا باشد؛ آزمون‌ها و تعبیرشان هنوز نیازمند متن پزشک و بررسی منبع هستند.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R13",
+      "version": "0.1.0",
+      "title_fa": "بررسی هدفمند نیاز به تصویربرداری",
+      "review_purpose_fa": "دریافت تصویربرداری خودکار برای همه دردهای زانو تعریف نشده است؛ سناریوی مناسب و منبع آن باید دقیق بررسی شود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "acr-chronic-knee-pain"
+      ]
+    },
+    {
+      "id": "KNEE-R14",
+      "version": "0.1.0",
+      "title_fa": "بازبینی دامنه کاربرد منبع منیسک",
+      "review_purpose_fa": "حدود راهنمای منیسک حاد منفرد و موارد خارج از دامنه آن بررسی شود؛ این جایگاه تشخیص منیسک یا انتخاب درمان نیست.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "aaos-acute-meniscus-2024"
+      ]
+    },
+    {
+      "id": "KNEE-R15",
+      "version": "0.1.0",
+      "title_fa": "بازبینی مشترک ایمنی و بیماری‌های زمینه‌ای",
+      "review_purpose_fa": "اطلاعات ایمنی باید پیش از بررسی گزینه‌ها بازبینی شود؛ فهرست موارد، آستانه‌ها و اقدام‌ها در این نسخه تعریف نشده است.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R16",
+      "version": "0.1.0",
+      "title_fa": "بازبینی دارویی در بیماری کلیوی",
+      "review_purpose_fa": "در طراحی آینده، پیشنهاد خودکار NSAID خوراکی در بیماری کلیوی متوقف و به بررسی پزشک یا هماهنگی ارجاع شود؛ ریسک موضعی و خوراکی یکسان فرض نشود. این قاعده در این فایل اجرا نمی‌شود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "nkf-pain-medicines"
+      ]
+    },
+    {
+      "id": "KNEE-R17",
+      "version": "0.1.0",
+      "title_fa": "اطلاعات ناقص و ناسازگار مرتبط با ایمنی",
+      "review_purpose_fa": "داده ناقص یا ناسازگار همراه منشأ و زمان برای پزشکیار آشکار شود؛ فقدان داده به نبود خطر تبدیل نشود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R18",
+      "version": "0.1.0",
+      "title_fa": "جایگاه مقایسه توان‌بخشی",
+      "review_purpose_fa": "گزینه‌ها، جمعیت هدف و شواهد باید توسط پزشک تعیین شوند؛ این جایگاه برنامه توان‌بخشی ارائه نمی‌کند.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "aaos-knee-oa-2021",
+        "nice-ng226"
+      ]
+    },
+    {
+      "id": "KNEE-R19",
+      "version": "0.1.0",
+      "title_fa": "جایگاه مقایسه دارو",
+      "review_purpose_fa": "اندیکاسیون، منع مصرف و نقش نظر متخصص باید بعداً مستند شوند؛ هیچ نام دارو، دوز یا تجویزی از این جایگاه تولید نمی‌شود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "aaos-knee-oa-2021",
+        "nice-ng226"
+      ]
+    },
+    {
+      "id": "KNEE-R20",
+      "version": "0.1.0",
+      "title_fa": "جایگاه مقایسه تزریق و تفکیک ترجیح کلینیک",
+      "review_purpose_fa": "ACS، PL، PRP، PRGF و اگزوزوم یکسان فرض نشوند؛ ادعای ترکیب و ترجیح Bio Harmony باید جدا از شواهد علمی بررسی شود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": [
+        "pmc-acs-knee-review",
+        "pmc-pl-review",
+        "pmc-acs-narrative",
+        "pmc-exosomes-rat-meta",
+        "pmc-ev-oa-review"
+      ]
+    },
+    {
+      "id": "KNEE-R21",
+      "version": "0.1.0",
+      "title_fa": "جایگاه بررسی نیاز به ارزیابی جراحی",
+      "review_purpose_fa": "معیارهای ارزیابی جراحی و مرجع تصمیم توسط پزشک مشخص شود؛ این جایگاه ارجاع یا توصیه جراحی خودکار نیست.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R22",
+      "version": "0.1.0",
+      "title_fa": "تصمیم و تأیید صریح پزشک اصلی",
+      "review_purpose_fa": "تشخیص نهایی و تصمیم درمان با پزشک اصلی است؛ تأیید خلاصه یا گزارش بیمار به‌جای تأیید درمان استفاده نشود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R23",
+      "version": "0.1.0",
+      "title_fa": "هدف درمان با مشارکت بیمار",
+      "review_purpose_fa": "روش ثبت هدف و ترجیح بیمار باید از فرایند واقعی کلینیک تعیین شود؛ هدف بیمار از ادعای اثربخشی جدا بماند.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R24",
+      "version": "0.1.0",
+      "title_fa": "زمان و مسئول بازبینی",
+      "review_purpose_fa": "زمان پیگیری، معیار بازگشت و مسئول باید صریح توسط پزشک تعیین شوند؛ بازه زمانی حدس زده نمی‌شود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R25",
+      "version": "0.1.0",
+      "title_fa": "ثبت پیامد با ابزار مشخص",
+      "review_purpose_fa": "ابزار، زمان و منشأ پیامد باید مشخص شود؛ آمار مشاهده‌ای محلی به اثربخشی علّی یا احتمال موفقیت شخصی تبدیل نشود.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    },
+    {
+      "id": "KNEE-R26",
+      "version": "0.1.0",
+      "title_fa": "ثبت عوارض و بازخورد",
+      "review_purpose_fa": "عوارض و بازخورد با زمان و مسئول بازبینی ثبت شوند؛ پیامد فردی نباید خودکار قاعده یا پروتکل عمومی را تغییر دهد.",
+      "status": "draft",
+      "runtime_enabled": false,
+      "clinical_question": null,
+      "answer_schema": null,
+      "display_condition": null,
+      "medical_rule": null,
+      "provenance": "user_handoff_outline_reconstruction",
+      "candidate_reference_ids": []
+    }
+  ],
+  "parallel_candidate_node_ids": [
+    "KNEE-R09",
+    "KNEE-R10",
+    "KNEE-R11"
+  ],
+  "constraints": [
+    {
+      "id": "unknown_is_not_no",
+      "text_fa": "نامعلوم، نمی‌دانم، خودداری از پاسخ و داده ثبت‌نشده از خیر متمایز هستند؛ شرط نامعلوم نباید false فرض شود.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "zero_is_not_missing",
+      "text_fa": "شدت درد صفر ثبت‌شده با داده ثبت‌نشده متفاوت است؛ ابزار و محدوده اندازه‌گیری باید در قرارداد سؤال مشخص شوند.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "patient_report_unconfirmed",
+      "text_fa": "اطلاعات خوداظهاری بیمار و متن گفتگو، یافته تأییدشده معاینه نیستند و منشأ و زمان خود را حفظ می‌کنند.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "parallel_paths",
+      "text_fa": "چند مسیر بررسی می‌توانند هم‌زمان مطرح باشند؛ این طرح تشخیص اجباری واحد یا درصد احتمال تشخیص نمی‌سازد.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "meniscus_scope",
+      "text_fa": "راهنمای منیسک حاد منفرد نباید به منیسک دژنراتیو، پارگی ریشه یا آسیب ترکیبی ACL تعمیم داده شود؛ متن و نسخه دقیق منبع پیش از اجرا باید بررسی شود.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "targeted_mri",
+      "text_fa": "MRI برای همه دردهای زانو خودکار درخواست نمی‌شود؛ سناریوهای تصویربرداری نیازمند بررسی منبع و تصمیم پزشک‌اند.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "no_single_score",
+      "text_fa": "گرید رادیولوژی یا نمره درد به‌تنهایی درمان را تعیین نمی‌کند.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "biologics_distinct",
+      "text_fa": "نتایج PRP به PL یا PRGF تعمیم داده نمی‌شود؛ نام و فرآورده هر مداخله باید دقیق حفظ شود.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "animal_exosomes",
+      "text_fa": "شواهد حیوانی اگزوزوم اثبات اثربخشی انسانی نیست؛ جمعیت و مدل پژوهش باید آشکار بماند.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "combination_synergy",
+      "text_fa": "طبق تحویل کاربر، در بسته فعلی شواهد مستقیم تأییدشده برای هم‌افزایی ACS+PL+EXO پیدا نشده است؛ این فایل مرور مستقل انجام نداده و ادعای اثربخشی ترکیب نمی‌سازد.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "clinic_policy_separate",
+      "text_fa": "Bio Harmony ترجیح یا پروتکل کلینیک نیازمند ارزیابی مستقل است؛ سیاست تجاری از شواهد علمی جدا می‌ماند و پیش‌فرض همه بیماران نمی‌شود.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "renal_medication_review",
+      "text_fa": "مرز طراحی اعلام‌شده: در بیماری کلیوی، پیشنهاد خودکار NSAID خوراکی متوقف و بررسی پزشک یا هماهنگی لازم شود؛ ریسک موضعی و خوراکی یکسان فرض نشود. این سند هیچ قاعده دارویی فعال نمی‌کند.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "incomplete_scope",
+      "text_fa": "شاخه کامل تروما، ACL، کودکان، زانوی پروتزی و جراحی اخیر ساخته نشده‌اند؛ فقدان مسیر نباید مجوز استفاده عمومی تلقی شود.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "physician_authority",
+      "text_fa": "تأیید تشخیص و درمان با پزشک اصلی است؛ طراحی، تست نرم‌افزار، تأیید خلاصه و فعال‌سازی بالینی مراحل جدا هستند.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    },
+    {
+      "id": "no_diagnostic_probabilities",
+      "text_fa": "بدون مدل معتبر و کالیبره، درصد احتمال تشخیص یا موفقیت درمان شخصی ساخته نمی‌شود.",
+      "basis": "user_handoff_requires_independent_review",
+      "status": "draft",
+      "runtime_enabled": false
+    }
+  ],
+  "references": [
+    {
+      "id": "aaos-knee-oa-2021",
+      "title": "AAOS Knee Osteoarthritis — عنوان و سال اعلام‌شده 2021",
+      "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/osteoarthritis-of-the-knee/oak3cpg.pdf",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "aaos-acute-meniscus-2024",
+      "title": "AAOS Acute Isolated Meniscal Pathology — عنوان و سال اعلام‌شده 2024",
+      "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/acute-meniscal-pathology/amp-cpg.pdf",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "acr-chronic-knee-pain",
+      "title": "ACR Appropriateness Criteria: Chronic Knee Pain",
+      "url": "https://acsearch.acr.org/docs/69432/Narrative/",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "pmc-acs-knee-review",
+      "title": "ACS knee OA systematic review — PMC11461807",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11461807/",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "pmc-pl-review",
+      "title": "Platelet lysate OA systematic review — PMC11371856",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11371856/",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "pmc-acs-narrative",
+      "title": "ACS musculoskeletal narrative review — PMC8765110",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8765110/",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "pmc-exosomes-rat-meta",
+      "title": "MSC-derived exosomes knee OA meta-analysis in rat models — PMC12171193",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12171193/",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "pmc-ev-oa-review",
+      "title": "Extracellular vesicles in OA review — PMC12380537",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12380537/",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "nhs-knee-pain",
+      "title": "NHS: Knee pain",
+      "url": "https://www.nhs.uk/symptoms/knee-pain/",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "nkf-pain-medicines",
+      "title": "National Kidney Foundation: Pain Medicines and Kidney Disease",
+      "url": "https://www.kidney.org/kidney-topics/pain-medicines-and-kidney-disease",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    },
+    {
+      "id": "nice-ng226",
+      "title": "NICE NG226: Recommendations — متن و نسخه جاری در این بازبینی دریافت نشده است",
+      "url": "https://www.nice.org.uk/guidance/ng226/chapter/Recommendations",
+      "verification_status": "candidate_not_verified_in_this_review",
+      "section": null,
+      "page": null,
+      "source_version": null,
+      "rights_status": "not_cleared_for_product_retrieval"
+    }
+  ]
+}

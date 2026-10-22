@@ -145,7 +145,13 @@ async function loadClinicalIntakeEditor(visitId, generation = sessionGeneration)
       details.textContent = [data.complaint, data.symptom_history,
         ...(data.other_specialists || []).map(value => "پزشک همکار: " + value),
         ...(source.messages || []).map(message => (message.from === "patient" ? "بیمار: " : "پزشک: ") + message.text),
-        ...((Array.isArray(source.interview?.answers) ? source.interview.answers : []).map(answer => JSON.stringify(answer)))
+        source.interview?.assistant_summary?.summary_fa
+          ? "خلاصهٔ مصاحبهٔ بیمار — نیازمند بررسی پزشک:\n" + source.interview.assistant_summary.summary_fa
+          : (Array.isArray(source.interview?.answers) ? source.interview.answers : []).map(answer =>
+            answer.question + "\nپاسخ بیمار: " + (answer.state === "answered"
+              ? String(answer.value ?? "") + (answer.unit ? " " + answer.unit : "")
+              : answer.state === "unknown" ? "نمی‌دانم" : "مایل به پاسخ نیست")
+              + (answer.supplementary_text ? "\nتوضیح: " + answer.supplementary_text : "")).join("\n\n")
       ].filter(Boolean).join("\n\n");
       panel.append(details);
       for (const file of source.attachments || []) {

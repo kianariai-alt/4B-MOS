@@ -1,0 +1,1017 @@
+{
+  "contract_version": "1.0.0",
+  "clinical_status": "patient_reported_requires_clinician_review",
+  "question_bank": {
+    "$defs": {
+      "AllCondition": {
+        "additionalProperties": false,
+        "properties": {
+          "all": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PredicateCondition"
+                },
+                {
+                  "$ref": "#/$defs/AllCondition"
+                },
+                {
+                  "$ref": "#/$defs/AnyCondition"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "All",
+            "type": "array"
+          }
+        },
+        "required": [
+          "all"
+        ],
+        "title": "AllCondition",
+        "type": "object"
+      },
+      "AnyCondition": {
+        "additionalProperties": false,
+        "properties": {
+          "any": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PredicateCondition"
+                },
+                {
+                  "$ref": "#/$defs/AllCondition"
+                },
+                {
+                  "$ref": "#/$defs/AnyCondition"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Any",
+            "type": "array"
+          }
+        },
+        "required": [
+          "any"
+        ],
+        "title": "AnyCondition",
+        "type": "object"
+      },
+      "InterviewQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "text_fa": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Text Fa",
+            "type": "string"
+          },
+          "purpose_fa": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Purpose Fa",
+            "type": "string"
+          },
+          "answer_type": {
+            "default": "text",
+            "enum": [
+              "text",
+              "yes_no",
+              "single_choice",
+              "number"
+            ],
+            "title": "Answer Type",
+            "type": "string"
+          },
+          "choices": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Choices",
+            "type": "array"
+          },
+          "depends_on_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Depends On Id"
+          },
+          "show_when_answer_in": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Show When Answer In",
+            "type": "array"
+          },
+          "allow_unknown": {
+            "const": true,
+            "default": true,
+            "title": "Allow Unknown",
+            "type": "boolean"
+          },
+          "allow_decline": {
+            "const": true,
+            "default": true,
+            "title": "Allow Decline",
+            "type": "boolean"
+          },
+          "question_version": {
+            "default": "legacy-unspecified",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Question Version",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/$defs/QuestionProvenance"
+          },
+          "display_condition": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PredicateCondition"
+              },
+              {
+                "$ref": "#/$defs/AllCondition"
+              },
+              {
+                "$ref": "#/$defs/AnyCondition"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Display Condition"
+          },
+          "numeric_unit": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Numeric Unit"
+          },
+          "numeric_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Numeric Min"
+          },
+          "numeric_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Numeric Max"
+          }
+        },
+        "required": [
+          "id",
+          "text_fa",
+          "purpose_fa"
+        ],
+        "title": "InterviewQuestion",
+        "type": "object"
+      },
+      "PredicateCondition": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "operator": {
+            "enum": [
+              "eq",
+              "ne",
+              "in",
+              "gt",
+              "gte",
+              "lt",
+              "lte",
+              "state_in"
+            ],
+            "title": "Operator",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Value"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "title": "Values",
+            "type": "array"
+          },
+          "states": {
+            "items": {
+              "enum": [
+                "answered",
+                "unknown",
+                "declined",
+                "missing"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "title": "States",
+            "type": "array"
+          }
+        },
+        "required": [
+          "question_id",
+          "operator"
+        ],
+        "title": "PredicateCondition",
+        "type": "object"
+      },
+      "QuestionProvenance": {
+        "additionalProperties": false,
+        "description": "An unspecified legacy source never becomes a claimed clinical citation.",
+        "properties": {
+          "kind": {
+            "default": "unspecified",
+            "enum": [
+              "unspecified",
+              "physician_authored",
+              "reference",
+              "clinic_protocol",
+              "design_draft"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reference"
+          }
+        },
+        "title": "QuestionProvenance",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "contract_version": {
+        "const": "1.0.0",
+        "default": "1.0.0",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "title_fa": {
+        "maxLength": 200,
+        "minLength": 3,
+        "title": "Title Fa",
+        "type": "string"
+      },
+      "scope_fa": {
+        "maxLength": 500,
+        "minLength": 3,
+        "title": "Scope Fa",
+        "type": "string"
+      },
+      "summary_preferences_fa": {
+        "anyOf": [
+          {
+            "maxLength": 2000,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Summary Preferences Fa"
+      },
+      "questions": {
+        "items": {
+          "$ref": "#/$defs/InterviewQuestion"
+        },
+        "maxItems": 100,
+        "minItems": 1,
+        "title": "Questions",
+        "type": "array"
+      }
+    },
+    "required": [
+      "title_fa",
+      "scope_fa",
+      "questions"
+    ],
+    "title": "BankContent",
+    "type": "object"
+  },
+  "answer_command": {
+    "additionalProperties": false,
+    "properties": {
+      "request_key": {
+        "maxLength": 100,
+        "minLength": 8,
+        "pattern": "^[A-Za-z0-9_.-]+$",
+        "title": "Request Key",
+        "type": "string"
+      },
+      "expected_version": {
+        "minimum": 0,
+        "title": "Expected Version",
+        "type": "integer"
+      },
+      "question_id": {
+        "maxLength": 80,
+        "minLength": 1,
+        "title": "Question Id",
+        "type": "string"
+      },
+      "state": {
+        "enum": [
+          "answered",
+          "unknown",
+          "declined"
+        ],
+        "title": "State",
+        "type": "string"
+      },
+      "value": {
+        "anyOf": [
+          {
+            "maxLength": 3000,
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Value"
+      },
+      "unit": {
+        "anyOf": [
+          {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Unit"
+      },
+      "supplementary_text": {
+        "anyOf": [
+          {
+            "maxLength": 3000,
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Supplementary Text"
+      }
+    },
+    "required": [
+      "request_key",
+      "expected_version",
+      "question_id",
+      "state"
+    ],
+    "title": "PortalAnswerCreate",
+    "type": "object"
+  },
+  "assistant_summary": {
+    "$defs": {
+      "AllCondition": {
+        "additionalProperties": false,
+        "properties": {
+          "all": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PredicateCondition"
+                },
+                {
+                  "$ref": "#/$defs/AllCondition"
+                },
+                {
+                  "$ref": "#/$defs/AnyCondition"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "All",
+            "type": "array"
+          }
+        },
+        "required": [
+          "all"
+        ],
+        "title": "AllCondition",
+        "type": "object"
+      },
+      "AnyCondition": {
+        "additionalProperties": false,
+        "properties": {
+          "any": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PredicateCondition"
+                },
+                {
+                  "$ref": "#/$defs/AllCondition"
+                },
+                {
+                  "$ref": "#/$defs/AnyCondition"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Any",
+            "type": "array"
+          }
+        },
+        "required": [
+          "any"
+        ],
+        "title": "AnyCondition",
+        "type": "object"
+      },
+      "InterviewQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "text_fa": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Text Fa",
+            "type": "string"
+          },
+          "purpose_fa": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Purpose Fa",
+            "type": "string"
+          },
+          "answer_type": {
+            "default": "text",
+            "enum": [
+              "text",
+              "yes_no",
+              "single_choice",
+              "number"
+            ],
+            "title": "Answer Type",
+            "type": "string"
+          },
+          "choices": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Choices",
+            "type": "array"
+          },
+          "depends_on_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Depends On Id"
+          },
+          "show_when_answer_in": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Show When Answer In",
+            "type": "array"
+          },
+          "allow_unknown": {
+            "const": true,
+            "default": true,
+            "title": "Allow Unknown",
+            "type": "boolean"
+          },
+          "allow_decline": {
+            "const": true,
+            "default": true,
+            "title": "Allow Decline",
+            "type": "boolean"
+          },
+          "question_version": {
+            "default": "legacy-unspecified",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Question Version",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/$defs/QuestionProvenance"
+          },
+          "display_condition": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PredicateCondition"
+              },
+              {
+                "$ref": "#/$defs/AllCondition"
+              },
+              {
+                "$ref": "#/$defs/AnyCondition"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Display Condition"
+          },
+          "numeric_unit": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Numeric Unit"
+          },
+          "numeric_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Numeric Min"
+          },
+          "numeric_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Numeric Max"
+          }
+        },
+        "required": [
+          "id",
+          "text_fa",
+          "purpose_fa"
+        ],
+        "title": "InterviewQuestion",
+        "type": "object"
+      },
+      "PredicateCondition": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "operator": {
+            "enum": [
+              "eq",
+              "ne",
+              "in",
+              "gt",
+              "gte",
+              "lt",
+              "lte",
+              "state_in"
+            ],
+            "title": "Operator",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Value"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "title": "Values",
+            "type": "array"
+          },
+          "states": {
+            "items": {
+              "enum": [
+                "answered",
+                "unknown",
+                "declined",
+                "missing"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "title": "States",
+            "type": "array"
+          }
+        },
+        "required": [
+          "question_id",
+          "operator"
+        ],
+        "title": "PredicateCondition",
+        "type": "object"
+      },
+      "QuestionProvenance": {
+        "additionalProperties": false,
+        "description": "An unspecified legacy source never becomes a claimed clinical citation.",
+        "properties": {
+          "kind": {
+            "default": "unspecified",
+            "enum": [
+              "unspecified",
+              "physician_authored",
+              "reference",
+              "clinic_protocol",
+              "design_draft"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reference"
+          }
+        },
+        "title": "QuestionProvenance",
+        "type": "object"
+      },
+      "ReportedInterviewAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "question_definition": {
+            "$ref": "#/$defs/InterviewQuestion"
+          },
+          "state": {
+            "enum": [
+              "answered",
+              "unknown",
+              "declined"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "supplementary_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplementary Text"
+          },
+          "recorded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At"
+          },
+          "source": {
+            "enum": [
+              "patient_portal",
+              "legacy_patient_portal"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "bank_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Bank Sha256",
+            "type": "string"
+          },
+          "question_version": {
+            "title": "Question Version",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/$defs/QuestionProvenance"
+          },
+          "answer_event_id": {
+            "title": "Answer Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id",
+          "question",
+          "question_definition",
+          "state",
+          "value",
+          "unit",
+          "supplementary_text",
+          "recorded_at",
+          "source",
+          "bank_sha256",
+          "question_version",
+          "provenance",
+          "answer_event_id"
+        ],
+        "title": "ReportedInterviewAnswer",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "1.0.0",
+        "default": "1.0.0",
+        "title": "Schema Version",
+        "type": "string"
+      },
+      "source": {
+        "const": "patient_portal",
+        "default": "patient_portal",
+        "title": "Source",
+        "type": "string"
+      },
+      "patient_reported_only": {
+        "const": true,
+        "default": true,
+        "title": "Patient Reported Only",
+        "type": "boolean"
+      },
+      "requires_clinician_review": {
+        "const": true,
+        "default": true,
+        "title": "Requires Clinician Review",
+        "type": "boolean"
+      },
+      "bank_sha256": {
+        "pattern": "^[a-f0-9]{64}$",
+        "title": "Bank Sha256",
+        "type": "string"
+      },
+      "physician_id": {
+        "title": "Physician Id",
+        "type": "string"
+      },
+      "request_id": {
+        "title": "Request Id",
+        "type": "string"
+      },
+      "interview_version": {
+        "minimum": 0,
+        "title": "Interview Version",
+        "type": "integer"
+      },
+      "items": {
+        "items": {
+          "$ref": "#/$defs/ReportedInterviewAnswer"
+        },
+        "title": "Items",
+        "type": "array"
+      },
+      "missing_question_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Missing Question Ids",
+        "type": "array"
+      },
+      "unknown_question_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Unknown Question Ids",
+        "type": "array"
+      },
+      "declined_question_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Declined Question Ids",
+        "type": "array"
+      },
+      "inactive_question_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Inactive Question Ids",
+        "type": "array"
+      },
+      "summary_fa": {
+        "title": "Summary Fa",
+        "type": "string"
+      }
+    },
+    "required": [
+      "bank_sha256",
+      "physician_id",
+      "request_id",
+      "interview_version",
+      "items",
+      "missing_question_ids",
+      "unknown_question_ids",
+      "declined_question_ids",
+      "inactive_question_ids",
+      "summary_fa"
+    ],
+    "title": "InterviewAssistantSummary",
+    "type": "object"
+  }
+}
