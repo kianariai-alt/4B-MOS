@@ -7,7 +7,9 @@ from backend.app.models.user import User
 from backend.app.schemas.orthopedic_adapter import OrthopedicDecisionKnowledge
 from backend.app.schemas.orthopedic_knowledge import KneeKnowledgePack
 from backend.app.schemas.orthopedic_questions import OrthopedicQuestionContext
+from backend.app.schemas.orthopedic_book_questions import BookQuestionPreview, BookQuestionPreviewRequest
 from backend.app.services.orthopedic_adapter import build_decision_knowledge
+from backend.app.services.orthopedic_book_questions import build_book_question_preview
 from backend.app.services.orthopedic_knowledge import load_knee_pack
 
 
@@ -37,3 +39,12 @@ def preview_knee_questions(
 ) -> OrthopedicDecisionKnowledge:
     response.headers["Cache-Control"] = "no-store"
     return build_decision_knowledge(context)
+
+
+@router.post("/book-preview", response_model=BookQuestionPreview)
+def preview_knee_book_questions(
+    request: BookQuestionPreviewRequest, response: Response,
+    _actor: User = Depends(require_roles("admin", "physician")),
+) -> BookQuestionPreview:
+    response.headers["Cache-Control"] = "no-store"
+    return build_book_question_preview(request)
