@@ -15,6 +15,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
 & $Python -m PyInstaller --noconfirm --clean --windowed --onedir --name 4B-Imaging `
     --paths $Repo --specpath build/imaging-desktop `
     --add-data "$TemplateRoot;backend/tools/knee_templates" `
+    --copy-metadata pydicom `
     --collect-submodules pydicom.pixels.decoders `
     --hidden-import vtkmodules.vtkRenderingOpenGL2 `
     --hidden-import vtkmodules.vtkRenderingVolumeOpenGL2 `

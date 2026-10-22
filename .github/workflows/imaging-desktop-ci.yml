@@ -56,8 +56,12 @@ jobs:
         shell: pwsh
         run: |
           $Report = Join-Path $env:RUNNER_TEMP 'imaging-core-self-test.json'
-          $Proc = Start-Process -FilePath 'dist/4B-Imaging/4B-Imaging.exe' -ArgumentList @('--self-test-core', $Report) -Wait -PassThru
-          if ($Proc.ExitCode -ne 0) { throw 'Packaged application self-test failed.' }
+          $Proc = Start-Process -FilePath 'dist/4B-Imaging/4B-Imaging.exe' -ArgumentList @('--self-test-core', $Report) -PassThru
+          if (-not $Proc.WaitForExit(120000)) { $Proc.Kill(); throw 'Packaged self-test exceeded two minutes.' }
+          if ($Proc.ExitCode -ne 0) {
+            if (Test-Path $Report) { Get-Content $Report -Raw }
+            throw 'Packaged application self-test failed.'
+          }
           $Result = Get-Content $Report -Raw | ConvertFrom-Json
           if ($Result.core_self_test -ne 'passed') { throw 'Missing packaged test result.' }
           Copy-Item $Report dist/4B-Imaging/synthetic-build-verification.json
