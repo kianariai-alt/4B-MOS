@@ -178,3 +178,23 @@ post-pilot report remains an evidence summary, not a clinical conclusion.
 The [Persian engineering handoff](docs/FINAL_RELEASE_HANDOFF_FA.md) lists
 deployment prerequisites and explicitly distinguishes merged code from live
 clinical deployment.
+
+The [orthopedic knee knowledge authoring preview](docs/ORTHOPEDIC_INTELLIGENCE_FA.md)
+adds a source-linked Draft knee pack, structured missing-information questions,
+unranked differential references, and a versioned additive adapter. The opt-in
+API is disabled by default; it does not approve knowledge, write patient records,
+activate safety rules, select treatment, or replace the existing Registry and
+physician question bank. An offline synthetic demo runs with
+`python -m backend.tools.orthopedic_knowledge_demo`.
+
+The additive [30-question knee interview tree](docs/ORTHOPEDIC_INTERVIEW_TREE_FA.md)
+provides a physician-review roadmap and a synthetic preview with explicit pain
+and trauma branches, separate treatment histories, and independent pain/function
+responses. It preserves the earlier preview contracts and remains Draft;
+accepting the wording does not independently approve medical content.
+
+For books stored on a local Windows drive, the
+[local orthopedic library reader](docs/LOCAL_ORTHOPEDIC_BOOKS_FA.md) provides
+`Read-Orthopedic-Books.cmd` (default `D:\orthopedic book`). It prepares private,
+page-referenced PDF text locally, with no upload, Registry write, medical
+approval or connection from a cloud session to the user's computer.

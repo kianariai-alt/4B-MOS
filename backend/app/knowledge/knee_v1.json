@@ -1,0 +1,2240 @@
+{
+  "schema_version": "1.0.0",
+  "pack_key": "knee_orthopedic_v1",
+  "pack_version": 1,
+  "clinical_domain": "orthopedics_knee",
+  "status": "draft",
+  "source_review_date": "2026-10-20",
+  "sources": [
+    {
+      "source_key": "aaos_oa_2021",
+      "source": {
+        "source_type": "guideline",
+        "title": "Management of Osteoarthritis of the Knee (Non-Arthroplasty), Third Edition",
+        "citation": "AAOS. Evidence-Based Clinical Practice Guideline. Adopted August 31, 2021.",
+        "publisher": null,
+        "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/osteoarthritis-of-the-knee/oak3cpg.pdf",
+        "doi": null,
+        "publication_date": "2021-08-31",
+        "guideline_version": "Third edition 2021",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Official full text checked; this is the edition reviewed, not an exhaustive currency claim."
+    },
+    {
+      "source_key": "acr_oa_2019",
+      "source": {
+        "source_type": "guideline",
+        "title": "2019 ACR/Arthritis Foundation Guideline for Management of Osteoarthritis of the Hand, Hip, and Knee",
+        "citation": "Kolasinski SL et al. Arthritis Care Res. 2020;72:149-162.",
+        "publisher": null,
+        "url": "https://www.arthritis.org/getmedia/d57cf9f5-e096-43a2-832d-dbc174065a58/Kolasinski-2020-american-college-of-rheumatology-a.pdf",
+        "doi": "10.1002/acr.24131",
+        "publication_date": null,
+        "guideline_version": "2019 guideline; February 2020 publication",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Co-publisher full text checked. Literature after 2018-08-01 was not evaluated in this edition; no exhaustive currency claim."
+    },
+    {
+      "source_key": "aaos_meniscus_2024",
+      "source": {
+        "source_type": "guideline",
+        "title": "Management of Acute Isolated Meniscal Pathology",
+        "citation": "AAOS. Evidence-Based Clinical Practice Guideline. 2024.",
+        "publisher": null,
+        "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/acute-meniscal-pathology/amp-cpg.pdf",
+        "doi": null,
+        "publication_date": null,
+        "guideline_version": "2024",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Official full text checked; excludes degenerative tears and concomitant ligament injury."
+    },
+    {
+      "source_key": "escape_2022",
+      "source": {
+        "source_type": "randomized_trial",
+        "title": "Effect of Physical Therapy vs Arthroscopic Partial Meniscectomy in People With Degenerative Meniscal Tears: Five-Year Follow-up of the ESCAPE Randomized Clinical Trial",
+        "citation": "Noorduyn JCA et al. JAMA Netw Open. 2022;5:e2220394. PMID 35802374.",
+        "publisher": null,
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9270699/",
+        "doi": "10.1001/jamanetworkopen.2022.20394",
+        "publication_date": null,
+        "guideline_version": "Five-year follow-up 2022",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Full text checked. Adults aged 45-70; locked knees and baseline KL4 excluded; no generalization to acute displaced tears."
+    },
+    {
+      "source_key": "sanjo_2023",
+      "source": {
+        "source_type": "guideline",
+        "title": "Guideline for management of septic arthritis in native joints (SANJO)",
+        "citation": "Ravn C et al. J Bone Jt Infect. 2023;8:29-37. PMID 36756304.",
+        "publisher": null,
+        "url": "https://jbji.copernicus.org/articles/8/29/2023/",
+        "doi": "10.5194/jbji-8-29-2023",
+        "publication_date": "2023-01-12",
+        "guideline_version": "2023; supplement corrected 2023-02-02",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Official full text checked; this is the edition reviewed, not an exhaustive currency claim."
+    },
+    {
+      "source_key": "fda_regen_2020",
+      "source": {
+        "source_type": "regulatory",
+        "title": "Consumer Alert on Regenerative Medicine Products Including Stem Cells and Exosomes",
+        "citation": "US Food and Drug Administration. Consumer safety alert, July 22, 2020.",
+        "publisher": null,
+        "url": "https://www.fda.gov/vaccines-blood-biologics/consumers-biologics/consumer-alert-regenerative-medicine-products-including-stem-cells-and-exosomes",
+        "doi": null,
+        "publication_date": "2020-07-22",
+        "guideline_version": "Historical US alert 2020",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Full text checked. Historical US regulatory/safety communication; not current product authorization in Iran or another jurisdiction and not efficacy evidence."
+    },
+    {
+      "source_key": "acs_review_2024",
+      "source": {
+        "source_type": "systematic_review",
+        "title": "Is there a role for autologous conditioned serum injections in osteoarthritis? A systematic review and meta-analysis of randomised controlled trials",
+        "citation": "Osteoarthritis Cartilage. 2024. PMID 38878817.",
+        "publisher": null,
+        "url": "https://pubmed.ncbi.nlm.nih.gov/38878817/",
+        "doi": "10.1016/j.joca.2024.06.004",
+        "publication_date": "2024-06-13",
+        "guideline_version": "Online June 13, 2024",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "abstract",
+      "verification_note": "Search-indexed PubMed/publisher abstract checked; direct page empty and publisher full text unavailable. Five RCTs; search to March 2024. No detailed full-text extraction claimed."
+    },
+    {
+      "source_key": "prgf_rct_2017",
+      "source": {
+        "source_type": "randomized_trial",
+        "title": "Efficacy of Intra-articular Injection of a Newly Developed Plasma Rich in Growth Factor (PRGF) Versus Hyaluronic Acid on Pain and Function of Patients with Knee Osteoarthritis: A Single-Blinded Randomized Clinical Trial",
+        "citation": "Raeissadat SA et al. Clin Med Insights Arthritis Musculoskelet Disord. 2017. PMID 29051707.",
+        "publisher": null,
+        "url": "https://journals.sagepub.com/doi/10.1177/1179544117733452",
+        "doi": "10.1177/1179544117733452",
+        "publication_date": "2017-10-10",
+        "guideline_version": "2017",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Full publisher text checked. One preparation, limited sample, single-blinding, six-month follow-up and no saline arm."
+    },
+    {
+      "source_key": "pl_review_2024",
+      "source": {
+        "source_type": "other",
+        "title": "Platelet Lysate and Osteoarthritis of the Knee: A Review of Current Clinical Evidence",
+        "citation": "Pain Ther. 2024. PMID 39340713.",
+        "publisher": null,
+        "url": "https://pubmed.ncbi.nlm.nih.gov/39340713/",
+        "doi": "10.1007/s40122-024-00661-y",
+        "publication_date": "2024-09-28",
+        "guideline_version": "Online September 28, 2024",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "abstract",
+      "verification_note": "PubMed metadata and abstract checked; full text not reviewed. Search to 2024-08-15; three included studies."
+    },
+    {
+      "source_key": "icrs_2000",
+      "source": {
+        "source_type": "consensus",
+        "title": "ICRS Cartilage Injury Evaluation Package",
+        "citation": "International Cartilage Repair Society. ICRS Clinical Cartilage Injury Evaluation System, 2000.",
+        "publisher": null,
+        "url": "https://cartilage.org/wp-content/uploads/2024/07/ICRS_evaluation1-1.pdf",
+        "doi": null,
+        "publication_date": null,
+        "guideline_version": "Clinical evaluation system 2000",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Official 16-page PDF checked. URL upload year 2024 is not a new edition; copyrighted forms are linked, not reproduced."
+    },
+    {
+      "source_key": "aaos_ocd_2023",
+      "source": {
+        "source_type": "guideline",
+        "title": "The Diagnosis and Treatment of Osteochondritis Dissecans: 2023 Report for the Update of the 2010 Clinical Practice Guideline",
+        "citation": "AAOS. Published December 1, 2023.",
+        "publisher": null,
+        "url": "https://new.aaos.org/globalassets/quality-and-practice-resources/osteochondritis-dissecans/osteochondritis-dissecans-rapid-update-2023.pdf",
+        "doi": null,
+        "publication_date": "2023-12-01",
+        "guideline_version": "2023 update of 2010 CPG",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Official full text checked. Historical inconclusive recommendations in Appendix XIV were not newly updated in 2023."
+    },
+    {
+      "source_key": "kl_1957",
+      "source": {
+        "source_type": "other",
+        "title": "Radiological assessment of osteo-arthrosis",
+        "citation": "Kellgren JH, Lawrence JS. Ann Rheum Dis. 1957;16:494-502. PMID 13498604.",
+        "publisher": null,
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1006995/",
+        "doi": "10.1136/ard.16.4.494",
+        "publication_date": null,
+        "guideline_version": "Original classification 1957",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "bibliographic_metadata",
+      "verification_note": "PubMed bibliographic title/year/DOI verified; original article scanned and no abstract available. No full grade table reproduced."
+    },
+    {
+      "source_key": "neogi_2009",
+      "source": {
+        "source_type": "observational_study",
+        "title": "Association between radiographic features of knee osteoarthritis and pain: results from two cohort studies",
+        "citation": "Neogi T et al. BMJ. 2009;339:b2844. PMID 19700505.",
+        "publisher": null,
+        "url": "https://www.bmj.com/content/339/bmj.b2844",
+        "doi": "10.1136/bmj.b2844",
+        "publication_date": null,
+        "guideline_version": "2009",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Primary full text via search index checked. Association does not make structural grade and symptoms interchangeable."
+    },
+    {
+      "source_key": "boast_arterial_2026",
+      "source": {
+        "source_type": "guideline",
+        "title": "Diagnosis and management of arterial injuries associated with musculoskeletal trauma",
+        "citation": "British Orthopaedic Association. BOASt. June 2026.",
+        "publisher": null,
+        "url": "https://www.boa.ac.uk/resource/diagnosis-and-management-of-arterial-injuries-associated-with-musculoskeletal-trauma.html",
+        "doi": null,
+        "publication_date": "2026-06-10",
+        "guideline_version": "June 2026",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Official full text reviewed. Timed arterial and peripheral-nerve examination; suspected arterial injury needs emergency specialist input. No diagnostic probability or new active safety rule."
+    },
+    {
+      "source_key": "merck_knee_2025",
+      "source": {
+        "source_type": "textbook",
+        "title": "Evaluation of the Knee",
+        "citation": "Villa-Forte A; peer review Mandell B. Merck Manual Professional. Reviewed February 2024; modified January 2025.",
+        "publisher": null,
+        "url": "https://www.merckmanuals.com/professional/musculoskeletal-and-connective-tissue-disorders/approach-to-the-patient-with-joint-symptoms/evaluation-of-the-knee",
+        "doi": null,
+        "publication_date": null,
+        "guideline_version": "Modified January 2025",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Full authoritative editorial educational text reviewed; not primary diagnostic-accuracy evidence. Methods require clinician performance and independent review."
+    },
+    {
+      "source_key": "merck_joint_2025",
+      "source": {
+        "source_type": "textbook",
+        "title": "Evaluation of the Patient With Joint Symptoms",
+        "citation": "Villa-Forte A; peer review Mandell B. Merck Manual Professional. Reviewed February 2024; modified January 2025.",
+        "publisher": null,
+        "url": "https://www.merckmanuals.com/professional/musculoskeletal-and-connective-tissue-disorders/approach-to-the-patient-with-joint-symptoms/evaluation-of-the-patient-with-joint-symptoms",
+        "doi": null,
+        "publication_date": null,
+        "guideline_version": "Modified January 2025",
+        "accessed_at": "2026-10-20"
+      },
+      "verified_at": "2026-10-20",
+      "access_level": "full_text",
+      "verification_note": "Full authoritative editorial educational text reviewed. History and active/passive motion domains; not primary diagnostic-accuracy evidence."
+    }
+  ],
+  "facts": [
+    {
+      "fact": {
+        "fact_key": "KNEE.OA.PRESENTATION",
+        "title": "OA presentation and functional context",
+        "statement": "OA may involve pain, stiffness, swelling and reduced function; these findings individually do not establish a diagnosis.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Draft paraphrase; independent specialist appraisal and current-source review are required.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"acr_oa_2019\"],\"topic\":\"osteoarthritis\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "2019 ACR/Arthritis Foundation Guideline for Management of Osteoarthritis of the Hand, Hip, and Knee",
+            "citation": "Kolasinski SL et al. Arthritis Care Res. 2020;72:149-162.",
+            "publisher": null,
+            "url": "https://www.arthritis.org/getmedia/d57cf9f5-e096-43a2-832d-dbc174065a58/Kolasinski-2020-american-college-of-rheumatology-a.pdf",
+            "doi": "10.1002/acr.24131",
+            "publication_date": null,
+            "guideline_version": "2019 guideline; February 2020 publication",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "osteoarthritis",
+      "summary": "OA may involve pain, stiffness, swelling and reduced function; these findings individually do not establish a diagnosis.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Draft paraphrase; independent specialist appraisal and current-source review are required."
+      ],
+      "source_keys": [
+        "acr_oa_2019"
+      ],
+      "content_sha256": "cb1a3fa40aa82e9af631295095401a59f746b9c459c3051a5ca61ef0340f51a7"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OA.EXERCISE",
+        "title": "Exercise guidance for knee OA",
+        "statement": "ACR/AF 2019 strongly supports exercise for knee OA, with activity choice informed by preferences, access and individual circumstances.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Recommendation strength is not individual response prediction; no exercise dose or automatic program is specified.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"acr_oa_2019\"],\"topic\":\"osteoarthritis\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "People with knee osteoarthritis.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "2019 ACR/Arthritis Foundation Guideline for Management of Osteoarthritis of the Hand, Hip, and Knee",
+            "citation": "Kolasinski SL et al. Arthritis Care Res. 2020;72:149-162.",
+            "publisher": null,
+            "url": "https://www.arthritis.org/getmedia/d57cf9f5-e096-43a2-832d-dbc174065a58/Kolasinski-2020-american-college-of-rheumatology-a.pdf",
+            "doi": "10.1002/acr.24131",
+            "publication_date": null,
+            "guideline_version": "2019 guideline; February 2020 publication",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "osteoarthritis",
+      "summary": "ACR/AF 2019 strongly supports exercise for knee OA, with activity choice informed by preferences, access and individual circumstances.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Recommendation strength is not individual response prediction; no exercise dose or automatic program is specified."
+      ],
+      "source_keys": [
+        "acr_oa_2019"
+      ],
+      "content_sha256": "02dded2b0efd17cf27354976ca65b01c7119dd0020f9ab6eb7e7168edde4454d"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OA.WEIGHT_MANAGEMENT",
+        "title": "Weight management guidance",
+        "statement": "For knee OA with overweight or obesity, ACR/AF 2019 strongly supports weight loss.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"No automatic weight target or protocol is inferred; suitability and goals require clinician assessment.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"acr_oa_2019\"],\"topic\":\"osteoarthritis\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "People with knee OA and overweight or obesity.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "2019 ACR/Arthritis Foundation Guideline for Management of Osteoarthritis of the Hand, Hip, and Knee",
+            "citation": "Kolasinski SL et al. Arthritis Care Res. 2020;72:149-162.",
+            "publisher": null,
+            "url": "https://www.arthritis.org/getmedia/d57cf9f5-e096-43a2-832d-dbc174065a58/Kolasinski-2020-american-college-of-rheumatology-a.pdf",
+            "doi": "10.1002/acr.24131",
+            "publication_date": null,
+            "guideline_version": "2019 guideline; February 2020 publication",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "osteoarthritis",
+      "summary": "For knee OA with overweight or obesity, ACR/AF 2019 strongly supports weight loss.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "No automatic weight target or protocol is inferred; suitability and goals require clinician assessment."
+      ],
+      "source_keys": [
+        "acr_oa_2019"
+      ],
+      "content_sha256": "70b8079e9807dfbc4cd7fc9ac450599212ebfefe8c4a1f7d2d40501e0833744b"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OA.TOPICAL_NSAID",
+        "title": "Medication evidence context",
+        "statement": "ACR/AF 2019 strongly supports topical NSAIDs for knee OA; medication risks and comorbidities require assessment.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"No prescribing, dose or comprehensive contraindication list is supplied.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"acr_oa_2019\"],\"topic\":\"osteoarthritis\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "2019 ACR/Arthritis Foundation Guideline for Management of Osteoarthritis of the Hand, Hip, and Knee",
+            "citation": "Kolasinski SL et al. Arthritis Care Res. 2020;72:149-162.",
+            "publisher": null,
+            "url": "https://www.arthritis.org/getmedia/d57cf9f5-e096-43a2-832d-dbc174065a58/Kolasinski-2020-american-college-of-rheumatology-a.pdf",
+            "doi": "10.1002/acr.24131",
+            "publication_date": null,
+            "guideline_version": "2019 guideline; February 2020 publication",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "osteoarthritis",
+      "summary": "ACR/AF 2019 strongly supports topical NSAIDs for knee OA; medication risks and comorbidities require assessment.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "No prescribing, dose or comprehensive contraindication list is supplied."
+      ],
+      "source_keys": [
+        "acr_oa_2019"
+      ],
+      "content_sha256": "54678b178da9a8be871aafec5892380eb0cd824e044a2afa395d70e5d4e03dab"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OA.PRP_AAOS",
+        "title": "AAOS PRP position",
+        "statement": "AAOS 2021 describes possible PRP pain/function benefit in symptomatic knee OA, with Limited recommendation strength.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Preparation variation and evidence limitations apply; this is not an individual recommendation or proof of cartilage regeneration.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_oa_2021\"],\"topic\":\"orthobiologics\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": "PRP",
+        "population": "People with knee OA in the cited source populations; product and trial eligibility require review.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Management of Osteoarthritis of the Knee (Non-Arthroplasty), Third Edition",
+            "citation": "AAOS. Evidence-Based Clinical Practice Guideline. Adopted August 31, 2021.",
+            "publisher": null,
+            "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/osteoarthritis-of-the-knee/oak3cpg.pdf",
+            "doi": null,
+            "publication_date": "2021-08-31",
+            "guideline_version": "Third edition 2021",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "orthobiologics",
+      "summary": "AAOS 2021 describes possible PRP pain/function benefit in symptomatic knee OA, with Limited recommendation strength.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Preparation variation and evidence limitations apply; this is not an individual recommendation or proof of cartilage regeneration."
+      ],
+      "source_keys": [
+        "aaos_oa_2021"
+      ],
+      "content_sha256": "ef8febb67c1f9aaac62e26c255215e91a8867653991a6b89e866f0a2eeb0bc82"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OA.PRP_ACR",
+        "title": "ACR PRP position and disagreement",
+        "statement": "ACR/AF 2019 strongly recommends against PRP for knee/hip OA, citing preparation and technique heterogeneity.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"This differs from the AAOS 2021 position; both source editions remain visible without choosing a preferred recommendation.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"acr_oa_2019\"],\"topic\":\"orthobiologics\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": "PRP",
+        "population": "People with knee OA in the cited source populations; product and trial eligibility require review.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "2019 ACR/Arthritis Foundation Guideline for Management of Osteoarthritis of the Hand, Hip, and Knee",
+            "citation": "Kolasinski SL et al. Arthritis Care Res. 2020;72:149-162.",
+            "publisher": null,
+            "url": "https://www.arthritis.org/getmedia/d57cf9f5-e096-43a2-832d-dbc174065a58/Kolasinski-2020-american-college-of-rheumatology-a.pdf",
+            "doi": "10.1002/acr.24131",
+            "publication_date": null,
+            "guideline_version": "2019 guideline; February 2020 publication",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "orthobiologics",
+      "summary": "ACR/AF 2019 strongly recommends against PRP for knee/hip OA, citing preparation and technique heterogeneity.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "This differs from the AAOS 2021 position; both source editions remain visible without choosing a preferred recommendation."
+      ],
+      "source_keys": [
+        "acr_oa_2019"
+      ],
+      "content_sha256": "fd45e2e13383ba8c427e6328e62167911b7d99d5cf95daaef19b3d729d5b99f0"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OA.HA_AAOS",
+        "title": "AAOS HA position",
+        "statement": "AAOS 2021 advises against routine hyaluronic acid injection use for symptomatic knee OA, with Moderate recommendation strength.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Guideline position is separate from product authorization; no regulatory conclusion or patient-specific treatment decision is inferred.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_oa_2021\"],\"topic\":\"orthobiologics\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "People with knee OA in the cited source populations; product and trial eligibility require review.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Management of Osteoarthritis of the Knee (Non-Arthroplasty), Third Edition",
+            "citation": "AAOS. Evidence-Based Clinical Practice Guideline. Adopted August 31, 2021.",
+            "publisher": null,
+            "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/osteoarthritis-of-the-knee/oak3cpg.pdf",
+            "doi": null,
+            "publication_date": "2021-08-31",
+            "guideline_version": "Third edition 2021",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "orthobiologics",
+      "summary": "AAOS 2021 advises against routine hyaluronic acid injection use for symptomatic knee OA, with Moderate recommendation strength.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Guideline position is separate from product authorization; no regulatory conclusion or patient-specific treatment decision is inferred."
+      ],
+      "source_keys": [
+        "aaos_oa_2021"
+      ],
+      "content_sha256": "8d9b263b7457bbfb6689a01184e66398546981a1375fe962d6321e12faaed777"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.MENISCUS.SCOPE",
+        "title": "Acute versus degenerative meniscal scope",
+        "statement": "The AAOS 2024 acute isolated meniscal guideline excludes degenerative tears and associated ligament injury; onset and mechanism determine applicability.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Draft paraphrase; independent specialist appraisal and current-source review are required.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_meniscus_2024\"],\"topic\":\"meniscus\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Management of Acute Isolated Meniscal Pathology",
+            "citation": "AAOS. Evidence-Based Clinical Practice Guideline. 2024.",
+            "publisher": null,
+            "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/acute-meniscal-pathology/amp-cpg.pdf",
+            "doi": null,
+            "publication_date": null,
+            "guideline_version": "2024",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "meniscus",
+      "summary": "The AAOS 2024 acute isolated meniscal guideline excludes degenerative tears and associated ligament injury; onset and mechanism determine applicability.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Draft paraphrase; independent specialist appraisal and current-source review are required."
+      ],
+      "source_keys": [
+        "aaos_meniscus_2024"
+      ],
+      "content_sha256": "dab77f71214c6d9f66d3d4f2fababb170867b0189968cf32e49f9ddff2b5bc16"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.MENISCUS.EXAMINATION",
+        "title": "Clinical meniscal examination context",
+        "statement": "Joint-line tenderness and meniscal maneuvers can inform assessment, with diagnostic accuracy varying among tests and studies.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"No universal sensitivity, specificity or definitive diagnosis is assigned to a maneuver.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_meniscus_2024\"],\"topic\":\"meniscus\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Management of Acute Isolated Meniscal Pathology",
+            "citation": "AAOS. Evidence-Based Clinical Practice Guideline. 2024.",
+            "publisher": null,
+            "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/acute-meniscal-pathology/amp-cpg.pdf",
+            "doi": null,
+            "publication_date": null,
+            "guideline_version": "2024",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "meniscus",
+      "summary": "Joint-line tenderness and meniscal maneuvers can inform assessment, with diagnostic accuracy varying among tests and studies.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "No universal sensitivity, specificity or definitive diagnosis is assigned to a maneuver."
+      ],
+      "source_keys": [
+        "aaos_meniscus_2024"
+      ],
+      "content_sha256": "ea9886cd106253cfb6e31165d50dcc7379771001a492ccde8211e9a8805e47b3"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.MENISCUS.MRI",
+        "title": "Acute meniscal MRI context",
+        "statement": "AAOS 2024 identifies MRI as the preferred modality for suspected acute meniscal tears (Strong recommendation; High evidence quality).\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"No automatic imaging order or interpretation; this scope does not include all chronic knee pain.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_meniscus_2024\"],\"topic\":\"meniscus\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Patients with suspected acute isolated meniscal pathology.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "high",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Management of Acute Isolated Meniscal Pathology",
+            "citation": "AAOS. Evidence-Based Clinical Practice Guideline. 2024.",
+            "publisher": null,
+            "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/acute-meniscal-pathology/amp-cpg.pdf",
+            "doi": null,
+            "publication_date": null,
+            "guideline_version": "2024",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "meniscus",
+      "summary": "AAOS 2024 identifies MRI as the preferred modality for suspected acute meniscal tears (Strong recommendation; High evidence quality).",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "No automatic imaging order or interpretation; this scope does not include all chronic knee pain."
+      ],
+      "source_keys": [
+        "aaos_meniscus_2024"
+      ],
+      "content_sha256": "24c5c50b4f53b0bde72d7c7607b31b7ef630a0038fb2d86b11bb858cfd1cd88d"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.MENISCUS.MOTION_BLOCK",
+        "title": "Mechanical motion restriction review",
+        "statement": "AAOS 2024 consensus highlights displaced acute tears restricting movement as potential candidates for acute specialist surgical assessment.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Consensus option with Very Low evidence quality; reported locking alone does not confirm a displaced tear.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_meniscus_2024\"],\"topic\":\"meniscus\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "consensus",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Management of Acute Isolated Meniscal Pathology",
+            "citation": "AAOS. Evidence-Based Clinical Practice Guideline. 2024.",
+            "publisher": null,
+            "url": "https://www.aaos.org/globalassets/quality-and-practice-resources/acute-meniscal-pathology/amp-cpg.pdf",
+            "doi": null,
+            "publication_date": null,
+            "guideline_version": "2024",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "meniscus",
+      "summary": "AAOS 2024 consensus highlights displaced acute tears restricting movement as potential candidates for acute specialist surgical assessment.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Consensus option with Very Low evidence quality; reported locking alone does not confirm a displaced tear."
+      ],
+      "source_keys": [
+        "aaos_meniscus_2024"
+      ],
+      "content_sha256": "7d52466c891b7e5b7b38a031f1cff1a562eca5a6c652f58ed5cf95180c5084a0"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.MENISCUS.DEGENERATIVE_REHAB",
+        "title": "Degenerative meniscus rehabilitation trial",
+        "statement": "ESCAPE found exercise-based physical therapy noninferior to partial meniscectomy for five-year knee function in its enrolled degenerative-tear population.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Locked knees and baseline KL4 excluded; crossover and noninferiority design limit extrapolation to acute displaced tears.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"escape_2022\"],\"topic\":\"meniscus\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Trial participants aged 45-70 with degenerative meniscal tears.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "randomized_trial",
+            "title": "Effect of Physical Therapy vs Arthroscopic Partial Meniscectomy in People With Degenerative Meniscal Tears: Five-Year Follow-up of the ESCAPE Randomized Clinical Trial",
+            "citation": "Noorduyn JCA et al. JAMA Netw Open. 2022;5:e2220394. PMID 35802374.",
+            "publisher": null,
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9270699/",
+            "doi": "10.1001/jamanetworkopen.2022.20394",
+            "publication_date": null,
+            "guideline_version": "Five-year follow-up 2022",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "meniscus",
+      "summary": "ESCAPE found exercise-based physical therapy noninferior to partial meniscectomy for five-year knee function in its enrolled degenerative-tear population.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Locked knees and baseline KL4 excluded; crossover and noninferiority design limit extrapolation to acute displaced tears."
+      ],
+      "source_keys": [
+        "escape_2022"
+      ],
+      "content_sha256": "0efb70a0a4e0ff672e56fa09f9ece91425494d7ab69ddf9868a276d5860597f9"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.SAFETY.HOT_JOINT",
+        "title": "Painful inflamed native joint safety context",
+        "statement": "SANJO advises suspicion with a painful inflamed joint, with or without fever; clinical findings alone cannot confirm or exclude infection.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Draft knowledge for physician review only; no new operational safety-engine rule is activated.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"sanjo_2023\"],\"topic\":\"safety\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Guideline for management of septic arthritis in native joints (SANJO)",
+            "citation": "Ravn C et al. J Bone Jt Infect. 2023;8:29-37. PMID 36756304.",
+            "publisher": null,
+            "url": "https://jbji.copernicus.org/articles/8/29/2023/",
+            "doi": "10.5194/jbji-8-29-2023",
+            "publication_date": "2023-01-12",
+            "guideline_version": "2023; supplement corrected 2023-02-02",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "safety",
+      "summary": "SANJO advises suspicion with a painful inflamed joint, with or without fever; clinical findings alone cannot confirm or exclude infection.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Draft knowledge for physician review only; no new operational safety-engine rule is activated."
+      ],
+      "source_keys": [
+        "sanjo_2023"
+      ],
+      "content_sha256": "2699005e608ff82ce7cbab781eb56633bbd96382996e60a43fe74340e85b7495"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.SAFETY.SEPSIS",
+        "title": "Systemic deterioration safety context",
+        "statement": "SANJO identifies concomitant sepsis or shock as requiring immediate clinical attention.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"No definitive diagnosis is emitted by this knowledge pack; existing governed Safety Rule Engine remains authoritative.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"sanjo_2023\"],\"topic\":\"safety\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Guideline for management of septic arthritis in native joints (SANJO)",
+            "citation": "Ravn C et al. J Bone Jt Infect. 2023;8:29-37. PMID 36756304.",
+            "publisher": null,
+            "url": "https://jbji.copernicus.org/articles/8/29/2023/",
+            "doi": "10.5194/jbji-8-29-2023",
+            "publication_date": "2023-01-12",
+            "guideline_version": "2023; supplement corrected 2023-02-02",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "safety",
+      "summary": "SANJO identifies concomitant sepsis or shock as requiring immediate clinical attention.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "No definitive diagnosis is emitted by this knowledge pack; existing governed Safety Rule Engine remains authoritative."
+      ],
+      "source_keys": [
+        "sanjo_2023"
+      ],
+      "content_sha256": "4cd6cd3d30d49f0ef321a61135582a8e364dcc68f401cc8edb8935bf83e4e3d9"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.REGULATORY.CELL_EXOSOME",
+        "title": "Historical cell/exosome regulatory context",
+        "statement": "The FDA 2020 notice states that its listed stem-cell, exosome and adipose-derived/SVF products lacked orthopedic-condition approval.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Historical United States notice; current product-specific authorization in Iran or any jurisdiction requires separate verification.\",\"Regulatory material does not establish efficacy or universal legal status in 2026.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"fda_regen_2020\"],\"topic\":\"orthobiologics\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "regulatory",
+            "title": "Consumer Alert on Regenerative Medicine Products Including Stem Cells and Exosomes",
+            "citation": "US Food and Drug Administration. Consumer safety alert, July 22, 2020.",
+            "publisher": null,
+            "url": "https://www.fda.gov/vaccines-blood-biologics/consumers-biologics/consumer-alert-regenerative-medicine-products-including-stem-cells-and-exosomes",
+            "doi": null,
+            "publication_date": "2020-07-22",
+            "guideline_version": "Historical US alert 2020",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "orthobiologics",
+      "summary": "The FDA 2020 notice states that its listed stem-cell, exosome and adipose-derived/SVF products lacked orthopedic-condition approval.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Historical United States notice; current product-specific authorization in Iran or any jurisdiction requires separate verification.",
+        "Regulatory material does not establish efficacy or universal legal status in 2026."
+      ],
+      "source_keys": [
+        "fda_regen_2020"
+      ],
+      "content_sha256": "ec4a96b73d4f7557c4bc4fe34c66ba9a0dd877ef2a6312f122c86a463b425f54"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.ACS.RESEARCH",
+        "title": "ACS research uncertainty",
+        "statement": "The ACS 2024 review abstract reports heterogeneous, conflicting comparisons and insufficient support; six-month saline comparisons did not establish pain/function benefit.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Only indexed abstract checked; full-text extraction and independent certainty assessment remain incomplete.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"acs_review_2024\"],\"topic\":\"orthobiologics\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": "ACS",
+        "population": "People with knee OA in the cited source populations; product and trial eligibility require review.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "systematic_review",
+            "title": "Is there a role for autologous conditioned serum injections in osteoarthritis? A systematic review and meta-analysis of randomised controlled trials",
+            "citation": "Osteoarthritis Cartilage. 2024. PMID 38878817.",
+            "publisher": null,
+            "url": "https://pubmed.ncbi.nlm.nih.gov/38878817/",
+            "doi": "10.1016/j.joca.2024.06.004",
+            "publication_date": "2024-06-13",
+            "guideline_version": "Online June 13, 2024",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "orthobiologics",
+      "summary": "The ACS 2024 review abstract reports heterogeneous, conflicting comparisons and insufficient support; six-month saline comparisons did not establish pain/function benefit.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Only indexed abstract checked; full-text extraction and independent certainty assessment remain incomplete."
+      ],
+      "source_keys": [
+        "acs_review_2024"
+      ],
+      "content_sha256": "cf6610d463a6ac8ee6d0ee287cc41219ef2ab93f460ea8e2914a0be146a13ecc"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.PRGF.RESEARCH",
+        "title": "Preparation-specific PRGF trial context",
+        "statement": "A 2017 PRGF trial compared one preparation with HA for six months; between-group pain/function differences were not statistically significant.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Single-blinding, limited sample and no saline arm; nonsignificance does not establish equivalence or efficacy over placebo.\",\"Do not generalize this preparation to all PRGF/PRP products or infer cartilage regeneration.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"prgf_rct_2017\"],\"topic\":\"orthobiologics\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": "PRGF",
+        "population": "Trial participants aged 50-70 with mild-to-moderate knee OA (KL II-III).",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "randomized_trial",
+            "title": "Efficacy of Intra-articular Injection of a Newly Developed Plasma Rich in Growth Factor (PRGF) Versus Hyaluronic Acid on Pain and Function of Patients with Knee Osteoarthritis: A Single-Blinded Randomized Clinical Trial",
+            "citation": "Raeissadat SA et al. Clin Med Insights Arthritis Musculoskelet Disord. 2017. PMID 29051707.",
+            "publisher": null,
+            "url": "https://journals.sagepub.com/doi/10.1177/1179544117733452",
+            "doi": "10.1177/1179544117733452",
+            "publication_date": "2017-10-10",
+            "guideline_version": "2017",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "orthobiologics",
+      "summary": "A 2017 PRGF trial compared one preparation with HA for six months; between-group pain/function differences were not statistically significant.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Single-blinding, limited sample and no saline arm; nonsignificance does not establish equivalence or efficacy over placebo.",
+        "Do not generalize this preparation to all PRGF/PRP products or infer cartilage regeneration."
+      ],
+      "source_keys": [
+        "prgf_rct_2017"
+      ],
+      "content_sha256": "195d5510cb251b5116917e0271c5bed482c71b1c901f8efd15c79f5d7cf15e0d"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.PL.RESEARCH",
+        "title": "Platelet lysate evidence gap",
+        "statement": "The 2024 platelet lysate review abstract describes sparse clinical literature and calls for larger comparative studies.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Abstract only; optimistic review language is not established safety or efficacy, and no numeric effect is extracted.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"pl_review_2024\"],\"topic\":\"orthobiologics\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": "PL",
+        "population": "People with knee OA in the cited source populations; product and trial eligibility require review.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "other",
+            "title": "Platelet Lysate and Osteoarthritis of the Knee: A Review of Current Clinical Evidence",
+            "citation": "Pain Ther. 2024. PMID 39340713.",
+            "publisher": null,
+            "url": "https://pubmed.ncbi.nlm.nih.gov/39340713/",
+            "doi": "10.1007/s40122-024-00661-y",
+            "publication_date": "2024-09-28",
+            "guideline_version": "Online September 28, 2024",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "orthobiologics",
+      "summary": "The 2024 platelet lysate review abstract describes sparse clinical literature and calls for larger comparative studies.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Abstract only; optimistic review language is not established safety or efficacy, and no numeric effect is extracted."
+      ],
+      "source_keys": [
+        "pl_review_2024"
+      ],
+      "content_sha256": "d8e61dad7ef203e7161cb863524c78f5225929ed7974796e347c2e62b51a444a"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.CARTILAGE.CLASSIFICATION",
+        "title": "Structural cartilage classification context",
+        "statement": "ICRS describes cartilage lesion structure and location while recording symptoms/function separately; structural grade must not be inferred from pain.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Evaluation instrument rather than diagnostic-accuracy evidence; copyrighted classification forms are not reproduced.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"icrs_2000\"],\"topic\":\"cartilage_osteochondral\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "consensus",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "consensus",
+            "title": "ICRS Cartilage Injury Evaluation Package",
+            "citation": "International Cartilage Repair Society. ICRS Clinical Cartilage Injury Evaluation System, 2000.",
+            "publisher": null,
+            "url": "https://cartilage.org/wp-content/uploads/2024/07/ICRS_evaluation1-1.pdf",
+            "doi": null,
+            "publication_date": null,
+            "guideline_version": "Clinical evaluation system 2000",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "cartilage_osteochondral",
+      "summary": "ICRS describes cartilage lesion structure and location while recording symptoms/function separately; structural grade must not be inferred from pain.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Evaluation instrument rather than diagnostic-accuracy evidence; copyrighted classification forms are not reproduced."
+      ],
+      "source_keys": [
+        "icrs_2000"
+      ],
+      "content_sha256": "0bbe672276d73c23b64d946144d43a60d538c8faa84be9bdce7d4c33f8751172"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.CARTILAGE.HISTORY_EXAM",
+        "title": "Cartilage assessment domains",
+        "statement": "ICRS assessment documents onset, injury, swelling, mechanical symptoms, function, prior surgery, effusion and motion.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Assessment domains are not criteria proving a cartilage lesion; no test accuracy is inferred.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"icrs_2000\"],\"topic\":\"cartilage_osteochondral\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "consensus",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "consensus",
+            "title": "ICRS Cartilage Injury Evaluation Package",
+            "citation": "International Cartilage Repair Society. ICRS Clinical Cartilage Injury Evaluation System, 2000.",
+            "publisher": null,
+            "url": "https://cartilage.org/wp-content/uploads/2024/07/ICRS_evaluation1-1.pdf",
+            "doi": null,
+            "publication_date": null,
+            "guideline_version": "Clinical evaluation system 2000",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "cartilage_osteochondral",
+      "summary": "ICRS assessment documents onset, injury, swelling, mechanical symptoms, function, prior surgery, effusion and motion.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Assessment domains are not criteria proving a cartilage lesion; no test accuracy is inferred."
+      ],
+      "source_keys": [
+        "icrs_2000"
+      ],
+      "content_sha256": "049a1f2ea44e62dfabf49f9cc0518aa6ab6cfcb327b1a6997f299226b8ea847c"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OCD.MRI_CONTEXT",
+        "title": "OCD assessment context",
+        "statement": "AAOS 2023 supports considering MRI to characterize a known knee OCD lesion on radiographs or suspected concomitant pathology (High recommendation strength).\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Specific to knee OCD, not every knee pain presentation or cartilage abnormality.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_ocd_2023\"],\"topic\":\"cartilage_osteochondral\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Skeletally immature or mature patients with knee osteochondritis dissecans, according to the cited recommendation.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "The Diagnosis and Treatment of Osteochondritis Dissecans: 2023 Report for the Update of the 2010 Clinical Practice Guideline",
+            "citation": "AAOS. Published December 1, 2023.",
+            "publisher": null,
+            "url": "https://new.aaos.org/globalassets/quality-and-practice-resources/osteochondritis-dissecans/osteochondritis-dissecans-rapid-update-2023.pdf",
+            "doi": null,
+            "publication_date": "2023-12-01",
+            "guideline_version": "2023 update of 2010 CPG",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "cartilage_osteochondral",
+      "summary": "AAOS 2023 supports considering MRI to characterize a known knee OCD lesion on radiographs or suspected concomitant pathology (High recommendation strength).",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Specific to knee OCD, not every knee pain presentation or cartilage abnormality."
+      ],
+      "source_keys": [
+        "aaos_ocd_2023"
+      ],
+      "content_sha256": "604aa268de019b64598ccca05336e66caf14f0529f8c8bb48845baa868a4800d"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OCD.SPECIALIST_REVIEW",
+        "title": "Unstable OCD specialist review",
+        "statement": "For symptomatic unstable/displaced knee OCD, AAOS 2023 offers surgery as an option in immature and mature patients (Limited strength).\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Symptoms, maturity and stability require specialist review; no procedure is chosen automatically.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_ocd_2023\"],\"topic\":\"cartilage_osteochondral\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Skeletally immature or mature patients with knee osteochondritis dissecans, according to the cited recommendation.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "The Diagnosis and Treatment of Osteochondritis Dissecans: 2023 Report for the Update of the 2010 Clinical Practice Guideline",
+            "citation": "AAOS. Published December 1, 2023.",
+            "publisher": null,
+            "url": "https://new.aaos.org/globalassets/quality-and-practice-resources/osteochondritis-dissecans/osteochondritis-dissecans-rapid-update-2023.pdf",
+            "doi": null,
+            "publication_date": "2023-12-01",
+            "guideline_version": "2023 update of 2010 CPG",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "cartilage_osteochondral",
+      "summary": "For symptomatic unstable/displaced knee OCD, AAOS 2023 offers surgery as an option in immature and mature patients (Limited strength).",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Symptoms, maturity and stability require specialist review; no procedure is chosen automatically."
+      ],
+      "source_keys": [
+        "aaos_ocd_2023"
+      ],
+      "content_sha256": "e36ded0ae39413dc98736340a45dbb82047a7ffbbcbf27933da3807c06cae7c0"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OCD.FOLLOW_UP",
+        "title": "OCD follow-up uncertainty",
+        "statement": "For persistent symptoms after OCD treatment, AAOS consensus supports considering repeat history, examination and radiographs and/or MRI for healing assessment.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Consensus is distinct from high-quality comparative treatment evidence; no follow-up interval is prescribed.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"aaos_ocd_2023\"],\"topic\":\"cartilage_osteochondral\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Skeletally immature or mature patients with knee osteochondritis dissecans, according to the cited recommendation.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "consensus",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "The Diagnosis and Treatment of Osteochondritis Dissecans: 2023 Report for the Update of the 2010 Clinical Practice Guideline",
+            "citation": "AAOS. Published December 1, 2023.",
+            "publisher": null,
+            "url": "https://new.aaos.org/globalassets/quality-and-practice-resources/osteochondritis-dissecans/osteochondritis-dissecans-rapid-update-2023.pdf",
+            "doi": null,
+            "publication_date": "2023-12-01",
+            "guideline_version": "2023 update of 2010 CPG",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "cartilage_osteochondral",
+      "summary": "For persistent symptoms after OCD treatment, AAOS consensus supports considering repeat history, examination and radiographs and/or MRI for healing assessment.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Consensus is distinct from high-quality comparative treatment evidence; no follow-up interval is prescribed."
+      ],
+      "source_keys": [
+        "aaos_ocd_2023"
+      ],
+      "content_sha256": "67f08e44027f81234a20cbe960e7fb88ab5f92f9a303230e8cf843666addb12a"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.OA.KL_CONTEXT",
+        "title": "Radiographic OA grade versus symptoms",
+        "statement": "Kellgren-Lawrence grades radiographic OA; record pain and function separately despite associations between radiographic severity and pain.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"No deterministic symptom, disability or treatment mapping from KL grade; image interpretation belongs to the imaging workflow.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"kl_1957\",\"neogi_2009\"],\"topic\":\"osteoarthritis\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "other",
+            "title": "Radiological assessment of osteo-arthrosis",
+            "citation": "Kellgren JH, Lawrence JS. Ann Rheum Dis. 1957;16:494-502. PMID 13498604.",
+            "publisher": null,
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1006995/",
+            "doi": "10.1136/ard.16.4.494",
+            "publication_date": null,
+            "guideline_version": "Original classification 1957",
+            "accessed_at": "2026-10-20"
+          },
+          {
+            "source_type": "observational_study",
+            "title": "Association between radiographic features of knee osteoarthritis and pain: results from two cohort studies",
+            "citation": "Neogi T et al. BMJ. 2009;339:b2844. PMID 19700505.",
+            "publisher": null,
+            "url": "https://www.bmj.com/content/339/bmj.b2844",
+            "doi": "10.1136/bmj.b2844",
+            "publication_date": null,
+            "guideline_version": "2009",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "osteoarthritis",
+      "summary": "Kellgren-Lawrence grades radiographic OA; record pain and function separately despite associations between radiographic severity and pain.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "No deterministic symptom, disability or treatment mapping from KL grade; image interpretation belongs to the imaging workflow."
+      ],
+      "source_keys": [
+        "kl_1957",
+        "neogi_2009"
+      ],
+      "content_sha256": "76564a8fcfa2e2918b0a9a2ea44c800644e367a4994925e703a032164aea6ef4"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.SAFETY.NEUROVASCULAR_TRAUMA",
+        "title": "Neurovascular concerns after acute limb trauma",
+        "statement": "After acute limb trauma, circulatory or neurological abnormality requires prompt clinician neurovascular assessment; suspected arterial injury needs emergency specialist review.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Professional standard; no definitive vascular diagnosis or new operational safety rule is created.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"boast_arterial_2026\"],\"topic\":\"safety\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "People with acute musculoskeletal limb trauma.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "ungraded",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "guideline",
+            "title": "Diagnosis and management of arterial injuries associated with musculoskeletal trauma",
+            "citation": "British Orthopaedic Association. BOASt. June 2026.",
+            "publisher": null,
+            "url": "https://www.boa.ac.uk/resource/diagnosis-and-management-of-arterial-injuries-associated-with-musculoskeletal-trauma.html",
+            "doi": null,
+            "publication_date": "2026-06-10",
+            "guideline_version": "June 2026",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "safety",
+      "summary": "After acute limb trauma, circulatory or neurological abnormality requires prompt clinician neurovascular assessment; suspected arterial injury needs emergency specialist review.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Professional standard; no definitive vascular diagnosis or new operational safety rule is created."
+      ],
+      "source_keys": [
+        "boast_arterial_2026"
+      ],
+      "content_sha256": "f76575fb244b61d8f52bae138e79847833fafd7e7c46790babeba07b5f9f9411"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.EXAM.JOINT_LINE",
+        "title": "Joint-line palpation method",
+        "statement": "With the patient supine, locate medial/lateral joint lines by palpation during slow flexion/extension and record the site of tenderness.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Educational method, not a diagnostic-accuracy study; distinguish adjacent bursal tenderness and do not infer meniscal diagnosis.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"merck_knee_2025\"],\"topic\":\"examination\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "consensus",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "textbook",
+            "title": "Evaluation of the Knee",
+            "citation": "Villa-Forte A; peer review Mandell B. Merck Manual Professional. Reviewed February 2024; modified January 2025.",
+            "publisher": null,
+            "url": "https://www.merckmanuals.com/professional/musculoskeletal-and-connective-tissue-disorders/approach-to-the-patient-with-joint-symptoms/evaluation-of-the-knee",
+            "doi": null,
+            "publication_date": null,
+            "guideline_version": "Modified January 2025",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "examination",
+      "summary": "With the patient supine, locate medial/lateral joint lines by palpation during slow flexion/extension and record the site of tenderness.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Educational method, not a diagnostic-accuracy study; distinguish adjacent bursal tenderness and do not infer meniscal diagnosis."
+      ],
+      "source_keys": [
+        "merck_knee_2025"
+      ],
+      "content_sha256": "43b8aff5acc94a82217d4eb677e4cc08edb3a005458a06f276b2bbf2f0e02faa"
+    },
+    {
+      "fact": {
+        "fact_key": "KNEE.EXAM.MOTION",
+        "title": "Active and passive knee motion assessment",
+        "statement": "Assess active motion before passive motion; record restriction and pain and compare sides.\n\nOrthopedic metadata v1:\n{\"application_conditions\":[\"Clinician review of the stated source population and context is required.\"],\"body_region\":\"knee\",\"limitations\":[\"Clinician-performed assessment; this is not a stand-alone diagnostic criterion or a complete acute-injury examination protocol.\"],\"orthopedic_schema_version\":\"1.0.0\",\"source_keys\":[\"merck_joint_2025\"],\"topic\":\"examination\"}",
+        "clinical_domain": "orthopedics_knee",
+        "therapy_type": null,
+        "population": "Adults undergoing clinician-led knee assessment.",
+        "indication": "Source-linked informational review; no automated diagnosis, prescription or protocol.",
+        "contraindications": [],
+        "evidence_grade": "consensus",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "source_type": "textbook",
+            "title": "Evaluation of the Patient With Joint Symptoms",
+            "citation": "Villa-Forte A; peer review Mandell B. Merck Manual Professional. Reviewed February 2024; modified January 2025.",
+            "publisher": null,
+            "url": "https://www.merckmanuals.com/professional/musculoskeletal-and-connective-tissue-disorders/approach-to-the-patient-with-joint-symptoms/evaluation-of-the-patient-with-joint-symptoms",
+            "doi": null,
+            "publication_date": null,
+            "guideline_version": "Modified January 2025",
+            "accessed_at": "2026-10-20"
+          }
+        ]
+      },
+      "version": 1,
+      "status": "draft",
+      "body_region": "knee",
+      "topic": "examination",
+      "summary": "Assess active motion before passive motion; record restriction and pain and compare sides.",
+      "application_conditions": [
+        "Clinician review of the stated source population and context is required."
+      ],
+      "limitations": [
+        "Clinician-performed assessment; this is not a stand-alone diagnostic criterion or a complete acute-injury examination protocol."
+      ],
+      "source_keys": [
+        "merck_joint_2025"
+      ],
+      "content_sha256": "77518b6193cabd84e64f94966ce410b6436d51cd2195c004e8fbe2ae8527284a"
+    }
+  ],
+  "relations": [
+    {
+      "id": "pain_to_oa",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "knee_pain",
+        "kind": "symptom",
+        "label": "Knee pain"
+      },
+      "target": {
+        "id": "knee_oa",
+        "kind": "differential",
+        "label": "Knee osteoarthritis"
+      },
+      "relationship": "may_support",
+      "fact_keys": [
+        "KNEE.OA.PRESENTATION"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "locking_to_meniscus",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "mechanical_locking",
+        "kind": "symptom",
+        "label": "Mechanical locking"
+      },
+      "target": {
+        "id": "meniscal_disorder",
+        "kind": "differential",
+        "label": "Meniscal disorder"
+      },
+      "relationship": "informs_review",
+      "fact_keys": [
+        "KNEE.MENISCUS.MOTION_BLOCK"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "jointline_to_meniscus",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "joint_line_palpation",
+        "kind": "examination",
+        "label": "Joint-line tenderness assessment"
+      },
+      "target": {
+        "id": "meniscal_disorder",
+        "kind": "differential",
+        "label": "Meniscal disorder"
+      },
+      "relationship": "may_support",
+      "fact_keys": [
+        "KNEE.MENISCUS.EXAMINATION"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "acute_syndrome_to_meniscus",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "acute_mechanical_knee",
+        "kind": "syndrome",
+        "label": "Acute mechanical knee symptoms"
+      },
+      "target": {
+        "id": "meniscal_disorder",
+        "kind": "differential",
+        "label": "Meniscal disorder"
+      },
+      "relationship": "informs_review",
+      "fact_keys": [
+        "KNEE.MENISCUS.SCOPE",
+        "KNEE.MENISCUS.MOTION_BLOCK"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "meniscus_to_mri",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "meniscal_disorder",
+        "kind": "differential",
+        "label": "Meniscal disorder"
+      },
+      "target": {
+        "id": "acute_meniscus_mri",
+        "kind": "assessment",
+        "label": "Clinician assessment of acute meniscal MRI requirement"
+      },
+      "relationship": "assessed_by",
+      "fact_keys": [
+        "KNEE.MENISCUS.MRI"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "cartilage_to_icrs",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "cartilage_lesion",
+        "kind": "differential",
+        "label": "Cartilage lesion"
+      },
+      "target": {
+        "id": "icrs_structural_review",
+        "kind": "assessment",
+        "label": "ICRS structural assessment context"
+      },
+      "relationship": "assessed_by",
+      "fact_keys": [
+        "KNEE.CARTILAGE.CLASSIFICATION"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "ocd_to_mri",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "osteochondral_disorder",
+        "kind": "differential",
+        "label": "Osteochondral disorder"
+      },
+      "target": {
+        "id": "ocd_mri_review",
+        "kind": "assessment",
+        "label": "OCD MRI review"
+      },
+      "relationship": "assessed_by",
+      "fact_keys": [
+        "KNEE.OCD.MRI_CONTEXT"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "oa_to_exercise_evidence",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "knee_oa",
+        "kind": "differential",
+        "label": "Knee osteoarthritis"
+      },
+      "target": {
+        "id": "oa_exercise_guidance",
+        "kind": "evidence",
+        "label": "Exercise guideline evidence"
+      },
+      "relationship": "informs_review",
+      "fact_keys": [
+        "KNEE.OA.EXERCISE"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "exercise_evidence_to_option",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "oa_exercise_guidance",
+        "kind": "evidence",
+        "label": "Exercise guideline evidence"
+      },
+      "target": {
+        "id": "exercise",
+        "kind": "treatment",
+        "label": "Exercise evidence review"
+      },
+      "relationship": "evidence_for",
+      "fact_keys": [
+        "KNEE.OA.EXERCISE"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    },
+    {
+      "id": "hot_joint_review",
+      "version": 1,
+      "status": "draft",
+      "source": {
+        "id": "painful_inflamed_joint",
+        "kind": "syndrome",
+        "label": "Painful inflamed joint"
+      },
+      "target": {
+        "id": "urgent_physician_review",
+        "kind": "assessment",
+        "label": "Prompt physician review of infection concern"
+      },
+      "relationship": "requires_review",
+      "fact_keys": [
+        "KNEE.SAFETY.HOT_JOINT",
+        "KNEE.SAFETY.SEPSIS"
+      ],
+      "limitations": [
+        "Descriptive sourced relation; no diagnostic probability, ranking or automatic management conclusion."
+      ]
+    }
+  ],
+  "examinations": [
+    {
+      "id": "joint_line_palpation",
+      "name": "Joint-line palpation",
+      "body_region": "knee",
+      "purpose": "Document localized tenderness for clinician differential review.",
+      "method": "Patient supine; palpate medial and lateral joint lines during slow knee flexion/extension; record the exact tender site and distinguish adjacent bursal tenderness.",
+      "recordable_findings": [
+        "medial_joint_line_tenderness",
+        "lateral_joint_line_tenderness",
+        "adjacent_bursal_tenderness"
+      ],
+      "result_states": [
+        "positive",
+        "negative",
+        "indeterminate"
+      ],
+      "precautions": [
+        "Clinician-performed only; this review artifact is not a complete protocol for acute painful or unstable injury."
+      ],
+      "limitations": [
+        "Tenderness is nonspecific; no sensitivity or specificity is extracted."
+      ],
+      "diagnostic_accuracy": null,
+      "fact_keys": [
+        "KNEE.EXAM.JOINT_LINE",
+        "KNEE.MENISCUS.EXAMINATION"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "knee_motion",
+      "name": "Active and passive knee motion",
+      "body_region": "knee",
+      "purpose": "Record pain and movement restriction for clinician review.",
+      "method": "Assess active knee motion first and then passive motion; record restriction and pain and compare sides.",
+      "recordable_findings": [
+        "active_motion_restriction",
+        "passive_motion_restriction",
+        "pain_during_motion"
+      ],
+      "result_states": [
+        "positive",
+        "negative",
+        "indeterminate"
+      ],
+      "precautions": [
+        "Clinician-performed only; acute trauma and severe symptoms require an appropriate supervised examination."
+      ],
+      "limitations": [
+        "Positive denotes a documented abnormality, not a disease diagnosis; no diagnostic-accuracy estimate."
+      ],
+      "diagnostic_accuracy": null,
+      "fact_keys": [
+        "KNEE.EXAM.MOTION",
+        "KNEE.CARTILAGE.HISTORY_EXAM"
+      ],
+      "status": "draft",
+      "version": 1
+    }
+  ],
+  "differentials": [
+    {
+      "id": "knee_oa",
+      "label": "Knee osteoarthritis",
+      "known_presentations": [
+        "Pain",
+        "Stiffness",
+        "Reduced function"
+      ],
+      "supporting_findings": [
+        "OA-compatible symptom pattern for clinician review"
+      ],
+      "assessment_requirements": [
+        "Document pain and function separately from radiographic grade",
+        "Review alternate causes and examination"
+      ],
+      "warning_features": [
+        "Painful inflamed joint with or without fever"
+      ],
+      "diagnostic_criteria": [
+        "No formal criteria automatically applied in this pack"
+      ],
+      "limitations": [
+        "Presentation is nonspecific; no confirmed diagnosis or probability."
+      ],
+      "fact_keys": [
+        "KNEE.OA.PRESENTATION",
+        "KNEE.OA.KL_CONTEXT",
+        "KNEE.SAFETY.HOT_JOINT"
+      ],
+      "examination_ids": [
+        "knee_motion"
+      ],
+      "risk_factors": [],
+      "opposing_findings": [],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "meniscal_disorder",
+      "label": "Meniscal disorder: distinguish acute and degenerative",
+      "known_presentations": [
+        "Injury-related symptoms",
+        "Mechanical symptoms",
+        "Motion restriction"
+      ],
+      "supporting_findings": [
+        "Joint-line tenderness or meniscal maneuver findings require contextual interpretation"
+      ],
+      "assessment_requirements": [
+        "Establish onset, mechanism and true movement restriction",
+        "Distinguish degenerative from acute isolated pathology",
+        "Clinician assesses MRI applicability"
+      ],
+      "warning_features": [
+        "Acute displaced lesion with movement restriction warrants specialist assessment"
+      ],
+      "diagnostic_criteria": [
+        "No maneuver alone establishes diagnosis"
+      ],
+      "limitations": [
+        "AAOS acute guideline and ESCAPE trial have distinct populations.",
+        "Concomitant ligament injury is an applicability limit of isolated acute guidance, not evidence against a coexisting meniscal lesion."
+      ],
+      "fact_keys": [
+        "KNEE.MENISCUS.SCOPE",
+        "KNEE.MENISCUS.EXAMINATION",
+        "KNEE.MENISCUS.MRI",
+        "KNEE.MENISCUS.MOTION_BLOCK",
+        "KNEE.MENISCUS.DEGENERATIVE_REHAB"
+      ],
+      "examination_ids": [
+        "joint_line_palpation",
+        "knee_motion"
+      ],
+      "risk_factors": [],
+      "opposing_findings": [],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "cartilage_lesion",
+      "label": "Articular cartilage lesion",
+      "known_presentations": [
+        "Mechanical symptoms",
+        "Swelling",
+        "Functional limitation"
+      ],
+      "supporting_findings": [
+        "Effusion and motion findings are assessment domains"
+      ],
+      "assessment_requirements": [
+        "Record lesion location and structural classification only from a documented assessment",
+        "Record symptom and function measures separately"
+      ],
+      "diagnostic_criteria": [
+        "ICRS evaluation is structural context, not a diagnosis inferred from symptoms"
+      ],
+      "limitations": [
+        "Symptoms overlap other knee disorders; no sensitivity or specificity supplied."
+      ],
+      "fact_keys": [
+        "KNEE.CARTILAGE.CLASSIFICATION",
+        "KNEE.CARTILAGE.HISTORY_EXAM"
+      ],
+      "examination_ids": [
+        "knee_motion"
+      ],
+      "risk_factors": [],
+      "opposing_findings": [],
+      "warning_features": [],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "osteochondral_disorder",
+      "label": "Osteochondral disorder / knee OCD review",
+      "known_presentations": [
+        "Symptomatic osteochondral lesion"
+      ],
+      "assessment_requirements": [
+        "Establish radiographic lesion context, maturity and stability",
+        "Clinician considers MRI for known knee OCD or concomitant pathology"
+      ],
+      "warning_features": [
+        "Symptomatic unstable or displaced lesion requires specialist assessment"
+      ],
+      "diagnostic_criteria": [
+        "No structural diagnosis inferred from pain or an unconfirmed imaging report"
+      ],
+      "limitations": [
+        "AAOS OCD scope is narrower than all osteochondral disorders."
+      ],
+      "fact_keys": [
+        "KNEE.OCD.MRI_CONTEXT",
+        "KNEE.OCD.SPECIALIST_REVIEW",
+        "KNEE.OCD.FOLLOW_UP"
+      ],
+      "examination_ids": [
+        "knee_motion"
+      ],
+      "risk_factors": [],
+      "supporting_findings": [],
+      "opposing_findings": [],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "infection_or_other_urgent_cause",
+      "label": "Infection or another urgent cause: physician review",
+      "known_presentations": [
+        "Painful inflamed joint",
+        "Systemic deterioration"
+      ],
+      "assessment_requirements": [
+        "Use existing governed Clinical Safety Rule Engine and physician assessment",
+        "Do not interpret lack of fever or lack of a rule alert as safety clearance"
+      ],
+      "warning_features": [
+        "Inflamed joint with or without fever",
+        "Possible sepsis or shock"
+      ],
+      "diagnostic_criteria": [
+        "No clinical finding alone confirms or excludes joint infection"
+      ],
+      "limitations": [
+        "Outside elective knee differential review; no definitive infectious diagnosis."
+      ],
+      "fact_keys": [
+        "KNEE.SAFETY.HOT_JOINT",
+        "KNEE.SAFETY.SEPSIS"
+      ],
+      "risk_factors": [],
+      "supporting_findings": [],
+      "opposing_findings": [],
+      "examination_ids": [],
+      "status": "draft",
+      "version": 1
+    }
+  ],
+  "treatments": [
+    {
+      "id": "exercise",
+      "treatment_type": "exercise",
+      "proposed_mechanism": "No mechanistic claim extracted.",
+      "studied_indications": [
+        "Knee OA"
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": null,
+      "adverse_effects": [],
+      "comparator": null,
+      "guideline_positions": [
+        "ACR/AF 2019: strong recommendation; individual selection required."
+      ],
+      "regulatory_status": "Product-specific current authorization not verified.",
+      "regulatory_jurisdiction": "Not established for Iran or any other local jurisdiction.",
+      "research_status": "Evidence extraction/appraisal incomplete.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.OA.EXERCISE"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "topical_nsaid",
+      "treatment_type": "NSAID",
+      "proposed_mechanism": "No pharmacologic mechanism extracted in this seed.",
+      "studied_indications": [
+        "Knee OA"
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": null,
+      "adverse_effects": [],
+      "comparator": null,
+      "guideline_positions": [
+        "ACR/AF 2019: strong recommendation for topical NSAIDs."
+      ],
+      "regulatory_status": "Product-specific current authorization not verified.",
+      "regulatory_jurisdiction": "Not established for Iran or any other local jurisdiction.",
+      "research_status": "Evidence extraction/appraisal incomplete.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.OA.TOPICAL_NSAID"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "prp",
+      "treatment_type": "PRP",
+      "proposed_mechanism": "Preparation-dependent biological rationale; no validated mechanism or cartilage repair claim extracted.",
+      "studied_indications": [
+        "Symptomatic knee OA"
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": null,
+      "adverse_effects": [],
+      "comparator": null,
+      "guideline_positions": [
+        "AAOS 2021: possible symptom/function benefit; Limited strength.",
+        "ACR/AF 2019: strongly against PRP; heterogeneity concern."
+      ],
+      "regulatory_status": "Product-specific current authorization not verified.",
+      "regulatory_jurisdiction": "Not established for Iran or any other local jurisdiction.",
+      "research_status": "Evidence extraction/appraisal incomplete.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.OA.PRP_AAOS",
+        "KNEE.OA.PRP_ACR"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "ha",
+      "treatment_type": "HA",
+      "proposed_mechanism": "No mechanistic claim extracted.",
+      "studied_indications": [
+        "Symptomatic knee OA"
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": null,
+      "adverse_effects": [],
+      "comparator": null,
+      "guideline_positions": [
+        "AAOS 2021: not recommended for routine use; Moderate strength."
+      ],
+      "regulatory_status": "Product-specific current authorization not verified.",
+      "regulatory_jurisdiction": "Not established for Iran or any other local jurisdiction.",
+      "research_status": "Evidence extraction/appraisal incomplete.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.OA.HA_AAOS"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "acs",
+      "treatment_type": "ACS",
+      "proposed_mechanism": "Proposed mechanism not extracted from abstract-only review.",
+      "studied_indications": [
+        "Osteoarthritis in reviewed trials"
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": "Six-month comparisons described in abstract; other durations not extracted.",
+      "adverse_effects": [],
+      "comparator": "Saline and other comparators; full trial details not extracted.",
+      "guideline_positions": [],
+      "regulatory_status": "Product-specific current authorization not verified.",
+      "regulatory_jurisdiction": "Not established for Iran or any other local jurisdiction.",
+      "research_status": "2024 review abstract reports heterogeneous and conflicting findings; full text not reviewed.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.ACS.RESEARCH"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "prgf",
+      "treatment_type": "PRGF",
+      "proposed_mechanism": "Preparation-specific biological rationale; no mechanistic clinical benefit proven by this trial.",
+      "studied_indications": [
+        "Knee OA in a 2017 single-blinded trial"
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": "Six months",
+      "adverse_effects": [],
+      "comparator": "Hyaluronic acid",
+      "guideline_positions": [],
+      "regulatory_status": "Product-specific current authorization not verified.",
+      "regulatory_jurisdiction": "Not established for Iran or any other local jurisdiction.",
+      "research_status": "One preparation, no saline group; nonsignificance does not establish equivalence.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.PRGF.RESEARCH"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "pl",
+      "treatment_type": "PL",
+      "proposed_mechanism": "No mechanism verified from the reviewed abstract.",
+      "studied_indications": [
+        "Knee OA in sparse clinical reports"
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": null,
+      "adverse_effects": [],
+      "comparator": null,
+      "guideline_positions": [],
+      "regulatory_status": "Product-specific current authorization not verified.",
+      "regulatory_jurisdiction": "Not established for Iran or any other local jurisdiction.",
+      "research_status": "2024 review abstract only; three included studies; stronger comparative evidence needed.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.PL.RESEARCH"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "exosome",
+      "treatment_type": "EXOSOME",
+      "proposed_mechanism": "No product-specific mechanistic efficacy evidence extracted.",
+      "studied_indications": [
+        "No efficacy indication established by the regulatory source."
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": null,
+      "adverse_effects": [],
+      "comparator": null,
+      "guideline_positions": [],
+      "regulatory_status": "FDA 2020 alert describes lack of orthopedic approval for listed products; current product status must be checked separately.",
+      "regulatory_jurisdiction": "Historical United States alert; no Iranian authorization assessment.",
+      "research_status": "Regulatory/safety communication is not efficacy research or a clinical guideline endorsement.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.REGULATORY.CELL_EXOSOME"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "svf",
+      "treatment_type": "SVF",
+      "proposed_mechanism": "No product-specific mechanistic efficacy evidence extracted.",
+      "studied_indications": [
+        "No efficacy indication established by the regulatory source."
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": null,
+      "adverse_effects": [],
+      "comparator": null,
+      "guideline_positions": [],
+      "regulatory_status": "FDA 2020 alert describes lack of orthopedic approval for listed products; current product status must be checked separately.",
+      "regulatory_jurisdiction": "Historical United States alert; no Iranian authorization assessment.",
+      "research_status": "Regulatory/safety communication is not efficacy research or a clinical guideline endorsement.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.REGULATORY.CELL_EXOSOME"
+      ],
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "id": "msc",
+      "treatment_type": "MSC",
+      "proposed_mechanism": "No product-specific mechanistic efficacy evidence extracted.",
+      "studied_indications": [
+        "No efficacy indication established by the regulatory source."
+      ],
+      "contraindications_precautions": [
+        "Product- and patient-specific risks require independent clinical review; this pack does not supply a complete contraindication list."
+      ],
+      "evidence_quality": "not_appraised",
+      "reported_effect": null,
+      "study_follow_up": null,
+      "adverse_effects": [],
+      "comparator": null,
+      "guideline_positions": [],
+      "regulatory_status": "FDA 2020 alert describes lack of orthopedic approval for listed products; current product status must be checked separately.",
+      "regulatory_jurisdiction": "Historical United States alert; no Iranian authorization assessment.",
+      "research_status": "Regulatory/safety communication is not efficacy research or a clinical guideline endorsement.",
+      "internal_observations": "not_used_as_efficacy_evidence",
+      "uncertainties": [
+        "No automatic protocol, superiority ranking, efficacy inference from clinic outcomes, or cartilage-regeneration claim.",
+        "Unlisted adverse effects or contraindications mean not extracted, not absent."
+      ],
+      "fact_keys": [
+        "KNEE.REGULATORY.CELL_EXOSOME"
+      ],
+      "status": "draft",
+      "version": 1
+    }
+  ],
+  "is_clinically_validated": false,
+  "requires_independent_review": true,
+  "manifest_sha256": "e2c417280f15f76bb69555521deceff4aa550b98f9a1f6d1294a25a9e64f7879"
+}

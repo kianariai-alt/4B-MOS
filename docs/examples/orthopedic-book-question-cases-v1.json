@@ -1,0 +1,375 @@
+{
+  "schema_id": "4b-mos.book-question-synthetic-cases",
+  "schema_version": "1.0.0",
+  "synthetic_only": true,
+  "is_clinically_validated": false,
+  "cases": [
+    {
+      "id": "gradual_knee_pain",
+      "description_fa": "درد تدریجی زانو با درد و محدودیت عملکرد قبلاً ثبت‌شده",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "onset",
+              "value": "gradual",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "duration",
+              "value": "years",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "pain_score",
+              "value": 6,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "functional_limitation",
+              "value": "moderate",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            }
+          ]
+        },
+        "review_scopes": [
+          "arthroplasty_review"
+        ]
+      },
+      "expected": {
+        "book_candidate_keys": [
+          "BOOK.KNEE.002"
+        ],
+        "absent_question_fields": [
+          "onset",
+          "duration",
+          "pain_score",
+          "functional_limitation"
+        ],
+        "physician_clarification_fields": [],
+        "baseline_review_reasons": []
+      }
+    },
+    {
+      "id": "sport_injury",
+      "description_fa": "آسیب ورزشی و علائم مکانیکی؛ بدون تبدیل به تشخیص منیسک",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "trauma",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "trauma_mechanism",
+              "value": "sport_twist",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "mechanical_locking",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            }
+          ]
+        },
+        "review_scopes": [
+          "meniscus_review"
+        ]
+      },
+      "expected": {
+        "book_candidate_keys": [
+          "BOOK.KNEE.003",
+          "BOOK.KNEE.006"
+        ],
+        "absent_question_fields": [
+          "trauma",
+          "trauma_mechanism",
+          "mechanical_locking"
+        ],
+        "physician_clarification_fields": [],
+        "baseline_review_reasons": [
+          "draft_traumatic_motion_block_information_requires_physician_review"
+        ]
+      }
+    },
+    {
+      "id": "incomplete_history",
+      "description_fa": "شرح‌حال ناقص با پاسخ نامعلوم و پاسخ ردشده",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "pain_score",
+              "value": null,
+              "state": "incomplete",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "relevant_comorbidity",
+              "value": null,
+              "state": "declined",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "current_medication",
+              "value": null,
+              "state": "unknown",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            }
+          ]
+        },
+        "review_scopes": [
+          "arthroplasty_review"
+        ]
+      },
+      "expected": {
+        "book_candidate_keys": [
+          "BOOK.KNEE.001"
+        ],
+        "absent_question_fields": [
+          "relevant_comorbidity",
+          "current_medication"
+        ],
+        "physician_clarification_fields": [
+          "pain_score"
+        ],
+        "baseline_review_reasons": [
+          "declined:relevant_comorbidity",
+          "unknown:current_medication"
+        ]
+      }
+    },
+    {
+      "id": "conflicting_examination",
+      "description_fa": "دو یافتهٔ معاینهٔ متناقض با حفظ هر دو منشأ",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "exam_joint_line_tenderness",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "physician_exam",
+              "source_ref": "synthetic:exam-a"
+            },
+            {
+              "field": "exam_joint_line_tenderness",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "physician_exam",
+              "source_ref": "synthetic:exam-b"
+            }
+          ]
+        },
+        "review_scopes": [
+          "meniscus_review"
+        ]
+      },
+      "expected": {
+        "book_candidate_keys": [
+          "BOOK.KNEE.003",
+          "BOOK.KNEE.006"
+        ],
+        "absent_question_fields": [],
+        "physician_clarification_fields": [],
+        "baseline_review_reasons": [
+          "contradictory:exam_joint_line_tenderness"
+        ]
+      }
+    },
+    {
+      "id": "clinical_warning",
+      "description_fa": "تورم حاد و تب با نیاز به بازبینی پزشک و حفظ الزام موتور ایمنی",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "fever",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "acute_swelling",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "systemic_symptoms",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            }
+          ]
+        },
+        "review_scopes": [
+          "arthroplasty_review"
+        ]
+      },
+      "expected": {
+        "book_candidate_keys": [
+          "BOOK.KNEE.001",
+          "BOOK.KNEE.002"
+        ],
+        "absent_question_fields": [],
+        "physician_clarification_fields": [],
+        "baseline_review_reasons": [
+          "draft_hot_joint_information_requires_prompt_physician_review",
+          "draft_systemic_symptom_information_requires_physician_review"
+        ]
+      }
+    },
+    {
+      "id": "unreviewed_imaging",
+      "description_fa": "یافتهٔ تصویری تأییدنشده و محل درد؛ بدون استنباط محل ساختاری یا بلوغ اسکلتی",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "pain_location",
+              "value": "medial",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "imaging_cartilage_lesion",
+              "value": true,
+              "state": "unverified",
+              "provenance": "unreviewed_imaging",
+              "source_ref": "synthetic:unreviewed-image"
+            }
+          ]
+        },
+        "review_scopes": [
+          "arthroplasty_review",
+          "cartilage_review",
+          "ocd_review"
+        ]
+      },
+      "expected": {
+        "book_candidate_keys": [
+          "BOOK.KNEE.001",
+          "BOOK.KNEE.002",
+          "BOOK.KNEE.004",
+          "BOOK.KNEE.005",
+          "BOOK.KNEE.009"
+        ],
+        "absent_question_fields": [
+          "pain_location"
+        ],
+        "physician_clarification_fields": [],
+        "baseline_review_reasons": [
+          "unverified:imaging_cartilage_lesion"
+        ]
+      }
+    },
+    {
+      "id": "unclear_previous_response",
+      "description_fa": "سابقهٔ درمان با پاسخ مبهم؛ نوع درمان و مصرف PRP احراز نشده است",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "prior_treatment",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            },
+            {
+              "field": "treatment_response",
+              "value": "unclear",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            }
+          ]
+        },
+        "review_scopes": [
+          "meniscus_review",
+          "prp_evidence_review"
+        ]
+      },
+      "expected": {
+        "book_candidate_keys": [
+          "BOOK.KNEE.003",
+          "BOOK.KNEE.006",
+          "BOOK.KNEE.007",
+          "BOOK.KNEE.008"
+        ],
+        "absent_question_fields": [
+          "prior_treatment"
+        ],
+        "physician_clarification_fields": [
+          "treatment_response"
+        ],
+        "baseline_review_reasons": [
+          "incomplete:treatment_response"
+        ]
+      }
+    },
+    {
+      "id": "outside_knee",
+      "description_fa": "موضوع خارج از زانو، بدون خروجی دانش کتابی زانو",
+      "request": {
+        "context": {
+          "body_region": "other",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:intake"
+            }
+          ]
+        },
+        "review_scopes": [
+          "arthroplasty_review",
+          "meniscus_review",
+          "cartilage_review",
+          "ocd_review",
+          "prp_evidence_review"
+        ]
+      },
+      "expected": {
+        "book_candidate_keys": [],
+        "absent_question_fields": [],
+        "physician_clarification_fields": [],
+        "baseline_review_reasons": [
+          "outside_knee_scope"
+        ]
+      }
+    }
+  ]
+}

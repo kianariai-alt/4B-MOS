@@ -5,6 +5,8 @@ __pycache__/
 
 # Virtual environments
 .venv/
+.venv-books/
+orthopedic-library-local/
 node_modules/
 venv/
 env/
