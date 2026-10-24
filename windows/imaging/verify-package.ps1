@@ -83,5 +83,18 @@ try {
     $Summary | ConvertTo-Json | Set-Content (Join-Path $Repo 'dist/imaging-setup/setup-verification.json') -Encoding utf8
     $Summary | ConvertTo-Json | Write-Output
 } finally {
-    Remove-Item -LiteralPath $VerificationRoot -Recurse -Force -ErrorAction SilentlyContinue
+    # Inno's delayed self-deletion may remove a child while cleanup enumerates
+    # this generated-data-only directory. Never replace the verification result
+    # with that disposable-runner cleanup race.
+    for ($Attempt = 0; $Attempt -lt 3 -and (Test-Path $VerificationRoot); $Attempt++) {
+        try {
+            [System.IO.Directory]::Delete($VerificationRoot, $true)
+        } catch {
+            if ($Attempt -eq 2 -and (Test-Path $VerificationRoot)) {
+                Write-Warning 'Temporary synthetic package cleanup was deferred to runner disposal.'
+            } else {
+                Start-Sleep -Milliseconds 300
+            }
+        }
+    }
 }
