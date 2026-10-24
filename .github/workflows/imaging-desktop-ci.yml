@@ -67,8 +67,19 @@ jobs:
           Copy-Item $Report dist/4B-Imaging/synthetic-build-verification.json
           if (-not (Get-ChildItem dist/4B-Imaging -Filter QtWebEngineProcess.exe -Recurse)) { throw 'Missing embedded portal browser runtime.' }
           if (-not (Get-ChildItem dist/4B-Imaging -Filter icudtl.dat -Recurse)) { throw 'Missing browser resource bundle.' }
+      - name: Build self-contained per-user Windows installer
+        shell: pwsh
+        run: ./windows/imaging/build-installer.ps1
+      - name: Verify extracted ZIP, isolated Setup.exe, installed app and uninstall
+        shell: pwsh
+        run: ./windows/imaging/verify-package.ps1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: 4B-Imaging-Windows-x64
           path: dist/4B-Imaging
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: 4B-Imaging-Windows-Installer-x64
+          path: dist/imaging-setup
           retention-days: 14
