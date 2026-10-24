@@ -8,9 +8,15 @@ from backend.app.schemas.orthopedic_adapter import OrthopedicDecisionKnowledge
 from backend.app.schemas.orthopedic_knowledge import KneeKnowledgePack
 from backend.app.schemas.orthopedic_questions import OrthopedicQuestionContext
 from backend.app.schemas.orthopedic_book_questions import BookQuestionPreview, BookQuestionPreviewRequest
+from backend.app.schemas.orthopedic_interview_tree import (
+    KneeInterviewTree, KneeInterviewTreePreview, KneeInterviewTreePreviewRequest,
+)
 from backend.app.services.orthopedic_adapter import build_decision_knowledge
 from backend.app.services.orthopedic_book_questions import build_book_question_preview
 from backend.app.services.orthopedic_knowledge import load_knee_pack
+from backend.app.services.orthopedic_interview_tree import (
+    build_interview_tree, build_interview_tree_preview,
+)
 
 
 def require_preview_enabled() -> None:
@@ -48,3 +54,20 @@ def preview_knee_book_questions(
 ) -> BookQuestionPreview:
     response.headers["Cache-Control"] = "no-store"
     return build_book_question_preview(request)
+
+
+@router.get("/interview-tree", response_model=KneeInterviewTree)
+def get_knee_interview_tree(
+    response: Response, _actor: User = Depends(require_roles("admin", "physician")),
+) -> KneeInterviewTree:
+    response.headers["Cache-Control"] = "no-store"
+    return build_interview_tree()
+
+
+@router.post("/interview-tree/preview", response_model=KneeInterviewTreePreview)
+def preview_knee_interview_tree(
+    request: KneeInterviewTreePreviewRequest, response: Response,
+    _actor: User = Depends(require_roles("admin", "physician")),
+) -> KneeInterviewTreePreview:
+    response.headers["Cache-Control"] = "no-store"
+    return build_interview_tree_preview(request)

@@ -187,6 +187,12 @@ activate safety rules, select treatment, or replace the existing Registry and
 physician question bank. An offline synthetic demo runs with
 `python -m backend.tools.orthopedic_knowledge_demo`.
 
+The additive [30-question knee interview tree](docs/ORTHOPEDIC_INTERVIEW_TREE_FA.md)
+provides a physician-review roadmap and a synthetic preview with explicit pain
+and trauma branches, separate treatment histories, and independent pain/function
+responses. It preserves the earlier preview contracts and remains Draft;
+accepting the wording does not independently approve medical content.
+
 For books stored on a local Windows drive, the
 [local orthopedic library reader](docs/LOCAL_ORTHOPEDIC_BOOKS_FA.md) provides
 `Read-Orthopedic-Books.cmd` (default `D:\orthopedic book`). It prepares private,
