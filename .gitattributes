@@ -1,0 +1,2 @@
+# These bundled reference assets have pinned byte digests on every platform.
+backend/tools/knee_templates/*.vtp text eol=lf
