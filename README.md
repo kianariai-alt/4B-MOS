@@ -200,6 +200,12 @@ read from finite tables compiled by Python. This offline lookup is not a full
 server assessment, clinical validation or treatment authorization. Build it with
 `python -B -m backend.tools.build_orthopedic_windows_demo --output-dir artifacts/windows-demo`.
 
+The [reasoning coverage review](docs/ORTHOPEDIC_REASONING_REVIEW_FA.md) traces
+patient observations to every current pattern, exposes unused examination data
+and separates model mismatch from clinical exclusion. Ten challenge cases keep
+independent clinician reference answers pending; this adds an audit view, not a
+new diagnosis rule or demonstrated clinical accuracy.
+
 For books stored on a local Windows drive, the
 [local orthopedic library reader](docs/LOCAL_ORTHOPEDIC_BOOKS_FA.md) provides
 `Read-Orthopedic-Books.cmd` (default `D:\orthopedic book`). It prepares private,
