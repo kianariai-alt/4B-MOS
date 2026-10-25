@@ -167,15 +167,15 @@ async function main() {
 
     // Treatment results must remain tied to their own explicit episode.
     fire(w, control('prior_treatment'), 'yes');
-    let descriptions = Array.from(doc.querySelectorAll('[id^="form-episode-"][id$="-treatment_description"]'));
+    let descriptions = Array.from(doc.querySelectorAll('textarea[id^="form-episode-"][id$="-treatment_description"]'));
     if (!descriptions.length) {
       doc.getElementById('add-treatment').click();
-      descriptions = Array.from(doc.querySelectorAll('[id^="form-episode-"][id$="-treatment_description"]'));
+      descriptions = Array.from(doc.querySelectorAll('textarea[id^="form-episode-"][id$="-treatment_description"]'));
     }
     assert.ok(descriptions.length >= 1);
     fire(w, descriptions[0], 'درمان ساختگی الف', 'input');
     doc.getElementById('add-treatment').click();
-    descriptions = Array.from(doc.querySelectorAll('[id^="form-episode-"][id$="-treatment_description"]'));
+    descriptions = Array.from(doc.querySelectorAll('textarea[id^="form-episode-"][id$="-treatment_description"]'));
     assert.equal(descriptions.length, 2);
     fire(w, descriptions[1], 'درمان ساختگی ب', 'input');
     const firstPrefix = descriptions[0].id.slice(0, -'treatment_description'.length);
@@ -215,7 +215,7 @@ async function main() {
     assert.equal(control('medication_list').value, '');
     assert.ok(painFields.every(field => !visible(field)));
     assert.equal(doc.getElementById('bilateral-notice').hidden, true);
-    assert.equal(doc.querySelectorAll('[id^="form-episode-"][id$="-treatment_description"]').length, 0);
+    assert.equal(doc.querySelectorAll('textarea[id^="form-episode-"][id$="-treatment_description"]').length, 0);
     assert.equal(counts.network, 0);
     assert.equal(counts.storage, 0);
     assert.deepEqual(errors, []);
