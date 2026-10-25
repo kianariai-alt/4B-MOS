@@ -85,6 +85,8 @@ jobs:
           export MOS_UI_QA_MODULES="$PWD/backend/tests/ui/node_modules"
           node backend/tests/reception_ui_qa.cjs
           node backend/tests/physician_question_ui_qa.cjs
+          python -B -m backend.tools.build_orthopedic_windows_demo --output-dir /tmp/mos-windows-demo
+          MOS_WINDOWS_DEMO_HTML=/tmp/mos-windows-demo/4B-MOS-Windows-Demo.html node backend/tests/orthopedic_windows_demo_ui_qa.cjs
           node backend/tests/clinical_intake_ui_qa.cjs
           node backend/tests/patient_portal_ui_qa.cjs
           TZ=Asia/Tehran node backend/tests/solar_date_ui_qa.cjs

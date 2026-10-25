@@ -193,6 +193,12 @@ and trauma branches, separate treatment histories, and independent pain/function
 responses. It preserves the earlier preview contracts and remains Draft;
 accepting the wording does not independently approve medical content.
 
+The [portable Windows demo](docs/ORTHOPEDIC_WINDOWS_DEMO_FA.md) opens offline in
+Edge or Chrome without installation. It contains ten saved results from the
+Python preview and a separate editable form simulator; custom form edits do not
+run the medical preview service. Build the single HTML and complete ZIP with
+`python -B -m backend.tools.build_orthopedic_windows_demo --output-dir artifacts/windows-demo`.
+
 For books stored on a local Windows drive, the
 [local orthopedic library reader](docs/LOCAL_ORTHOPEDIC_BOOKS_FA.md) provides
 `Read-Orthopedic-Books.cmd` (default `D:\orthopedic book`). It prepares private,

@@ -1,0 +1,64 @@
+name: Windows orthopedic demo
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orthopedic-windows-demo-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-demo:
+    name: Build and test portable Windows demo
+    runs-on: windows-2025
+    timeout-minutes: 15
+    env:
+      ENVIRONMENT: test
+      DEBUG: "false"
+      BOOTSTRAP_ENABLED: "true"
+      SECRET_KEY: 4B-MOS-CI-only-key-not-for-production-20260905
+      DATABASE_URL: sqlite:///./ci-demo-unused.db
+      PYTHONDONTWRITEBYTECODE: "1"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      MOS_UI_QA_MODULES: ${{ github.workspace }}\backend\tests\ui\node_modules
+      MOS_WINDOWS_DEMO_HTML: ${{ github.workspace }}\artifacts\windows-demo\4B-MOS-Windows-Demo.html
+      MOS_WINDOWS_DEMO_DIR: ${{ github.workspace }}\artifacts\windows-demo
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+      - name: Install existing pinned build and test dependencies
+        run: python -m pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: Test package provenance and boundaries
+        run: python -B -m pytest backend/tests/test_orthopedic_windows_demo.py -q
+      - name: Build portable demo from real synthetic previews
+        run: python -B -m backend.tools.build_orthopedic_windows_demo --output-dir artifacts/windows-demo
+      - name: Install existing UI test dependency
+        run: npm ci --prefix backend/tests/ui --ignore-scripts --no-audit --no-fund
+      - name: Test interactive demo UI
+        run: node backend/tests/orthopedic_windows_demo_ui_qa.cjs
+      - name: Test artifact with actual Windows Edge
+        run: python -B backend/tests/windows_orthopedic_demo_smoke.py
+      - name: Upload tested portable files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: 4B-MOS-Windows-Demo
+          path: |
+            artifacts/windows-demo/4B-MOS-Windows-Demo.html
+            artifacts/windows-demo/Run-4B-MOS-Demo.cmd
+            artifacts/windows-demo/README-FA.txt
+            artifacts/windows-demo/manifest.json
+          if-no-files-found: error
+          retention-days: 30
