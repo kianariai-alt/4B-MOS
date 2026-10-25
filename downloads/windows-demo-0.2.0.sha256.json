@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "file": "downloads/4B-MOS-Windows-Demo-0.2.0.zip",
+  "bytes": 87337,
+  "sha256": "c9cf7637566852c6e3c9e1a43f762c5ed201ffa4175fb104d0b9c3165b1151a3",
+  "git_blob_sha": "4005e7bde07c51f25e33ad0eb0121efb31655607",
+  "source_commit": "62f8614d9d1e750abd75cedd6af8d79ab89334f9",
+  "workflow_run_id": 40198123049,
+  "governance_status": "draft",
+  "synthetic_only": true
+}
