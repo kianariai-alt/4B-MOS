@@ -16,6 +16,7 @@ from backend.app.schemas.orthopedic_knowledge import content_digest
 from backend.app.services.orthopedic_interview_tree import (
     build_interview_tree, build_interview_tree_preview,
 )
+from backend.app.services.orthopedic_assessment import build_knee_assessment, export_offline_assessment
 from backend.tools import build_orthopedic_windows_demo as demo_builder
 
 
@@ -60,7 +61,7 @@ def test_portable_package_has_complete_windows_layout_and_verified_bytes(built_d
     destination, manifest, payload, html, parsed = built_demo
     assert manifest["schema_id"] == "4b-mos.windows-demo-manifest"
     assert manifest["schema_version"] == "1.0.0"
-    assert manifest["version"] == "0.1.0"
+    assert manifest["version"] == "0.2.0"
     assert re.fullmatch(r"[a-f0-9]{40}", manifest["source_commit"])
     assert manifest["tree_sha256"] == payload["tree"]["tree_sha256"]
     assert manifest["payload_sha256"] == content_digest(payload)
@@ -101,6 +102,12 @@ def test_embedded_tree_and_all_ten_cases_match_actual_python_engine(built_demo):
         assert restored["approved_fact_count"] == 0
         assert restored["safety_evaluation"] == "not_performed"
         assert not restored["authorizes_treatment"] and not restored["is_clinical_clearance"]
+        assert case["assessment"] == build_knee_assessment(request).model_dump(mode="json")
+    assert payload["assessment_model"] == export_offline_assessment()
+    assert len(payload["assessment_examples"]) == 3
+    assert len(payload["assessment_parity_cases"]) == 8
+    for example in payload["assessment_parity_cases"]:
+        assert example["assessment"] == build_knee_assessment(example["request"]).model_dump(mode="json")
 
 
 def test_single_html_uses_local_assets_without_requests_or_persistence(built_demo):

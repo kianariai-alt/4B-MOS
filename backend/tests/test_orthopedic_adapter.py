@@ -17,6 +17,7 @@ from backend.app.schemas.orthopedic_questions import OrthopedicQuestionContext
 from backend.app.schemas.orthopedic_interview_tree import (
     KneeInterviewTree, KneeInterviewTreePreview, KneeInterviewTreePreviewRequest,
 )
+from backend.app.schemas.orthopedic_assessment import KneeAssessmentPreview
 from backend.app.services.orthopedic_adapter import build_decision_knowledge
 
 
@@ -71,11 +72,13 @@ def test_api_requires_explicit_enablement_and_authorization(client, admin_header
     assert client.post(BASE_URL + "/book-preview", headers=admin_headers, json=book_request).status_code == 404
     assert client.get(BASE_URL + "/interview-tree", headers=admin_headers).status_code == 404
     assert client.post(BASE_URL + "/interview-tree/preview", headers=admin_headers, json=book_request).status_code == 404
+    assert client.post(BASE_URL + "/interview-tree/assessment-preview", headers=admin_headers, json=book_request).status_code == 404
     monkeypatch.setattr(settings, "ORTHOPEDIC_PREVIEW_ENABLED", True)
     assert client.get(BASE_URL).status_code == 401
     assert client.post(BASE_URL + "/book-preview", json=book_request).status_code == 401
     assert client.get(BASE_URL + "/interview-tree").status_code == 401
     assert client.post(BASE_URL + "/interview-tree/preview", json=book_request).status_code == 401
+    assert client.post(BASE_URL + "/interview-tree/assessment-preview", json=book_request).status_code == 401
     client.headers.update(admin_headers)
     from backend.tests.test_medical_knowledge import create_role_headers
     headers = create_role_headers(client, username="orthopedic_viewer", role="viewer")
@@ -84,6 +87,7 @@ def test_api_requires_explicit_enablement_and_authorization(client, admin_header
     assert client.post(BASE_URL + "/book-preview", headers=headers, json=book_request).status_code == 403
     assert client.get(BASE_URL + "/interview-tree", headers=headers).status_code == 403
     assert client.post(BASE_URL + "/interview-tree/preview", headers=headers, json=book_request).status_code == 403
+    assert client.post(BASE_URL + "/interview-tree/assessment-preview", headers=headers, json=book_request).status_code == 403
 
 
 def test_preview_keeps_stores_empty_and_patient_identifiers_rejected(client, admin_headers, db_session, monkeypatch):
@@ -113,6 +117,13 @@ def test_preview_keeps_stores_empty_and_patient_identifiers_rejected(client, adm
     assert tree_preview.headers["cache-control"] == "no-store"
     tree_result = KneeInterviewTreePreview.model_validate(tree_preview.json())
     assert tree_result.approved_fact_count == 0 and tree_result.safety_evaluation == "not_performed"
+    assessment = client.post(BASE_URL + "/interview-tree/assessment-preview", headers=admin_headers, json=tree_request)
+    assert assessment.status_code == 200, assessment.text
+    assert assessment.headers["cache-control"] == "no-store"
+    assessment_result = KneeAssessmentPreview.model_validate(assessment.json())
+    assert assessment_result.approved_fact_count == 0
+    assert assessment_result.status == "insufficient_information"
+    assert not assessment_result.authorizes_treatment
     assert client.post(BASE_URL + "/interview-tree/preview", headers=admin_headers,
                        json=tree_request).json() == tree_preview.json()
     assert client.post(BASE_URL + "/preview", headers=admin_headers,
@@ -127,6 +138,8 @@ def test_preview_keeps_stores_empty_and_patient_identifiers_rejected(client, adm
     assert rejected_book.status_code == 422
     assert client.post(BASE_URL + "/interview-tree/preview", headers=admin_headers,
                        json={"context": {"body_region": "knee", "patient_id": "not-allowed"}}).status_code == 422
+    assert client.post(BASE_URL + "/interview-tree/assessment-preview", headers=admin_headers,
+                       json={"context": {"body_region": "knee", "patient_id": "not-allowed"}}).status_code == 422
 
 
 @pytest.mark.parametrize("name,model", [
@@ -136,6 +149,7 @@ def test_preview_keeps_stores_empty_and_patient_identifiers_rejected(client, adm
     ("orthopedic-interview-tree", KneeInterviewTree),
     ("orthopedic-interview-tree-preview-request", KneeInterviewTreePreviewRequest),
     ("orthopedic-interview-tree-preview", KneeInterviewTreePreview),
+    ("orthopedic-assessment-preview", KneeAssessmentPreview),
 ])
 def test_checked_in_json_schema_matches_current_contract(name, model):
     path = Path(__file__).resolve().parents[2] / f"docs/contracts/{name}-1.0.0.schema.json"

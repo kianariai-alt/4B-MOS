@@ -15,23 +15,25 @@
     </header>
     <main>
       <section class="intro-card">
-        <div><span class="eyebrow">از اطلاعات بیمار تا سؤال هدفمند</span><h2>مسیر سؤال‌ها را ببینید و امتحان کنید.</h2><p>۳۰ سؤال زانو، منابع پشتیبان و ۱۰ پروندهٔ ساختگی برای بازبینی طراحی آماده‌اند.</p></div>
-        <div class="scope-note"><strong>فقط برای آزمایش با دادهٔ ساختگی</strong><p>این نسخه تأیید بالینی ندارد و تشخیص یا برنامهٔ درمان صادر نمی‌کند. پاسخ‌ها فقط در حافظهٔ همین صفحه می‌مانند.</p></div>
+        <div><span class="eyebrow">از پاسخ‌ها تا جمع‌بندی قابل‌بررسی</span><h2>سؤال هدفمند، پیشنهاد تشخیصی برای پزشک.</h2><p>۳۰ سؤال زانو، منابع پشتیبان و جمع‌بندی افتراقی پیش‌نویس را با پرونده‌های ساختگی امتحان کنید.</p></div>
+        <div class="scope-note"><strong>فقط برای آزمایش با دادهٔ ساختگی</strong><p>پیشنهادها برای بررسی پزشک‌اند؛ این نسخه تأیید بالینی ندارد و تشخیص قطعی یا پروتکل درمان صادر نمی‌کند. پاسخ‌ها فقط در حافظهٔ همین صفحه می‌مانند.</p></div>
       </section>
       <nav class="mode-tabs" aria-label="نوع آزمایش">
         <button id="mode-cases" type="button" class="mode-tab active" aria-pressed="true"><span class="tab-number">۱</span><span><strong>پرونده‌های ساختگی موتور</strong><small>مشاهدهٔ خروجی واقعی نسخهٔ Python</small></span></button>
-        <button id="mode-form" type="button" class="mode-tab" aria-pressed="false"><span class="tab-number">۲</span><span><strong>امتحان فرم و شاخه‌ها</strong><small>ورود پاسخ ساختگی و مشاهدهٔ مسیر سؤال‌ها</small></span></button>
+        <button id="mode-form" type="button" class="mode-tab" aria-pressed="false"><span class="tab-number">۲</span><span><strong>فرم و جمع‌بندی پیشنهادی</strong><small>ورود پاسخ ساختگی و مرور فرضیه‌های قابل‌بررسی</small></span></button>
       </nav>
       <section id="cases-view" aria-label="پرونده‌های ساختگی">
         <div class="section-heading"><div><h2>یک پرونده را انتخاب کنید</h2><p>این خروجی‌ها هنگام ساخت بسته با موتور موجود پروژه محاسبه شده‌اند.</p></div><label class="case-picker" for="case-select">پروندهٔ آزمایشی<select id="case-select"></select></label></div>
         <div id="case-content"></div>
       </section>
       <section id="form-view" aria-label="آزمایش فرم" hidden>
-        <div class="form-notice" id="form-disclaimer"><strong>این بخش، شبیه‌ساز فرم است.</strong> پاسخ‌های شما فقط برای امتحان نمایش شاخه‌ها هستند. تحلیل موتور و بررسی تناقض‌ها مربوط به خروجی پرونده‌های ثابتِ بخش اول است.</div>
+        <div class="form-notice" id="form-disclaimer"><strong>فرم و دانش پیش‌نویس برای بازبینی پزشک.</strong> جمع‌بندی از جدول‌های نسخه‌بندی‌شدهٔ همین بسته خوانده می‌شود؛ اجرای زندهٔ موتور Python یا ارزیابی کامل پزشکی نیست. اطلاعات ناقص، متناقض یا نیازمند رسیدگی فوری، نتیجهٔ قطعی نمی‌سازند.</div>
+        <div id="assessment-examples" class="assessment-examples" aria-label="نمونه‌های آمادهٔ جمع‌بندی"></div>
         <div class="form-toolbar"><div><h2>یک شرح‌حال ساختگی بسازید</h2><p>برای دیدن شاخه‌ها، پاسخ آسیب، درد، جراحی و درمان قبلی را تغییر دهید.</p></div><button id="form-reset" type="button" class="button button-secondary">شروع دوباره</button></div>
         <div id="bilateral-notice" class="notice" hidden>«هر دو زانو» انتخاب شده است. جزئیات درد، جراحی و درمان هر سمت باید در شرح‌حال جداگانهٔ راست و چپ بررسی شود؛ این فرم آن‌ها را خودکار به هر دو سمت نسبت نمی‌دهد.</div>
         <div class="form-layout"><aside class="roadmap"><h3>نقشهٔ شرح‌حال</h3><nav id="stage-nav" aria-label="بخش‌های شرح‌حال"></nav><div class="roadmap-stat"><strong id="visible-count">۰</strong><span>سؤال در شاخه‌های باز</span></div><label class="check-label"><input id="show-closed" type="checkbox"> نمایش شاخه‌های بسته</label><p class="muted">نامشخص با «خیر» برابر نیست. پاسخ‌های شاخهٔ بسته حذف نمی‌شوند.</p></aside><div id="form-content"></div></div>
         <section class="panel summary-panel"><div class="section-heading"><div><h2>خلاصهٔ پاسخ‌های واردشده</h2><p>این خلاصه، گزارش خام فرم است؛ خروجی تحلیل موتور یا دادهٔ بالینی تأییدشده نیست.</p></div></div><div id="form-summary"><div id="form-summary-output"></div></div><div id="closed-answers" class="notice" hidden></div></section>
+        <section id="form-assessment" class="panel assessment-panel" aria-label="جمع‌بندی پیشنهادی برای پزشک" aria-live="polite"></section>
       </section>
       <section class="panel source-panel" id="source-panel" aria-label="منابع سؤال‌ها" hidden tabindex="-1"><div class="section-heading"><div><span class="eyebrow">قابل‌ردیابی، نیازمند بازبینی مستقل</span><h2 id="source-title">منابع سؤال</h2></div><button id="source-close" type="button" class="button button-secondary">بستن منابع</button></div><div id="source-content"></div></section>
       <footer><p>تمام سؤال‌ها و اتصال منابع Draft هستند. قبول متن سؤال‌ها، تأیید مستقل پزشکی نیست. نبود هشدار به معنی تأیید ایمنی نیست.</p><details><summary>اطلاعات نسخه و حدود این آزمایش</summary><div id="build-info"></div><p>اتصال کتابی فعلی فقط درد، عملکرد و بیماری‌های همراه را در زمینهٔ صریح بازبینی آرتروپلاستی پشتیبانی می‌کند. متن کامل کتاب‌ها در این نسخه وجود ندارد؛ بررسی بصری صفحات و بررسی مستقل متخصص باقی است.</p><p>در این بسته اتصال به پروندهٔ بیمار، دیتابیس، اینترنت یا سامانهٔ عملیاتی وجود ندارد. بستن یا بازخوانی صفحه، پاسخ‌های فرم را پاک می‌کند.</p></details></footer>

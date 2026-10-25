@@ -48,7 +48,26 @@ class PortableWindowsDemoSmoke(unittest.TestCase):
             dom = process.stdout.decode("utf-8", errors="replace")
             self.assertIn('data-demo-ready="true"', dom)
             self.assertIn('data-rendered-case-count="10"', dom)
+            self.assertIn('data-assessment-model-ready="true"', dom)
             self.assertIn('id="case-select"', dom)
+
+    def test_actual_edge_renders_a_provisional_assessment_after_answers(self):
+        edge = next((Path(root) / "Microsoft/Edge/Application/msedge.exe"
+                     for root in (os.environ.get("ProgramFiles(x86)"), os.environ.get("ProgramFiles"))
+                     if root and (Path(root) / "Microsoft/Edge/Application/msedge.exe").is_file()), None)
+        self.assertIsNotNone(edge)
+        with tempfile.TemporaryDirectory(prefix="MOS assessment ", ignore_cleanup_errors=True) as directory:
+            process = subprocess.run([
+                str(edge), "--headless=new", "--disable-gpu", "--no-first-run",
+                "--no-default-browser-check", "--disable-background-networking", "--disable-component-update",
+                "--user-data-dir=" + str(Path(directory) / "profile"), "--virtual-time-budget=2000", "--dump-dom",
+                self.html.as_uri() + "#example=oa_pattern",
+            ], capture_output=True, timeout=60)
+            self.assertEqual(process.returncode, 0)
+            dom = process.stdout.decode("utf-8", errors="replace")
+            self.assertIn('data-assessment-case="oa_pattern"', dom)
+            self.assertIn('data-consideration-id="knee_oa"', dom)
+            self.assertIn('data-assessment-status="differential_review"', dom)
 
 
 if __name__ == "__main__":

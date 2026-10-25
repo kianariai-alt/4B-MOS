@@ -1,0 +1,1088 @@
+{
+  "schema_id": "4b-mos.knee-assessment-synthetic-cases",
+  "schema_version": "1.0.0",
+  "synthetic_only": true,
+  "quickfill_case_ids": [
+    "oa_pattern",
+    "anterior_loaded",
+    "urgent_twisting"
+  ],
+  "cases": [
+    {
+      "id": "oa_pattern",
+      "label_fa": "درد تدریجی وابسته به فعالیت؛ بررسی آرتروز",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "laterality",
+              "value": "right",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "trauma",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "fever",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "acute_swelling",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "systemic_symptoms",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "has_pain",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "onset",
+              "value": "gradual",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "duration",
+              "value": "years",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "pain_location",
+              "value": "medial",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "pain_score_now",
+              "value": 6,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "pain_pattern",
+              "value": "activity",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "aggravating_factor",
+              "value": "walking",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "relieving_factor",
+              "value": "rest",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "mechanical_locking",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "functional_limitation",
+              "value": "moderate",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "prior_surgery",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "prior_treatment",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            },
+            {
+              "field": "care_goal",
+              "value": "function",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:oa_pattern"
+            }
+          ]
+        },
+        "review_scopes": []
+      }
+    },
+    {
+      "id": "anterior_loaded",
+      "label_fa": "درد جلوی زانو هنگام پله؛ بررسی درد پاتلوفمورال",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "laterality",
+              "value": "right",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "trauma",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "fever",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "acute_swelling",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "systemic_symptoms",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "has_pain",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "onset",
+              "value": "gradual",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "duration",
+              "value": "weeks",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "pain_location",
+              "value": "anterior",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "pain_score_now",
+              "value": 6,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "pain_pattern",
+              "value": "activity",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "aggravating_factor",
+              "value": "stairs",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "relieving_factor",
+              "value": "rest",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "mechanical_locking",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "functional_limitation",
+              "value": "moderate",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "prior_surgery",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "prior_treatment",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            },
+            {
+              "field": "care_goal",
+              "value": "function",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:anterior_loaded"
+            }
+          ]
+        },
+        "review_scopes": []
+      }
+    },
+    {
+      "id": "urgent_twisting",
+      "label_fa": "آسیب چرخشی با گیرکردن حرکت؛ بررسی سریع پزشک",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "laterality",
+              "value": "right",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "trauma",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "fever",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "acute_swelling",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "systemic_symptoms",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "has_pain",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "onset",
+              "value": "sudden",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "duration",
+              "value": "days",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "pain_location",
+              "value": "medial",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "pain_score_now",
+              "value": 6,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "pain_pattern",
+              "value": "activity",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "aggravating_factor",
+              "value": "walking",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "relieving_factor",
+              "value": "rest",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "mechanical_locking",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "functional_limitation",
+              "value": "moderate",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "prior_surgery",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "prior_treatment",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "care_goal",
+              "value": "function",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "trauma_mechanism",
+              "value": "sport_twist",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "sensory_change",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "weakness",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "foot_coldness",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            },
+            {
+              "field": "foot_color_change",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:urgent_twisting"
+            }
+          ]
+        },
+        "review_scopes": []
+      }
+    },
+    {
+      "id": "febrile_swollen",
+      "label_fa": "تورم تازه همراه تب؛ بررسی پزشک پیش از جمع‌بندی انتخابی",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "laterality",
+              "value": "right",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "trauma",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "fever",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "acute_swelling",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "systemic_symptoms",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "has_pain",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "onset",
+              "value": "sudden",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "duration",
+              "value": "days",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "pain_location",
+              "value": "medial",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "pain_score_now",
+              "value": 6,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "pain_pattern",
+              "value": "activity",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "aggravating_factor",
+              "value": "walking",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "relieving_factor",
+              "value": "rest",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "mechanical_locking",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "functional_limitation",
+              "value": "moderate",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "prior_surgery",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "prior_treatment",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            },
+            {
+              "field": "care_goal",
+              "value": "function",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:febrile_swollen"
+            }
+          ]
+        },
+        "review_scopes": []
+      }
+    },
+    {
+      "id": "overlapping_patterns",
+      "label_fa": "هم‌پوشانی درد مزمن و درد جلوی زانو",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "laterality",
+              "value": "right",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "trauma",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "fever",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "acute_swelling",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "systemic_symptoms",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "has_pain",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "onset",
+              "value": "gradual",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "duration",
+              "value": "years",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "pain_location",
+              "value": "anterior",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "pain_score_now",
+              "value": 6,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "pain_pattern",
+              "value": "activity",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "aggravating_factor",
+              "value": "stairs",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "relieving_factor",
+              "value": "rest",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "mechanical_locking",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "functional_limitation",
+              "value": "moderate",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "prior_surgery",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "prior_treatment",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            },
+            {
+              "field": "care_goal",
+              "value": "function",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:overlapping_patterns"
+            }
+          ]
+        },
+        "review_scopes": []
+      }
+    },
+    {
+      "id": "incomplete_history",
+      "label_fa": "شرح‌حال ناکافی؛ بدون انتخاب اجباری تشخیص",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:incomplete_history"
+            },
+            {
+              "field": "has_pain",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:incomplete_history"
+            }
+          ]
+        },
+        "review_scopes": []
+      }
+    },
+    {
+      "id": "contradictory_pain",
+      "label_fa": "وجود درد و شدت فعلی ناسازگار؛ نیازمند روشن‌سازی",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "laterality",
+              "value": "right",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "trauma",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "fever",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "acute_swelling",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "systemic_symptoms",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "has_pain",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "onset",
+              "value": "gradual",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "duration",
+              "value": "years",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "pain_location",
+              "value": "medial",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "pain_score_now",
+              "value": 8,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "pain_pattern",
+              "value": "activity",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "aggravating_factor",
+              "value": "walking",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "relieving_factor",
+              "value": "rest",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "mechanical_locking",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "functional_limitation",
+              "value": "moderate",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "prior_surgery",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "prior_treatment",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            },
+            {
+              "field": "care_goal",
+              "value": "function",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:contradictory_pain"
+            }
+          ]
+        },
+        "review_scopes": []
+      }
+    },
+    {
+      "id": "bilateral_history",
+      "label_fa": "درگیری دوطرفه؛ نیاز به بررسی جداگانهٔ هر زانو",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {
+              "field": "chief_complaint",
+              "value": "pain",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "laterality",
+              "value": "both",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "trauma",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "fever",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "acute_swelling",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "systemic_symptoms",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "has_pain",
+              "value": true,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "onset",
+              "value": "gradual",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "duration",
+              "value": "years",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "pain_location",
+              "value": "medial",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "pain_score_now",
+              "value": 6,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "pain_pattern",
+              "value": "activity",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "aggravating_factor",
+              "value": "walking",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "relieving_factor",
+              "value": "rest",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "mechanical_locking",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "functional_limitation",
+              "value": "moderate",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "prior_surgery",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "prior_treatment",
+              "value": false,
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            },
+            {
+              "field": "care_goal",
+              "value": "function",
+              "state": "confirmed",
+              "provenance": "patient_report",
+              "source_ref": "synthetic:bilateral_history"
+            }
+          ]
+        },
+        "review_scopes": []
+      }
+    }
+  ]
+}

@@ -195,8 +195,9 @@ accepting the wording does not independently approve medical content.
 
 The [portable Windows demo](docs/ORTHOPEDIC_WINDOWS_DEMO_FA.md) opens offline in
 Edge or Chrome without installation. It contains ten saved results from the
-Python preview and a separate editable form simulator; custom form edits do not
-run the medical preview service. Build the single HTML and complete ZIP with
+Python preview and an editable form with source-bound provisional differentials
+read from finite tables compiled by Python. This offline lookup is not a full
+server assessment, clinical validation or treatment authorization. Build it with
 `python -B -m backend.tools.build_orthopedic_windows_demo --output-dir artifacts/windows-demo`.
 
 For books stored on a local Windows drive, the

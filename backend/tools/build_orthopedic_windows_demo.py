@@ -22,10 +22,11 @@ from backend.app.services.orthopedic_interview_tree import (
     build_interview_tree, build_interview_tree_preview,
 )
 from backend.app.services.orthopedic_knowledge import load_knee_pack
+from backend.app.services.orthopedic_assessment import build_knee_assessment, export_offline_assessment
 from backend.tools.orthopedic_interview_tree_demo import CASES_PATH, run_synthetic_cases
 
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = Path(__file__).with_name("orthopedic_windows_demo")
 HTML_NAME = "4B-MOS-Windows-Demo.html"
@@ -87,7 +88,25 @@ def generate_payload() -> dict:
             "request": request.model_dump(mode="json"),
             # Reattach the shared top-level tree to verify result_sha256.
             "preview": preview.model_dump(mode="json", exclude={"tree"}),
+            "assessment": build_knee_assessment(request).model_dump(mode="json"),
         })
+    assessment_cases = json.loads((ROOT / "docs/examples/orthopedic-assessment-cases-v1.json").read_text(encoding="utf-8"))
+    if assessment_cases.get("synthetic_only") is not True:
+        raise ValueError("Assessment quick-fill examples must be explicitly synthetic.")
+    examples = []
+    assessment_parity_cases = []
+    wanted = assessment_cases["quickfill_case_ids"]
+    for case in assessment_cases["cases"]:
+        request = KneeInterviewTreePreviewRequest.model_validate(case["request"])
+        item = {
+            "id": case["id"], "label_fa": case["label_fa"], "request": request.model_dump(mode="json"),
+            "assessment": build_knee_assessment(request).model_dump(mode="json"),
+        }
+        assessment_parity_cases.append(item)
+        if case["id"] in wanted:
+            examples.append(item)
+    if len(examples) != len(set(wanted)):
+        raise ValueError("Every selected synthetic assessment example must occur once.")
     revision, dirty = _source_revision()
     return {
         "schema_version": "1.0.0",
@@ -98,6 +117,7 @@ def generate_payload() -> dict:
             "fixed_case_count": summary["case_count"],
             "fixed_case_passed_count": summary["passed_cases"],
             "custom_form_executes_python_engine": False,
+            "custom_form_uses_compiled_draft_assessment": True,
             "network_required": False, "persistent_answer_storage": False,
         },
         "tree": tree_json,
@@ -105,6 +125,9 @@ def generate_payload() -> dict:
         "choices": {key: list(values) for key, values in CHOICES.items()},
         "boolean_fields": sorted(BOOLEAN_FIELDS), "text_fields": sorted(TEXT_FIELDS),
         "cases": cases,
+        "assessment_model": export_offline_assessment(),
+        "assessment_examples": examples,
+        "assessment_parity_cases": assessment_parity_cases,
         "disclaimer_fa": "نسخهٔ آزمایشی برای دادهٔ ساختگی و بازبینی پزشک؛ همهٔ محتوا پیش‌نویس است. اطلاعات بیمار واقعی وارد نکنید.",
     }
 

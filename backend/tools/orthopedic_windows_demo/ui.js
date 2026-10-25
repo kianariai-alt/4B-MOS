@@ -1,6 +1,6 @@
-/* Offline authoring demo. Only fixed cases contain Python-engine output.
- * The live form uses exported question conditions for visibility, never medical
- * inference, safety evaluation, conflict resolution, or treatment selection.
+/* Offline authoring demo. Fixed cases contain actual Python-service output.
+ * The form reads versioned finite knowledge tables exported by Python. It does
+ * not run a separate medical rule/score engine or supply clinical clearance.
  */
 (() => {
   "use strict";
@@ -10,6 +10,7 @@
   const byField = new Map(nodes.map(node => [node.field, node]));
   const boolFields = new Set(data.boolean_fields || []);
   const textFields = new Set(data.text_fields || []);
+  const assessmentModel = data.assessment_model || null;
   const stages = [
     ["opening", "شروع و مشخص‌کردن مشکل"], ["risk_information", "اطلاعات نیازمند توجه پزشک"],
     ["symptoms", "الگوی علائم و عملکرد"], ["mechanical", "گیرکردن و محدودیت حرکت"],
@@ -51,6 +52,7 @@
     draft_traumatic_motion_block_information_requires_physician_review:"گیرکردن حرکت همراه سابقهٔ آسیب، برای بررسی پزشک مشخص شده است."
   };
   let state = {mode:"cases", observations:{}, episodes:[], textDrafts:{}, nextEpisode:1, showClosed:false};
+  let lastFormAssessment = null;
   const $ = id => document.getElementById(id);
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -155,6 +157,163 @@
     // Source URLs are text only: this portable review has no network actions.
     if (source.url) target.append(el("p", "citation", source.url));
   }
+  function assessmentTextList(target, heading, values) {
+    if (!Array.isArray(values) || !values.length) return;
+    target.append(el("h4", "", heading));
+    const list = el("ul", "");
+    for (const value of values) list.append(el("li", "", typeof value === "string" ? value : value.text_fa || value.label_fa || value.reason_fa || "نیازمند بازبینی پزشک"));
+    target.append(list);
+  }
+  function assessmentSources(target, item) {
+    const references = item.source_references || [];
+    const keys = item.source_fact_keys || item.fact_keys || [];
+    if (!references.length && !keys.length) return;
+    const detail = el("details", "assessment-sources");
+    detail.append(el("summary", "", "منابع و حدود این اتصال دانشی"));
+    detail.append(el("p", "assessment-footnote", "این اتصال و پیشنهاد همچنان Draft و نیازمند بررسی مستقل‌اند؛ منبع، تشخیص قطعی برای این بیمار را ثابت نمی‌کند."));
+    for (const key of keys) {
+      const row = el("div", "assessment-source-entry");
+      row.append(el("p", "", "شناسهٔ دانش: " + key));
+      const sourceKeys = assessmentModel?.fact_sources?.[key] || data.fact_sources?.[key] || [];
+      for (const sourceKey of sourceKeys) {
+        const ref = (assessmentModel?.source_references || []).find(source => source.source_key === sourceKey)
+          || (tree.source_references || []).find(source => source.source_key === sourceKey);
+        if (ref) renderSource(row, ref.source || ref);
+      }
+      detail.append(row);
+    }
+    for (const reference of references) {
+      const row = el("div", "assessment-source-entry");
+      renderSource(row, reference.source || reference);
+      detail.append(row);
+    }
+    target.append(detail);
+  }
+  function renderAssessment(target, result, origin) {
+    target.replaceChildren();
+    const heading = el("div", "assessment-heading");
+    const copy = el("div", "");
+    copy.append(el("h2", "", "جمع‌بندی پیشنهادی برای پزشک"));
+    copy.append(el("p", "assessment-caption", origin === "python"
+      ? "این جمع‌بندی با سرویس Python برای همین ورودی ساختگی محاسبه شده است."
+      : "این جمع‌بندی از جدول‌های محدود و نسخه‌بندی‌شدهٔ دانش پیش‌نویس خوانده می‌شود؛ تشخیص قطعی یا ارزیابی کامل پزشکی نیست."));
+    heading.append(copy, el("span", "tag tag-amber", "پیش‌نویس · بررسی مستقل لازم است"));
+    target.append(heading);
+    if (!result) {
+      target.append(el("p", "assessment-empty", "جدول جمع‌بندی در این بسته موجود نیست؛ پیشنهاد تشخیصی ساخته نمی‌شود."));
+      return;
+    }
+    target.dataset.assessmentStatus = result.status || "insufficient_information";
+    const ready = result.status === "differential_review";
+    const status = el("div", "assessment-status" + (ready ? "" : " is-held"), result.headline_fa || result.summary_fa || "اطلاعات برای پیشنهاد تشخیصی کافی نیست؛ بازبینی پزشک لازم است.");
+    status.dataset.assessmentHeadline = "true";
+    target.append(status);
+    const cards = [...(result.considerations || []), ...(result.urgent_considerations || [])];
+    const grid = el("div", "assessment-cards");
+    for (const item of cards) {
+      const card = el("article", "assessment-card");
+      card.dataset.considerationId = item.id;
+      card.append(el("h3", "", item.label_fa || item.title_fa));
+      if (item.summary_fa) card.append(el("p", "", item.summary_fa));
+      assessmentTextList(card, "کدام اطلاعات این مورد را مطرح می‌کند؟", item.supporting_findings_fa || item.supporting_evidence_fa);
+      assessmentTextList(card, "اطلاعاتی که هنوز لازم است", item.information_gaps_fa || item.missing_information_fa);
+      assessmentTextList(card, "بررسی تکمیلی توسط پزشک", item.assessment_requirements_fa);
+      assessmentTextList(card, "محدودیت و افتراق‌های دیگر", item.limitations_fa);
+      assessmentSources(card, item);
+      grid.append(card);
+    }
+    target.append(grid);
+    assessmentTextList(target, "موارد لازم برای ادامهٔ ارزیابی", result.information_requirements_fa);
+    assessmentTextList(target, "موارد نیازمند توجه پزشک", result.review_reasons_fa || result.review_requirements_fa);
+    const evidence = result.conditional_treatment_evidence || [];
+    if (evidence.length) {
+      const section = el("section", "assessment-treatment");
+      section.append(el("h3", "", "شواهد گزینه‌های قابل‌بحث با پزشک"));
+      section.append(el("p", "assessment-footnote", "این بخش نسخه یا انتخاب درمان برای بیمار نیست. تنها پس از تأیید تشخیص و بررسی شرایط فرد توسط پزشک، می‌توان دربارهٔ تناسب این شواهد گفتگو کرد."));
+      for (const item of evidence) {
+        const card = el("article", "assessment-evidence-card");
+        card.dataset.treatmentEvidenceId = item.id;
+        card.append(el("h4", "", item.label_fa || item.title_fa));
+        if (item.summary_fa) card.append(el("p", "", item.summary_fa));
+        assessmentTextList(card, "شرایط کاربرد", item.conditions_fa || item.application_conditions_fa);
+        assessmentTextList(card, "محدودیت‌ها و احتیاط‌ها", item.limitations_fa || item.precautions_fa);
+        assessmentSources(card, item);
+        section.append(card);
+      }
+      target.append(section);
+    }
+    target.append(el("p", "assessment-footnote", "هیچ درصد احتمال، اولویت اثبات‌شدهٔ تشخیص، تجویز، انتخاب پروتکل یا تأیید ایمنی از این جمع‌بندی حاصل نمی‌شود. نبود پیشنهاد یا هشدار، رد بیماری نیست."));
+    const trace = origin === "python"
+      ? {result_sha256:result.result_sha256, rules_sha256:result.rules_sha256, status:result.status}
+      : {lookup_model_sha256:result.lookup_model_sha256, status:result.status, axis_tokens:result.axis_tokens};
+    target.append(metadataDetails(origin === "python" ? "منشأ خروجی این پرونده" : "نسخهٔ جدول و مسیر خواندن دانش", JSON.stringify(trace, null, 2)));
+  }
+  function evaluateOfflineAssessment(context) {
+    if (!assessmentModel) return null;
+    const history = context.observations || [];
+    const findings = context.clinical_findings || [];
+    const tokens = {};
+    const usable = (items, field, channel) => {
+      const matches = items.filter(item => item.field === field);
+      // The form has one report per field. Multiple-source clinical cases use
+      // the saved Python result; never use last-write-wins in this view.
+      if (matches.length !== 1 || matches[0].state !== "confirmed") return undefined;
+      const answer = matches[0];
+      if (channel === "history" && answer.provenance !== "patient_report") return undefined;
+      if (channel === "clinical" && !["reviewed_imaging", "physician_exam"].includes(answer.provenance)) return undefined;
+      return answer.value;
+    };
+    for (const axis of assessmentModel.axes) {
+      const items = history.filter(item => item.field === axis.field);
+      if (axis.input === "raw_true") tokens[axis.id] = items.some(item => item.value === true) ? "p" : "n";
+      else if (axis.input === "raw_presence") {
+        const meaningful = items.some(item => item.value !== null && item.value !== undefined && item.value !== false && item.value !== 0 && item.value !== "none");
+        tokens[axis.id] = meaningful ? "p" : items.some(item => item.state !== "confirmed") ? "u" : "n";
+      } else if (axis.input === "episode_presence") tokens[axis.id] = (context.treatment_episodes || []).some(item => item.observations?.length) ? "p" : "n";
+      else {
+        const value = axis.input === "region" ? context.body_region : usable(axis.input === "usable_clinical" ? findings : history, axis.field, axis.input === "usable_clinical" ? "clinical" : "history");
+        tokens[axis.id] = axis.value_tokens[JSON.stringify(value)] || axis.default_token;
+      }
+    }
+    const decisions = assessmentModel.guard_tables.map(table => ({table, row:table.rows[table.axis_ids.map(id => tokens[id]).join("|")]}))
+      .filter(item => item.row && item.row.status !== "ready").sort((a,b) => b.table.priority - a.table.priority);
+    const reasons = [...new Set(decisions.map(item => item.row.reason_fa))];
+    let result;
+    if (decisions.length) {
+      const status = decisions[0].row.status;
+      const urgent = new Set(status === "prompt_physician_review" ? decisions.flatMap(item => item.row.urgent_consideration_ids) : []);
+      result = {status,headline_fa:assessmentModel.headlines[status],considerations:[],
+        urgent_considerations:assessmentModel.urgent_cards.filter(item => urgent.has(item.id)),
+        information_requirements_fa:reasons,conditional_treatment_evidence:[],review_reasons_fa:reasons};
+    } else {
+      const ids = new Set(assessmentModel.card_tables.filter(table => table.rows[table.axis_ids.map(id => tokens[id]).join("|")] === true).map(table => table.id));
+      const cards = assessmentModel.cards.filter(item => ids.has(item.id));
+      const gaps = [...new Set(cards.flatMap(item => item.information_gaps_fa))];
+      if (!cards.length) gaps.push(assessmentModel.no_match_requirement_fa);
+      result = {status:cards.length ? "differential_review" : "insufficient_information",
+        headline_fa:cards.length === 1 ? assessmentModel.headlines.single_prefix + cards[0].label_fa : cards.length ? assessmentModel.headlines.multiple : assessmentModel.headlines.insufficient_information,
+        considerations:cards,urgent_considerations:[],information_requirements_fa:gaps,
+        conditional_treatment_evidence:assessmentModel.treatment_evidence.filter(item => ids.has(item.requires_card_id)),
+        review_reasons_fa:assessmentModel.review_notes_fa};
+    }
+    return {...result,lookup_model_sha256:assessmentModel.model_sha256,axis_tokens:tokens};
+  }
+  function formContext() {
+    return {body_region:"knee",observations:Object.values(state.observations).map(item => ({...item,provenance:"patient_report"})),
+      treatment_episodes:state.episodes.map(item => ({episode_ref:item.ref,observations:Object.values(item.answers).map(answer => ({...answer,provenance:"patient_report"}))})),clinical_findings:[]};
+  }
+  function renderFormAssessment() { renderAssessment($("form-assessment"), evaluateOfflineAssessment(formContext()), "lookup"); }
+  function loadAssessmentExample(example) {
+    reset();
+    for (const item of example.request.context.observations) state.observations[item.field] = {field:item.field,state:item.state,value:item.value};
+    for (const episode of example.request.context.treatment_episodes || []) {
+      const answers = {}; for (const item of episode.observations) answers[item.field] = {field:item.field,state:item.state,value:item.value};
+      state.episodes.push({ref:episode.episode_ref,answers});
+    }
+    state.nextEpisode = state.episodes.length + 1;
+    switchMode("form");
+    $("form-assessment").scrollIntoView?.({behavior:"smooth",block:"start"});
+  }
   function answerList(observations, extraLabel = "") {
     const list = el("ul", "answer-list");
     for (const answer of observations || []) {
@@ -222,6 +381,8 @@
     review.append(list);
     review.append(metadataDetails("شناسه‌ها و هش خروجی واقعی موتور", JSON.stringify({case_id:item.id, request_sha256:preview.request_sha256, rules_sha256:preview.rules_sha256, result_sha256:preview.result_sha256, review_reasons:preview.review_reasons}, null, 2), "case-metadata"));
     root.append(review);
+    const assessment = el("section", "panel assessment-panel"); assessment.id = "case-assessment";
+    renderAssessment(assessment, item.assessment, "python"); root.append(assessment);
   }
   function currentAnswer(field, episodeRef) {
     return episodeRef ? state.episodes.find(item => item.ref === episodeRef)?.answers[field] : state.observations[field];
@@ -373,6 +534,7 @@
     }
     $("visible-count").textContent = fa(visible);
     $("bilateral-notice").hidden = !(state.observations.laterality?.value === "both");
+    const summaryLink = el("a", "assessment-jump", "جمع‌بندی پیشنهادی برای پزشک"); summaryLink.href = "#form-assessment"; nav.append(summaryLink);
     renderSummary();
   }
   function renderSummary() {
@@ -396,11 +558,12 @@
       const item = el("li", ""); item.dataset.field = entry.answer.field; item.dataset.branchOpen = String(entry.open);
       item.append(el("span", "label", (entry.label ? entry.label + " · " : "") + labelFor(entry.answer.field)));
       item.append(el("span", "value", valueLabel(entry.answer)));
-      item.append(el("span", "answer-meta", entry.open ? "گزارش خام فرم؛ بررسی موتور انجام نشده" : "حفظ‌شده در حافظه؛ شاخه بسته و پاسخ از مسیر فعلی کنار گذاشته شده است")); list.append(item);
+      item.append(el("span", "answer-meta", entry.open ? "گزارش خام فرم؛ اصالت بالینی احراز نشده است" : "حفظ‌شده در حافظه؛ شاخه بسته و پاسخ نیازمند تطبیق با پیش‌نیاز است")); list.append(item);
     }
     if (entries.length) target.append(list);
     $("closed-answers").hidden = closedCount === 0;
-    $("closed-answers").textContent = closedCount ? fa(closedCount) + " پاسخِ شاخهٔ بسته در حافظه حفظ شده است. این پاسخ‌ها در مسیر فعلی استفاده نمی‌شوند؛ برای اصلاح می‌توانید پیش‌نیاز همان شاخه را تغییر دهید." : "";
+    $("closed-answers").textContent = closedCount ? fa(closedCount) + " پاسخِ شاخهٔ بسته در حافظه حفظ شده است. این پاسخ‌ها برای پیشنهاد تشخیصی معتبر شمرده نمی‌شوند و ممکن است نیاز به روشن‌سازی را نشان دهند؛ پیش‌نیاز همان شاخه را بررسی کنید." : "";
+    renderFormAssessment();
   }
   function switchMode(mode) {
     state.mode = mode === "form" ? "form" : "cases";
@@ -417,14 +580,28 @@
   $("source-close").addEventListener("click", () => { $("source-panel").hidden = true; });
   $("show-closed").addEventListener("change", () => { state.showClosed = $("show-closed").checked; renderForm(); });
   for (const [index, item] of data.cases.entries()) option($("case-select"), String(index), "پروندهٔ " + fa(index + 1) + " — " + item.description_fa);
+  for (const example of data.assessment_examples || []) {
+    const button = el("button", "button button-secondary", "بارگذاری نمونه: " + example.label_fa);
+    button.id = "assessment-example-" + example.id; button.type = "button";
+    button.title = "پاسخ‌های آزمایشی فعلی با این نمونهٔ ساختگی جایگزین می‌شوند.";
+    button.addEventListener("click", () => loadAssessmentExample(example));
+    $("assessment-examples").append(button);
+  }
   const buildInfo = data.build || {};
   $("build-info").textContent = JSON.stringify({version:buildInfo.version || data.schema_version, source_commit:buildInfo.source_commit || buildInfo.commit_sha || null, tree_sha256:tree.tree_sha256, fixed_case_count:data.cases.length}, null, 2);
   renderCase(); renderForm();
+  const requestedExample = new URLSearchParams(window.location.hash.slice(1)).get("example");
+  const initialExample = (data.assessment_examples || []).find(item => item.id === requestedExample);
+  if (initialExample) loadAssessmentExample(initialExample);
   window.MOS_DEMO = Object.freeze({
     getState: () => JSON.parse(JSON.stringify(state)),
     getVisibleFields: () => nodes.filter(node => !node.repeat_per_treatment && nodeOpen(node)).map(node => node.field),
+    getAssessment: () => JSON.parse(JSON.stringify(evaluateOfflineAssessment(formContext()))),
+    evaluateAssessment: context => JSON.parse(JSON.stringify(evaluateOfflineAssessment(context))),
     switchMode, reset
   });
   document.documentElement.dataset.demoReady = "true";
   document.documentElement.dataset.renderedCaseCount = String(data.cases.length);
+  document.documentElement.dataset.assessmentModelReady = String(Boolean(assessmentModel?.model_sha256));
+  document.documentElement.dataset.assessmentCase = initialExample?.id || "none";
 })();

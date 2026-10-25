@@ -216,10 +216,47 @@ async function main() {
     assert.ok(painFields.every(field => !visible(field)));
     assert.equal(doc.getElementById('bilateral-notice').hidden, true);
     assert.equal(doc.querySelectorAll('textarea[id^="form-episode-"][id$="-treatment_description"]').length, 0);
+    // Compiled knowledge must agree with real Python results on the supported
+    // single-report synthetic contexts. It must not claim a Python run hash.
+    for (const sample of data.assessment_parity_cases) {
+      const actual = w.MOS_DEMO.evaluateAssessment(sample.request.context);
+      const ids = items => Array.from(items, item => item.id).sort();
+      assert.equal(actual.status, sample.assessment.status, sample.id);
+      assert.equal(actual.headline_fa, sample.assessment.headline_fa, sample.id);
+      assert.deepEqual(ids(actual.considerations), ids(sample.assessment.considerations), sample.id);
+      assert.deepEqual(ids(actual.urgent_considerations), ids(sample.assessment.urgent_considerations), sample.id);
+      assert.deepEqual(ids(actual.conditional_treatment_evidence), ids(sample.assessment.conditional_treatment_evidence), sample.id);
+      assert.equal(actual.lookup_model_sha256, data.assessment_model.model_sha256);
+      assert.equal(actual.result_sha256, undefined);
+      assert.equal(actual.request_sha256, undefined);
+    }
+    const panel = doc.getElementById('form-assessment');
+    doc.getElementById('assessment-example-oa_pattern').click();
+    assert.equal(panel.dataset.assessmentStatus, 'differential_review');
+    assert.ok(panel.querySelector('[data-consideration-id="knee_oa"]'));
+    assert.ok(panel.textContent.includes('سن') && panel.textContent.includes('خشکی'));
+    assert.ok(panel.querySelector('.assessment-evidence-card'));
+    fire(w, control('fever'), 'yes');
+    assert.equal(panel.dataset.assessmentStatus, 'prompt_physician_review');
+    assert.equal(panel.querySelector('[data-consideration-id="knee_oa"]'), null);
+    assert.equal(panel.querySelector('.assessment-evidence-card'), null);
+    doc.getElementById('assessment-example-anterior_loaded').click();
+    assert.ok(panel.querySelector('[data-consideration-id="patellofemoral_pain"]'));
+    assert.equal(panel.querySelector('[data-consideration-id="cartilage_finding"]'), null);
+    doc.getElementById('assessment-example-oa_pattern').click();
+    fire(w, doc.getElementById('has-pain'), 'no');
+    assert.equal(panel.dataset.assessmentStatus, 'insufficient_information');
+    assert.equal(panel.querySelector('.assessment-evidence-card'), null);
+    doc.getElementById('assessment-example-urgent_twisting').click();
+    assert.equal(panel.dataset.assessmentStatus, 'prompt_physician_review');
+    assert.ok(panel.querySelector('[data-consideration-id="urgent_internal_derangement"]'));
+    assert.equal(panel.querySelector('.assessment-evidence-card'), null);
+    doc.getElementById('form-reset').click();
+    assert.equal(panel.dataset.assessmentStatus, 'insufficient_information');
     assert.equal(counts.network, 0);
     assert.equal(counts.storage, 0);
     assert.deepEqual(errors, []);
-    console.log('PASS: ten Python cases, source/hash display, 30-question branches, uncertainty, false/zero, retained reports, separate treatments, bilateral review, safe text, offline reset.');
+    console.log('PASS: ten Python cases, 30-question branches, retained reports, safe text, offline reset, compiled/Python assessment parity, OA/PFP differentials, missing criteria and urgent treatment holds.');
   } finally {
     dom.window.close();
   }
