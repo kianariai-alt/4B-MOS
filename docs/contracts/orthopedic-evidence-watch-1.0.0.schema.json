@@ -1,0 +1,431 @@
+{
+  "$defs": {
+    "EvidenceCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "provider": {
+          "const": "europe_pmc",
+          "default": "europe_pmc",
+          "title": "Provider",
+          "type": "string"
+        },
+        "provider_source": {
+          "const": "MED",
+          "default": "MED",
+          "title": "Provider Source",
+          "type": "string"
+        },
+        "provider_id": {
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "pmid": {
+          "title": "Pmid",
+          "type": "string"
+        },
+        "doi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Doi"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "journal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Journal"
+        },
+        "publication_types_reported": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publication Types Reported"
+        },
+        "publication_year": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publication Year"
+        },
+        "first_publication_date_reported": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "First Publication Date Reported"
+        },
+        "publication_date_precision_verified": {
+          "const": false,
+          "default": false,
+          "title": "Publication Date Precision Verified",
+          "type": "boolean"
+        },
+        "source_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Version"
+        },
+        "source_version_verified": {
+          "const": false,
+          "default": false,
+          "title": "Source Version Verified",
+          "type": "boolean"
+        },
+        "citation_url": {
+          "title": "Citation Url",
+          "type": "string"
+        },
+        "retraction_status": {
+          "enum": [
+            "flagged",
+            "not_flagged_by_returned_metadata",
+            "not_reported"
+          ],
+          "title": "Retraction Status",
+          "type": "string"
+        },
+        "correction_status": {
+          "enum": [
+            "flagged",
+            "not_flagged_by_returned_metadata",
+            "not_reported"
+          ],
+          "title": "Correction Status",
+          "type": "string"
+        },
+        "record_payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Record Payload Sha256",
+          "type": "string"
+        },
+        "status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Status",
+          "type": "string"
+        },
+        "independent_review_required": {
+          "const": true,
+          "default": true,
+          "title": "Independent Review Required",
+          "type": "boolean"
+        },
+        "evidence_quality": {
+          "const": "unassessed",
+          "default": "unassessed",
+          "title": "Evidence Quality",
+          "type": "string"
+        },
+        "access_scope": {
+          "const": "bibliographic_metadata_only",
+          "default": "bibliographic_metadata_only",
+          "title": "Access Scope",
+          "type": "string"
+        },
+        "is_clinical_recommendation": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Recommendation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "candidate_id",
+        "provider_id",
+        "pmid",
+        "title",
+        "citation_url",
+        "retraction_status",
+        "correction_status",
+        "record_payload_sha256"
+      ],
+      "title": "EvidenceCandidate",
+      "type": "object"
+    },
+    "EvidenceWatchRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "topic": {
+          "enum": [
+            "knee_oa",
+            "meniscus",
+            "cartilage",
+            "orthobiologics"
+          ],
+          "title": "Topic",
+          "type": "string"
+        },
+        "since": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Since"
+        },
+        "max_records": {
+          "default": 10,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Max Records",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "title": "EvidenceWatchRequest",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_id": {
+      "const": "4b-mos.orthopedic-evidence-watch",
+      "default": "4b-mos.orthopedic-evidence-watch",
+      "title": "Schema Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "request": {
+      "$ref": "#/$defs/EvidenceWatchRequest"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "rules_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Rules Sha256",
+      "type": "string"
+    },
+    "query": {
+      "title": "Query",
+      "type": "string"
+    },
+    "endpoint": {
+      "title": "Endpoint",
+      "type": "string"
+    },
+    "acquisition_mode": {
+      "enum": [
+        "online",
+        "provided_response",
+        "not_requested"
+      ],
+      "title": "Acquisition Mode",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "discovered",
+        "failed",
+        "online_not_requested"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "fetched_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fetched At"
+    },
+    "provider_api_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provider Api Version"
+    },
+    "source_payload_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Payload Sha256"
+    },
+    "provider_hit_count": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provider Hit Count"
+    },
+    "candidates": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/EvidenceCandidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "error_code": {
+      "anyOf": [
+        {
+          "enum": [
+            "http_error",
+            "endpoint_blocked",
+            "redirect_blocked",
+            "network_error",
+            "timeout",
+            "response_limit",
+            "malformed_response",
+            "invalid_record"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Code"
+    },
+    "error_detail": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Detail"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "registry_import_performed": {
+      "const": false,
+      "default": false,
+      "title": "Registry Import Performed",
+      "type": "boolean"
+    },
+    "medical_approval_performed": {
+      "const": false,
+      "default": false,
+      "title": "Medical Approval Performed",
+      "type": "boolean"
+    },
+    "patient_information_sent": {
+      "const": false,
+      "default": false,
+      "title": "Patient Information Sent",
+      "type": "boolean"
+    },
+    "clinical_logic_changed": {
+      "const": false,
+      "default": false,
+      "title": "Clinical Logic Changed",
+      "type": "boolean"
+    },
+    "approved_fact_count": {
+      "const": 0,
+      "default": 0,
+      "title": "Approved Fact Count",
+      "type": "integer"
+    },
+    "result_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Result Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request",
+    "request_sha256",
+    "rules_sha256",
+    "query",
+    "endpoint",
+    "acquisition_mode",
+    "status",
+    "limitations",
+    "result_sha256"
+  ],
+  "title": "EvidenceWatchResult",
+  "type": "object"
+}

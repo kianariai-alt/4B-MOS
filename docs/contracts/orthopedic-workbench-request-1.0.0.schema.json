@@ -1,0 +1,383 @@
+{
+  "$defs": {
+    "KneeInterviewTreePreviewRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/TreeInterviewContext"
+        },
+        "review_scopes": {
+          "default": [],
+          "items": {
+            "const": "arthroplasty_review",
+            "type": "string"
+          },
+          "maxItems": 1,
+          "title": "Review Scopes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "context"
+      ],
+      "title": "KneeInterviewTreePreviewRequest",
+      "type": "object"
+    },
+    "StructuredAnswer": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "chief_complaint",
+            "onset",
+            "duration",
+            "pain_location",
+            "pain_score",
+            "pain_pattern",
+            "aggravating_factor",
+            "relieving_factor",
+            "mechanical_locking",
+            "functional_limitation",
+            "trauma",
+            "trauma_mechanism",
+            "prior_surgery",
+            "prior_treatment",
+            "treatment_response",
+            "relevant_comorbidity",
+            "current_medication",
+            "fever",
+            "acute_swelling",
+            "neurovascular_symptoms",
+            "systemic_symptoms",
+            "care_goal",
+            "exam_joint_line_tenderness",
+            "exam_effusion",
+            "exam_range_of_motion",
+            "imaging_kl_grade",
+            "imaging_meniscal_lesion",
+            "imaging_cartilage_lesion"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "confirmed",
+            "unverified",
+            "incomplete",
+            "contradictory",
+            "unknown",
+            "declined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "provenance": {
+          "enum": [
+            "patient_report",
+            "physician_exam",
+            "reviewed_imaging",
+            "unreviewed_imaging"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Source Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "state",
+        "provenance",
+        "source_ref"
+      ],
+      "title": "StructuredAnswer",
+      "type": "object"
+    },
+    "SupplementalObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "age_band",
+            "morning_stiffness",
+            "exam_squat_anterior_pain",
+            "exam_mcmurray",
+            "pain_locations",
+            "aggravating_activities",
+            "care_goals"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "confirmed",
+            "unverified",
+            "incomplete",
+            "contradictory",
+            "unknown",
+            "declined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "provenance": {
+          "enum": [
+            "patient_report",
+            "physician_exam"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Source Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "state",
+        "provenance",
+        "source_ref"
+      ],
+      "title": "SupplementalObservation",
+      "type": "object"
+    },
+    "TreeInterviewAnswer": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "chief_complaint",
+            "laterality",
+            "trauma",
+            "fever",
+            "acute_swelling",
+            "systemic_symptoms",
+            "sensory_change",
+            "weakness",
+            "foot_coldness",
+            "foot_color_change",
+            "onset",
+            "duration",
+            "pain_location",
+            "pain_score_now",
+            "pain_pattern",
+            "aggravating_factor",
+            "relieving_factor",
+            "mechanical_locking",
+            "pain_limited_motion",
+            "functional_limitation",
+            "trauma_mechanism",
+            "prior_surgery",
+            "surgery_description",
+            "prior_treatment",
+            "treatment_description",
+            "treatment_pain_response",
+            "treatment_function_response",
+            "diagnosed_conditions",
+            "medication_list",
+            "care_goal",
+            "has_pain"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "confirmed",
+            "unverified",
+            "incomplete",
+            "contradictory",
+            "unknown",
+            "declined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "provenance": {
+          "const": "patient_report",
+          "default": "patient_report",
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Source Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "state",
+        "source_ref"
+      ],
+      "title": "TreeInterviewAnswer",
+      "type": "object"
+    },
+    "TreeInterviewContext": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "body_region": {
+          "default": "unknown",
+          "enum": [
+            "knee",
+            "other",
+            "unknown"
+          ],
+          "title": "Body Region",
+          "type": "string"
+        },
+        "observations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeInterviewAnswer"
+          },
+          "maxItems": 200,
+          "title": "Observations",
+          "type": "array"
+        },
+        "treatment_episodes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeTreatmentEpisode"
+          },
+          "maxItems": 20,
+          "title": "Treatment Episodes",
+          "type": "array"
+        },
+        "clinical_findings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/StructuredAnswer"
+          },
+          "maxItems": 100,
+          "title": "Clinical Findings",
+          "type": "array"
+        }
+      },
+      "title": "TreeInterviewContext",
+      "type": "object"
+    },
+    "TreeTreatmentEpisode": {
+      "additionalProperties": false,
+      "properties": {
+        "episode_ref": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Episode Ref",
+          "type": "string"
+        },
+        "observations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeInterviewAnswer"
+          },
+          "maxItems": 30,
+          "title": "Observations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "episode_ref"
+      ],
+      "title": "TreeTreatmentEpisode",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "interview": {
+      "$ref": "#/$defs/KneeInterviewTreePreviewRequest"
+    },
+    "supplemental_observations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SupplementalObservation"
+      },
+      "maxItems": 100,
+      "title": "Supplemental Observations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "interview"
+  ],
+  "title": "KneeWorkbenchRequest",
+  "type": "object"
+}

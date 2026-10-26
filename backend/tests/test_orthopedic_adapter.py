@@ -19,6 +19,9 @@ from backend.app.schemas.orthopedic_interview_tree import (
 )
 from backend.app.schemas.orthopedic_assessment import KneeAssessmentPreview
 from backend.app.schemas.orthopedic_reasoning_review import KneeReasoningReview
+from backend.app.schemas.orthopedic_workbench import KneeWorkbench, KneeWorkbenchRequest
+from backend.app.schemas.orthopedic_workbench_turn import KneeWorkbenchTurn, KneeWorkbenchTurnRequest
+from backend.app.schemas.orthopedic_evidence_watch import EvidenceWatchRequest, EvidenceWatchResult
 from backend.app.services.orthopedic_adapter import build_decision_knowledge
 
 
@@ -75,6 +78,8 @@ def test_api_requires_explicit_enablement_and_authorization(client, admin_header
     assert client.post(BASE_URL + "/interview-tree/preview", headers=admin_headers, json=book_request).status_code == 404
     assert client.post(BASE_URL + "/interview-tree/assessment-preview", headers=admin_headers, json=book_request).status_code == 404
     assert client.post(BASE_URL + "/interview-tree/reasoning-review", headers=admin_headers, json=book_request).status_code == 404
+    for path in ("/workbench", "/workbench/turn"):
+        assert client.post(BASE_URL + path, headers=admin_headers, json={}).status_code == 404
     monkeypatch.setattr(settings, "ORTHOPEDIC_PREVIEW_ENABLED", True)
     assert client.get(BASE_URL).status_code == 401
     assert client.post(BASE_URL + "/book-preview", json=book_request).status_code == 401
@@ -82,6 +87,8 @@ def test_api_requires_explicit_enablement_and_authorization(client, admin_header
     assert client.post(BASE_URL + "/interview-tree/preview", json=book_request).status_code == 401
     assert client.post(BASE_URL + "/interview-tree/assessment-preview", json=book_request).status_code == 401
     assert client.post(BASE_URL + "/interview-tree/reasoning-review", json=book_request).status_code == 401
+    for path in ("/workbench", "/workbench/turn"):
+        assert client.post(BASE_URL + path, json={}).status_code == 401
     client.headers.update(admin_headers)
     from backend.tests.test_medical_knowledge import create_role_headers
     headers = create_role_headers(client, username="orthopedic_viewer", role="viewer")
@@ -92,6 +99,8 @@ def test_api_requires_explicit_enablement_and_authorization(client, admin_header
     assert client.post(BASE_URL + "/interview-tree/preview", headers=headers, json=book_request).status_code == 403
     assert client.post(BASE_URL + "/interview-tree/assessment-preview", headers=headers, json=book_request).status_code == 403
     assert client.post(BASE_URL + "/interview-tree/reasoning-review", headers=headers, json=book_request).status_code == 403
+    for path in ("/workbench", "/workbench/turn"):
+        assert client.post(BASE_URL + path, headers=headers, json={}).status_code == 403
 
 
 def test_preview_keeps_stores_empty_and_patient_identifiers_rejected(client, admin_headers, db_session, monkeypatch):
@@ -135,6 +144,26 @@ def test_preview_keeps_stores_empty_and_patient_identifiers_rejected(client, adm
     assert review.baseline_assessment == assessment_result
     assert len(review.hypothesis_reviews) == 4
     assert review.approved_fact_count == 0 and not review.is_clinically_validated
+    workbench_request = {"interview": tree_request}
+    workbench_response = client.post(BASE_URL + "/workbench", headers=admin_headers, json=workbench_request)
+    assert workbench_response.status_code == 200, workbench_response.text
+    assert workbench_response.headers["cache-control"] == "no-store"
+    workbench = KneeWorkbench.model_validate(workbench_response.json())
+    assert workbench.baseline_review == review and workbench.approved_fact_count == 0
+    turn_request = {"state": workbench_request, "answer": {"respondent": "patient", "observation": {
+        "field": "chief_complaint", "value": "pain", "state": "confirmed",
+        "provenance": "patient_report", "source_ref": "synthetic:http-turn",
+    }}}
+    turn_response = client.post(BASE_URL + "/workbench/turn", headers=admin_headers, json=turn_request)
+    assert turn_response.status_code == 200, turn_response.text
+    assert turn_response.headers["cache-control"] == "no-store"
+    turn = KneeWorkbenchTurn.model_validate(turn_response.json())
+    assert len(turn.state.interview.context.observations) == 1
+    assert turn.next_patient_question.field == "laterality"
+    repeated = client.post(BASE_URL + "/workbench/turn", headers=admin_headers,
+                           json={**turn_request, "state": turn.state.model_dump(mode="json")})
+    assert repeated.status_code == 422
+    assert repeated.headers["cache-control"] == "no-store"
     assert client.post(BASE_URL + "/interview-tree/preview", headers=admin_headers,
                        json=tree_request).json() == tree_preview.json()
     assert client.post(BASE_URL + "/preview", headers=admin_headers,
@@ -153,6 +182,10 @@ def test_preview_keeps_stores_empty_and_patient_identifiers_rejected(client, adm
                        json={"context": {"body_region": "knee", "patient_id": "not-allowed"}}).status_code == 422
     assert client.post(BASE_URL + "/interview-tree/reasoning-review", headers=admin_headers,
                        json={"context": {"body_region": "knee", "patient_id": "not-allowed"}}).status_code == 422
+    assert client.post(BASE_URL + "/workbench", headers=admin_headers,
+                       json={"interview": tree_request, "patient_id": "not-allowed"}).status_code == 422
+    assert client.post(BASE_URL + "/workbench/turn", headers=admin_headers,
+                       json={**turn_request, "patient_id": "not-allowed"}).status_code == 422
 
 
 @pytest.mark.parametrize("name,model", [
@@ -164,6 +197,12 @@ def test_preview_keeps_stores_empty_and_patient_identifiers_rejected(client, adm
     ("orthopedic-interview-tree-preview", KneeInterviewTreePreview),
     ("orthopedic-assessment-preview", KneeAssessmentPreview),
     ("orthopedic-reasoning-review", KneeReasoningReview),
+    ("orthopedic-workbench-request", KneeWorkbenchRequest),
+    ("orthopedic-workbench", KneeWorkbench),
+    ("orthopedic-workbench-turn-request", KneeWorkbenchTurnRequest),
+    ("orthopedic-workbench-turn", KneeWorkbenchTurn),
+    ("orthopedic-evidence-watch-request", EvidenceWatchRequest),
+    ("orthopedic-evidence-watch", EvidenceWatchResult),
 ])
 def test_checked_in_json_schema_matches_current_contract(name, model):
     path = Path(__file__).resolve().parents[2] / f"docs/contracts/{name}-1.0.0.schema.json"

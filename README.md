@@ -206,6 +206,20 @@ and separates model mismatch from clinical exclusion. Ten challenge cases keep
 independent clinician reference answers pending; this adds an audit view, not a
 new diagnosis rule or demonstrated clinical accuracy.
 
+The additive [dynamic knee workbench](docs/ORTHOPEDIC_DYNAMIC_WORKBENCH_FA.md)
+recomputes the next question after every response, preserves multiple pain
+locations, provoking activities and patient goals, and compares actual clinical
+observations with five new source-bound Draft propositions. Examination stays
+in the physician channel. A [real synthetic walkthrough](docs/ORTHOPEDIC_ADAPTIVE_WALKTHROUGH_FA.md)
+demonstrates 23 patient responses and a separate examination update. These
+server-side authoring additions are not included in Windows demo 0.2.
+
+An opt-in [Europe PMC metadata watch](docs/ORTHOPEDIC_EVIDENCE_WATCH_FA.md)
+discovers recent PubMed-indexed sources without sending patient information or
+automatically changing clinical rules. A live three-record response is checked
+in with acquisition time and hashes; full-text appraisal and independent
+approval remain pending.
+
 For books stored on a local Windows drive, the
 [local orthopedic library reader](docs/LOCAL_ORTHOPEDIC_BOOKS_FA.md) provides
 `Read-Orthopedic-Books.cmd` (default `D:\orthopedic book`). It prepares private,
