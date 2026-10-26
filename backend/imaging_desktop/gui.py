@@ -288,7 +288,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_notice_text.setWordWrap(True)
         notice_layout.addWidget(self.import_notice_title)
         notice_layout.addWidget(self.import_notice_text)
-        notice_actions = QtWidgets.QHBoxLayout()
+        notice_actions = QtWidgets.QVBoxLayout()
         self.other_file_button = QtWidgets.QPushButton("انتخاب فایل تصویری یا گزارش")
         self.reopen_received_button = QtWidgets.QPushButton("بازکردن یکی از فایل‌های دریافت‌شده")
         self.help_button = QtWidgets.QPushButton("راهنمای دریافت از مرکز")
@@ -296,7 +296,6 @@ class MainWindow(QtWidgets.QMainWindow):
             notice_actions.addWidget(button)
         notice_layout.addLayout(notice_actions)
         self.import_notice.hide()
-        layout.addWidget(self.import_notice)
         splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         left = QtWidgets.QWidget()
         side = QtWidgets.QVBoxLayout(left)
@@ -310,7 +309,10 @@ class MainWindow(QtWidgets.QMainWindow):
         view_layout = QtWidgets.QVBoxLayout(right)
         view_layout.setContentsMargins(0, 0, 0, 0)
         self.view = VolumeView()
-        view_layout.addWidget(self.view, 1)
+        self.view_stack = QtWidgets.QStackedWidget()
+        self.view_stack.addWidget(self.view)
+        self.view_stack.addWidget(self.import_notice)
+        view_layout.addWidget(self.view_stack, 1)
         hint = QtWidgets.QLabel("چرخش: کشیدن با ماوس چپ  ·  جابه‌جایی: ماوس میانی  ·  بزرگ‌نمایی: چرخ ماوس")
         view_layout.addWidget(hint)
         actions = QtWidgets.QHBoxLayout()
@@ -433,6 +435,7 @@ class MainWindow(QtWidgets.QMainWindow):
         job.start()
 
     def clear(self):
+        self.view_stack.setCurrentWidget(self.view)
         self.import_notice.hide()
         if self.document_preview is not None:
             self.document_preview.close()
@@ -544,6 +547,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "در صفحهٔ مرکز گزینهٔ «تصاویر / DICOM / ZIP / Export» یا گزارش PDF را انتخاب کنید. "
                 "اگر فایل تصویری قبلاً دریافت شده، آن را از فهرست دریافت‌ها باز کنید.")
             self.import_notice.show()
+            self.view_stack.setCurrentWidget(self.import_notice)
         self.info.setText(f"فایل دریافت شد · قالب: {artifact.inventory.kind} · {len(artifact.payload)/1024/1024:.2f} MiB\n"
                           "قالب از محتوای فایل تشخیص داده شده؛ دریافت فایل به معنی اعتبار بالینی آن نیست.")
         self.status.setText("فایل از منوی «فایل‌های دریافت‌شده» قابل ذخیره است. "
