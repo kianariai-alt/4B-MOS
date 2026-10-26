@@ -220,6 +220,14 @@ automatically changing clinical rules. A live three-record response is checked
 in with acquisition time and hashes; full-text appraisal and independent
 approval remain pending.
 
+The [Zetamed pain/injury roadmap](docs/ZETAMED_PAIN_INJURY_BACKBONE_FA.md)
+uses the physician-requested knee-pain article as its explicit primary organizing
+source. Eight source-linked dimensions group actual history/findings and expose
+unimplemented injury domains alongside the existing comparisons. A new adaptive
+turn composes this roadmap with the unchanged question selector. Clinical facts
+retain independent source bindings and Draft governance; no website-only
+diagnosis, mandatory imaging, surgery or regeneration claim is executed.
+
 For books stored on a local Windows drive, the
 [local orthopedic library reader](docs/LOCAL_ORTHOPEDIC_BOOKS_FA.md) provides
 `Read-Orthopedic-Books.cmd` (default `D:\orthopedic book`). It prepares private,

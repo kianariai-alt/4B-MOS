@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "source_key": "zetamed_knee_pain",
+  "url": "https://zetamed.org/knee-pain/",
+  "resolved_url": "https://zetamed.org/knee-pain/",
+  "retrieved_at": "2026-10-26T06:31:52.782149+00:00",
+  "http_status": 200,
+  "content_type_reported": "text/html; charset=UTF-8",
+  "content_encoding_reported": null,
+  "response_body_byte_count": 165843,
+  "source_document_sha256": "d350548b6128e97ef7ecf330ed16f8b3992c21588998fb95f29b74161863a6fd",
+  "displayed_publication_date": "2025-09-05",
+  "publication_date_verification_method": "Displayed date on source webpage independently read during source review; source date is not acquisition date.",
+  "source_version": "Webpage edition not displayed; response-body snapshot identified by acquisition time and SHA-256.",
+  "source_text_retained": false,
+  "is_medical_approval": false,
+  "metadata_sha256": "b2e49f3b0e62cf86914abeb136e37e5e89c686a12f41082e22ba96f1e7c78d63"
+}

@@ -1,0 +1,3192 @@
+{
+  "$defs": {
+    "AssessmentConsideration": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label_fa": {
+          "title": "Label Fa",
+          "type": "string"
+        },
+        "supporting_findings_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Findings Fa",
+          "type": "array"
+        },
+        "limitations_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations Fa",
+          "type": "array"
+        },
+        "information_gaps_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Information Gaps Fa",
+          "type": "array"
+        },
+        "assessment_requirements_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Assessment Requirements Fa",
+          "type": "array"
+        },
+        "source_fact_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "source_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Keys",
+          "type": "array"
+        },
+        "is_ranked": {
+          "const": false,
+          "default": false,
+          "title": "Is Ranked",
+          "type": "boolean"
+        },
+        "compatibility": {
+          "enum": [
+            "authored_pattern_for_review",
+            "documented_finding_for_review",
+            "urgent_context_for_review"
+          ],
+          "title": "Compatibility",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label_fa",
+        "supporting_findings_fa",
+        "limitations_fa",
+        "information_gaps_fa",
+        "assessment_requirements_fa",
+        "source_fact_keys",
+        "source_content_sha256s",
+        "source_keys",
+        "compatibility"
+      ],
+      "title": "AssessmentConsideration",
+      "type": "object"
+    },
+    "AssessmentDraftProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "fact": {
+          "$ref": "#/$defs/KnowledgeFactCreate"
+        },
+        "version": {
+          "const": 1,
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fact",
+        "content_sha256"
+      ],
+      "title": "AssessmentDraftProposal",
+      "type": "object"
+    },
+    "ClinicalProblemRepresentation": {
+      "additionalProperties": false,
+      "properties": {
+        "body_region": {
+          "enum": [
+            "knee",
+            "other",
+            "unknown"
+          ],
+          "title": "Body Region",
+          "type": "string"
+        },
+        "summary_fa": {
+          "title": "Summary Fa",
+          "type": "string"
+        },
+        "history": {
+          "items": {
+            "$ref": "#/$defs/ReasoningObservation"
+          },
+          "title": "History",
+          "type": "array"
+        },
+        "examination": {
+          "items": {
+            "$ref": "#/$defs/ReasoningObservation"
+          },
+          "title": "Examination",
+          "type": "array"
+        },
+        "imaging": {
+          "items": {
+            "$ref": "#/$defs/ReasoningObservation"
+          },
+          "title": "Imaging",
+          "type": "array"
+        },
+        "treatment_episodes": {
+          "items": {
+            "$ref": "#/$defs/ReasoningTreatmentEpisode"
+          },
+          "title": "Treatment Episodes",
+          "type": "array"
+        },
+        "inferred_demographics": {
+          "const": false,
+          "default": false,
+          "title": "Inferred Demographics",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "body_region",
+        "summary_fa",
+        "history",
+        "examination",
+        "imaging",
+        "treatment_episodes"
+      ],
+      "title": "ClinicalProblemRepresentation",
+      "type": "object"
+    },
+    "ConditionalTreatmentEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label_fa": {
+          "title": "Label Fa",
+          "type": "string"
+        },
+        "summary_fa": {
+          "title": "Summary Fa",
+          "type": "string"
+        },
+        "conditions_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Conditions Fa",
+          "type": "array"
+        },
+        "limitations_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations Fa",
+          "type": "array"
+        },
+        "source_fact_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "source_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Keys",
+          "type": "array"
+        },
+        "requires_card_id": {
+          "default": "knee_oa",
+          "title": "Requires Card Id",
+          "type": "string"
+        },
+        "required_workflow_status": {
+          "const": "ready",
+          "default": "ready",
+          "title": "Required Workflow Status",
+          "type": "string"
+        },
+        "is_personalized_plan": {
+          "const": false,
+          "default": false,
+          "title": "Is Personalized Plan",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "label_fa",
+        "summary_fa",
+        "conditions_fa",
+        "limitations_fa",
+        "source_fact_keys",
+        "source_content_sha256s",
+        "source_keys"
+      ],
+      "title": "ConditionalTreatmentEvidence",
+      "type": "object"
+    },
+    "DifferentialComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label_fa": {
+          "title": "Label Fa",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "evidence_for_physician_review",
+            "information_missing",
+            "withheld_by_workflow"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "summary_fa": {
+          "title": "Summary Fa",
+          "type": "string"
+        },
+        "relationships": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchRelationship"
+          },
+          "title": "Relationships",
+          "type": "array"
+        },
+        "limitations_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations Fa",
+          "type": "array"
+        },
+        "is_ranked": {
+          "const": false,
+          "default": false,
+          "title": "Is Ranked",
+          "type": "boolean"
+        },
+        "is_excluded": {
+          "const": false,
+          "default": false,
+          "title": "Is Excluded",
+          "type": "boolean"
+        },
+        "diagnostic_probability": {
+          "default": null,
+          "title": "Diagnostic Probability",
+          "type": "null"
+        }
+      },
+      "required": [
+        "id",
+        "label_fa",
+        "status",
+        "summary_fa",
+        "relationships",
+        "limitations_fa"
+      ],
+      "title": "DifferentialComparison",
+      "type": "object"
+    },
+    "KneeAssessmentPreview": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "schema_id": {
+          "const": "4b-mos.knee-assessment-preview",
+          "default": "4b-mos.knee-assessment-preview",
+          "title": "Schema Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "differential_review",
+            "insufficient_information",
+            "prompt_physician_review",
+            "outside_scope",
+            "side_specific_review"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "headline_fa": {
+          "title": "Headline Fa",
+          "type": "string"
+        },
+        "considerations": {
+          "items": {
+            "$ref": "#/$defs/AssessmentConsideration"
+          },
+          "title": "Considerations",
+          "type": "array"
+        },
+        "urgent_considerations": {
+          "items": {
+            "$ref": "#/$defs/AssessmentConsideration"
+          },
+          "title": "Urgent Considerations",
+          "type": "array"
+        },
+        "information_requirements_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Information Requirements Fa",
+          "type": "array"
+        },
+        "conditional_treatment_evidence": {
+          "items": {
+            "$ref": "#/$defs/ConditionalTreatmentEvidence"
+          },
+          "title": "Conditional Treatment Evidence",
+          "type": "array"
+        },
+        "review_reasons_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Review Reasons Fa",
+          "type": "array"
+        },
+        "source_references": {
+          "items": {
+            "$ref": "#/$defs/SourceEntry"
+          },
+          "title": "Source References",
+          "type": "array"
+        },
+        "new_draft_proposals": {
+          "items": {
+            "$ref": "#/$defs/AssessmentDraftProposal"
+          },
+          "title": "New Draft Proposals",
+          "type": "array"
+        },
+        "axis_tokens": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Axis Tokens",
+          "type": "object"
+        },
+        "lookup_model_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Lookup Model Sha256",
+          "type": "string"
+        },
+        "preview_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Preview Sha256",
+          "type": "string"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "rules_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Rules Sha256",
+          "type": "string"
+        },
+        "result_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Result Sha256",
+          "type": "string"
+        },
+        "approved_fact_count": {
+          "const": 0,
+          "default": 0,
+          "title": "Approved Fact Count",
+          "type": "integer"
+        },
+        "review_only": {
+          "const": true,
+          "default": true,
+          "title": "Review Only",
+          "type": "boolean"
+        },
+        "is_diagnosis": {
+          "const": false,
+          "default": false,
+          "title": "Is Diagnosis",
+          "type": "boolean"
+        },
+        "is_recommendation": {
+          "const": false,
+          "default": false,
+          "title": "Is Recommendation",
+          "type": "boolean"
+        },
+        "is_clinical_clearance": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Clearance",
+          "type": "boolean"
+        },
+        "authorizes_treatment": {
+          "const": false,
+          "default": false,
+          "title": "Authorizes Treatment",
+          "type": "boolean"
+        },
+        "registry_write_performed": {
+          "const": false,
+          "default": false,
+          "title": "Registry Write Performed",
+          "type": "boolean"
+        },
+        "safety_engine_required": {
+          "const": true,
+          "default": true,
+          "title": "Safety Engine Required",
+          "type": "boolean"
+        },
+        "safety_evaluation": {
+          "const": "not_performed",
+          "default": "not_performed",
+          "title": "Safety Evaluation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "headline_fa",
+        "considerations",
+        "urgent_considerations",
+        "information_requirements_fa",
+        "conditional_treatment_evidence",
+        "review_reasons_fa",
+        "source_references",
+        "new_draft_proposals",
+        "axis_tokens",
+        "lookup_model_sha256",
+        "preview_sha256",
+        "request_sha256",
+        "rules_sha256",
+        "result_sha256"
+      ],
+      "title": "KneeAssessmentPreview",
+      "type": "object"
+    },
+    "KneeInterviewTreePreviewRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/TreeInterviewContext"
+        },
+        "review_scopes": {
+          "default": [],
+          "items": {
+            "const": "arthroplasty_review",
+            "type": "string"
+          },
+          "maxItems": 1,
+          "title": "Review Scopes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "context"
+      ],
+      "title": "KneeInterviewTreePreviewRequest",
+      "type": "object"
+    },
+    "KneePainInjuryReview": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "schema_id": {
+          "const": "4b-mos.knee-pain-injury-review",
+          "default": "4b-mos.knee-pain-injury-review",
+          "title": "Schema Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "workbench": {
+          "$ref": "#/$defs/KneeWorkbench"
+        },
+        "organizing_source": {
+          "$ref": "#/$defs/SourceEntry"
+        },
+        "organizing_source_role": {
+          "const": "primary_organizing_source",
+          "default": "primary_organizing_source",
+          "title": "Organizing Source Role",
+          "type": "string"
+        },
+        "source_document_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Document Sha256",
+          "type": "string"
+        },
+        "source_snapshot_metadata_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Snapshot Metadata Sha256",
+          "type": "string"
+        },
+        "source_document_hash_scope": {
+          "const": "recorded_response_bytes_not_independently_rehashed",
+          "default": "recorded_response_bytes_not_independently_rehashed",
+          "title": "Source Document Hash Scope",
+          "type": "string"
+        },
+        "routes": {
+          "items": {
+            "$ref": "#/$defs/PainInjuryRoute"
+          },
+          "maxItems": 8,
+          "minItems": 8,
+          "title": "Routes",
+          "type": "array"
+        },
+        "coverage_gaps": {
+          "items": {
+            "$ref": "#/$defs/PainInjuryCoverageGap"
+          },
+          "title": "Coverage Gaps",
+          "type": "array"
+        },
+        "raw_risk_observations": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchObservation"
+          },
+          "title": "Raw Risk Observations",
+          "type": "array"
+        },
+        "routine_evaluation_withheld": {
+          "title": "Routine Evaluation Withheld",
+          "type": "boolean"
+        },
+        "source_references": {
+          "items": {
+            "$ref": "#/$defs/SourceEntry"
+          },
+          "title": "Source References",
+          "type": "array"
+        },
+        "new_draft_proposals": {
+          "items": {
+            "$ref": "#/$defs/AssessmentDraftProposal"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "New Draft Proposals",
+          "type": "array"
+        },
+        "limitations_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations Fa",
+          "type": "array"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "rules_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Rules Sha256",
+          "type": "string"
+        },
+        "source_set_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Set Sha256",
+          "type": "string"
+        },
+        "result_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Result Sha256",
+          "type": "string"
+        },
+        "review_only": {
+          "const": true,
+          "default": true,
+          "title": "Review Only",
+          "type": "boolean"
+        },
+        "is_diagnosis": {
+          "const": false,
+          "default": false,
+          "title": "Is Diagnosis",
+          "type": "boolean"
+        },
+        "is_clinically_validated": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinically Validated",
+          "type": "boolean"
+        },
+        "is_recommendation": {
+          "const": false,
+          "default": false,
+          "title": "Is Recommendation",
+          "type": "boolean"
+        },
+        "is_clinical_clearance": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Clearance",
+          "type": "boolean"
+        },
+        "authorizes_treatment": {
+          "const": false,
+          "default": false,
+          "title": "Authorizes Treatment",
+          "type": "boolean"
+        },
+        "registry_write_performed": {
+          "const": false,
+          "default": false,
+          "title": "Registry Write Performed",
+          "type": "boolean"
+        },
+        "safety_engine_required": {
+          "const": true,
+          "default": true,
+          "title": "Safety Engine Required",
+          "type": "boolean"
+        },
+        "safety_evaluation": {
+          "const": "not_performed",
+          "default": "not_performed",
+          "title": "Safety Evaluation",
+          "type": "string"
+        },
+        "approved_fact_count": {
+          "const": 0,
+          "default": 0,
+          "title": "Approved Fact Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "workbench",
+        "organizing_source",
+        "source_document_sha256",
+        "source_snapshot_metadata_sha256",
+        "routes",
+        "coverage_gaps",
+        "raw_risk_observations",
+        "routine_evaluation_withheld",
+        "source_references",
+        "new_draft_proposals",
+        "limitations_fa",
+        "request_sha256",
+        "rules_sha256",
+        "source_set_sha256",
+        "result_sha256"
+      ],
+      "title": "KneePainInjuryReview",
+      "type": "object"
+    },
+    "KneeReasoningReview": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "schema_id": {
+          "const": "4b-mos.knee-reasoning-review",
+          "default": "4b-mos.knee-reasoning-review",
+          "title": "Schema Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "baseline_assessment": {
+          "$ref": "#/$defs/KneeAssessmentPreview"
+        },
+        "problem_representation": {
+          "$ref": "#/$defs/ClinicalProblemRepresentation"
+        },
+        "quarantined_observations": {
+          "items": {
+            "$ref": "#/$defs/ReasoningObservation"
+          },
+          "title": "Quarantined Observations",
+          "type": "array"
+        },
+        "hypothesis_reviews": {
+          "items": {
+            "$ref": "#/$defs/ReasoningHypothesisReview"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Hypothesis Reviews",
+          "type": "array"
+        },
+        "next_data_requirements": {
+          "items": {
+            "$ref": "#/$defs/ReasoningDataRequirement"
+          },
+          "title": "Next Data Requirements",
+          "type": "array"
+        },
+        "clinical_findings_not_used_by_current_model": {
+          "items": {
+            "$ref": "#/$defs/ReasoningObservation"
+          },
+          "title": "Clinical Findings Not Used By Current Model",
+          "type": "array"
+        },
+        "structural_limitations_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Structural Limitations Fa",
+          "type": "array"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "preview_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Preview Sha256",
+          "type": "string"
+        },
+        "assessment_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Assessment Sha256",
+          "type": "string"
+        },
+        "lookup_model_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Lookup Model Sha256",
+          "type": "string"
+        },
+        "rules_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Rules Sha256",
+          "type": "string"
+        },
+        "result_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Result Sha256",
+          "type": "string"
+        },
+        "review_only": {
+          "const": true,
+          "default": true,
+          "title": "Review Only",
+          "type": "boolean"
+        },
+        "is_diagnosis": {
+          "const": false,
+          "default": false,
+          "title": "Is Diagnosis",
+          "type": "boolean"
+        },
+        "is_recommendation": {
+          "const": false,
+          "default": false,
+          "title": "Is Recommendation",
+          "type": "boolean"
+        },
+        "is_clinically_validated": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinically Validated",
+          "type": "boolean"
+        },
+        "is_clinical_clearance": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Clearance",
+          "type": "boolean"
+        },
+        "authorizes_treatment": {
+          "const": false,
+          "default": false,
+          "title": "Authorizes Treatment",
+          "type": "boolean"
+        },
+        "registry_write_performed": {
+          "const": false,
+          "default": false,
+          "title": "Registry Write Performed",
+          "type": "boolean"
+        },
+        "safety_engine_required": {
+          "const": true,
+          "default": true,
+          "title": "Safety Engine Required",
+          "type": "boolean"
+        },
+        "safety_evaluation": {
+          "const": "not_performed",
+          "default": "not_performed",
+          "title": "Safety Evaluation",
+          "type": "string"
+        },
+        "approved_fact_count": {
+          "const": 0,
+          "default": 0,
+          "title": "Approved Fact Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "baseline_assessment",
+        "problem_representation",
+        "quarantined_observations",
+        "hypothesis_reviews",
+        "next_data_requirements",
+        "clinical_findings_not_used_by_current_model",
+        "structural_limitations_fa",
+        "request_sha256",
+        "preview_sha256",
+        "assessment_sha256",
+        "lookup_model_sha256",
+        "rules_sha256",
+        "result_sha256"
+      ],
+      "title": "KneeReasoningReview",
+      "type": "object"
+    },
+    "KneeWorkbench": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "schema_id": {
+          "const": "4b-mos.knee-clinical-workbench",
+          "default": "4b-mos.knee-clinical-workbench",
+          "title": "Schema Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "baseline_review": {
+          "$ref": "#/$defs/KneeReasoningReview"
+        },
+        "baseline_workflow_status": {
+          "enum": [
+            "differential_review",
+            "insufficient_information",
+            "prompt_physician_review",
+            "outside_scope",
+            "side_specific_review"
+          ],
+          "title": "Baseline Workflow Status",
+          "type": "string"
+        },
+        "workflow_status": {
+          "enum": [
+            "differential_review",
+            "insufficient_information",
+            "prompt_physician_review",
+            "outside_scope",
+            "side_specific_review"
+          ],
+          "title": "Workflow Status",
+          "type": "string"
+        },
+        "workflow_equivalences": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/WorkbenchWorkflowEquivalence"
+          },
+          "title": "Workflow Equivalences",
+          "type": "array"
+        },
+        "summary_fa": {
+          "title": "Summary Fa",
+          "type": "string"
+        },
+        "routine_evaluation_withheld": {
+          "title": "Routine Evaluation Withheld",
+          "type": "boolean"
+        },
+        "supplemental_observations": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchObservation"
+          },
+          "title": "Supplemental Observations",
+          "type": "array"
+        },
+        "quarantined_observations": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchObservation"
+          },
+          "title": "Quarantined Observations",
+          "type": "array"
+        },
+        "comparisons": {
+          "items": {
+            "$ref": "#/$defs/DifferentialComparison"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Comparisons",
+          "type": "array"
+        },
+        "next_items": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchNextItem"
+          },
+          "title": "Next Items",
+          "type": "array"
+        },
+        "management_review": {
+          "$ref": "#/$defs/ManagementContextReview"
+        },
+        "source_references": {
+          "items": {
+            "$ref": "#/$defs/SourceEntry"
+          },
+          "title": "Source References",
+          "type": "array"
+        },
+        "new_draft_proposals": {
+          "items": {
+            "$ref": "#/$defs/AssessmentDraftProposal"
+          },
+          "title": "New Draft Proposals",
+          "type": "array"
+        },
+        "limitations_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations Fa",
+          "type": "array"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "rules_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Rules Sha256",
+          "type": "string"
+        },
+        "source_set_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Set Sha256",
+          "type": "string"
+        },
+        "result_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Result Sha256",
+          "type": "string"
+        },
+        "review_only": {
+          "const": true,
+          "default": true,
+          "title": "Review Only",
+          "type": "boolean"
+        },
+        "is_diagnosis": {
+          "const": false,
+          "default": false,
+          "title": "Is Diagnosis",
+          "type": "boolean"
+        },
+        "is_recommendation": {
+          "const": false,
+          "default": false,
+          "title": "Is Recommendation",
+          "type": "boolean"
+        },
+        "is_clinically_validated": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinically Validated",
+          "type": "boolean"
+        },
+        "is_clinical_clearance": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Clearance",
+          "type": "boolean"
+        },
+        "authorizes_treatment": {
+          "const": false,
+          "default": false,
+          "title": "Authorizes Treatment",
+          "type": "boolean"
+        },
+        "registry_write_performed": {
+          "const": false,
+          "default": false,
+          "title": "Registry Write Performed",
+          "type": "boolean"
+        },
+        "safety_engine_required": {
+          "const": true,
+          "default": true,
+          "title": "Safety Engine Required",
+          "type": "boolean"
+        },
+        "safety_evaluation": {
+          "const": "not_performed",
+          "default": "not_performed",
+          "title": "Safety Evaluation",
+          "type": "string"
+        },
+        "approved_fact_count": {
+          "const": 0,
+          "default": 0,
+          "title": "Approved Fact Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "baseline_review",
+        "baseline_workflow_status",
+        "workflow_status",
+        "summary_fa",
+        "routine_evaluation_withheld",
+        "supplemental_observations",
+        "quarantined_observations",
+        "comparisons",
+        "next_items",
+        "management_review",
+        "source_references",
+        "new_draft_proposals",
+        "limitations_fa",
+        "request_sha256",
+        "rules_sha256",
+        "source_set_sha256",
+        "result_sha256"
+      ],
+      "title": "KneeWorkbench",
+      "type": "object"
+    },
+    "KneeWorkbenchRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "interview": {
+          "$ref": "#/$defs/KneeInterviewTreePreviewRequest"
+        },
+        "supplemental_observations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SupplementalObservation"
+          },
+          "maxItems": 100,
+          "title": "Supplemental Observations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "interview"
+      ],
+      "title": "KneeWorkbenchRequest",
+      "type": "object"
+    },
+    "KnowledgeFactCreate": {
+      "properties": {
+        "title": {
+          "maxLength": 300,
+          "minLength": 3,
+          "title": "Title",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 20000,
+          "minLength": 20,
+          "title": "Statement",
+          "type": "string"
+        },
+        "clinical_domain": {
+          "maxLength": 100,
+          "minLength": 2,
+          "title": "Clinical Domain",
+          "type": "string"
+        },
+        "therapy_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "PRP",
+                "PRGF",
+                "ACS",
+                "PL",
+                "SVF",
+                "EXOSOME",
+                "MSC"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Therapy Type"
+        },
+        "population": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Population"
+        },
+        "indication": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Indication"
+        },
+        "contraindications": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Contraindications",
+          "type": "array"
+        },
+        "evidence_grade": {
+          "enum": [
+            "high",
+            "moderate",
+            "low",
+            "very_low",
+            "consensus",
+            "ungraded"
+          ],
+          "title": "Evidence Grade",
+          "type": "string"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid To"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/KnowledgeSourceCreate"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Sources",
+          "type": "array"
+        },
+        "fact_key": {
+          "maxLength": 100,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "statement",
+        "clinical_domain",
+        "evidence_grade",
+        "sources",
+        "fact_key"
+      ],
+      "title": "KnowledgeFactCreate",
+      "type": "object"
+    },
+    "KnowledgeSourceCreate": {
+      "properties": {
+        "source_type": {
+          "enum": [
+            "guideline",
+            "systematic_review",
+            "randomized_trial",
+            "observational_study",
+            "regulatory",
+            "consensus",
+            "textbook",
+            "other"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 500,
+          "minLength": 3,
+          "title": "Title",
+          "type": "string"
+        },
+        "citation": {
+          "maxLength": 5000,
+          "minLength": 3,
+          "title": "Citation",
+          "type": "string"
+        },
+        "publisher": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publisher"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "doi": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Doi"
+        },
+        "publication_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publication Date"
+        },
+        "guideline_version": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Guideline Version"
+        },
+        "accessed_at": {
+          "format": "date",
+          "title": "Accessed At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_type",
+        "title",
+        "citation"
+      ],
+      "title": "KnowledgeSourceCreate",
+      "type": "object"
+    },
+    "ManagementContextReview": {
+      "additionalProperties": false,
+      "properties": {
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchObservation"
+          },
+          "title": "Observations",
+          "type": "array"
+        },
+        "review_points_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Review Points Fa",
+          "type": "array"
+        },
+        "is_personalized_plan": {
+          "const": false,
+          "default": false,
+          "title": "Is Personalized Plan",
+          "type": "boolean"
+        },
+        "infers_treatment_efficacy": {
+          "const": false,
+          "default": false,
+          "title": "Infers Treatment Efficacy",
+          "type": "boolean"
+        },
+        "infers_cartilage_regeneration": {
+          "const": false,
+          "default": false,
+          "title": "Infers Cartilage Regeneration",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "observations",
+        "review_points_fa"
+      ],
+      "title": "ManagementContextReview",
+      "type": "object"
+    },
+    "PainInjuryCoverageGap": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label_fa": {
+          "title": "Label Fa",
+          "type": "string"
+        },
+        "reason_fa": {
+          "title": "Reason Fa",
+          "type": "string"
+        },
+        "status": {
+          "const": "not_implemented",
+          "default": "not_implemented",
+          "title": "Status",
+          "type": "string"
+        },
+        "is_excluded": {
+          "const": false,
+          "default": false,
+          "title": "Is Excluded",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "label_fa",
+        "reason_fa"
+      ],
+      "title": "PainInjuryCoverageGap",
+      "type": "object"
+    },
+    "PainInjuryRoute": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label_fa": {
+          "title": "Label Fa",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "context_present",
+            "context_not_reported",
+            "information_missing"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "interpretation_fa": {
+          "title": "Interpretation Fa",
+          "type": "string"
+        },
+        "article_section_locator": {
+          "title": "Article Section Locator",
+          "type": "string"
+        },
+        "organizing_source_key": {
+          "const": "zetamed_knee_pain",
+          "default": "zetamed_knee_pain",
+          "title": "Organizing Source Key",
+          "type": "string"
+        },
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchObservation"
+          },
+          "title": "Observations",
+          "type": "array"
+        },
+        "differential_comparison_ids": {
+          "items": {
+            "enum": [
+              "oa",
+              "pfp",
+              "meniscus",
+              "cartilage"
+            ],
+            "type": "string"
+          },
+          "title": "Differential Comparison Ids",
+          "type": "array"
+        },
+        "source_fact_keys": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "question_links": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchNextItem"
+          },
+          "title": "Question Links",
+          "type": "array"
+        },
+        "limitations_fa": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Limitations Fa",
+          "type": "array"
+        },
+        "is_excluded": {
+          "const": false,
+          "default": false,
+          "title": "Is Excluded",
+          "type": "boolean"
+        },
+        "is_ranked": {
+          "const": false,
+          "default": false,
+          "title": "Is Ranked",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "label_fa",
+        "status",
+        "interpretation_fa",
+        "article_section_locator",
+        "observations",
+        "differential_comparison_ids",
+        "source_fact_keys",
+        "source_content_sha256s",
+        "question_links",
+        "limitations_fa"
+      ],
+      "title": "PainInjuryRoute",
+      "type": "object"
+    },
+    "ReasoningCriterion": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "axis_id": {
+          "title": "Axis Id",
+          "type": "string"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "input_channel": {
+          "enum": [
+            "usable_history",
+            "usable_clinical"
+          ],
+          "title": "Input Channel",
+          "type": "string"
+        },
+        "observed_token": {
+          "enum": [
+            "p",
+            "n",
+            "u"
+          ],
+          "title": "Observed Token",
+          "type": "string"
+        },
+        "expected_tokens": {
+          "items": {
+            "enum": [
+              "p",
+              "n",
+              "u"
+            ],
+            "type": "string"
+          },
+          "title": "Expected Tokens",
+          "type": "array"
+        },
+        "relation": {
+          "enum": [
+            "matched",
+            "mismatched",
+            "unresolved"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "explanation_fa": {
+          "title": "Explanation Fa",
+          "type": "string"
+        },
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/ReasoningObservation"
+          },
+          "title": "Observations",
+          "type": "array"
+        },
+        "source_fact_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "is_diagnostic_criterion": {
+          "const": false,
+          "default": false,
+          "title": "Is Diagnostic Criterion",
+          "type": "boolean"
+        },
+        "is_clinical_exclusion": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Exclusion",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "axis_id",
+        "field",
+        "input_channel",
+        "observed_token",
+        "expected_tokens",
+        "relation",
+        "explanation_fa",
+        "observations",
+        "source_fact_keys",
+        "source_content_sha256s"
+      ],
+      "title": "ReasoningCriterion",
+      "type": "object"
+    },
+    "ReasoningDataRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "workflow_prerequisite",
+            "missing_current_field",
+            "schema_coverage_gap",
+            "physician_clinical_review"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "hypothesis_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Hypothesis Ids",
+          "type": "array"
+        },
+        "reason_fa": {
+          "title": "Reason Fa",
+          "type": "string"
+        },
+        "current_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Reason"
+        },
+        "existing_question_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Existing Question Id"
+        },
+        "existing_question_number": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Existing Question Number"
+        },
+        "question_action": {
+          "enum": [
+            "ask_missing",
+            "physician_clarification",
+            "not_automatically_reask",
+            "physician_review",
+            "schema_extension_review"
+          ],
+          "title": "Question Action",
+          "type": "string"
+        },
+        "supported_by_current_context": {
+          "title": "Supported By Current Context",
+          "type": "boolean"
+        },
+        "source_fact_keys": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "default": [],
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "is_imaging_order": {
+          "const": false,
+          "default": false,
+          "title": "Is Imaging Order",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "reason_fa",
+        "question_action",
+        "supported_by_current_context"
+      ],
+      "title": "ReasoningDataRequirement",
+      "type": "object"
+    },
+    "ReasoningHypothesisReview": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "hypothesis_id": {
+          "title": "Hypothesis Id",
+          "type": "string"
+        },
+        "label_fa": {
+          "title": "Label Fa",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "matched_pattern",
+            "pattern_not_matched",
+            "information_missing",
+            "withheld_by_workflow"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "pattern_status": {
+          "enum": [
+            "matched_pattern",
+            "pattern_not_matched",
+            "information_missing"
+          ],
+          "title": "Pattern Status",
+          "type": "string"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/ReasoningCriterion"
+          },
+          "title": "Criteria",
+          "type": "array"
+        },
+        "patient_grounded_support_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Patient Grounded Support Fa",
+          "type": "array"
+        },
+        "pattern_mismatches_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pattern Mismatches Fa",
+          "type": "array"
+        },
+        "schema_coverage_gaps": {
+          "items": {
+            "$ref": "#/$defs/ReasoningDataRequirement"
+          },
+          "title": "Schema Coverage Gaps",
+          "type": "array"
+        },
+        "limitations_fa": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations Fa",
+          "type": "array"
+        },
+        "source_fact_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "is_excluded": {
+          "const": false,
+          "default": false,
+          "title": "Is Excluded",
+          "type": "boolean"
+        },
+        "is_ranked": {
+          "const": false,
+          "default": false,
+          "title": "Is Ranked",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "hypothesis_id",
+        "label_fa",
+        "status",
+        "pattern_status",
+        "criteria",
+        "patient_grounded_support_fa",
+        "pattern_mismatches_fa",
+        "schema_coverage_gaps",
+        "limitations_fa",
+        "source_fact_keys",
+        "source_content_sha256s"
+      ],
+      "title": "ReasoningHypothesisReview",
+      "type": "object"
+    },
+    "ReasoningObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "label_fa": {
+          "title": "Label Fa",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "value_fa": {
+          "title": "Value Fa",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "confirmed",
+            "unverified",
+            "incomplete",
+            "contradictory",
+            "unknown",
+            "declined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "patient_report",
+            "physician_exam",
+            "reviewed_imaging",
+            "unreviewed_imaging"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_ref": {
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "episode_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Episode Ref"
+        },
+        "usability": {
+          "enum": [
+            "usable",
+            "quarantined"
+          ],
+          "title": "Usability",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "field",
+        "label_fa",
+        "value",
+        "value_fa",
+        "state",
+        "provenance",
+        "source_ref",
+        "usability"
+      ],
+      "title": "ReasoningObservation",
+      "type": "object"
+    },
+    "ReasoningTreatmentEpisode": {
+      "additionalProperties": false,
+      "properties": {
+        "episode_ref": {
+          "title": "Episode Ref",
+          "type": "string"
+        },
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/ReasoningObservation"
+          },
+          "title": "Observations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "episode_ref",
+        "observations"
+      ],
+      "title": "ReasoningTreatmentEpisode",
+      "type": "object"
+    },
+    "SourceEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "source_key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Key",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/KnowledgeSourceCreate"
+        },
+        "verified_at": {
+          "format": "date",
+          "title": "Verified At",
+          "type": "string"
+        },
+        "access_level": {
+          "enum": [
+            "full_text",
+            "abstract",
+            "bibliographic_metadata",
+            "indexed_recommendations"
+          ],
+          "title": "Access Level",
+          "type": "string"
+        },
+        "verification_note": {
+          "minLength": 10,
+          "title": "Verification Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_key",
+        "source",
+        "verified_at",
+        "access_level",
+        "verification_note"
+      ],
+      "title": "SourceEntry",
+      "type": "object"
+    },
+    "StructuredAnswer": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "chief_complaint",
+            "onset",
+            "duration",
+            "pain_location",
+            "pain_score",
+            "pain_pattern",
+            "aggravating_factor",
+            "relieving_factor",
+            "mechanical_locking",
+            "functional_limitation",
+            "trauma",
+            "trauma_mechanism",
+            "prior_surgery",
+            "prior_treatment",
+            "treatment_response",
+            "relevant_comorbidity",
+            "current_medication",
+            "fever",
+            "acute_swelling",
+            "neurovascular_symptoms",
+            "systemic_symptoms",
+            "care_goal",
+            "exam_joint_line_tenderness",
+            "exam_effusion",
+            "exam_range_of_motion",
+            "imaging_kl_grade",
+            "imaging_meniscal_lesion",
+            "imaging_cartilage_lesion"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "confirmed",
+            "unverified",
+            "incomplete",
+            "contradictory",
+            "unknown",
+            "declined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "provenance": {
+          "enum": [
+            "patient_report",
+            "physician_exam",
+            "reviewed_imaging",
+            "unreviewed_imaging"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Source Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "state",
+        "provenance",
+        "source_ref"
+      ],
+      "title": "StructuredAnswer",
+      "type": "object"
+    },
+    "SupplementalObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "age_band",
+            "morning_stiffness",
+            "exam_squat_anterior_pain",
+            "exam_mcmurray",
+            "pain_locations",
+            "aggravating_activities",
+            "care_goals"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "confirmed",
+            "unverified",
+            "incomplete",
+            "contradictory",
+            "unknown",
+            "declined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "provenance": {
+          "enum": [
+            "patient_report",
+            "physician_exam"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Source Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "state",
+        "provenance",
+        "source_ref"
+      ],
+      "title": "SupplementalObservation",
+      "type": "object"
+    },
+    "TreeInterviewAnswer": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "chief_complaint",
+            "laterality",
+            "trauma",
+            "fever",
+            "acute_swelling",
+            "systemic_symptoms",
+            "sensory_change",
+            "weakness",
+            "foot_coldness",
+            "foot_color_change",
+            "onset",
+            "duration",
+            "pain_location",
+            "pain_score_now",
+            "pain_pattern",
+            "aggravating_factor",
+            "relieving_factor",
+            "mechanical_locking",
+            "pain_limited_motion",
+            "functional_limitation",
+            "trauma_mechanism",
+            "prior_surgery",
+            "surgery_description",
+            "prior_treatment",
+            "treatment_description",
+            "treatment_pain_response",
+            "treatment_function_response",
+            "diagnosed_conditions",
+            "medication_list",
+            "care_goal",
+            "has_pain"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "confirmed",
+            "unverified",
+            "incomplete",
+            "contradictory",
+            "unknown",
+            "declined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "provenance": {
+          "const": "patient_report",
+          "default": "patient_report",
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Source Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "state",
+        "source_ref"
+      ],
+      "title": "TreeInterviewAnswer",
+      "type": "object"
+    },
+    "TreeInterviewContext": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "body_region": {
+          "default": "unknown",
+          "enum": [
+            "knee",
+            "other",
+            "unknown"
+          ],
+          "title": "Body Region",
+          "type": "string"
+        },
+        "observations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeInterviewAnswer"
+          },
+          "maxItems": 200,
+          "title": "Observations",
+          "type": "array"
+        },
+        "treatment_episodes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeTreatmentEpisode"
+          },
+          "maxItems": 20,
+          "title": "Treatment Episodes",
+          "type": "array"
+        },
+        "clinical_findings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/StructuredAnswer"
+          },
+          "maxItems": 100,
+          "title": "Clinical Findings",
+          "type": "array"
+        }
+      },
+      "title": "TreeInterviewContext",
+      "type": "object"
+    },
+    "TreeTreatmentEpisode": {
+      "additionalProperties": false,
+      "properties": {
+        "episode_ref": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Episode Ref",
+          "type": "string"
+        },
+        "observations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeInterviewAnswer"
+          },
+          "maxItems": 30,
+          "title": "Observations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "episode_ref"
+      ],
+      "title": "TreeTreatmentEpisode",
+      "type": "object"
+    },
+    "WorkbenchNextItem": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "episode_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Episode Ref"
+        },
+        "category": {
+          "enum": [
+            "patient_question",
+            "clinician_exam",
+            "physician_review",
+            "imaging_review"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "action": {
+          "enum": [
+            "ask_missing",
+            "physician_clarification",
+            "not_automatically_reask",
+            "review_existing",
+            "consider_examination"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "question": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkbenchQuestion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reason_fa": {
+          "title": "Reason Fa",
+          "type": "string"
+        },
+        "addresses_comparison_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Addresses Comparison Ids",
+          "type": "array"
+        },
+        "source_fact_keys": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "default": [],
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "priority": {
+          "enum": [
+            "workflow_first",
+            "clarification",
+            "discriminating_information",
+            "context_review"
+          ],
+          "title": "Priority",
+          "type": "string"
+        },
+        "is_imaging_order": {
+          "const": false,
+          "default": false,
+          "title": "Is Imaging Order",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "action",
+        "reason_fa",
+        "priority"
+      ],
+      "title": "WorkbenchNextItem",
+      "type": "object"
+    },
+    "WorkbenchObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "value_fa": {
+          "title": "Value Fa",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "confirmed",
+            "unverified",
+            "incomplete",
+            "contradictory",
+            "unknown",
+            "declined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "patient_report",
+            "physician_exam",
+            "reviewed_imaging",
+            "unreviewed_imaging"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "source_ref": {
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "usability": {
+          "enum": [
+            "usable",
+            "quarantined"
+          ],
+          "title": "Usability",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "field",
+        "value",
+        "value_fa",
+        "state",
+        "provenance",
+        "source_ref",
+        "usability"
+      ],
+      "title": "WorkbenchObservation",
+      "type": "object"
+    },
+    "WorkbenchQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "text_fa": {
+          "title": "Text Fa",
+          "type": "string"
+        },
+        "purpose_fa": {
+          "title": "Purpose Fa",
+          "type": "string"
+        },
+        "answer_type": {
+          "enum": [
+            "text",
+            "yes_no",
+            "single_choice",
+            "multi_choice"
+          ],
+          "title": "Answer Type",
+          "type": "string"
+        },
+        "choices": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Choices",
+          "type": "array"
+        },
+        "channel": {
+          "enum": [
+            "patient_report",
+            "physician_exam",
+            "reviewed_imaging"
+          ],
+          "title": "Channel",
+          "type": "string"
+        },
+        "allow_unknown": {
+          "const": true,
+          "default": true,
+          "title": "Allow Unknown",
+          "type": "boolean"
+        },
+        "allow_decline": {
+          "const": true,
+          "default": true,
+          "title": "Allow Decline",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "field",
+        "text_fa",
+        "purpose_fa",
+        "answer_type",
+        "channel"
+      ],
+      "title": "WorkbenchQuestion",
+      "type": "object"
+    },
+    "WorkbenchRelationship": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "relation": {
+          "enum": [
+            "supports",
+            "discordant",
+            "unavailable",
+            "neutral"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "explanation_fa": {
+          "title": "Explanation Fa",
+          "type": "string"
+        },
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/WorkbenchObservation"
+          },
+          "title": "Observations",
+          "type": "array"
+        },
+        "source_fact_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "is_diagnostic_criterion": {
+          "const": false,
+          "default": false,
+          "title": "Is Diagnostic Criterion",
+          "type": "boolean"
+        },
+        "is_clinical_exclusion": {
+          "const": false,
+          "default": false,
+          "title": "Is Clinical Exclusion",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "field",
+        "relation",
+        "explanation_fa",
+        "observations",
+        "source_fact_keys",
+        "source_content_sha256s"
+      ],
+      "title": "WorkbenchRelationship",
+      "type": "object"
+    },
+    "WorkbenchWorkflowEquivalence": {
+      "additionalProperties": false,
+      "properties": {
+        "guard_id": {
+          "const": "core:pain_location",
+          "title": "Guard Id",
+          "type": "string"
+        },
+        "base_field": {
+          "const": "pain_location",
+          "default": "pain_location",
+          "title": "Base Field",
+          "type": "string"
+        },
+        "supplemental_field": {
+          "const": "pain_locations",
+          "default": "pain_locations",
+          "title": "Supplemental Field",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "explanation_fa": {
+          "title": "Explanation Fa",
+          "type": "string"
+        }
+      },
+      "required": [
+        "guard_id",
+        "source_refs",
+        "explanation_fa"
+      ],
+      "title": "WorkbenchWorkflowEquivalence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "governance_status": {
+      "const": "draft",
+      "default": "draft",
+      "title": "Governance Status",
+      "type": "string"
+    },
+    "source_binding_status": {
+      "const": "draft_authored",
+      "default": "draft_authored",
+      "title": "Source Binding Status",
+      "type": "string"
+    },
+    "requires_independent_review": {
+      "const": true,
+      "default": true,
+      "title": "Requires Independent Review",
+      "type": "boolean"
+    },
+    "schema_id": {
+      "const": "4b-mos.knee-pain-injury-turn",
+      "default": "4b-mos.knee-pain-injury-turn",
+      "title": "Schema Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "$ref": "#/$defs/KneeWorkbenchRequest"
+    },
+    "review": {
+      "$ref": "#/$defs/KneePainInjuryReview"
+    },
+    "next_patient_question": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WorkbenchNextItem"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "next_question_route_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Next Question Route Ids",
+      "type": "array"
+    },
+    "prior_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prior State Sha256",
+      "type": "string"
+    },
+    "turn_result_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Turn Result Sha256",
+      "type": "string"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "rules_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Rules Sha256",
+      "type": "string"
+    },
+    "result_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Result Sha256",
+      "type": "string"
+    },
+    "registry_write_performed": {
+      "const": false,
+      "default": false,
+      "title": "Registry Write Performed",
+      "type": "boolean"
+    },
+    "authenticated_provenance": {
+      "const": false,
+      "default": false,
+      "title": "Authenticated Provenance",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "state",
+    "review",
+    "next_patient_question",
+    "next_question_route_ids",
+    "prior_state_sha256",
+    "turn_result_sha256",
+    "request_sha256",
+    "rules_sha256",
+    "result_sha256"
+  ],
+  "title": "KneePainInjuryTurn",
+  "type": "object"
+}

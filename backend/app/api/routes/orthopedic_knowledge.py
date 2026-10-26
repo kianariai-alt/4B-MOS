@@ -15,6 +15,8 @@ from backend.app.schemas.orthopedic_assessment import KneeAssessmentPreview
 from backend.app.schemas.orthopedic_reasoning_review import KneeReasoningReview
 from backend.app.schemas.orthopedic_workbench import KneeWorkbench, KneeWorkbenchRequest
 from backend.app.schemas.orthopedic_workbench_turn import KneeWorkbenchTurnRequest, KneeWorkbenchTurn
+from backend.app.schemas.orthopedic_pain_injury import KneePainInjuryReview
+from backend.app.schemas.orthopedic_pain_injury_turn import KneePainInjuryTurn
 from backend.app.services.orthopedic_adapter import build_decision_knowledge
 from backend.app.services.orthopedic_book_questions import build_book_question_preview
 from backend.app.services.orthopedic_knowledge import load_knee_pack
@@ -25,6 +27,8 @@ from backend.app.services.orthopedic_assessment import build_knee_assessment
 from backend.app.services.orthopedic_reasoning_review import build_knee_reasoning_review
 from backend.app.services.orthopedic_workbench import build_knee_workbench
 from backend.app.services.orthopedic_workbench_turn import apply_knee_workbench_turn
+from backend.app.services.orthopedic_pain_injury import build_knee_pain_injury_review
+from backend.app.services.orthopedic_pain_injury_turn import apply_knee_pain_injury_turn
 
 
 def require_preview_enabled() -> None:
@@ -116,5 +120,26 @@ def preview_knee_workbench_turn(
     response.headers["Cache-Control"] = "no-store"
     try:
         return apply_knee_workbench_turn(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc), headers={"Cache-Control": "no-store"}) from exc
+
+
+@router.post("/workbench/pain-injury-review", response_model=KneePainInjuryReview)
+def preview_knee_pain_injury_review(
+    request: KneeWorkbenchRequest, response: Response,
+    _actor: User = Depends(require_roles("admin", "physician")),
+) -> KneePainInjuryReview:
+    response.headers["Cache-Control"] = "no-store"
+    return build_knee_pain_injury_review(request)
+
+
+@router.post("/workbench/pain-injury-turn", response_model=KneePainInjuryTurn)
+def preview_knee_pain_injury_turn(
+    request: KneeWorkbenchTurnRequest, response: Response,
+    _actor: User = Depends(require_roles("admin", "physician")),
+) -> KneePainInjuryTurn:
+    response.headers["Cache-Control"] = "no-store"
+    try:
+        return apply_knee_pain_injury_turn(request)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc), headers={"Cache-Control": "no-store"}) from exc
