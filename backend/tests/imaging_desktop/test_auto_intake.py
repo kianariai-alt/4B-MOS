@@ -15,7 +15,7 @@ import zipfile
 from backend.app.imaging_intelligence.intake import inventory, IntakeError
 from backend.imaging_desktop.discovery import discover_downloads
 from backend.imaging_desktop.received import receive
-from backend.imaging_desktop.sources import _download_stream, read_artifact
+from backend.imaging_desktop.sources import _download_stream, read_artifact, unpack
 
 
 def zipped(entries):
@@ -134,6 +134,50 @@ class IntakeTests(unittest.TestCase):
         self.assertEqual(len(validation["rules_sha256"]), 64)
         self.assertFalse(report["is_diagnosis"])
 
+    def test_executable_zip_reaches_dicom_volume_without_executing_the_wrapper(self):
+        from backend.imaging_desktop.volume import load_series
+        from backend.tools.synthetic_knee_fixture import generate_knee_dicom
+        with TemporaryDirectory() as folder:
+            fixture = generate_knee_dicom(Path(folder), size=32)
+            dicoms = tuple(item.path.read_bytes() for item in fixture.source.instances)
+        archive = zipped([(f"images/{i}.bin", raw) for i, raw in enumerate(dicoms)])
+        # Non-runnable MZ fixture; only ZIP data is consumed, never instructions.
+        wrapped = b"MZ" + b"synthetic-non-runnable-wrapper\x00"*20 + archive
+        with patch("subprocess.Popen", side_effect=AssertionError("must not execute")), \
+             patch("os.system", side_effect=AssertionError("must not execute")):
+            result = receive(wrapped)
+            self.assertEqual(result.inventory.kind, "executable_zip")
+            self.assertEqual(result.processing_code, "volume_catalog_ready")
+            self.assertEqual(unpack(wrapped).files, dicoms)
+            self.assertEqual(load_series(result.catalog.series[0]).voxels.shape, (32, 32, 32))
+        self.assertEqual(result.payload, wrapped)
+        self.assertNotIn("synthetic-non-runnable-wrapper", json.dumps(result.report()))
+
+    def test_viewer_only_or_false_zip_signatures_have_actionable_processing_codes(self):
+        for raw in (b"MZviewer-only", b"MZstubPK\x03\x04not-a-valid-archive"):
+            result = receive(raw)
+            self.assertEqual(result.inventory.kind, "executable")
+            self.assertEqual(result.processing_code, "executable_requires_image_export")
+            self.assertIsNone(result.catalog)
+        report_package = receive(b"MZsynthetic-stub" + zipped([("report.pdf", b"%PDF-1.7")]))
+        self.assertEqual(report_package.inventory.kind, "executable_zip")
+        self.assertEqual(report_package.processing_code, "embedded_archive_requires_image_export")
+        self.assertEqual(dict(report_package.inventory.member_kinds), {"pdf": 1})
+
+    def test_executable_zip_keeps_archive_path_and_expansion_guards(self):
+        wrapped = b"MZsynthetic-stub" + zipped([("../Private Patient/file.dcm", b"private")])
+        with self.assertRaisesRegex(IntakeError, "unsafe_archive_entry"):
+            inventory(wrapped)
+        result = receive(wrapped)
+        self.assertEqual(result.payload, wrapped)
+        self.assertEqual(result.processing_code, "quarantined_invalid_archive")
+        self.assertNotIn("Private Patient", json.dumps(result.report()))
+        with patch("backend.app.imaging_intelligence.intake.MAX_MEMBERS", 1):
+            with self.assertRaisesRegex(IntakeError, "archive_member_limit"):
+                inventory(b"MZstub" + zipped([("1", b"a"), ("2", b"b")]))
+        with patch("backend.app.imaging_intelligence.intake.MAX_INSPECTED_BYTES", 2):
+            self.assertIn("archive_inspection_byte_limit", inventory(b"MZstub" + zipped([("report", b"%PDF-1.7")])).issues)
+
 
 class DiscoveryTests(unittest.TestCase):
     def anchor(self, href, **kw):
@@ -166,6 +210,14 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(discover_downloads("https://center.example/Patient", [self.anchor(f"/{i}.pdf") for i in range(9)]).status,
                          "too_many_download_candidates")
         self.assertEqual(discover_downloads("https://center.example/Patient", anchors*100).status, "portal_inspection_limit")
+
+    def test_image_exports_are_fetched_before_viewer_executables_without_dropping_formats(self):
+        result = discover_downloads("https://center.example/Patient", [
+            self.anchor("/aaa-viewer.exe", download=True), self.anchor("/images.zip"),
+            self.anchor("/report.pdf"), self.anchor("/installer.msi", text="Download viewer"),
+        ])
+        self.assertEqual(result.urls, ("https://center.example/images.zip", "https://center.example/report.pdf",
+                                       "https://center.example/aaa-viewer.exe", "https://center.example/installer.msi"))
 
 
 if __name__ == "__main__":

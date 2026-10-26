@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 import hashlib
 
-from backend.app.imaging_intelligence.intake import ArtifactInventory, IntakeError, inventory, MAX_BYTES
+from backend.app.imaging_intelligence.intake import ArtifactInventory, IntakeError, inventory, MAX_BYTES, ZIP_KINDS
 from .sources import ImportFailure, check_cancel, unpack
 
 
@@ -50,7 +50,9 @@ def receive(raw, *, cancel=None):
         return ReceivedArtifact(raw, assessment, processing_code="quarantined_invalid_archive")
     if assessment.kind == "html":
         return ReceivedArtifact(raw, assessment, processing_code="portal_page")
-    if assessment.kind == "dicom" or (assessment.kind == "zip" and dict(assessment.member_kinds).get("dicom")):
+    if assessment.kind == "executable":
+        return ReceivedArtifact(raw, assessment, processing_code="executable_requires_image_export")
+    if assessment.kind == "dicom" or (assessment.kind in ZIP_KINDS and dict(assessment.member_kinds).get("dicom")):
         from .volume import scan
         try:
             catalog = scan(unpack(raw, cancel=cancel), cancel=cancel)
@@ -59,4 +61,6 @@ def receive(raw, *, cancel=None):
             if str(error) == "cancelled":
                 raise
             return ReceivedArtifact(raw, assessment, processing_code=str(error))
+    if assessment.kind == "executable_zip":
+        return ReceivedArtifact(raw, assessment, processing_code="embedded_archive_requires_image_export")
     return ReceivedArtifact(raw, assessment)

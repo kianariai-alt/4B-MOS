@@ -29,7 +29,7 @@ def discover_downloads(page_url, anchors) -> DiscoveryResult:
     origin = validate_https_url(page_url)
     if type(anchors) is not list or len(anchors) > 200:
         return DiscoveryResult(status="portal_inspection_limit")
-    found = set()
+    found = {}
     for anchor in anchors:
         if type(anchor) is not dict or anchor.get("visible") is not True:
             continue
@@ -51,10 +51,15 @@ def discover_downloads(page_url, anchors) -> DiscoveryResult:
         explicit = (anchor.get("download") is True or suffix in DOWNLOAD_SUFFIXES
                     or bool(re.search(r"\b(download|export)\b|دانلود|دریافت فایل", label[:300], re.I)))
         if explicit:
-            found.add(url)
+            # Keep every explicit format eligible, but fetch image/data exports
+            # before viewer/install programs when the center offers both.
+            priority = 0 if suffix in {"dcm", "dicom", "zip", "nii", "gz", "nrrd", "mha"} else 1
+            if suffix in {"exe", "msi", "com", "bat", "cmd", "ps1", "scr", "dmg", "pkg"}:
+                priority = 2
+            found[url] = min(priority, found.get(url, priority))
     if len(found) > 8:
         return DiscoveryResult(status="too_many_download_candidates")
-    return DiscoveryResult(tuple(sorted(found)), "downloads_found" if found else "manual_export_required")
+    return DiscoveryResult(tuple(sorted(found, key=lambda url:(found[url], url))), "downloads_found" if found else "manual_export_required")
 
 
 # Read only visible anchor descriptors; never input values, cookies or page text.

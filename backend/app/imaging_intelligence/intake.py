@@ -21,6 +21,7 @@ MAX_BYTES = 512 * 1024 * 1024
 MAX_MEMBERS = 544
 MAX_INSPECTED_BYTES = 64 * 1024 * 1024
 MAX_DEPTH = 2
+ZIP_KINDS = frozenset({"zip", "executable_zip"})
 
 
 class IntakeError(ValueError):
@@ -43,8 +44,19 @@ class ArtifactInventory:
         return asdict(self)
 
 
+def is_embedded_zip(raw: bytes) -> bool:
+    """Recognize an MZ-prefixed ZIP container by its end directory, without executing it.
+
+    This does not validate a PE program or trust its contents. Full member, path,
+    compression and size checks still apply before any image is consumed.
+    """
+    return raw.startswith(b"MZ") and zipfile.is_zipfile(BytesIO(raw))
+
+
 def _kind(raw):
     head = raw[:4096].lstrip(b"\xef\xbb\xbf\x00\t\n\r ")
+    if raw.startswith(b"MZ"):
+        return "executable_zip" if is_embedded_zip(raw) else "executable"
     if raw[128:132] == b"DICM":
         return "dicom"
     if raw.startswith((b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08")):
@@ -104,7 +116,8 @@ def inventory(raw: bytes, *, _depth=0) -> ArtifactInventory:
         issues.add("archive_decoder_required")
     if kind in {"unknown", "executable"}:
         issues.add("quarantined_no_processor")
-    if kind in {"zip", "gzip", "tar"}:
+    if kind in ZIP_KINDS | {"gzip", "tar"}:
+        is_zip = kind in ZIP_KINDS
         if _depth >= MAX_DEPTH:
             issues.add("nested_archive_inspection_limit")
         else:
@@ -119,28 +132,28 @@ def inventory(raw: bytes, *, _depth=0) -> ArtifactInventory:
                     counts.update(dict(child.member_kinds))
                     issues.update(child.issues)
                 else:
-                    archive = (zipfile.ZipFile(BytesIO(raw)) if kind == "zip"
+                    archive = (zipfile.ZipFile(BytesIO(raw)) if is_zip
                                else tarfile.open(fileobj=BytesIO(raw), mode="r:"))
                     with archive:
-                        entries = archive.infolist() if kind == "zip" else archive
+                        entries = archive.infolist() if is_zip else archive
                         expanded, inspected = 0, 0
                         for index, item in enumerate(entries):
                             if index >= MAX_MEMBERS:
                                 raise IntakeError("archive_member_limit")
-                            name = item.filename if kind == "zip" else item.name
-                            if (not _safe_name(name) or (kind == "zip" and stat.S_ISLNK(item.external_attr >> 16))
+                            name = item.filename if is_zip else item.name
+                            if (not _safe_name(name) or (is_zip and stat.S_ISLNK(item.external_attr >> 16))
                                     or (kind == "tar" and not (item.isfile() or item.isdir()))):
                                 raise IntakeError("unsafe_archive_entry")
-                            if item.is_dir() if kind == "zip" else item.isdir():
+                            if (item.is_dir() if is_zip else item.isdir()):
                                 continue
-                            size = item.file_size if kind == "zip" else item.size
+                            size = item.file_size if is_zip else item.size
                             expanded += size
                             if expanded > MAX_BYTES or size < 0:
                                 raise IntakeError("archive_expansion_limit")
-                            if kind == "zip" and item.flag_bits & 1:
+                            if is_zip and item.flag_bits & 1:
                                 issues.add("encrypted_archive_requires_credentials")
                                 continue
-                            if kind == "zip" and item.compress_type not in {zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED}:
+                            if is_zip and item.compress_type not in {zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED}:
                                 issues.add("archive_decoder_required")
                                 continue
                             if size == 0:
@@ -150,7 +163,7 @@ def inventory(raw: bytes, *, _depth=0) -> ArtifactInventory:
                                 issues.add("archive_inspection_byte_limit")
                                 continue
                             inspected += size
-                            stream = archive.open(item) if kind == "zip" else archive.extractfile(item)
+                            stream = archive.open(item) if is_zip else archive.extractfile(item)
                             with stream:
                                 payload = stream.read(size+1)
                             if len(payload) != size:

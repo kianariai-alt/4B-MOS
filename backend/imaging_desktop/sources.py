@@ -12,6 +12,8 @@ from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 import zipfile
 
+from backend.app.imaging_intelligence.intake import is_embedded_zip
+
 
 MAX_FILE_BYTES = 16 * 1024 * 1024
 MAX_INPUT_BYTES = 512 * 1024 * 1024
@@ -124,7 +126,7 @@ def read_artifact(path):
 def unpack(raw, *, cancel=None):
     if not isinstance(raw, bytes) or not raw or len(raw) > MAX_INPUT_BYTES:
         raise ImportFailure("input_size_limit")
-    if raw[:4] != b"PK\x03\x04":
+    if raw[:4] != b"PK\x03\x04" and not is_embedded_zip(raw):
         if len(raw) <= MAX_FILE_BYTES and raw[128:132] == b"DICM":
             return SourceFiles((raw,))
         if raw.lstrip()[:1] == b"<":

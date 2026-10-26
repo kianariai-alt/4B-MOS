@@ -234,7 +234,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("4B Imaging · نمایشگر محلی MRI / CT")
+        self.setWindowTitle("4B Imaging 0.2.1 · نمایشگر محلی MRI / CT")
         self.resize(1450, 940)
         self.catalog = self.loaded = None
         self.portal = None
@@ -258,7 +258,7 @@ class MainWindow(QtWidgets.QMainWindow):
         notice.setObjectName("notice")
         layout.addWidget(notice)
         imports = QtWidgets.QHBoxLayout()
-        self.file_button, self.folder_button, self.demo_button = [QtWidgets.QPushButton(s) for s in ("بازکردن DICOM / ZIP", "پوشهٔ DICOM", "نمونهٔ ساختگی")]
+        self.file_button, self.folder_button, self.demo_button = [QtWidgets.QPushButton(s) for s in ("بازکردن فایل تصویری / گزارش", "پوشهٔ DICOM", "نمونهٔ ساختگی")]
         for button in (self.file_button, self.folder_button, self.demo_button):
             imports.addWidget(button)
         imports.addStretch()
@@ -268,7 +268,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addLayout(imports)
         network = QtWidgets.QHBoxLayout()
         self.url, self.token = QtWidgets.QLineEdit(), QtWidgets.QLineEdit()
-        self.url.setPlaceholderText("لینک HTTPS صفحهٔ مرکز یا دانلود مستقیم DICOM/ZIP")
+        self.url.setPlaceholderText("لینک HTTPS صفحهٔ مرکز یا دانلود فایل")
         self.url.setEchoMode(QtWidgets.QLineEdit.PasswordEchoOnEdit)
         self.url.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.token.setPlaceholderText("Bearer token اختیاری")
@@ -279,6 +279,24 @@ class MainWindow(QtWidgets.QMainWindow):
         for widget in (self.url, self.portal_button, self.token, self.fetch_button, self.cancel_button):
             network.addWidget(widget, 1 if widget is self.url else 0)
         layout.addLayout(network)
+        self.import_notice = QtWidgets.QFrame()
+        self.import_notice.setObjectName("importNotice")
+        notice_layout = QtWidgets.QVBoxLayout(self.import_notice)
+        self.import_notice_title = QtWidgets.QLabel()
+        self.import_notice_title.setObjectName("importNoticeTitle")
+        self.import_notice_text = QtWidgets.QLabel()
+        self.import_notice_text.setWordWrap(True)
+        notice_layout.addWidget(self.import_notice_title)
+        notice_layout.addWidget(self.import_notice_text)
+        notice_actions = QtWidgets.QHBoxLayout()
+        self.other_file_button = QtWidgets.QPushButton("انتخاب فایل تصویری یا گزارش")
+        self.reopen_received_button = QtWidgets.QPushButton("بازکردن یکی از فایل‌های دریافت‌شده")
+        self.help_button = QtWidgets.QPushButton("راهنمای دریافت از مرکز")
+        for button in (self.other_file_button, self.reopen_received_button, self.help_button):
+            notice_actions.addWidget(button)
+        notice_layout.addLayout(notice_actions)
+        self.import_notice.hide()
+        layout.addWidget(self.import_notice)
         splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         left = QtWidgets.QWidget()
         side = QtWidgets.QVBoxLayout(left)
@@ -333,10 +351,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status = QtWidgets.QLabel("آماده · پردازش تصویر محلی است؛ برنامه داده‌ای به سرور 4B-MOS ارسال نمی‌کند.")
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
-        self.import_controls = (self.file_button, self.folder_button, self.demo_button, self.fetch_button, self.portal_button, self.series_box, self.url, self.token)
+        self.import_controls = (self.file_button, self.folder_button, self.demo_button, self.fetch_button, self.portal_button, self.series_box, self.url, self.token,
+                                self.other_file_button, self.reopen_received_button, self.help_button)
         self.view_controls = (self.reset_button, self.orbit_button, self.cine_button, self.color_box, self.clip_box,
                               self.threshold, self.opacity, self.clip, self.window_center, self.window_width)
         self.file_button.clicked.connect(self.choose_file)
+        self.other_file_button.clicked.connect(self.choose_file)
+        self.reopen_received_button.clicked.connect(self.reopen_received)
+        self.help_button.clicked.connect(self.show_download_help)
         self.folder_button.clicked.connect(self.choose_folder)
         self.demo_button.clicked.connect(self.load_demo)
         self.fetch_button.clicked.connect(self.load_url)
@@ -361,6 +383,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.inventory_action = QtGui.QAction("ذخیرهٔ فهرست فنی دریافت‌ها…", self)
         self.inventory_action.triggered.connect(self.save_inventory)
         received_menu = self.menuBar().addMenu("فایل‌های دریافت‌شده")
+        self.reopen_received_action = received_menu.addAction("بازکردن فایل دریافت‌شده…")
+        self.reopen_received_action.triggered.connect(self.reopen_received)
         received_menu.addAction(self.save_received_action)
         received_menu.addAction(self.inventory_action)
 
@@ -409,6 +433,7 @@ class MainWindow(QtWidgets.QMainWindow):
         job.start()
 
     def clear(self):
+        self.import_notice.hide()
         if self.document_preview is not None:
             self.document_preview.close()
             self.document_preview = None
@@ -502,20 +527,47 @@ class MainWindow(QtWidgets.QMainWindow):
         self.clear()
         self.start_job(operation, self.received_ready)
 
-    def received_ready(self, artifact):
+    def received_ready(self, artifact, *, remember=True):
         from .sources import MAX_INPUT_BYTES
-        while self.received_artifacts and sum(len(a.payload) for a in self.received_artifacts)+len(artifact.payload) > MAX_INPUT_BYTES:
-            self.received_artifacts.pop(0)
-        self.received_artifacts.append(artifact)
+        if remember:
+            while self.received_artifacts and sum(len(a.payload) for a in self.received_artifacts)+len(artifact.payload) > MAX_INPUT_BYTES:
+                self.received_artifacts.pop(0)
+            self.received_artifacts.append(artifact)
         if artifact.catalog is not None:
             self.catalog_ready(artifact.catalog)
             return
+        if artifact.processing_code in {"executable_requires_image_export", "embedded_archive_requires_image_export"}:
+            self.import_notice_title.setText("فایل اجرایی مرکز دریافت شد؛ هنوز تصویر قابل نمایش نداریم")
+            self.import_notice_text.setText(
+                "این فایل می‌تواند برنامهٔ مشاهده، دانلودکننده یا بستهٔ اختصاصی مرکز باشد. "
+                "ZIP جاسازی‌شده بدون اجرای برنامه بررسی می‌شود؛ در این ورودی دادهٔ حجمی قابل‌خواندن پیدا نشد. "
+                "در صفحهٔ مرکز گزینهٔ «تصاویر / DICOM / ZIP / Export» یا گزارش PDF را انتخاب کنید. "
+                "اگر فایل تصویری قبلاً دریافت شده، آن را از فهرست دریافت‌ها باز کنید.")
+            self.import_notice.show()
         self.info.setText(f"فایل دریافت شد · قالب: {artifact.inventory.kind} · {len(artifact.payload)/1024/1024:.2f} MiB\n"
                           "قالب از محتوای فایل تشخیص داده شده؛ دریافت فایل به معنی اعتبار بالینی آن نیست.")
         self.status.setText("فایل از منوی «فایل‌های دریافت‌شده» قابل ذخیره است. "
                             "این قالب وارد پردازشگر حجم DICOM نمی‌شود. ["+artifact.processing_code+"]")
         if artifact.inventory.kind in {"pdf", "png", "jpeg", "gif", "tiff", "bmp", "webp"}:
             self.preview_document(artifact)
+
+    def reopen_received(self):
+        if self.active_job is not None or not self.received_artifacts:
+            return
+        choices = [f"{i+1} · {a.inventory.kind} · {len(a.payload)} bytes" for i, a in enumerate(self.received_artifacts)]
+        selected, ok = QtWidgets.QInputDialog.getItem(self, "فایل دریافت‌شده", "انتخاب فایل برای نمایش", choices, 0, False)
+        if ok:
+            artifact = self.received_artifacts[choices.index(selected)]
+            self.clear()
+            self.received_ready(artifact, remember=False)
+
+    def show_download_help(self):
+        QtWidgets.QMessageBox.information(self, "راهنمای خروجی مرکز",
+            "۱. لینک مرکز را در بالای برنامه وارد و «ورود به صفحهٔ مرکز» را انتخاب کنید.\n"
+            "۲. کد و رمز را در صفحهٔ خود مرکز وارد کنید.\n"
+            "۳. گزینهٔ دانلود تصاویر / DICOM / ZIP / Export یا گزارش PDF را انتخاب کنید.\n"
+            "۴. اگر فقط برنامهٔ EXE ارائه می‌شود، خروجی خام یا خروجی قابل دانلود تصاویر را از مرکز بخواهید.\n"
+            "بسته‌های دارای ZIP جاسازی‌شده مستقیماً بررسی می‌شوند؛ کد فایل اجرایی اجرا نمی‌شود.")
 
     def save_received(self):
         if not self.received_artifacts:
@@ -727,6 +779,8 @@ STYLE = """
 QWidget { background:#0c1522; color:#e6edf6; font-family:Tahoma,'Segoe UI'; font-size:12px; }
 QLabel#heading { color:#71dec8; font-size:21px; font-weight:600; padding:9px; }
 QLabel#notice { background:#24271f; color:#ddcfac; padding:10px; border-radius:6px; }
+QFrame#importNotice { background:#293125; border:1px solid #7c9064; border-radius:6px; }
+QLabel#importNoticeTitle { color:#f4e7ae; font-weight:bold; font-size:15px; }
 QPushButton { background:#1b3344; border:1px solid #365165; padding:9px 13px; border-radius:5px; }
 QPushButton:hover { background:#28506a; } QPushButton:checked { background:#286353; }
 QPushButton:disabled { color:#607586; background:#142332; }

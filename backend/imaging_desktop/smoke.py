@@ -39,6 +39,7 @@ def process_for(milliseconds):
 
 
 def check_ui(application, window, output):
+    from .received import receive
     output.mkdir(parents=True, exist_ok=True)
     QtTest.QTest.mouseClick(window.demo_button, QtCore.Qt.LeftButton)
     wait_until(lambda: window.loaded is not None or not window.jobs, 60000)
@@ -153,7 +154,7 @@ def check_ui(application, window, output):
          patch.object(portal.page, "download") as browser_download:
         portal.inspect_downloads()
         assert wait_until(lambda: browser_download.called, 10000)
-        assert browser_download.call_args.args[0].toString() == "https://synthetic-center.example/report.pdf"
+        assert browser_download.call_args.args[0].toString() == "https://synthetic-center.example/volume.zip"
         assert len(portal.attempted_urls) == 1
     portal.close()
 
@@ -179,10 +180,32 @@ def check_ui(application, window, output):
     assert window.document_preview is not None and window.document_preview.isVisible()
     assert all(not path.exists() for path in temp_paths)
     window.document_preview.close()
+    # A center's viewer EXE must explain why there is no image and how to recover.
+    window.import_received(lambda cancel: receive(b"MZsynthetic-viewer-only", cancel=cancel))
+    assert wait_until(lambda: not window.jobs and window.import_notice.isVisible(), 10000)
+    assert window.loaded is None and window.view.loaded is None
+    assert "فایل اجرایی مرکز" in window.import_notice_title.text()
+    assert window.received_artifacts[-1].processing_code == "executable_requires_image_export"
+    window.grab().save(str(output/"viewer-exe-guidance.png"))
+    # A ZIP-based self-extracting package uses exactly the existing DICOM gate.
+    wrapped = b"MZsynthetic-non-runnable-wrapper\x00" + archive.getvalue()
+    window.import_received(lambda cancel: receive(wrapped, cancel=cancel))
+    assert wait_until(lambda: window.loaded is not None and not window.jobs, 40000)
+    assert window.received_artifacts[-1].inventory.kind == "executable_zip"
+    assert not window.import_notice.isVisible()
+    # A later viewer-only download clears old images, but the earlier scan is
+    # explicitly reopenable without inventing a new patient association.
+    window.import_received(lambda cancel: receive(b"MZanother-synthetic-viewer", cancel=cancel))
+    assert wait_until(lambda: not window.jobs and window.import_notice.isVisible(), 10000)
+    with patch("PySide6.QtWidgets.QInputDialog.getItem", return_value=(
+            f"{len(window.received_artifacts)-1} · executable_zip · {len(wrapped)} bytes", True)):
+        before_count = len(window.received_artifacts)
+        window.reopen_received()
+        assert wait_until(lambda: window.loaded is not None and not window.jobs, 40000)
+        assert len(window.received_artifacts) == before_count
     portal.close()
 
     # Render a generated PDF in the actual Qt PDF widget, without OCR/model claims.
-    from .received import receive
     pdf = QtCore.QBuffer()
     pdf.open(QtCore.QIODevice.ReadWrite)
     writer = QtGui.QPdfWriter(pdf)
@@ -190,6 +213,7 @@ def check_ui(application, window, output):
     painter.drawText(100, 100, "Synthetic report - no patient data")
     painter.end()
     del writer
+    window.clear()
     window.received_ready(receive(bytes(pdf.data())))
     from PySide6.QtPdf import QPdfDocument
     assert wait_until(lambda: window.document_preview.document.status() == QPdfDocument.Status.Ready, 10000)
@@ -203,4 +227,6 @@ def check_ui(application, window, output):
     report.update(private_portal_browser_checked=True, browser_download_to_volume_checked=True,
                   temporary_portal_file_removed=True, explicit_download_automation_checked=True,
                   browser_png_download_and_preview_checked=True, actual_qt_pdf_preview_checked=True)
+    report.update(viewer_exe_guidance_checked=True, executable_zip_to_volume_checked=True,
+                  earlier_download_can_be_reopened=True)
     (output/"ui-verification.json").write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")
