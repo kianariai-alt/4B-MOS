@@ -1,0 +1,60 @@
+name: AMK Full Replacement Utility Windows
+
+on:
+  push:
+    branches:
+      - build/amk-accounting-installer
+    paths:
+      - 'amk-build/AMK_FullReplacement_Tool_Source.b64'
+      - '.github/workflows/amk-full-replacement-tool.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout utility source
+        uses: actions/checkout@v4
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Validate and unpack tool source only
+        shell: pwsh
+        run: |
+          $base64=(Get-Content -Raw 'amk-build/AMK_FullReplacement_Tool_Source.b64').Trim()
+          [IO.File]::WriteAllBytes('amk-tool-source.zip',[Convert]::FromBase64String($base64))
+          $sha=(Get-FileHash 'amk-tool-source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne 'db0a6eeb70bed4459e9820ffd5afc37abbadfea581090c4c85e77bbdaa257bd0') { throw "Tool source hash mismatch: $sha" }
+          Expand-Archive 'amk-tool-source.zip' '.' -Force
+          if (!(Test-Path 'AMK.ResetImport/AMK.ResetImport.csproj')) { throw 'Missing C# tool project' }
+      - name: Restore and publish single Windows executable
+        shell: pwsh
+        run: |
+          dotnet restore 'AMK.ResetImport/AMK.ResetImport.csproj' -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed' }
+          dotnet publish 'AMK.ResetImport/AMK.ResetImport.csproj' -c Release -r win-x64 --self-contained true -o 'published' -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
+          if (!(Test-Path 'published/AMK.ResetImport.exe')) { throw 'Executable missing' }
+      - name: Verify copy backup reset insert and retain admin using synthetic SQLite
+        shell: pwsh
+        run: |
+          $exe=(Resolve-Path 'published/AMK.ResetImport.exe').Path
+          $p=Start-Process -FilePath $exe -ArgumentList '--selftest' -Wait -PassThru -NoNewWindow
+          Write-Host ('Self test exit: '+$p.ExitCode)
+          if ($p.ExitCode -ne 0) {
+            if (Test-Path 'AMK_Reset_SelfTest_Error.txt') { Get-Content 'AMK_Reset_SelfTest_Error.txt' }
+            throw 'Full replacement synthetic safety test failed'
+          }
+          if (!(Test-Path 'AMK_Reset_SelfTest_OK.txt')) { throw 'Self-test success marker missing' }
+          Get-Content 'AMK_Reset_SelfTest_OK.txt'
+      - name: Upload compiled utility, no patient data
+        uses: actions/upload-artifact@v4
+        with:
+          name: AMK-Full-Replacement-Tool-Windows64
+          path: published/AMK.ResetImport.exe
+          retention-days: 21
+          if-no-files-found: error
