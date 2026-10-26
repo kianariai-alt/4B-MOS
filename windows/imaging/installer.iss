@@ -10,7 +10,7 @@
 [Setup]
 AppId={{A77CBACD-739F-4BD9-9399-A17719B3B061}
 AppName=4B Imaging
-AppVersion=0.1.1
+AppVersion=0.2.0
 AppPublisher=4B-MOS
 DefaultDirName={localappdata}\Programs\4B Imaging
 DefaultGroupName=4B Imaging

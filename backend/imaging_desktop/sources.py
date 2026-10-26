@@ -54,14 +54,14 @@ class _SameOriginRedirect(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _download_stream(response, *, cancel=None, progress=None):
+def _download_stream(response, *, cancel=None, progress=None, allow_any_format=False):
     """The response can be a real HTTPS stream or a byte stream in unit tests."""
     if getattr(response, "status", 200) != 200:
         raise ImportFailure("download_failed")
     if response.headers.get("Content-Encoding", "identity").lower() != "identity":
         raise ImportFailure("encoded_download_not_supported")
     kind = response.headers.get("Content-Type", "").split(";", 1)[0].lower()
-    if kind in {"text/html", "application/xhtml+xml", "application/json"}:
+    if not allow_any_format and kind in {"text/html", "application/xhtml+xml", "application/json"}:
         raise ImportFailure("portal_page_requires_dicom_download")
     try:
         length = int(response.headers.get("Content-Length", "0"))
@@ -88,27 +88,37 @@ def _download_stream(response, *, cancel=None, progress=None):
     return data.getvalue()
 
 
-def download(url, *, bearer_token="", cancel=None, progress=None):
+def download_bytes(url, *, bearer_token="", cancel=None, progress=None, allow_any_format=True):
     check_cancel(cancel)
     validate_https_url(url)
     if not isinstance(bearer_token, str) or len(bearer_token) > 4096 or "\r" in bearer_token or "\n" in bearer_token:
         raise ImportFailure("invalid_access_token")
-    headers = {"Accept": "application/zip, application/dicom, application/octet-stream", "Accept-Encoding": "identity",
-               "User-Agent": "4B-Imaging-Desktop/0.1"}
+    headers = {"Accept": "*/*", "Accept-Encoding": "identity", "User-Agent": "4B-Imaging-Desktop/0.2"}
     if bearer_token:
         headers["Authorization"] = "Bearer " + bearer_token
     # Fresh opener: no shared cookies, cache, browsing history or credentials.
     opener = build_opener(_SameOriginRedirect(), HTTPSHandler(context=ssl.create_default_context()))
     try:
         with opener.open(Request(url, headers=headers), timeout=15) as response:
-            raw = _download_stream(response, cancel=cancel, progress=progress)
-        return unpack(raw, cancel=cancel)
+            raw = _download_stream(response, cancel=cancel, progress=progress, allow_any_format=allow_any_format)
+        return raw
     except ImportFailure:
         raise
     except HTTPError as error:
         raise ImportFailure("authentication_required" if error.code in {401, 403} else "download_failed") from None
     except (URLError, OSError, ValueError):
         raise ImportFailure("https_connection_failed") from None
+
+
+def download(url, *, bearer_token="", cancel=None, progress=None):
+    """Compatibility entry point for existing DICOM callers."""
+    return unpack(download_bytes(url, bearer_token=bearer_token, cancel=cancel,
+                                 progress=progress, allow_any_format=False), cancel=cancel)
+
+
+def read_artifact(path):
+    """Receive any regular local file without assuming its extension or format."""
+    return _read_file(Path(path), limit=MAX_INPUT_BYTES)
 
 
 def unpack(raw, *, cancel=None):

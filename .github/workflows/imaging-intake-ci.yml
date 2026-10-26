@@ -1,0 +1,30 @@
+name: Imaging intake and Copilot evidence
+on:
+  pull_request:
+    branches: [main, feature/windows-imaging-viewer]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: imaging-intake-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ENVIRONMENT: test
+      DATABASE_URL: sqlite://
+      BOOTSTRAP_ENABLED: 'true'
+      SECRET_KEY: 4B-intake-CI-generated-fixtures-only-20261026
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt -r backend/requirements-dev.txt -r backend/requirements-imaging.txt numpy==2.3.5
+      - run: python -m compileall -q backend
+      - run: python -m unittest discover -s backend/tests/imaging_desktop -v
+      - run: python -m pytest backend/tests/test_imaging_evidence.py backend/tests/test_physician_copilot.py backend/tests/test_clinical_context.py -q

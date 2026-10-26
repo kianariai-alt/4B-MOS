@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from backend.app.api.dependencies import require_roles
 from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.physician_copilot import PhysicianCopilotSnapshotRead
+from backend.app.schemas.imaging_evidence import ImagingEvidenceRead
+from backend.app.services.imaging_evidence import ImagingEvidenceService
 from backend.app.services.clinical_context import (
     ClinicalContextConflictError,
     ClinicalContextIntegrityError,
@@ -75,5 +77,19 @@ def get_physician_copilot_snapshot(
 ) -> PhysicianCopilotSnapshotRead:
     try:
         return PhysicianCopilotService.get_snapshot(db, visit_id)
+    except COPILOT_ERRORS as error:
+        _translate_error(error)
+
+
+@router.get("/visits/{visit_id}/physician-copilot/imaging-evidence", response_model=ImagingEvidenceRead)
+def get_imaging_evidence(
+    visit_id: str,
+    response: Response,
+    _actor: User = Depends(require_roles(*READ_ROLES)),
+    db: Session = Depends(get_db),
+) -> ImagingEvidenceRead:
+    try:
+        response.headers["Cache-Control"] = "no-store"
+        return ImagingEvidenceService.get_for_visit(db, visit_id)
     except COPILOT_ERRORS as error:
         _translate_error(error)

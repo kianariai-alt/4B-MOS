@@ -8,7 +8,7 @@ import time
 import zipfile
 
 import numpy as np
-from PySide6 import QtCore, QtTest
+from PySide6 import QtCore, QtGui, QtTest
 from vtkmodules.vtkRenderingCore import vtkWindowToImageFilter
 from vtkmodules.vtkIOImage import vtkPNGWriter
 from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -137,11 +137,70 @@ def check_ui(application, window, output):
     assert all(not path.exists() for path in temp_paths), "Temporary portal downloads must be deleted after snapshot import."
     portal.grab().save(str(output/"portal-fixture.png"))
     portal.close()
+    # The auto-download driver reads the real DOM, using a fixture URL and a
+    # recorded browser-download call. No real portal navigation/credential read.
+    from unittest.mock import patch
+    portal.show()
+    process_for(200)
+    populated = []
+    portal.page.runJavaScript("document.body.innerHTML="+json.dumps(
+        '<input type="password" value="fixture-never-read">'
+        '<a href="/report.pdf">Report</a><a href="/volume.zip">Scan</a>'
+        '<a hidden href="/private.pdf">Hidden</a><a href="https://other.example/a.pdf">Other center</a>'),
+        lambda value: populated.append(True))
+    assert wait_until(lambda: bool(populated), 10000)
+    with patch.object(portal.page, "url", return_value=QtCore.QUrl("https://synthetic-center.example/Patient")), \
+         patch.object(portal.page, "download") as browser_download:
+        portal.inspect_downloads()
+        assert wait_until(lambda: browser_download.called, 10000)
+        assert browser_download.call_args.args[0].toString() == "https://synthetic-center.example/report.pdf"
+        assert len(portal.attempted_urls) == 1
+    portal.close()
+
+    # A second actual browser download is an image, not DICOM. It must be kept,
+    # previewed and must clear the previously displayed scan.
+    image = QtGui.QImage(64, 48, QtGui.QImage.Format_RGB32)
+    image.fill(QtGui.QColor("#27aa88"))
+    buffer = QtCore.QBuffer()
+    buffer.open(QtCore.QIODevice.WriteOnly)
+    assert image.save(buffer, "PNG")
+    encoded_png = base64.b64encode(bytes(buffer.data())).decode("ascii")
+    portal.show()
+    process_for(200)
+    populated = []
+    portal.page.runJavaScript("document.body.innerHTML="+json.dumps(
+        '<a id="image" download="misleading.dcm" href="data:image/png;base64,'+encoded_png+'">Download report image</a>'),
+        lambda value: populated.append(True))
+    assert wait_until(lambda: bool(populated), 10000)
+    portal.page.runJavaScript("document.getElementById('image').click()")
+    assert wait_until(lambda: not window.jobs and bool(window.received_artifacts) and
+                      window.received_artifacts[-1].inventory.kind == "png", 20000)
+    assert window.loaded is None and window.view.loaded is None
+    assert window.document_preview is not None and window.document_preview.isVisible()
+    assert all(not path.exists() for path in temp_paths)
+    window.document_preview.close()
+    portal.close()
+
+    # Render a generated PDF in the actual Qt PDF widget, without OCR/model claims.
+    from .received import receive
+    pdf = QtCore.QBuffer()
+    pdf.open(QtCore.QIODevice.ReadWrite)
+    writer = QtGui.QPdfWriter(pdf)
+    painter = QtGui.QPainter(writer)
+    painter.drawText(100, 100, "Synthetic report - no patient data")
+    painter.end()
+    del writer
+    window.received_ready(receive(bytes(pdf.data())))
+    from PySide6.QtPdf import QPdfDocument
+    assert wait_until(lambda: window.document_preview.document.status() == QPdfDocument.Status.Ready, 10000)
+    assert window.document_preview.document.pageCount() == 1
+    window.document_preview.close()
     report = {"actual_qt_vtk": True, "synthetic_only": True, "rendered_volume_pixels": True,
               "orbit_checked": True, "slice_cine_checked": True, "source_mpr_value_checked": True,
               "lps_linked_point_checked": True, "clip_pixels_checked": True,
               "false_color_pixels_checked": True, "source_voxels_unchanged": True,
               "failed_import_clears_old_images": True, "credentials_cleared": True}
     report.update(private_portal_browser_checked=True, browser_download_to_volume_checked=True,
-                  temporary_portal_file_removed=True)
+                  temporary_portal_file_removed=True, explicit_download_automation_checked=True,
+                  browser_png_download_and_preview_checked=True, actual_qt_pdf_preview_checked=True)
     (output/"ui-verification.json").write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")
