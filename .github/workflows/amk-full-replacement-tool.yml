@@ -28,7 +28,7 @@ jobs:
           $base64=(Get-Content -Raw 'amk-build/AMK_FullReplacement_Tool_Source.b64').Trim()
           [IO.File]::WriteAllBytes('amk-tool-source.zip',[Convert]::FromBase64String($base64))
           $sha=(Get-FileHash 'amk-tool-source.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($sha -ne '9fe708cab6f8aa9e3ed3108c43b71e075d345248374671b79cb492dd136bdf01') { throw "Tool source hash mismatch: $sha" }
+          if ($sha -ne '05393028385b3b99c172b9a934d488da7d64d04b7225f310bc8da12484095b02') { throw "Tool source hash mismatch: $sha" }
           Expand-Archive 'amk-tool-source.zip' '.' -Force
           if (!(Test-Path 'AMK.ResetImport/AMK.ResetImport.csproj')) { throw 'Missing C# tool project' }
       - name: Restore and publish single Windows executable
