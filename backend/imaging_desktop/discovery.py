@@ -58,8 +58,9 @@ def discover_downloads(page_url, anchors) -> DiscoveryResult:
 
 
 # Read only visible anchor descriptors; never input values, cookies or page text.
-DISCOVERY_SCRIPT = """(() => Array.from(document.querySelectorAll('a[href]')).slice(0,201).map(a => ({
-  href: a.getAttribute('href'), text: (a.innerText || '').slice(0,300),
+DISCOVERY_SCRIPT = """(() => JSON.stringify(Array.from(document.querySelectorAll('a[href]')).slice(0,201).map(a => ({
+  href: (a.getAttribute('href') || '').length <= 8192 ? a.getAttribute('href') : null,
+  text: (a.innerText || '').slice(0,300),
   download: a.hasAttribute('download'), visible: !!a.getClientRects().length &&
   getComputedStyle(a).visibility !== 'hidden'
-})))()"""
+}))))()"""

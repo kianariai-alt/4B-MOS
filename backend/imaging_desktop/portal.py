@@ -6,6 +6,7 @@ that page. Only explicit download links are automated; no form submission.
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import json
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWebEngineCore import QWebEngineDownloadRequest, QWebEnginePage, QWebEngineProfile, QWebEngineSettings
@@ -104,11 +105,17 @@ class PortalWindow(QtWidgets.QDialog):
         except ValueError:
             return
         self.inspecting = True
-        def inspected(anchors):
+        def inspected(serialized):
             self.inspecting = False
             if (self.disposing or not self.isVisible() or not self.automatic.isChecked()
                     or self.active_downloads or self.page.url().toString() != page_url):
                 return
+            # PySide6 WebEngine does not reliably convert JS arrays/objects.
+            # A JSON string crosses that bridge on both supported OSes.
+            try:
+                anchors = json.loads(serialized) if type(serialized) is str and len(serialized) <= 2*1024*1024 else []
+            except (ValueError, TypeError):
+                anchors = []
             result = discover_downloads(page_url, anchors)
             candidate = next((url for url in result.urls if url not in self.attempted_urls), None)
             if candidate is not None:
