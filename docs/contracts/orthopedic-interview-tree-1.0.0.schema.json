@@ -1,0 +1,929 @@
+{
+  "$defs": {
+    "BankContent": {
+      "additionalProperties": false,
+      "properties": {
+        "title_fa": {
+          "maxLength": 200,
+          "minLength": 3,
+          "title": "Title Fa",
+          "type": "string"
+        },
+        "scope_fa": {
+          "maxLength": 500,
+          "minLength": 3,
+          "title": "Scope Fa",
+          "type": "string"
+        },
+        "summary_preferences_fa": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary Preferences Fa"
+        },
+        "questions": {
+          "items": {
+            "$ref": "#/$defs/InterviewQuestion"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Questions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title_fa",
+        "scope_fa",
+        "questions"
+      ],
+      "title": "BankContent",
+      "type": "object"
+    },
+    "BookDraftPageProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "source_file_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source File Sha256",
+          "type": "string"
+        },
+        "pdf_page_number": {
+          "exclusiveMinimum": 0,
+          "title": "Pdf Page Number",
+          "type": "integer"
+        },
+        "text_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Text Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_file_sha256",
+        "pdf_page_number",
+        "text_sha256"
+      ],
+      "title": "BookDraftPageProvenance",
+      "type": "object"
+    },
+    "BookDraftProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "4b-mos.book-draft-provenance",
+          "default": "4b-mos.book-draft-provenance",
+          "title": "Schema Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "extraction_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Extraction Manifest Sha256",
+          "type": "string"
+        },
+        "verifier_artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Verifier Artifact Sha256",
+          "type": "string"
+        },
+        "handoff_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Handoff Sha256",
+          "type": "string"
+        },
+        "source_file_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source File Sha256",
+          "type": "string"
+        },
+        "filename": {
+          "title": "Filename",
+          "type": "string"
+        },
+        "pages_artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Pages Artifact Sha256",
+          "type": "string"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/BookDraftPageProvenance"
+          },
+          "minItems": 1,
+          "title": "Pages",
+          "type": "array"
+        },
+        "chapter": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Chapter",
+          "type": "string"
+        },
+        "reported_printed_pages": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reported Printed Pages"
+        },
+        "printed_page_verification": {
+          "const": "unverified",
+          "default": "unverified",
+          "title": "Printed Page Verification",
+          "type": "string"
+        },
+        "proposal_origin": {
+          "enum": [
+            "human_authored",
+            "ai_assisted_draft"
+          ],
+          "title": "Proposal Origin",
+          "type": "string"
+        },
+        "source_pdf_verification_scope": {
+          "const": "technical_bytes_only",
+          "default": "technical_bytes_only",
+          "title": "Source Pdf Verification Scope",
+          "type": "string"
+        },
+        "bibliographic_identity_review": {
+          "const": "pending",
+          "default": "pending",
+          "title": "Bibliographic Identity Review",
+          "type": "string"
+        },
+        "clinical_source_review": {
+          "const": "pending",
+          "default": "pending",
+          "title": "Clinical Source Review",
+          "type": "string"
+        },
+        "source_entailment_review": {
+          "const": "pending",
+          "default": "pending",
+          "title": "Source Entailment Review",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "extraction_manifest_sha256",
+        "verifier_artifact_sha256",
+        "handoff_sha256",
+        "source_file_sha256",
+        "filename",
+        "pages_artifact_sha256",
+        "pages",
+        "chapter",
+        "proposal_origin"
+      ],
+      "title": "BookDraftProvenance",
+      "type": "object"
+    },
+    "BookQuestionSourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "population_applicability": {
+          "const": "not_assessed",
+          "default": "not_assessed",
+          "title": "Population Applicability",
+          "type": "string"
+        },
+        "candidate_key": {
+          "maxLength": 100,
+          "minLength": 3,
+          "title": "Candidate Key",
+          "type": "string"
+        },
+        "registry_fact_key": {
+          "maxLength": 100,
+          "minLength": 3,
+          "title": "Registry Fact Key",
+          "type": "string"
+        },
+        "action": {
+          "enum": [
+            "new_fact",
+            "support_existing"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "population": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Population",
+          "type": "string"
+        },
+        "indication": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Indication",
+          "type": "string"
+        },
+        "application_conditions": {
+          "items": {
+            "maxLength": 5000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Application Conditions",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "maxLength": 5000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "evidence_scope": {
+          "enum": [
+            "clinical_assessment",
+            "structural_assessment",
+            "proposed_mechanism",
+            "historical_evidence_summary"
+          ],
+          "title": "Evidence Scope",
+          "type": "string"
+        },
+        "content_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Sha256"
+        },
+        "entry_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Entry Sha256",
+          "type": "string"
+        },
+        "support_scope": {
+          "anyOf": [
+            {
+              "const": "location_component_only",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Support Scope"
+        },
+        "target_base_fact_content_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Base Fact Content Sha256"
+        },
+        "source": {
+          "$ref": "#/$defs/KnowledgeSourceCreate"
+        },
+        "provenance": {
+          "$ref": "#/$defs/BookDraftProvenance"
+        }
+      },
+      "required": [
+        "candidate_key",
+        "registry_fact_key",
+        "action",
+        "title",
+        "summary",
+        "population",
+        "indication",
+        "application_conditions",
+        "limitations",
+        "evidence_scope",
+        "entry_sha256",
+        "source",
+        "provenance"
+      ],
+      "title": "BookQuestionSourceReference",
+      "type": "object"
+    },
+    "InterviewQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "text_fa": {
+          "maxLength": 1000,
+          "minLength": 3,
+          "title": "Text Fa",
+          "type": "string"
+        },
+        "purpose_fa": {
+          "maxLength": 1000,
+          "minLength": 3,
+          "title": "Purpose Fa",
+          "type": "string"
+        },
+        "answer_type": {
+          "default": "text",
+          "enum": [
+            "text",
+            "yes_no",
+            "single_choice"
+          ],
+          "title": "Answer Type",
+          "type": "string"
+        },
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Choices",
+          "type": "array"
+        },
+        "depends_on_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depends On Id"
+        },
+        "show_when_answer_in": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Show When Answer In",
+          "type": "array"
+        },
+        "allow_unknown": {
+          "const": true,
+          "default": true,
+          "title": "Allow Unknown",
+          "type": "boolean"
+        },
+        "allow_decline": {
+          "const": true,
+          "default": true,
+          "title": "Allow Decline",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "text_fa",
+        "purpose_fa"
+      ],
+      "title": "InterviewQuestion",
+      "type": "object"
+    },
+    "InterviewTreeNode": {
+      "additionalProperties": false,
+      "properties": {
+        "governance_status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Governance Status",
+          "type": "string"
+        },
+        "source_binding_status": {
+          "const": "draft_authored",
+          "default": "draft_authored",
+          "title": "Source Binding Status",
+          "type": "string"
+        },
+        "requires_independent_review": {
+          "const": true,
+          "default": true,
+          "title": "Requires Independent Review",
+          "type": "boolean"
+        },
+        "number": {
+          "maximum": 30,
+          "minimum": 1,
+          "title": "Number",
+          "type": "integer"
+        },
+        "field": {
+          "enum": [
+            "chief_complaint",
+            "laterality",
+            "trauma",
+            "fever",
+            "acute_swelling",
+            "systemic_symptoms",
+            "sensory_change",
+            "weakness",
+            "foot_coldness",
+            "foot_color_change",
+            "onset",
+            "duration",
+            "pain_location",
+            "pain_score_now",
+            "pain_pattern",
+            "aggravating_factor",
+            "relieving_factor",
+            "mechanical_locking",
+            "pain_limited_motion",
+            "functional_limitation",
+            "trauma_mechanism",
+            "prior_surgery",
+            "surgery_description",
+            "prior_treatment",
+            "treatment_description",
+            "treatment_pain_response",
+            "treatment_function_response",
+            "diagnosed_conditions",
+            "medication_list",
+            "care_goal",
+            "has_pain"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "question": {
+          "$ref": "#/$defs/InterviewQuestion"
+        },
+        "stage": {
+          "enum": [
+            "opening",
+            "risk_information",
+            "symptoms",
+            "mechanical",
+            "history",
+            "goals"
+          ],
+          "title": "Stage",
+          "type": "string"
+        },
+        "conditions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeCondition"
+          },
+          "title": "Conditions",
+          "type": "array"
+        },
+        "repeat_per_treatment": {
+          "default": false,
+          "title": "Repeat Per Treatment",
+          "type": "boolean"
+        },
+        "requires_treatment_description": {
+          "default": false,
+          "title": "Requires Treatment Description",
+          "type": "boolean"
+        },
+        "source_fact_keys": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Fact Keys",
+          "type": "array"
+        },
+        "source_content_sha256s": {
+          "default": [],
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "title": "Source Content Sha256S",
+          "type": "array"
+        },
+        "book_bindings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeBookBinding"
+          },
+          "title": "Book Bindings",
+          "type": "array"
+        },
+        "rationale_fa": {
+          "title": "Rationale Fa",
+          "type": "string"
+        },
+        "authorship": {
+          "enum": [
+            "existing_reworded",
+            "split_existing",
+            "proposed_follow_up"
+          ],
+          "title": "Authorship",
+          "type": "string"
+        }
+      },
+      "required": [
+        "number",
+        "field",
+        "question",
+        "stage",
+        "rationale_fa",
+        "authorship"
+      ],
+      "title": "InterviewTreeNode",
+      "type": "object"
+    },
+    "KnowledgeSourceCreate": {
+      "properties": {
+        "source_type": {
+          "enum": [
+            "guideline",
+            "systematic_review",
+            "randomized_trial",
+            "observational_study",
+            "regulatory",
+            "consensus",
+            "textbook",
+            "other"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 500,
+          "minLength": 3,
+          "title": "Title",
+          "type": "string"
+        },
+        "citation": {
+          "maxLength": 5000,
+          "minLength": 3,
+          "title": "Citation",
+          "type": "string"
+        },
+        "publisher": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publisher"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "doi": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Doi"
+        },
+        "publication_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publication Date"
+        },
+        "guideline_version": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Guideline Version"
+        },
+        "accessed_at": {
+          "format": "date",
+          "title": "Accessed At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_type",
+        "title",
+        "citation"
+      ],
+      "title": "KnowledgeSourceCreate",
+      "type": "object"
+    },
+    "SourceEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "source_key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Key",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/KnowledgeSourceCreate"
+        },
+        "verified_at": {
+          "format": "date",
+          "title": "Verified At",
+          "type": "string"
+        },
+        "access_level": {
+          "enum": [
+            "full_text",
+            "abstract",
+            "bibliographic_metadata",
+            "indexed_recommendations"
+          ],
+          "title": "Access Level",
+          "type": "string"
+        },
+        "verification_note": {
+          "minLength": 10,
+          "title": "Verification Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_key",
+        "source",
+        "verified_at",
+        "access_level",
+        "verification_note"
+      ],
+      "title": "SourceEntry",
+      "type": "object"
+    },
+    "TreeBookBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_key": {
+          "title": "Candidate Key",
+          "type": "string"
+        },
+        "required_scope": {
+          "const": "arthroplasty_review",
+          "default": "arthroplasty_review",
+          "title": "Required Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "candidate_key"
+      ],
+      "title": "TreeBookBinding",
+      "type": "object"
+    },
+    "TreeCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "chief_complaint",
+            "laterality",
+            "trauma",
+            "fever",
+            "acute_swelling",
+            "systemic_symptoms",
+            "sensory_change",
+            "weakness",
+            "foot_coldness",
+            "foot_color_change",
+            "onset",
+            "duration",
+            "pain_location",
+            "pain_score_now",
+            "pain_pattern",
+            "aggravating_factor",
+            "relieving_factor",
+            "mechanical_locking",
+            "pain_limited_motion",
+            "functional_limitation",
+            "trauma_mechanism",
+            "prior_surgery",
+            "surgery_description",
+            "prior_treatment",
+            "treatment_description",
+            "treatment_pain_response",
+            "treatment_function_response",
+            "diagnosed_conditions",
+            "medication_list",
+            "care_goal",
+            "has_pain"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "equals": {
+          "title": "Equals",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "field",
+        "equals"
+      ],
+      "title": "TreeCondition",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "governance_status": {
+      "const": "draft",
+      "default": "draft",
+      "title": "Governance Status",
+      "type": "string"
+    },
+    "source_binding_status": {
+      "const": "draft_authored",
+      "default": "draft_authored",
+      "title": "Source Binding Status",
+      "type": "string"
+    },
+    "requires_independent_review": {
+      "const": true,
+      "default": true,
+      "title": "Requires Independent Review",
+      "type": "boolean"
+    },
+    "schema_id": {
+      "const": "4b-mos.knee-interview-tree",
+      "default": "4b-mos.knee-interview-tree",
+      "title": "Schema Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "bank": {
+      "$ref": "#/$defs/BankContent"
+    },
+    "bank_export_purpose": {
+      "const": "authoring_only",
+      "default": "authoring_only",
+      "title": "Bank Export Purpose",
+      "type": "string"
+    },
+    "bank_export_is_executable_tree": {
+      "const": false,
+      "default": false,
+      "title": "Bank Export Is Executable Tree",
+      "type": "boolean"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/InterviewTreeNode"
+      },
+      "maxItems": 30,
+      "minItems": 30,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "supplemental_routing_fields": {
+      "default": [
+        "has_pain"
+      ],
+      "items": {
+        "const": "has_pain",
+        "type": "string"
+      },
+      "title": "Supplemental Routing Fields",
+      "type": "array"
+    },
+    "base_pack_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Base Pack Manifest Sha256",
+      "type": "string"
+    },
+    "supplement_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Supplement Manifest Sha256",
+      "type": "string"
+    },
+    "source_references": {
+      "items": {
+        "$ref": "#/$defs/SourceEntry"
+      },
+      "title": "Source References",
+      "type": "array"
+    },
+    "book_source_references": {
+      "items": {
+        "$ref": "#/$defs/BookQuestionSourceReference"
+      },
+      "title": "Book Source References",
+      "type": "array"
+    },
+    "tree_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Tree Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "bank",
+    "nodes",
+    "base_pack_manifest_sha256",
+    "supplement_manifest_sha256",
+    "source_references",
+    "book_source_references",
+    "tree_sha256"
+  ],
+  "title": "KneeInterviewTree",
+  "type": "object"
+}

@@ -178,3 +178,58 @@ post-pilot report remains an evidence summary, not a clinical conclusion.
 The [Persian engineering handoff](docs/FINAL_RELEASE_HANDOFF_FA.md) lists
 deployment prerequisites and explicitly distinguishes merged code from live
 clinical deployment.
+
+The [orthopedic knee knowledge authoring preview](docs/ORTHOPEDIC_INTELLIGENCE_FA.md)
+adds a source-linked Draft knee pack, structured missing-information questions,
+unranked differential references, and a versioned additive adapter. The opt-in
+API is disabled by default; it does not approve knowledge, write patient records,
+activate safety rules, select treatment, or replace the existing Registry and
+physician question bank. An offline synthetic demo runs with
+`python -m backend.tools.orthopedic_knowledge_demo`.
+
+The additive [30-question knee interview tree](docs/ORTHOPEDIC_INTERVIEW_TREE_FA.md)
+provides a physician-review roadmap and a synthetic preview with explicit pain
+and trauma branches, separate treatment histories, and independent pain/function
+responses. It preserves the earlier preview contracts and remains Draft;
+accepting the wording does not independently approve medical content.
+
+The [portable Windows demo](docs/ORTHOPEDIC_WINDOWS_DEMO_FA.md) opens offline in
+Edge or Chrome without installation. It contains ten saved results from the
+Python preview and an editable form with source-bound provisional differentials
+read from finite tables compiled by Python. This offline lookup is not a full
+server assessment, clinical validation or treatment authorization. Build it with
+`python -B -m backend.tools.build_orthopedic_windows_demo --output-dir artifacts/windows-demo`.
+
+The [reasoning coverage review](docs/ORTHOPEDIC_REASONING_REVIEW_FA.md) traces
+patient observations to every current pattern, exposes unused examination data
+and separates model mismatch from clinical exclusion. Ten challenge cases keep
+independent clinician reference answers pending; this adds an audit view, not a
+new diagnosis rule or demonstrated clinical accuracy.
+
+The additive [dynamic knee workbench](docs/ORTHOPEDIC_DYNAMIC_WORKBENCH_FA.md)
+recomputes the next question after every response, preserves multiple pain
+locations, provoking activities and patient goals, and compares actual clinical
+observations with five new source-bound Draft propositions. Examination stays
+in the physician channel. A [real synthetic walkthrough](docs/ORTHOPEDIC_ADAPTIVE_WALKTHROUGH_FA.md)
+demonstrates 23 patient responses and a separate examination update. These
+server-side authoring additions are not included in Windows demo 0.2.
+
+An opt-in [Europe PMC metadata watch](docs/ORTHOPEDIC_EVIDENCE_WATCH_FA.md)
+discovers recent PubMed-indexed sources without sending patient information or
+automatically changing clinical rules. A live three-record response is checked
+in with acquisition time and hashes; full-text appraisal and independent
+approval remain pending.
+
+The [Zetamed pain/injury roadmap](docs/ZETAMED_PAIN_INJURY_BACKBONE_FA.md)
+uses the physician-requested knee-pain article as its explicit primary organizing
+source. Eight source-linked dimensions group actual history/findings and expose
+unimplemented injury domains alongside the existing comparisons. A new adaptive
+turn composes this roadmap with the unchanged question selector. Clinical facts
+retain independent source bindings and Draft governance; no website-only
+diagnosis, mandatory imaging, surgery or regeneration claim is executed.
+
+For books stored on a local Windows drive, the
+[local orthopedic library reader](docs/LOCAL_ORTHOPEDIC_BOOKS_FA.md) provides
+`Read-Orthopedic-Books.cmd` (default `D:\orthopedic book`). It prepares private,
+page-referenced PDF text locally, with no upload, Registry write, medical
+approval or connection from a cloud session to the user's computer.

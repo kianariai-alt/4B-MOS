@@ -1,0 +1,40 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "topic": {
+      "enum": [
+        "knee_oa",
+        "meniscus",
+        "cartilage",
+        "orthobiologics"
+      ],
+      "title": "Topic",
+      "type": "string"
+    },
+    "since": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Since"
+    },
+    "max_records": {
+      "default": 10,
+      "maximum": 20,
+      "minimum": 1,
+      "title": "Max Records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "topic"
+  ],
+  "title": "EvidenceWatchRequest",
+  "type": "object"
+}

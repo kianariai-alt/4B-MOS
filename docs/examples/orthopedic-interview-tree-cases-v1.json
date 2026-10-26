@@ -1,0 +1,221 @@
+{
+  "schema_id": "4b-mos.knee-interview-tree-synthetic-cases",
+  "schema_version": "1.0.0",
+  "synthetic_only": true,
+  "is_clinically_validated": false,
+  "cases": [
+    {
+      "id": "gradual_pain_known_answers",
+      "description_fa": "درد تدریجی با شدت درد و عملکرد ثبت‌شده؛ بدون تکرار پاسخ‌ها",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "has_pain", "state": "confirmed", "value": true, "source_ref": "synthetic:intake"},
+            {"field": "onset", "state": "confirmed", "value": "gradual", "source_ref": "synthetic:intake"},
+            {"field": "duration", "state": "confirmed", "value": "years", "source_ref": "synthetic:intake"},
+            {"field": "pain_score_now", "state": "confirmed", "value": 6, "source_ref": "synthetic:intake"},
+            {"field": "functional_limitation", "state": "confirmed", "value": "moderate", "source_ref": "synthetic:intake"}
+          ]
+        },
+        "review_scopes": ["arthroplasty_review"]
+      },
+      "expected": {
+        "required_question_fields": ["pain_location", "diagnosed_conditions"],
+        "absent_question_fields": ["onset", "duration", "pain_score_now", "functional_limitation"],
+        "clarification_fields": []
+      }
+    },
+    {
+      "id": "sport_injury_mechanical_symptoms",
+      "description_fa": "آسیب ورزشی با گیرکردن حرکت؛ چهار سؤال عصبی‌عروقی مستقل",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "has_pain", "state": "confirmed", "value": true, "source_ref": "synthetic:intake"},
+            {"field": "trauma", "state": "confirmed", "value": true, "source_ref": "synthetic:intake"},
+            {"field": "trauma_mechanism", "state": "confirmed", "value": "sport_twist", "source_ref": "synthetic:intake"},
+            {"field": "mechanical_locking", "state": "confirmed", "value": true, "source_ref": "synthetic:intake"}
+          ]
+        }
+      },
+      "expected": {
+        "required_question_fields": ["sensory_change", "weakness", "foot_coldness", "foot_color_change", "pain_limited_motion"],
+        "absent_question_fields": ["trauma", "trauma_mechanism", "mechanical_locking"],
+        "clarification_fields": []
+      }
+    },
+    {
+      "id": "unknown_and_declined_parents",
+      "description_fa": "پاسخ نامعلوم یا ردشده؛ بدون تبدیل به خیر یا پرسش تکراری",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "trauma", "state": "unknown", "source_ref": "synthetic:intake"},
+            {"field": "has_pain", "state": "unknown", "source_ref": "synthetic:intake"},
+            {"field": "prior_treatment", "state": "declined", "source_ref": "synthetic:intake"},
+            {"field": "fever", "state": "declined", "source_ref": "synthetic:intake"}
+          ]
+        }
+      },
+      "expected": {
+        "required_question_fields": ["chief_complaint"],
+        "absent_question_fields": ["trauma", "fever", "prior_treatment", "trauma_mechanism", "sensory_change", "weakness", "foot_coldness", "foot_color_change", "pain_location", "pain_score_now", "pain_pattern", "aggravating_factor", "relieving_factor", "treatment_description", "treatment_pain_response", "treatment_function_response"],
+        "clarification_fields": []
+      }
+    },
+    {
+      "id": "conflicting_history_and_bilateral_side",
+      "description_fa": "شروع علائم متناقض با حفظ دو منشأ؛ سمت هر دو زانو از دست نمی‌رود",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "laterality", "state": "confirmed", "value": "both", "source_ref": "synthetic:intake"},
+            {"field": "onset", "state": "confirmed", "value": "gradual", "source_ref": "synthetic:source-a"},
+            {"field": "onset", "state": "confirmed", "value": "sudden", "source_ref": "synthetic:source-b"}
+          ]
+        }
+      },
+      "expected": {
+        "required_question_fields": ["onset"],
+        "absent_question_fields": ["laterality"],
+        "clarification_fields": ["onset"]
+      }
+    },
+    {
+      "id": "fever_swelling_unverified_positive",
+      "description_fa": "تب تأییدنشده و تورم تازه؛ اطلاعات خطر حذف یا تأییدشده تلقی نمی‌شوند",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "fever", "state": "unverified", "value": true, "source_ref": "synthetic:unverified"},
+            {"field": "acute_swelling", "state": "confirmed", "value": true, "source_ref": "synthetic:intake"},
+            {"field": "systemic_symptoms", "state": "confirmed", "value": true, "source_ref": "synthetic:intake"}
+          ]
+        }
+      },
+      "expected": {
+        "required_question_fields": ["fever"],
+        "absent_question_fields": ["acute_swelling", "systemic_symptoms"],
+        "clarification_fields": ["fever"],
+        "review_reason_contains": ["hot_joint", "systemic"]
+      }
+    },
+    {
+      "id": "unreviewed_image_no_history_inference",
+      "description_fa": "تصویر تأییدنشده و معاینهٔ متناقض؛ بدون ساختن شرح‌حال یا شدت درد",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "chief_complaint", "state": "confirmed", "value": "swelling", "source_ref": "synthetic:intake"}
+          ],
+          "clinical_findings": [
+            {"field": "imaging_cartilage_lesion", "state": "unverified", "value": true, "provenance": "unreviewed_imaging", "source_ref": "synthetic:image"},
+            {"field": "exam_effusion", "state": "confirmed", "value": true, "provenance": "physician_exam", "source_ref": "synthetic:exam-a"},
+            {"field": "exam_effusion", "state": "confirmed", "value": false, "provenance": "physician_exam", "source_ref": "synthetic:exam-b"}
+          ]
+        }
+      },
+      "expected": {
+        "required_question_fields": ["acute_swelling"],
+        "absent_question_fields": ["chief_complaint", "pain_location", "pain_score_now", "pain_pattern", "aggravating_factor", "relieving_factor"],
+        "clarification_fields": [],
+        "review_reason_contains": ["imaging_cartilage_lesion", "exam_effusion"]
+      }
+    },
+    {
+      "id": "separate_treatment_episodes",
+      "description_fa": "دو درمان با پیامدهای مستقل؛ پاسخ ناقص درمان دوم با درمان اول پر نمی‌شود",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "prior_treatment", "state": "confirmed", "value": true, "source_ref": "synthetic:intake"}
+          ],
+          "treatment_episodes": [
+            {
+              "episode_ref": "synthetic:therapy-a",
+              "observations": [
+                {"field": "treatment_description", "state": "confirmed", "value": "Synthetic exercise course", "source_ref": "synthetic:report-a"},
+                {"field": "treatment_pain_response", "state": "confirmed", "value": "improved", "source_ref": "synthetic:report-a"},
+                {"field": "treatment_function_response", "state": "confirmed", "value": "unchanged", "source_ref": "synthetic:report-a"}
+              ]
+            },
+            {
+              "episode_ref": "synthetic:therapy-b",
+              "observations": [
+                {"field": "treatment_description", "state": "confirmed", "value": "Synthetic injection; product not verified", "source_ref": "synthetic:report-b"},
+                {"field": "treatment_pain_response", "state": "confirmed", "value": "worse", "source_ref": "synthetic:report-b"}
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "required_question_fields": ["treatment_function_response"],
+        "absent_question_fields": ["prior_treatment", "treatment_description", "treatment_pain_response"],
+        "clarification_fields": [],
+        "required_candidate_targets": [{"field": "treatment_function_response", "episode_ref": "synthetic:therapy-b"}],
+        "absent_candidate_targets": [{"field": "treatment_function_response", "episode_ref": "synthetic:therapy-a"}]
+      }
+    },
+    {
+      "id": "outside_knee_domain",
+      "description_fa": "موضوع خارج از زانو؛ بدون پرسش یا ارجاع کتابی زانو",
+      "request": {
+        "context": {"body_region": "other"},
+        "review_scopes": ["arthroplasty_review"]
+      },
+      "expected": {
+        "required_question_fields": [],
+        "absent_question_fields": [],
+        "clarification_fields": [],
+        "candidate_count": 0,
+        "review_reason_contains": ["outside_knee"]
+      }
+    },
+    {
+      "id": "zero_false_are_valid_answers",
+      "description_fa": "درد صفر و پاسخ خیر معتبر؛ بدون تکرار یا فعال‌کردن شاخهٔ آسیب، جراحی و درمان",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "has_pain", "state": "confirmed", "value": true, "source_ref": "synthetic:intake"},
+            {"field": "pain_score_now", "state": "confirmed", "value": 0, "source_ref": "synthetic:intake"},
+            {"field": "trauma", "state": "confirmed", "value": false, "source_ref": "synthetic:intake"},
+            {"field": "prior_surgery", "state": "confirmed", "value": false, "source_ref": "synthetic:intake"},
+            {"field": "prior_treatment", "state": "confirmed", "value": false, "source_ref": "synthetic:intake"}
+          ]
+        }
+      },
+      "expected": {
+        "required_question_fields": ["pain_location"],
+        "absent_question_fields": ["pain_score_now", "trauma", "prior_surgery", "prior_treatment", "trauma_mechanism", "sensory_change", "weakness", "foot_coldness", "foot_color_change", "surgery_description", "treatment_description", "treatment_pain_response", "treatment_function_response"],
+        "clarification_fields": []
+      }
+    },
+    {
+      "id": "swelling_does_not_mean_no_pain",
+      "description_fa": "شکایت اصلی تورم است؛ وجود یا نبود درد از روی آن حدس زده نمی‌شود",
+      "request": {
+        "context": {
+          "body_region": "knee",
+          "observations": [
+            {"field": "chief_complaint", "state": "confirmed", "value": "swelling", "source_ref": "synthetic:intake"}
+          ]
+        }
+      },
+      "expected": {
+        "required_question_fields": ["functional_limitation"],
+        "absent_question_fields": ["chief_complaint", "pain_location", "pain_score_now", "pain_pattern", "aggravating_factor", "relieving_factor"],
+        "clarification_fields": []
+      }
+    }
+  ]
+}

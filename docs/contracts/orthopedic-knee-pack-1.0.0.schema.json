@@ -1,0 +1,997 @@
+{
+  "$defs": {
+    "ConceptRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "symptom",
+            "examination",
+            "syndrome",
+            "differential",
+            "evidence",
+            "assessment",
+            "treatment"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 500,
+          "minLength": 2,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "label"
+      ],
+      "title": "ConceptRef",
+      "type": "object"
+    },
+    "DifferentialDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "known_presentations": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Known Presentations",
+          "type": "array"
+        },
+        "risk_factors": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Risk Factors",
+          "type": "array"
+        },
+        "supporting_findings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Findings",
+          "type": "array"
+        },
+        "opposing_findings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Opposing Findings",
+          "type": "array"
+        },
+        "examination_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Examination Ids",
+          "type": "array"
+        },
+        "assessment_requirements": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Assessment Requirements",
+          "type": "array"
+        },
+        "warning_features": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Warning Features",
+          "type": "array"
+        },
+        "diagnostic_criteria": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Diagnostic Criteria",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "fact_keys": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fact Keys",
+          "type": "array"
+        },
+        "status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Status",
+          "type": "string"
+        },
+        "version": {
+          "const": 1,
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "known_presentations",
+        "assessment_requirements",
+        "limitations",
+        "fact_keys"
+      ],
+      "title": "DifferentialDefinition",
+      "type": "object"
+    },
+    "ExaminationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "body_region": {
+          "const": "knee",
+          "default": "knee",
+          "title": "Body Region",
+          "type": "string"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string"
+        },
+        "method": {
+          "title": "Method",
+          "type": "string"
+        },
+        "recordable_findings": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Recordable Findings",
+          "type": "array"
+        },
+        "result_states": {
+          "default": [
+            "positive",
+            "negative",
+            "indeterminate"
+          ],
+          "items": {
+            "enum": [
+              "positive",
+              "negative",
+              "indeterminate"
+            ],
+            "type": "string"
+          },
+          "title": "Result States",
+          "type": "array"
+        },
+        "precautions": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Precautions",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "diagnostic_accuracy": {
+          "default": null,
+          "title": "Diagnostic Accuracy",
+          "type": "null"
+        },
+        "fact_keys": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fact Keys",
+          "type": "array"
+        },
+        "status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Status",
+          "type": "string"
+        },
+        "version": {
+          "const": 1,
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "purpose",
+        "method",
+        "recordable_findings",
+        "precautions",
+        "limitations",
+        "fact_keys"
+      ],
+      "title": "ExaminationDefinition",
+      "type": "object"
+    },
+    "KnowledgeFactCreate": {
+      "properties": {
+        "title": {
+          "maxLength": 300,
+          "minLength": 3,
+          "title": "Title",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 20000,
+          "minLength": 20,
+          "title": "Statement",
+          "type": "string"
+        },
+        "clinical_domain": {
+          "maxLength": 100,
+          "minLength": 2,
+          "title": "Clinical Domain",
+          "type": "string"
+        },
+        "therapy_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "PRP",
+                "PRGF",
+                "ACS",
+                "PL",
+                "SVF",
+                "EXOSOME",
+                "MSC"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Therapy Type"
+        },
+        "population": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Population"
+        },
+        "indication": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Indication"
+        },
+        "contraindications": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Contraindications",
+          "type": "array"
+        },
+        "evidence_grade": {
+          "enum": [
+            "high",
+            "moderate",
+            "low",
+            "very_low",
+            "consensus",
+            "ungraded"
+          ],
+          "title": "Evidence Grade",
+          "type": "string"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid To"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/KnowledgeSourceCreate"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Sources",
+          "type": "array"
+        },
+        "fact_key": {
+          "maxLength": 100,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "statement",
+        "clinical_domain",
+        "evidence_grade",
+        "sources",
+        "fact_key"
+      ],
+      "title": "KnowledgeFactCreate",
+      "type": "object"
+    },
+    "KnowledgeRelation": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "const": 1,
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Status",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ConceptRef"
+        },
+        "target": {
+          "$ref": "#/$defs/ConceptRef"
+        },
+        "relationship": {
+          "enum": [
+            "may_support",
+            "may_oppose",
+            "assessed_by",
+            "informs_review",
+            "evidence_for",
+            "requires_review"
+          ],
+          "title": "Relationship",
+          "type": "string"
+        },
+        "fact_keys": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fact Keys",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Limitations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target",
+        "relationship",
+        "fact_keys",
+        "limitations"
+      ],
+      "title": "KnowledgeRelation",
+      "type": "object"
+    },
+    "KnowledgeSourceCreate": {
+      "properties": {
+        "source_type": {
+          "enum": [
+            "guideline",
+            "systematic_review",
+            "randomized_trial",
+            "observational_study",
+            "regulatory",
+            "consensus",
+            "textbook",
+            "other"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 500,
+          "minLength": 3,
+          "title": "Title",
+          "type": "string"
+        },
+        "citation": {
+          "maxLength": 5000,
+          "minLength": 3,
+          "title": "Citation",
+          "type": "string"
+        },
+        "publisher": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publisher"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "doi": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Doi"
+        },
+        "publication_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publication Date"
+        },
+        "guideline_version": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Guideline Version"
+        },
+        "accessed_at": {
+          "format": "date",
+          "title": "Accessed At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_type",
+        "title",
+        "citation"
+      ],
+      "title": "KnowledgeSourceCreate",
+      "type": "object"
+    },
+    "OrthopedicFact": {
+      "additionalProperties": false,
+      "properties": {
+        "fact": {
+          "$ref": "#/$defs/KnowledgeFactCreate"
+        },
+        "version": {
+          "const": 1,
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Status",
+          "type": "string"
+        },
+        "body_region": {
+          "const": "knee",
+          "default": "knee",
+          "title": "Body Region",
+          "type": "string"
+        },
+        "topic": {
+          "enum": [
+            "osteoarthritis",
+            "meniscus",
+            "cartilage_osteochondral",
+            "safety",
+            "orthobiologics",
+            "examination"
+          ],
+          "title": "Topic",
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 20,
+          "title": "Summary",
+          "type": "string"
+        },
+        "application_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Application Conditions",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "source_keys": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Keys",
+          "type": "array"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fact",
+        "topic",
+        "summary",
+        "application_conditions",
+        "limitations",
+        "source_keys",
+        "content_sha256"
+      ],
+      "title": "OrthopedicFact",
+      "type": "object"
+    },
+    "SourceEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "source_key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Key",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/KnowledgeSourceCreate"
+        },
+        "verified_at": {
+          "format": "date",
+          "title": "Verified At",
+          "type": "string"
+        },
+        "access_level": {
+          "enum": [
+            "full_text",
+            "abstract",
+            "bibliographic_metadata",
+            "indexed_recommendations"
+          ],
+          "title": "Access Level",
+          "type": "string"
+        },
+        "verification_note": {
+          "minLength": 10,
+          "title": "Verification Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_key",
+        "source",
+        "verified_at",
+        "access_level",
+        "verification_note"
+      ],
+      "title": "SourceEntry",
+      "type": "object"
+    },
+    "TreatmentEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "treatment_type": {
+          "enum": [
+            "exercise",
+            "NSAID",
+            "corticosteroid",
+            "surgical_referral",
+            "ACS",
+            "PRGF",
+            "PL",
+            "PRP",
+            "HA",
+            "EXOSOME",
+            "SVF",
+            "MSC"
+          ],
+          "title": "Treatment Type",
+          "type": "string"
+        },
+        "proposed_mechanism": {
+          "title": "Proposed Mechanism",
+          "type": "string"
+        },
+        "studied_indications": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Studied Indications",
+          "type": "array"
+        },
+        "contraindications_precautions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Contraindications Precautions",
+          "type": "array"
+        },
+        "evidence_quality": {
+          "default": "not_appraised",
+          "enum": [
+            "ungraded",
+            "not_appraised"
+          ],
+          "title": "Evidence Quality",
+          "type": "string"
+        },
+        "reported_effect": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reported Effect"
+        },
+        "study_follow_up": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Study Follow Up"
+        },
+        "adverse_effects": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Adverse Effects",
+          "type": "array"
+        },
+        "comparator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comparator"
+        },
+        "guideline_positions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Guideline Positions",
+          "type": "array"
+        },
+        "regulatory_status": {
+          "title": "Regulatory Status",
+          "type": "string"
+        },
+        "regulatory_jurisdiction": {
+          "title": "Regulatory Jurisdiction",
+          "type": "string"
+        },
+        "research_status": {
+          "title": "Research Status",
+          "type": "string"
+        },
+        "internal_observations": {
+          "const": "not_used_as_efficacy_evidence",
+          "default": "not_used_as_efficacy_evidence",
+          "title": "Internal Observations",
+          "type": "string"
+        },
+        "uncertainties": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Uncertainties",
+          "type": "array"
+        },
+        "fact_keys": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fact Keys",
+          "type": "array"
+        },
+        "status": {
+          "const": "draft",
+          "default": "draft",
+          "title": "Status",
+          "type": "string"
+        },
+        "version": {
+          "const": 1,
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "treatment_type",
+        "proposed_mechanism",
+        "studied_indications",
+        "contraindications_precautions",
+        "regulatory_status",
+        "regulatory_jurisdiction",
+        "research_status",
+        "uncertainties",
+        "fact_keys"
+      ],
+      "title": "TreatmentEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "pack_key": {
+      "const": "knee_orthopedic_v1",
+      "default": "knee_orthopedic_v1",
+      "title": "Pack Key",
+      "type": "string"
+    },
+    "pack_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Pack Version",
+      "type": "integer"
+    },
+    "clinical_domain": {
+      "const": "orthopedics_knee",
+      "default": "orthopedics_knee",
+      "title": "Clinical Domain",
+      "type": "string"
+    },
+    "status": {
+      "const": "draft",
+      "default": "draft",
+      "title": "Status",
+      "type": "string"
+    },
+    "source_review_date": {
+      "format": "date",
+      "title": "Source Review Date",
+      "type": "string"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/SourceEntry"
+      },
+      "minItems": 1,
+      "title": "Sources",
+      "type": "array"
+    },
+    "facts": {
+      "items": {
+        "$ref": "#/$defs/OrthopedicFact"
+      },
+      "minItems": 1,
+      "title": "Facts",
+      "type": "array"
+    },
+    "relations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/KnowledgeRelation"
+      },
+      "title": "Relations",
+      "type": "array"
+    },
+    "examinations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ExaminationDefinition"
+      },
+      "title": "Examinations",
+      "type": "array"
+    },
+    "differentials": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/DifferentialDefinition"
+      },
+      "title": "Differentials",
+      "type": "array"
+    },
+    "treatments": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/TreatmentEvidence"
+      },
+      "title": "Treatments",
+      "type": "array"
+    },
+    "manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "is_clinically_validated": {
+      "const": false,
+      "default": false,
+      "title": "Is Clinically Validated",
+      "type": "boolean"
+    },
+    "requires_independent_review": {
+      "const": true,
+      "default": true,
+      "title": "Requires Independent Review",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "source_review_date",
+    "sources",
+    "facts",
+    "manifest_sha256"
+  ],
+  "title": "KneeKnowledgePack",
+  "type": "object"
+}

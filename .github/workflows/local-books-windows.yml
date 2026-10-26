@@ -1,0 +1,65 @@
+name: Local orthopedic books Windows smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - Read-Orthopedic-Books.cmd
+      - Prepare-Orthopedic-Book-Handoff.cmd
+      - backend/tools/local_orthopedic_library.py
+      - backend/tools/orthopedic_book_handoff.py
+      - backend/tools/orthopedic_book_page_review.py
+      - backend/requirements-books.txt
+      - backend/tests/local_books_windows/**
+      - .github/workflows/local-books-windows.yml
+  push:
+    branches:
+      - main
+    paths:
+      - Read-Orthopedic-Books.cmd
+      - Prepare-Orthopedic-Book-Handoff.cmd
+      - backend/tools/local_orthopedic_library.py
+      - backend/tools/orthopedic_book_handoff.py
+      - backend/tools/orthopedic_book_page_review.py
+      - backend/requirements-books.txt
+      - backend/tests/local_books_windows/**
+      - .github/workflows/local-books-windows.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-books-windows-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-launcher:
+    name: Windows launcher (Python 3.12)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    env:
+      PYTHONUTF8: "1"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install only the optional local PDF reader
+        run: python -m pip install -r backend/requirements-books.txt
+
+      - name: Exercise actual cmd launcher and verify private synthetic output
+        run: python -m unittest discover -s backend/tests/local_books_windows -v

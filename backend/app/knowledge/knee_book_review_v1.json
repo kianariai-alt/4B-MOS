@@ -1,0 +1,1499 @@
+{
+  "schema_id": "4b-mos.knee-book-review",
+  "schema_version": "1.0.0",
+  "pack_key": "knee_book_review_v1",
+  "pack_version": 1,
+  "status": "draft",
+  "clinical_domain": "orthopedics_knee",
+  "base_pack_manifest_sha256": "e2c417280f15f76bb69555521deceff4aa550b98f9a1f6d1294a25a9e64f7879",
+  "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+  "text_alignment_review_date": "2026-10-22",
+  "source_handoff": {
+    "schema_id": "4b-mos.book-source-handoff",
+    "schema_version": "1.0.0",
+    "scope": "selected_extracted_pages",
+    "omitted_entry_count": 19,
+    "unresolved_entry_count": 11,
+    "traversal_error_count": 0,
+    "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+    "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+    "sources": [
+      {
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "filename": "Orthobiologics.pdf",
+        "source_pdf_verified": true,
+        "pages_artifact_sha256": "8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a",
+        "verification_error": null
+      },
+      {
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "filename": "Basics in Primary Knee Arthroplasty-Springer (2022).pdf",
+        "source_pdf_verified": true,
+        "pages_artifact_sha256": "5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9",
+        "verification_error": null
+      },
+      {
+        "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+        "filename": "Campbells_Operative_Orthopaedics,_14th_-4_Volume_Set-Elsevier_(2020)_(Freder.pdf",
+        "source_pdf_verified": true,
+        "pages_artifact_sha256": "a949ef9c04b4561ee52956de0d4acbe1e978240dec4c2b0d9d186d463965c326",
+        "verification_error": null
+      }
+    ],
+    "pages": [
+      {
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "pdf_page_number": 263,
+        "text_sha256": "65d7821487f29b4d231f8b55ffd67fab14ae65b7c375b2d784d207d2091a243d",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "pdf_page_number": 275,
+        "text_sha256": "ce9a7debcabe0240956b02aef9808c15e84fcd9efc5e3c7a54ed3980a90a57ad",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "pdf_page_number": 276,
+        "text_sha256": "a88db861e40f4fcbe2f47919be5975c6268ec646f0c302e256a0bf2665059e5f",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "pdf_page_number": 280,
+        "text_sha256": "d499f4681de14b4bf3f2a59bf9bf8f96d7018d2780df612f3cef18f1235fd383",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "pdf_page_number": 281,
+        "text_sha256": "e0247dedadf012ec8dba7d6d552102d56f88410d95683c3a4940e7657fce93c3",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "pdf_page_number": 313,
+        "text_sha256": "79dbb702631fe5b52bb6280edb5af757abff19c097fac3aaa1b150ecd333497a",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "pdf_page_number": 314,
+        "text_sha256": "bc1b2a19218468f807acd71e297e499ac8fc21c3f2f45f3c3924847b3ea0954a",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "pdf_page_number": 118,
+        "text_sha256": "97dd91c38e705077e91299982bafc57d91e9ef1dd9028ce042435bba8fd6834a",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "pdf_page_number": 119,
+        "text_sha256": "75b99b50b79a97c6b91decc016522516b89a22ccaecf23024b0bc30eaa22987d",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "pdf_page_number": 120,
+        "text_sha256": "60bdc20824f53598f9c30368c7e7fb5e66e3eea62163122b40fe96b313b2e0ca",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "pdf_page_number": 125,
+        "text_sha256": "ff4edf5027cd5d45cef503266bca43abad0b6c6a2e7f0d6c731e596745b2ff8f",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "pdf_page_number": 134,
+        "text_sha256": "79825e6c473ecfb8eb4a1442d14fc5e415542cc370629c4caa12f8f6ccaa1e93",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "pdf_page_number": 135,
+        "text_sha256": "149404fae83efbaecd693ff015b836e869119a281c1b5267fbf5c28b42ca2009",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+        "pdf_page_number": 2478,
+        "text_sha256": "6fe7e8069c441405af891518e61538c2d87651f98c6ec0df084a2e289e15eb92",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+        "pdf_page_number": 2479,
+        "text_sha256": "e6e52a99138e172902b1e2486be384148cfe4c943fa57c4fe2fd42196f61a8dd",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+        "pdf_page_number": 2598,
+        "text_sha256": "c8b8847d21cf3e3c6bdecf98e003fb3370ddcbde7db1daa2f42981c0a0f4fa40",
+        "status": "text_extracted"
+      },
+      {
+        "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+        "pdf_page_number": 2607,
+        "text_sha256": "9278e505c00d90679bf1045807c207f6c56e61cfd1c143b77b48a3215d6a70e1",
+        "status": "text_extracted"
+      }
+    ],
+    "uploads_performed": false,
+    "is_clinically_validated": false,
+    "registry_write_performed": false,
+    "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb"
+  },
+  "reviewed_pages": [
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 262,
+      "text_sha256": "71b65284c41bcce0aa6ff4d41ce9fcf0e97b0f0d7e804ce39670500d71a3567d"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 263,
+      "text_sha256": "65d7821487f29b4d231f8b55ffd67fab14ae65b7c375b2d784d207d2091a243d"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 264,
+      "text_sha256": "65c79c78c4d86dad2eca753740822209e2fbdda93e6fc98340b87d0541bf74b2"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 274,
+      "text_sha256": "75d18a1e41c08b24f4657ed6afc72743d48017bd040b8105c1e9959437a2c96e"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 275,
+      "text_sha256": "ce9a7debcabe0240956b02aef9808c15e84fcd9efc5e3c7a54ed3980a90a57ad"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 276,
+      "text_sha256": "a88db861e40f4fcbe2f47919be5975c6268ec646f0c302e256a0bf2665059e5f"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 277,
+      "text_sha256": "54852e15bff1001ad8d2fb2395c0a0709f6877881680685a847225dc57d5227f"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 279,
+      "text_sha256": "0cbda922ddc340de045ae263c0d45b46ed2ce1c2f4f9147b02de65c4eaeda9b8"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 280,
+      "text_sha256": "d499f4681de14b4bf3f2a59bf9bf8f96d7018d2780df612f3cef18f1235fd383"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 281,
+      "text_sha256": "e0247dedadf012ec8dba7d6d552102d56f88410d95683c3a4940e7657fce93c3"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 282,
+      "text_sha256": "423504f02d20b6d73dc79d58228b012f7b577697753c06f12b1e6e19b9750527"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 312,
+      "text_sha256": "6de1faf186244e852073462e64012f0ddf9653c4790051d02f012d50575b4adb"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 313,
+      "text_sha256": "79dbb702631fe5b52bb6280edb5af757abff19c097fac3aaa1b150ecd333497a"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 314,
+      "text_sha256": "bc1b2a19218468f807acd71e297e499ac8fc21c3f2f45f3c3924847b3ea0954a"
+    },
+    {
+      "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+      "pdf_page_number": 315,
+      "text_sha256": "df35c04c1ad2ada9f545705b01342df8c0525b0c80a32a38a2cc378ab57c40c4"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 117,
+      "text_sha256": "ad12f9264ddee9ea8d33c2b19d2156d71be9c4b23c8d35b4174603b21380b163"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 118,
+      "text_sha256": "97dd91c38e705077e91299982bafc57d91e9ef1dd9028ce042435bba8fd6834a"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 119,
+      "text_sha256": "75b99b50b79a97c6b91decc016522516b89a22ccaecf23024b0bc30eaa22987d"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 120,
+      "text_sha256": "60bdc20824f53598f9c30368c7e7fb5e66e3eea62163122b40fe96b313b2e0ca"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 121,
+      "text_sha256": "813563f0ecb5c146e23b567ff5f16c44a3c1a8dd2fcb08bf7486f5ade0eab68f"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 124,
+      "text_sha256": "7ad683676b0b822f84227b4d62ef71a0850b095fcb544bf8e523acc1f8f9c91c"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 125,
+      "text_sha256": "ff4edf5027cd5d45cef503266bca43abad0b6c6a2e7f0d6c731e596745b2ff8f"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 126,
+      "text_sha256": "3e8d9cbf79df924c3e0942e1482258a4874390a08f0e1a55bf4d2ec80cc18659"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 133,
+      "text_sha256": "ed175417ed8a32e8bb033373137f3120f1997d1cb03d4b6c622ac5907465a361"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 134,
+      "text_sha256": "79825e6c473ecfb8eb4a1442d14fc5e415542cc370629c4caa12f8f6ccaa1e93"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 135,
+      "text_sha256": "149404fae83efbaecd693ff015b836e869119a281c1b5267fbf5c28b42ca2009"
+    },
+    {
+      "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+      "pdf_page_number": 136,
+      "text_sha256": "9db09cf9352b542ab6bf28b4909752f4f3228a5258ba8f44fd1fdb6ed5117a0e"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2477,
+      "text_sha256": "6ab57fe29df879de533101e84189c71d0a382540f85042720b1ad75019dae89f"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2478,
+      "text_sha256": "6fe7e8069c441405af891518e61538c2d87651f98c6ec0df084a2e289e15eb92"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2479,
+      "text_sha256": "e6e52a99138e172902b1e2486be384148cfe4c943fa57c4fe2fd42196f61a8dd"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2480,
+      "text_sha256": "e5205019ae8d0d8e70439be68f3bff0e3f076fda3f1c1d3ca45bce1fd77028c6"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2597,
+      "text_sha256": "2ff126a1fd3670c1576a2cc77039e73f3375ff58836d47e275430ac2883bc785"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2598,
+      "text_sha256": "c8b8847d21cf3e3c6bdecf98e003fb3370ddcbde7db1daa2f42981c0a0f4fa40"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2599,
+      "text_sha256": "9b0c9990b2720492f9089990ebdba9073a80ff7f9246ebed6172c7b26e3913b2"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2606,
+      "text_sha256": "eeed00040145a143ce6c2144313cee4c410ec31f08384c6447e6e92637575fba"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2607,
+      "text_sha256": "9278e505c00d90679bf1045807c207f6c56e61cfd1c143b77b48a3215d6a70e1"
+    },
+    {
+      "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+      "pdf_page_number": 2608,
+      "text_sha256": "64a37922c6b68be5607ef90399e3fd213b0dd18ce3411bf1967ddaefb537ad29"
+    }
+  ],
+  "entries": [
+    {
+      "candidate_key": "BOOK.KNEE.001",
+      "action": "new_fact",
+      "registry_fact_key": "KNEE.OA.ARTHROPLASTY_CONTEXT",
+      "title": "شدت رادیوگرافیک و ارزیابی تعویض کامل زانو",
+      "summary": "شدت رادیوگرافیک آرتروز زانو به‌تنهایی معیار کافی برای تصمیم دربارهٔ تعویض کامل زانو نیست.",
+      "population": "بیماران مبتلا به آرتروز علامت‌دار زانو",
+      "indication": "بازبینی پزشک هنگام ارزیابی برای تعویض کامل زانو",
+      "topic": "osteoarthritis",
+      "application_conditions": [
+        "شرح‌حال درد و عملکرد باید جدا از یافتهٔ رادیوگرافیک ثبت شود.",
+        "کاربرد این گزاره محدود به بازبینی فردی پزشک در زمینهٔ آرتروپلاستی است."
+      ],
+      "limitations": [
+        "آستانهٔ خودکار جراحی یا صلاحیت بیمار تعیین نمی‌شود.",
+        "این گزاره نبود هرگونه ارتباط میان شدت رادیوگرافیک و علائم را ادعا نمی‌کند.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "clinical_assessment",
+      "related_facts": [
+        {
+          "fact_key": "KNEE.OA.KL_CONTEXT",
+          "version": 1,
+          "content_sha256": "76564a8fcfa2e2918b0a9a2ea44c800644e367a4994925e703a032164aea6ef4"
+        },
+        {
+          "fact_key": "KNEE.OA.PRESENTATION",
+          "version": 1,
+          "content_sha256": "cb1a3fa40aa82e9af631295095401a59f746b9c459c3051a5ca61ef0340f51a7"
+        }
+      ],
+      "source": {
+        "source_type": "textbook",
+        "title": "Basics in Primary Knee Arthroplasty",
+        "citation": "Kayaalp ME, Becker R. 8. The Optimal Indication for Total Knee Arthroplasty. In: Becker R, Hirschmann MT, Kort NP, editors. Basics in Primary Knee Arthroplasty. Springer; copyright 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 118; reported printed page 107, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Springer",
+        "url": "https://doi.org/10.1007/978-3-030-58178-7_8",
+        "doi": "10.1007/978-3-030-58178-7_8",
+        "publication_date": null,
+        "guideline_version": "First edition; copyright 2022",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "filename": "Basics in Primary Knee Arthroplasty-Springer (2022).pdf",
+        "pages_artifact_sha256": "5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9",
+        "pages": [
+          {
+            "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+            "pdf_page_number": 118,
+            "text_sha256": "97dd91c38e705077e91299982bafc57d91e9ef1dd9028ce042435bba8fd6834a"
+          }
+        ],
+        "chapter": "8. The Optimal Indication for Total Knee Arthroplasty",
+        "reported_printed_pages": "107",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "extracted_header_and_adjacent_pages",
+      "therapy_type": null,
+      "support_scope": null,
+      "draft_preview": {
+        "proposal": {
+          "title": "شدت رادیوگرافیک و ارزیابی تعویض کامل زانو",
+          "statement": "شدت رادیوگرافیک آرتروز زانو به‌تنهایی معیار کافی برای تصمیم دربارهٔ تعویض کامل زانو نیست.\n\nBook authoring metadata v1:\n{\"action\":\"new_fact\",\"application_conditions\":[\"شرح‌حال درد و عملکرد باید جدا از یافتهٔ رادیوگرافیک ثبت شود.\",\"کاربرد این گزاره محدود به بازبینی فردی پزشک در زمینهٔ آرتروپلاستی است.\"],\"candidate_key\":\"BOOK.KNEE.001\",\"evidence_scope\":\"clinical_assessment\",\"indication\":\"بازبینی پزشک هنگام ارزیابی برای تعویض کامل زانو\",\"limitations\":[\"آستانهٔ خودکار جراحی یا صلاحیت بیمار تعیین نمی‌شود.\",\"این گزاره نبود هرگونه ارتباط میان شدت رادیوگرافیک و علائم را ادعا نمی‌کند.\",\"این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.\",\"شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند.\"],\"page_review_bundle_sha256\":\"98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca\",\"population\":\"بیماران مبتلا به آرتروز علامت‌دار زانو\",\"printed_page_method\":\"extracted_header_and_adjacent_pages\",\"registry_fact_key\":\"KNEE.OA.ARTHROPLASTY_CONTEXT\",\"related_facts\":[{\"content_sha256\":\"76564a8fcfa2e2918b0a9a2ea44c800644e367a4994925e703a032164aea6ef4\",\"fact_key\":\"KNEE.OA.KL_CONTEXT\",\"version\":1},{\"content_sha256\":\"cb1a3fa40aa82e9af631295095401a59f746b9c459c3051a5ca61ef0340f51a7\",\"fact_key\":\"KNEE.OA.PRESENTATION\",\"version\":1}],\"summary\":\"شدت رادیوگرافیک آرتروز زانو به‌تنهایی معیار کافی برای تصمیم دربارهٔ تعویض کامل زانو نیست.\",\"support_scope\":null,\"text_alignment_observation\":\"ai_assisted_selected_text_checked\",\"text_alignment_review_date\":\"2026-10-22\",\"therapy_type\":null,\"title\":\"شدت رادیوگرافیک و ارزیابی تعویض کامل زانو\",\"topic\":\"osteoarthritis\"}\n\nBook Draft provenance v1:\n{\"bibliographic_identity_review\":\"pending\",\"chapter\":\"8. The Optimal Indication for Total Knee Arthroplasty\",\"clinical_source_review\":\"pending\",\"extraction_manifest_sha256\":\"7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f\",\"filename\":\"Basics in Primary Knee Arthroplasty-Springer (2022).pdf\",\"handoff_sha256\":\"467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb\",\"pages\":[{\"pdf_page_number\":118,\"source_file_sha256\":\"7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0\",\"text_sha256\":\"97dd91c38e705077e91299982bafc57d91e9ef1dd9028ce042435bba8fd6834a\"}],\"pages_artifact_sha256\":\"5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9\",\"printed_page_verification\":\"unverified\",\"proposal_origin\":\"ai_assisted_draft\",\"reported_printed_pages\":\"107\",\"requires_independent_review\":true,\"schema_id\":\"4b-mos.book-draft-provenance\",\"schema_version\":\"1.0.0\",\"source_entailment_review\":\"pending\",\"source_file_sha256\":\"7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0\",\"source_pdf_verification_scope\":\"technical_bytes_only\",\"verifier_artifact_sha256\":\"1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee\"}",
+          "clinical_domain": "orthopedics_knee",
+          "therapy_type": null,
+          "population": "بیماران مبتلا به آرتروز علامت‌دار زانو",
+          "indication": "بازبینی پزشک هنگام ارزیابی برای تعویض کامل زانو",
+          "contraindications": [],
+          "evidence_grade": "ungraded",
+          "valid_from": null,
+          "valid_to": null,
+          "sources": [
+            {
+              "source_type": "textbook",
+              "title": "Basics in Primary Knee Arthroplasty",
+              "citation": "Kayaalp ME, Becker R. 8. The Optimal Indication for Total Knee Arthroplasty. In: Becker R, Hirschmann MT, Kort NP, editors. Basics in Primary Knee Arthroplasty. Springer; copyright 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 118; reported printed page 107, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+              "publisher": "Springer",
+              "url": "https://doi.org/10.1007/978-3-030-58178-7_8",
+              "doi": "10.1007/978-3-030-58178-7_8",
+              "publication_date": null,
+              "guideline_version": "First edition; copyright 2022",
+              "accessed_at": "2026-10-22"
+            }
+          ],
+          "fact_key": "KNEE.OA.ARTHROPLASTY_CONTEXT"
+        },
+        "provenance": {
+          "schema_id": "4b-mos.book-draft-provenance",
+          "schema_version": "1.0.0",
+          "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+          "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+          "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+          "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+          "filename": "Basics in Primary Knee Arthroplasty-Springer (2022).pdf",
+          "pages_artifact_sha256": "5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9",
+          "pages": [
+            {
+              "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+              "pdf_page_number": 118,
+              "text_sha256": "97dd91c38e705077e91299982bafc57d91e9ef1dd9028ce042435bba8fd6834a"
+            }
+          ],
+          "chapter": "8. The Optimal Indication for Total Knee Arthroplasty",
+          "reported_printed_pages": "107",
+          "printed_page_verification": "unverified",
+          "proposal_origin": "ai_assisted_draft",
+          "source_pdf_verification_scope": "technical_bytes_only",
+          "bibliographic_identity_review": "pending",
+          "clinical_source_review": "pending",
+          "source_entailment_review": "pending",
+          "requires_independent_review": true
+        },
+        "version": 1,
+        "status": "draft",
+        "content_sha256": "e6b7f83bddda13189ee7fb926c9eef8e1f4ea5e9b15fd4bce040e272fbe25a3e",
+        "proposal_origin": "ai_assisted_draft",
+        "clinical_source_review": "pending",
+        "requires_independent_review": true,
+        "registry_write_performed": false,
+        "is_clinically_validated": false
+      }
+    },
+    {
+      "candidate_key": "BOOK.KNEE.002",
+      "action": "new_fact",
+      "registry_fact_key": "KNEE.ARTHROPLASTY.COMORBIDITY_HISTORY",
+      "title": "ثبت بیماری‌های همراه پیش از آرتروپلاستی زانو",
+      "summary": "شناسایی بیماری‌های همراه بخشی از شرح‌حال عمومی در ارزیابی پیش از آرتروپلاستی زانو است.",
+      "population": "افراد تحت ارزیابی پیش از آرتروپلاستی زانو",
+      "indication": "تکمیل شرح‌حال عمومی برای بازبینی پزشک پیش از جراحی",
+      "topic": "osteoarthritis",
+      "application_conditions": [
+        "بیماری گزارش‌شده توسط بیمار تا بررسی مدارک، خوداظهاری باقی می‌ماند.",
+        "این مدخل دربارهٔ شرح‌حال پیش از جراحی است."
+      ],
+      "limitations": [
+        "امتیاز خطر، آزمایش اجباری، دستور تغییر دارو یا تصمیم امکان جراحی ایجاد نمی‌شود.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "clinical_assessment",
+      "related_facts": [],
+      "source": {
+        "source_type": "textbook",
+        "title": "Basics in Primary Knee Arthroplasty",
+        "citation": "Salzmann M, Becker R. 10. Patients’ Evaluation Prior to Knee Arthroplasty. In: Becker R, Hirschmann MT, Kort NP, editors. Basics in Primary Knee Arthroplasty. Springer; copyright 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 134; reported printed page 125, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Springer",
+        "url": "https://doi.org/10.1007/978-3-030-58178-7_10",
+        "doi": "10.1007/978-3-030-58178-7_10",
+        "publication_date": null,
+        "guideline_version": "First edition; copyright 2022",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "filename": "Basics in Primary Knee Arthroplasty-Springer (2022).pdf",
+        "pages_artifact_sha256": "5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9",
+        "pages": [
+          {
+            "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+            "pdf_page_number": 134,
+            "text_sha256": "79825e6c473ecfb8eb4a1442d14fc5e415542cc370629c4caa12f8f6ccaa1e93"
+          }
+        ],
+        "chapter": "10. Patients’ Evaluation Prior to Knee Arthroplasty",
+        "reported_printed_pages": "125",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "extracted_header_and_adjacent_pages",
+      "therapy_type": null,
+      "support_scope": null,
+      "draft_preview": {
+        "proposal": {
+          "title": "ثبت بیماری‌های همراه پیش از آرتروپلاستی زانو",
+          "statement": "شناسایی بیماری‌های همراه بخشی از شرح‌حال عمومی در ارزیابی پیش از آرتروپلاستی زانو است.\n\nBook authoring metadata v1:\n{\"action\":\"new_fact\",\"application_conditions\":[\"بیماری گزارش‌شده توسط بیمار تا بررسی مدارک، خوداظهاری باقی می‌ماند.\",\"این مدخل دربارهٔ شرح‌حال پیش از جراحی است.\"],\"candidate_key\":\"BOOK.KNEE.002\",\"evidence_scope\":\"clinical_assessment\",\"indication\":\"تکمیل شرح‌حال عمومی برای بازبینی پزشک پیش از جراحی\",\"limitations\":[\"امتیاز خطر، آزمایش اجباری، دستور تغییر دارو یا تصمیم امکان جراحی ایجاد نمی‌شود.\",\"این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.\",\"شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند.\"],\"page_review_bundle_sha256\":\"98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca\",\"population\":\"افراد تحت ارزیابی پیش از آرتروپلاستی زانو\",\"printed_page_method\":\"extracted_header_and_adjacent_pages\",\"registry_fact_key\":\"KNEE.ARTHROPLASTY.COMORBIDITY_HISTORY\",\"related_facts\":[],\"summary\":\"شناسایی بیماری‌های همراه بخشی از شرح‌حال عمومی در ارزیابی پیش از آرتروپلاستی زانو است.\",\"support_scope\":null,\"text_alignment_observation\":\"ai_assisted_selected_text_checked\",\"text_alignment_review_date\":\"2026-10-22\",\"therapy_type\":null,\"title\":\"ثبت بیماری‌های همراه پیش از آرتروپلاستی زانو\",\"topic\":\"osteoarthritis\"}\n\nBook Draft provenance v1:\n{\"bibliographic_identity_review\":\"pending\",\"chapter\":\"10. Patients’ Evaluation Prior to Knee Arthroplasty\",\"clinical_source_review\":\"pending\",\"extraction_manifest_sha256\":\"7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f\",\"filename\":\"Basics in Primary Knee Arthroplasty-Springer (2022).pdf\",\"handoff_sha256\":\"467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb\",\"pages\":[{\"pdf_page_number\":134,\"source_file_sha256\":\"7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0\",\"text_sha256\":\"79825e6c473ecfb8eb4a1442d14fc5e415542cc370629c4caa12f8f6ccaa1e93\"}],\"pages_artifact_sha256\":\"5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9\",\"printed_page_verification\":\"unverified\",\"proposal_origin\":\"ai_assisted_draft\",\"reported_printed_pages\":\"125\",\"requires_independent_review\":true,\"schema_id\":\"4b-mos.book-draft-provenance\",\"schema_version\":\"1.0.0\",\"source_entailment_review\":\"pending\",\"source_file_sha256\":\"7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0\",\"source_pdf_verification_scope\":\"technical_bytes_only\",\"verifier_artifact_sha256\":\"1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee\"}",
+          "clinical_domain": "orthopedics_knee",
+          "therapy_type": null,
+          "population": "افراد تحت ارزیابی پیش از آرتروپلاستی زانو",
+          "indication": "تکمیل شرح‌حال عمومی برای بازبینی پزشک پیش از جراحی",
+          "contraindications": [],
+          "evidence_grade": "ungraded",
+          "valid_from": null,
+          "valid_to": null,
+          "sources": [
+            {
+              "source_type": "textbook",
+              "title": "Basics in Primary Knee Arthroplasty",
+              "citation": "Salzmann M, Becker R. 10. Patients’ Evaluation Prior to Knee Arthroplasty. In: Becker R, Hirschmann MT, Kort NP, editors. Basics in Primary Knee Arthroplasty. Springer; copyright 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 134; reported printed page 125, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+              "publisher": "Springer",
+              "url": "https://doi.org/10.1007/978-3-030-58178-7_10",
+              "doi": "10.1007/978-3-030-58178-7_10",
+              "publication_date": null,
+              "guideline_version": "First edition; copyright 2022",
+              "accessed_at": "2026-10-22"
+            }
+          ],
+          "fact_key": "KNEE.ARTHROPLASTY.COMORBIDITY_HISTORY"
+        },
+        "provenance": {
+          "schema_id": "4b-mos.book-draft-provenance",
+          "schema_version": "1.0.0",
+          "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+          "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+          "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+          "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+          "filename": "Basics in Primary Knee Arthroplasty-Springer (2022).pdf",
+          "pages_artifact_sha256": "5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9",
+          "pages": [
+            {
+              "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+              "pdf_page_number": 134,
+              "text_sha256": "79825e6c473ecfb8eb4a1442d14fc5e415542cc370629c4caa12f8f6ccaa1e93"
+            }
+          ],
+          "chapter": "10. Patients’ Evaluation Prior to Knee Arthroplasty",
+          "reported_printed_pages": "125",
+          "printed_page_verification": "unverified",
+          "proposal_origin": "ai_assisted_draft",
+          "source_pdf_verification_scope": "technical_bytes_only",
+          "bibliographic_identity_review": "pending",
+          "clinical_source_review": "pending",
+          "source_entailment_review": "pending",
+          "requires_independent_review": true
+        },
+        "version": 1,
+        "status": "draft",
+        "content_sha256": "1c7c752cd8883db6cf9158fa10f26aab2fcd1401984fbc711d004c2f6b8e11f3",
+        "proposal_origin": "ai_assisted_draft",
+        "clinical_source_review": "pending",
+        "requires_independent_review": true,
+        "registry_write_performed": false,
+        "is_clinically_validated": false
+      }
+    },
+    {
+      "candidate_key": "BOOK.KNEE.003",
+      "action": "new_fact",
+      "registry_fact_key": "KNEE.MENISCUS.MCMURRAY_NEGATIVE",
+      "title": "محدودیت نتیجهٔ منفی مک‌موری",
+      "summary": "در بیمار مشکوک به پارگی منیسک، منفی‌بودن آزمون مک‌موری به‌تنهایی پارگی را رد نمی‌کند.",
+      "population": "بیماران دارای شک بالینی به پارگی منیسک",
+      "indication": "تفسیر یافتهٔ معاینه توسط پزشک",
+      "topic": "meniscus",
+      "application_conditions": [
+        "نتیجهٔ آزمون از معاینهٔ ثبت‌شده توسط پزشک گرفته شود.",
+        "مثبت، منفی و نامشخص به‌صورت متمایز باقی بمانند."
+      ],
+      "limitations": [
+        "حساسیت، ویژگی یا احتمال تشخیص از این مدخل استخراج نشده است.",
+        "نتیجهٔ نامشخص یا انجام‌نشده به منفی تبدیل نشود.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "clinical_assessment",
+      "related_facts": [
+        {
+          "fact_key": "KNEE.MENISCUS.EXAMINATION",
+          "version": 1,
+          "content_sha256": "ea9886cd106253cfb6e31165d50dcc7379771001a492ccde8211e9a8805e47b3"
+        }
+      ],
+      "source": {
+        "source_type": "textbook",
+        "title": "Campbell's Operative Orthopaedics",
+        "citation": "45. Knee Injuries — Diagnostic Tests. In: Campbell's Operative Orthopaedics. 14th edition. Elsevier; copyright 2021. Local report identifies Azar and Beaty as editors; bibliographic identity and source entailment require independent review. Release date and copyright year are distinct. Selected extracted PDF page 2479; reported printed page 2217, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Elsevier",
+        "url": "https://shop.elsevier.com/books/campbells-operative-orthopaedics-4-volume-set/azar/978-0-323-67217-7",
+        "doi": null,
+        "publication_date": null,
+        "guideline_version": "14th edition; copyright 2021",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+        "filename": "Campbells_Operative_Orthopaedics,_14th_-4_Volume_Set-Elsevier_(2020)_(Freder.pdf",
+        "pages_artifact_sha256": "a949ef9c04b4561ee52956de0d4acbe1e978240dec4c2b0d9d186d463965c326",
+        "pages": [
+          {
+            "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+            "pdf_page_number": 2479,
+            "text_sha256": "e6e52a99138e172902b1e2486be384148cfe4c943fa57c4fe2fd42196f61a8dd"
+          }
+        ],
+        "chapter": "45. Knee Injuries — Diagnostic Tests",
+        "reported_printed_pages": "2217",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "extracted_header_and_adjacent_pages",
+      "therapy_type": null,
+      "support_scope": null,
+      "draft_preview": {
+        "proposal": {
+          "title": "محدودیت نتیجهٔ منفی مک‌موری",
+          "statement": "در بیمار مشکوک به پارگی منیسک، منفی‌بودن آزمون مک‌موری به‌تنهایی پارگی را رد نمی‌کند.\n\nBook authoring metadata v1:\n{\"action\":\"new_fact\",\"application_conditions\":[\"نتیجهٔ آزمون از معاینهٔ ثبت‌شده توسط پزشک گرفته شود.\",\"مثبت، منفی و نامشخص به‌صورت متمایز باقی بمانند.\"],\"candidate_key\":\"BOOK.KNEE.003\",\"evidence_scope\":\"clinical_assessment\",\"indication\":\"تفسیر یافتهٔ معاینه توسط پزشک\",\"limitations\":[\"حساسیت، ویژگی یا احتمال تشخیص از این مدخل استخراج نشده است.\",\"نتیجهٔ نامشخص یا انجام‌نشده به منفی تبدیل نشود.\",\"این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.\",\"شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند.\"],\"page_review_bundle_sha256\":\"98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca\",\"population\":\"بیماران دارای شک بالینی به پارگی منیسک\",\"printed_page_method\":\"extracted_header_and_adjacent_pages\",\"registry_fact_key\":\"KNEE.MENISCUS.MCMURRAY_NEGATIVE\",\"related_facts\":[{\"content_sha256\":\"ea9886cd106253cfb6e31165d50dcc7379771001a492ccde8211e9a8805e47b3\",\"fact_key\":\"KNEE.MENISCUS.EXAMINATION\",\"version\":1}],\"summary\":\"در بیمار مشکوک به پارگی منیسک، منفی‌بودن آزمون مک‌موری به‌تنهایی پارگی را رد نمی‌کند.\",\"support_scope\":null,\"text_alignment_observation\":\"ai_assisted_selected_text_checked\",\"text_alignment_review_date\":\"2026-10-22\",\"therapy_type\":null,\"title\":\"محدودیت نتیجهٔ منفی مک‌موری\",\"topic\":\"meniscus\"}\n\nBook Draft provenance v1:\n{\"bibliographic_identity_review\":\"pending\",\"chapter\":\"45. Knee Injuries — Diagnostic Tests\",\"clinical_source_review\":\"pending\",\"extraction_manifest_sha256\":\"7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f\",\"filename\":\"Campbells_Operative_Orthopaedics,_14th_-4_Volume_Set-Elsevier_(2020)_(Freder.pdf\",\"handoff_sha256\":\"467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb\",\"pages\":[{\"pdf_page_number\":2479,\"source_file_sha256\":\"c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801\",\"text_sha256\":\"e6e52a99138e172902b1e2486be384148cfe4c943fa57c4fe2fd42196f61a8dd\"}],\"pages_artifact_sha256\":\"a949ef9c04b4561ee52956de0d4acbe1e978240dec4c2b0d9d186d463965c326\",\"printed_page_verification\":\"unverified\",\"proposal_origin\":\"ai_assisted_draft\",\"reported_printed_pages\":\"2217\",\"requires_independent_review\":true,\"schema_id\":\"4b-mos.book-draft-provenance\",\"schema_version\":\"1.0.0\",\"source_entailment_review\":\"pending\",\"source_file_sha256\":\"c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801\",\"source_pdf_verification_scope\":\"technical_bytes_only\",\"verifier_artifact_sha256\":\"1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee\"}",
+          "clinical_domain": "orthopedics_knee",
+          "therapy_type": null,
+          "population": "بیماران دارای شک بالینی به پارگی منیسک",
+          "indication": "تفسیر یافتهٔ معاینه توسط پزشک",
+          "contraindications": [],
+          "evidence_grade": "ungraded",
+          "valid_from": null,
+          "valid_to": null,
+          "sources": [
+            {
+              "source_type": "textbook",
+              "title": "Campbell's Operative Orthopaedics",
+              "citation": "45. Knee Injuries — Diagnostic Tests. In: Campbell's Operative Orthopaedics. 14th edition. Elsevier; copyright 2021. Local report identifies Azar and Beaty as editors; bibliographic identity and source entailment require independent review. Release date and copyright year are distinct. Selected extracted PDF page 2479; reported printed page 2217, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+              "publisher": "Elsevier",
+              "url": "https://shop.elsevier.com/books/campbells-operative-orthopaedics-4-volume-set/azar/978-0-323-67217-7",
+              "doi": null,
+              "publication_date": null,
+              "guideline_version": "14th edition; copyright 2021",
+              "accessed_at": "2026-10-22"
+            }
+          ],
+          "fact_key": "KNEE.MENISCUS.MCMURRAY_NEGATIVE"
+        },
+        "provenance": {
+          "schema_id": "4b-mos.book-draft-provenance",
+          "schema_version": "1.0.0",
+          "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+          "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+          "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+          "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+          "filename": "Campbells_Operative_Orthopaedics,_14th_-4_Volume_Set-Elsevier_(2020)_(Freder.pdf",
+          "pages_artifact_sha256": "a949ef9c04b4561ee52956de0d4acbe1e978240dec4c2b0d9d186d463965c326",
+          "pages": [
+            {
+              "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+              "pdf_page_number": 2479,
+              "text_sha256": "e6e52a99138e172902b1e2486be384148cfe4c943fa57c4fe2fd42196f61a8dd"
+            }
+          ],
+          "chapter": "45. Knee Injuries — Diagnostic Tests",
+          "reported_printed_pages": "2217",
+          "printed_page_verification": "unverified",
+          "proposal_origin": "ai_assisted_draft",
+          "source_pdf_verification_scope": "technical_bytes_only",
+          "bibliographic_identity_review": "pending",
+          "clinical_source_review": "pending",
+          "source_entailment_review": "pending",
+          "requires_independent_review": true
+        },
+        "version": 1,
+        "status": "draft",
+        "content_sha256": "4c685683ebf48d93ba76c31a9743ba3b65321d2252e9ecbed17398a7c63a7e7a",
+        "proposal_origin": "ai_assisted_draft",
+        "clinical_source_review": "pending",
+        "requires_independent_review": true,
+        "registry_write_performed": false,
+        "is_clinically_validated": false
+      }
+    },
+    {
+      "candidate_key": "BOOK.KNEE.004",
+      "action": "support_existing",
+      "registry_fact_key": "KNEE.CARTILAGE.CLASSIFICATION",
+      "title": "ارجاع پشتیبان مؤلفهٔ محل ضایعهٔ غضروفی",
+      "summary": "محل ضایعه یکی از ویژگی‌های ساختاری مورد بررسی در ارزیابی ضایعهٔ غضروفی یا استئوکندرال زانو است.",
+      "population": "افراد دارای ضایعهٔ غضروفی یا استئوکندرال مشکوک یا مستند زانو",
+      "indication": "توصیف ساختاری ضایعه برای بازبینی پزشک",
+      "topic": "cartilage_osteochondral",
+      "application_conditions": [
+        "ارجاع فقط مؤلفهٔ محل ضایعه در گزارهٔ موجود را پشتیبانی می‌کند.",
+        "محل ساختاری ضایعه از ارزیابی تخصصی یا تصویربرداری تأییدشده گرفته شود."
+      ],
+      "limitations": [
+        "این ارجاع تأیید مستقل تمام اجزای گزارهٔ ICRS یا جایگزین آن نیست.",
+        "محل درد گزارش‌شده با محل ضایعه یکسان فرض نشود.",
+        "محل ضایعه به‌تنهایی شدت، علت یا درمان را تعیین نمی‌کند.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "structural_assessment",
+      "related_facts": [
+        {
+          "fact_key": "KNEE.CARTILAGE.CLASSIFICATION",
+          "version": 1,
+          "content_sha256": "0bbe672276d73c23b64d946144d43a60d538c8faa84be9bdce7d4c33f8751172"
+        }
+      ],
+      "source": {
+        "source_type": "textbook",
+        "title": "Campbell's Operative Orthopaedics",
+        "citation": "45. Knee Injuries — Articular Cartilage Injuries. In: Campbell's Operative Orthopaedics. 14th edition. Elsevier; copyright 2021. Local report identifies Azar and Beaty as editors; bibliographic identity and source entailment require independent review. Release date and copyright year are distinct. Selected extracted PDF page 2598; reported printed page 2336, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Elsevier",
+        "url": "https://shop.elsevier.com/books/campbells-operative-orthopaedics-4-volume-set/azar/978-0-323-67217-7",
+        "doi": null,
+        "publication_date": null,
+        "guideline_version": "14th edition; copyright 2021",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+        "filename": "Campbells_Operative_Orthopaedics,_14th_-4_Volume_Set-Elsevier_(2020)_(Freder.pdf",
+        "pages_artifact_sha256": "a949ef9c04b4561ee52956de0d4acbe1e978240dec4c2b0d9d186d463965c326",
+        "pages": [
+          {
+            "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+            "pdf_page_number": 2598,
+            "text_sha256": "c8b8847d21cf3e3c6bdecf98e003fb3370ddcbde7db1daa2f42981c0a0f4fa40"
+          }
+        ],
+        "chapter": "45. Knee Injuries — Articular Cartilage Injuries",
+        "reported_printed_pages": "2336",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "reconstructed_split_header_and_adjacent_pages",
+      "therapy_type": null,
+      "support_scope": "location_component_only",
+      "draft_preview": null
+    },
+    {
+      "candidate_key": "BOOK.KNEE.005",
+      "action": "new_fact",
+      "registry_fact_key": "KNEE.OCD.SKELETAL_MATURITY",
+      "title": "بلوغ اسکلتی در ارزیابی OCD زانو",
+      "summary": "وضعیت بلوغ اسکلتی یکی از متغیرهای مرتبط با ارزیابی استئوکندریت دیسکان زانو است.",
+      "population": "افراد دارای OCD زانو مشکوک یا مستند",
+      "indication": "ارزیابی تخصصی وضعیت بلوغ اسکلتی در زمینهٔ OCD",
+      "topic": "cartilage_osteochondral",
+      "application_conditions": [
+        "وضعیت صفحهٔ رشد از ارزیابی تخصصی تأییدشده ثبت شود."
+      ],
+      "limitations": [
+        "سن یا گفتهٔ بیمار به‌تنهایی وضعیت باز یا بستهٔ صفحهٔ رشد را تأیید نمی‌کند.",
+        "از این متغیر به‌تنهایی درمان، پیش‌آگهی یا احتمال بهبود تولید نمی‌شود.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "structural_assessment",
+      "related_facts": [
+        {
+          "fact_key": "KNEE.OCD.SPECIALIST_REVIEW",
+          "version": 1,
+          "content_sha256": "e36ded0ae39413dc98736340a45dbb82047a7ffbbcbf27933da3807c06cae7c0"
+        },
+        {
+          "fact_key": "KNEE.OCD.MRI_CONTEXT",
+          "version": 1,
+          "content_sha256": "604aa268de019b64598ccca05336e66caf14f0529f8c8bb48845baa868a4800d"
+        }
+      ],
+      "source": {
+        "source_type": "textbook",
+        "title": "Campbell's Operative Orthopaedics",
+        "citation": "45. Knee Injuries — Osteochondritis Dissecans. In: Campbell's Operative Orthopaedics. 14th edition. Elsevier; copyright 2021. Local report identifies Azar and Beaty as editors; bibliographic identity and source entailment require independent review. Release date and copyright year are distinct. Selected extracted PDF page 2607; reported printed page 2345, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Elsevier",
+        "url": "https://shop.elsevier.com/books/campbells-operative-orthopaedics-4-volume-set/azar/978-0-323-67217-7",
+        "doi": null,
+        "publication_date": null,
+        "guideline_version": "14th edition; copyright 2021",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+        "filename": "Campbells_Operative_Orthopaedics,_14th_-4_Volume_Set-Elsevier_(2020)_(Freder.pdf",
+        "pages_artifact_sha256": "a949ef9c04b4561ee52956de0d4acbe1e978240dec4c2b0d9d186d463965c326",
+        "pages": [
+          {
+            "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+            "pdf_page_number": 2607,
+            "text_sha256": "9278e505c00d90679bf1045807c207f6c56e61cfd1c143b77b48a3215d6a70e1"
+          }
+        ],
+        "chapter": "45. Knee Injuries — Osteochondritis Dissecans",
+        "reported_printed_pages": "2345",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "reconstructed_split_header_and_adjacent_pages",
+      "therapy_type": null,
+      "support_scope": null,
+      "draft_preview": {
+        "proposal": {
+          "title": "بلوغ اسکلتی در ارزیابی OCD زانو",
+          "statement": "وضعیت بلوغ اسکلتی یکی از متغیرهای مرتبط با ارزیابی استئوکندریت دیسکان زانو است.\n\nBook authoring metadata v1:\n{\"action\":\"new_fact\",\"application_conditions\":[\"وضعیت صفحهٔ رشد از ارزیابی تخصصی تأییدشده ثبت شود.\"],\"candidate_key\":\"BOOK.KNEE.005\",\"evidence_scope\":\"structural_assessment\",\"indication\":\"ارزیابی تخصصی وضعیت بلوغ اسکلتی در زمینهٔ OCD\",\"limitations\":[\"سن یا گفتهٔ بیمار به‌تنهایی وضعیت باز یا بستهٔ صفحهٔ رشد را تأیید نمی‌کند.\",\"از این متغیر به‌تنهایی درمان، پیش‌آگهی یا احتمال بهبود تولید نمی‌شود.\",\"این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.\",\"شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند.\"],\"page_review_bundle_sha256\":\"98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca\",\"population\":\"افراد دارای OCD زانو مشکوک یا مستند\",\"printed_page_method\":\"reconstructed_split_header_and_adjacent_pages\",\"registry_fact_key\":\"KNEE.OCD.SKELETAL_MATURITY\",\"related_facts\":[{\"content_sha256\":\"e36ded0ae39413dc98736340a45dbb82047a7ffbbcbf27933da3807c06cae7c0\",\"fact_key\":\"KNEE.OCD.SPECIALIST_REVIEW\",\"version\":1},{\"content_sha256\":\"604aa268de019b64598ccca05336e66caf14f0529f8c8bb48845baa868a4800d\",\"fact_key\":\"KNEE.OCD.MRI_CONTEXT\",\"version\":1}],\"summary\":\"وضعیت بلوغ اسکلتی یکی از متغیرهای مرتبط با ارزیابی استئوکندریت دیسکان زانو است.\",\"support_scope\":null,\"text_alignment_observation\":\"ai_assisted_selected_text_checked\",\"text_alignment_review_date\":\"2026-10-22\",\"therapy_type\":null,\"title\":\"بلوغ اسکلتی در ارزیابی OCD زانو\",\"topic\":\"cartilage_osteochondral\"}\n\nBook Draft provenance v1:\n{\"bibliographic_identity_review\":\"pending\",\"chapter\":\"45. Knee Injuries — Osteochondritis Dissecans\",\"clinical_source_review\":\"pending\",\"extraction_manifest_sha256\":\"7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f\",\"filename\":\"Campbells_Operative_Orthopaedics,_14th_-4_Volume_Set-Elsevier_(2020)_(Freder.pdf\",\"handoff_sha256\":\"467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb\",\"pages\":[{\"pdf_page_number\":2607,\"source_file_sha256\":\"c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801\",\"text_sha256\":\"9278e505c00d90679bf1045807c207f6c56e61cfd1c143b77b48a3215d6a70e1\"}],\"pages_artifact_sha256\":\"a949ef9c04b4561ee52956de0d4acbe1e978240dec4c2b0d9d186d463965c326\",\"printed_page_verification\":\"unverified\",\"proposal_origin\":\"ai_assisted_draft\",\"reported_printed_pages\":\"2345\",\"requires_independent_review\":true,\"schema_id\":\"4b-mos.book-draft-provenance\",\"schema_version\":\"1.0.0\",\"source_entailment_review\":\"pending\",\"source_file_sha256\":\"c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801\",\"source_pdf_verification_scope\":\"technical_bytes_only\",\"verifier_artifact_sha256\":\"1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee\"}",
+          "clinical_domain": "orthopedics_knee",
+          "therapy_type": null,
+          "population": "افراد دارای OCD زانو مشکوک یا مستند",
+          "indication": "ارزیابی تخصصی وضعیت بلوغ اسکلتی در زمینهٔ OCD",
+          "contraindications": [],
+          "evidence_grade": "ungraded",
+          "valid_from": null,
+          "valid_to": null,
+          "sources": [
+            {
+              "source_type": "textbook",
+              "title": "Campbell's Operative Orthopaedics",
+              "citation": "45. Knee Injuries — Osteochondritis Dissecans. In: Campbell's Operative Orthopaedics. 14th edition. Elsevier; copyright 2021. Local report identifies Azar and Beaty as editors; bibliographic identity and source entailment require independent review. Release date and copyright year are distinct. Selected extracted PDF page 2607; reported printed page 2345, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+              "publisher": "Elsevier",
+              "url": "https://shop.elsevier.com/books/campbells-operative-orthopaedics-4-volume-set/azar/978-0-323-67217-7",
+              "doi": null,
+              "publication_date": null,
+              "guideline_version": "14th edition; copyright 2021",
+              "accessed_at": "2026-10-22"
+            }
+          ],
+          "fact_key": "KNEE.OCD.SKELETAL_MATURITY"
+        },
+        "provenance": {
+          "schema_id": "4b-mos.book-draft-provenance",
+          "schema_version": "1.0.0",
+          "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+          "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+          "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+          "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+          "filename": "Campbells_Operative_Orthopaedics,_14th_-4_Volume_Set-Elsevier_(2020)_(Freder.pdf",
+          "pages_artifact_sha256": "a949ef9c04b4561ee52956de0d4acbe1e978240dec4c2b0d9d186d463965c326",
+          "pages": [
+            {
+              "source_file_sha256": "c2e7aa0c4b2117bb7e793d18fc4ed420d43952876f3b61d59f4d8a0e196cc801",
+              "pdf_page_number": 2607,
+              "text_sha256": "9278e505c00d90679bf1045807c207f6c56e61cfd1c143b77b48a3215d6a70e1"
+            }
+          ],
+          "chapter": "45. Knee Injuries — Osteochondritis Dissecans",
+          "reported_printed_pages": "2345",
+          "printed_page_verification": "unverified",
+          "proposal_origin": "ai_assisted_draft",
+          "source_pdf_verification_scope": "technical_bytes_only",
+          "bibliographic_identity_review": "pending",
+          "clinical_source_review": "pending",
+          "source_entailment_review": "pending",
+          "requires_independent_review": true
+        },
+        "version": 1,
+        "status": "draft",
+        "content_sha256": "b1af5a5c2ab56ca3f53f4ba9c418da8931d4f5df405ad7c796d909cbb49e787a",
+        "proposal_origin": "ai_assisted_draft",
+        "clinical_source_review": "pending",
+        "requires_independent_review": true,
+        "registry_write_performed": false,
+        "is_clinically_validated": false
+      }
+    },
+    {
+      "candidate_key": "BOOK.KNEE.006",
+      "action": "new_fact",
+      "registry_fact_key": "KNEE.MENISCUS.VASCULARITY_HEALING",
+      "title": "خون‌رسانی ناحیهٔ پارگی و ظرفیت ترمیم منیسک",
+      "summary": "میزان خون‌رسانی ناحیهٔ پارگی منیسک یکی از عوامل مرتبط با ظرفیت ترمیم آن است.",
+      "population": "افراد دارای پارگی منیسک",
+      "indication": "بازبینی ظرفیت ترمیم توسط پزشک",
+      "topic": "meniscus",
+      "application_conditions": [
+        "ناحیهٔ ساختاری پارگی با محل درد بیمار یکسان فرض نشود.",
+        "این رابطه همراه الگو، کیفیت بافت و شرایط بیمار بررسی شود."
+      ],
+      "limitations": [
+        "همهٔ پارگی‌های کم‌عروق غیرقابل‌ترمیم یا همهٔ پارگی‌های پرعروق مناسب جراحی تلقی نشوند.",
+        "هیچ احتمال ترمیم یا روش جراحی به‌طور خودکار تعیین نمی‌شود.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "clinical_assessment",
+      "related_facts": [
+        {
+          "fact_key": "KNEE.MENISCUS.SCOPE",
+          "version": 1,
+          "content_sha256": "dab77f71214c6d9f66d3d4f2fababb170867b0189968cf32e49f9ddff2b5bc16"
+        }
+      ],
+      "source": {
+        "source_type": "textbook",
+        "title": "Orthobiologics: Injectable Therapies for the Musculoskeletal System",
+        "citation": "Shimomura K, Hart DA, Nakamura N. 22. Meniscal Lesions: Cell Therapy — 22.1 Introduction. In: Filardo G, Mandelbaum BR, Muschler GF, Rodeo SA, Nakamura N, editors. Orthobiologics: Injectable Therapies for the Musculoskeletal System. Springer; copyright ISAKOS 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 263; reported printed page 265, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Springer",
+        "url": "https://doi.org/10.1007/978-3-030-84744-9_22",
+        "doi": "10.1007/978-3-030-84744-9_22",
+        "publication_date": null,
+        "guideline_version": "First edition; copyright ISAKOS 2022",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "filename": "Orthobiologics.pdf",
+        "pages_artifact_sha256": "8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a",
+        "pages": [
+          {
+            "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+            "pdf_page_number": 263,
+            "text_sha256": "65d7821487f29b4d231f8b55ffd67fab14ae65b7c375b2d784d207d2091a243d"
+          }
+        ],
+        "chapter": "22. Meniscal Lesions: Cell Therapy — 22.1 Introduction",
+        "reported_printed_pages": "265",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "extracted_header_and_adjacent_pages",
+      "therapy_type": null,
+      "support_scope": null,
+      "draft_preview": {
+        "proposal": {
+          "title": "خون‌رسانی ناحیهٔ پارگی و ظرفیت ترمیم منیسک",
+          "statement": "میزان خون‌رسانی ناحیهٔ پارگی منیسک یکی از عوامل مرتبط با ظرفیت ترمیم آن است.\n\nBook authoring metadata v1:\n{\"action\":\"new_fact\",\"application_conditions\":[\"ناحیهٔ ساختاری پارگی با محل درد بیمار یکسان فرض نشود.\",\"این رابطه همراه الگو، کیفیت بافت و شرایط بیمار بررسی شود.\"],\"candidate_key\":\"BOOK.KNEE.006\",\"evidence_scope\":\"clinical_assessment\",\"indication\":\"بازبینی ظرفیت ترمیم توسط پزشک\",\"limitations\":[\"همهٔ پارگی‌های کم‌عروق غیرقابل‌ترمیم یا همهٔ پارگی‌های پرعروق مناسب جراحی تلقی نشوند.\",\"هیچ احتمال ترمیم یا روش جراحی به‌طور خودکار تعیین نمی‌شود.\",\"این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.\",\"شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند.\"],\"page_review_bundle_sha256\":\"98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca\",\"population\":\"افراد دارای پارگی منیسک\",\"printed_page_method\":\"extracted_header_and_adjacent_pages\",\"registry_fact_key\":\"KNEE.MENISCUS.VASCULARITY_HEALING\",\"related_facts\":[{\"content_sha256\":\"dab77f71214c6d9f66d3d4f2fababb170867b0189968cf32e49f9ddff2b5bc16\",\"fact_key\":\"KNEE.MENISCUS.SCOPE\",\"version\":1}],\"summary\":\"میزان خون‌رسانی ناحیهٔ پارگی منیسک یکی از عوامل مرتبط با ظرفیت ترمیم آن است.\",\"support_scope\":null,\"text_alignment_observation\":\"ai_assisted_selected_text_checked\",\"text_alignment_review_date\":\"2026-10-22\",\"therapy_type\":null,\"title\":\"خون‌رسانی ناحیهٔ پارگی و ظرفیت ترمیم منیسک\",\"topic\":\"meniscus\"}\n\nBook Draft provenance v1:\n{\"bibliographic_identity_review\":\"pending\",\"chapter\":\"22. Meniscal Lesions: Cell Therapy — 22.1 Introduction\",\"clinical_source_review\":\"pending\",\"extraction_manifest_sha256\":\"7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f\",\"filename\":\"Orthobiologics.pdf\",\"handoff_sha256\":\"467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb\",\"pages\":[{\"pdf_page_number\":263,\"source_file_sha256\":\"79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20\",\"text_sha256\":\"65d7821487f29b4d231f8b55ffd67fab14ae65b7c375b2d784d207d2091a243d\"}],\"pages_artifact_sha256\":\"8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a\",\"printed_page_verification\":\"unverified\",\"proposal_origin\":\"ai_assisted_draft\",\"reported_printed_pages\":\"265\",\"requires_independent_review\":true,\"schema_id\":\"4b-mos.book-draft-provenance\",\"schema_version\":\"1.0.0\",\"source_entailment_review\":\"pending\",\"source_file_sha256\":\"79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20\",\"source_pdf_verification_scope\":\"technical_bytes_only\",\"verifier_artifact_sha256\":\"1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee\"}",
+          "clinical_domain": "orthopedics_knee",
+          "therapy_type": null,
+          "population": "افراد دارای پارگی منیسک",
+          "indication": "بازبینی ظرفیت ترمیم توسط پزشک",
+          "contraindications": [],
+          "evidence_grade": "ungraded",
+          "valid_from": null,
+          "valid_to": null,
+          "sources": [
+            {
+              "source_type": "textbook",
+              "title": "Orthobiologics: Injectable Therapies for the Musculoskeletal System",
+              "citation": "Shimomura K, Hart DA, Nakamura N. 22. Meniscal Lesions: Cell Therapy — 22.1 Introduction. In: Filardo G, Mandelbaum BR, Muschler GF, Rodeo SA, Nakamura N, editors. Orthobiologics: Injectable Therapies for the Musculoskeletal System. Springer; copyright ISAKOS 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 263; reported printed page 265, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+              "publisher": "Springer",
+              "url": "https://doi.org/10.1007/978-3-030-84744-9_22",
+              "doi": "10.1007/978-3-030-84744-9_22",
+              "publication_date": null,
+              "guideline_version": "First edition; copyright ISAKOS 2022",
+              "accessed_at": "2026-10-22"
+            }
+          ],
+          "fact_key": "KNEE.MENISCUS.VASCULARITY_HEALING"
+        },
+        "provenance": {
+          "schema_id": "4b-mos.book-draft-provenance",
+          "schema_version": "1.0.0",
+          "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+          "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+          "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+          "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+          "filename": "Orthobiologics.pdf",
+          "pages_artifact_sha256": "8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a",
+          "pages": [
+            {
+              "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+              "pdf_page_number": 263,
+              "text_sha256": "65d7821487f29b4d231f8b55ffd67fab14ae65b7c375b2d784d207d2091a243d"
+            }
+          ],
+          "chapter": "22. Meniscal Lesions: Cell Therapy — 22.1 Introduction",
+          "reported_printed_pages": "265",
+          "printed_page_verification": "unverified",
+          "proposal_origin": "ai_assisted_draft",
+          "source_pdf_verification_scope": "technical_bytes_only",
+          "bibliographic_identity_review": "pending",
+          "clinical_source_review": "pending",
+          "source_entailment_review": "pending",
+          "requires_independent_review": true
+        },
+        "version": 1,
+        "status": "draft",
+        "content_sha256": "1d255cc81cff2c0ed9fae61e61be8099fe6de58fa642c5672572e62613b391a7",
+        "proposal_origin": "ai_assisted_draft",
+        "clinical_source_review": "pending",
+        "requires_independent_review": true,
+        "registry_write_performed": false,
+        "is_clinically_validated": false
+      }
+    },
+    {
+      "candidate_key": "BOOK.KNEE.007",
+      "action": "new_fact",
+      "registry_fact_key": "KNEE.MENISCUS.PRP_REPAIR_EVIDENCE",
+      "title": "ناهمسویی مطالعات نقل‌شده دربارهٔ PRP همراه ترمیم منیسک",
+      "summary": "مطالعات بالینی نقل‌شده در فصل ۲۳ دربارهٔ PRP به‌عنوان کمک به ترمیم جراحی منیسک، نتایج همسویی نداشتند.",
+      "population": "بیماران دارای پارگی منیسک تحت ترمیم جراحی در مطالعات نقل‌شده",
+      "indication": "نمایش محدودیت شواهد تاریخی فصل برای بازبینی پزشک",
+      "topic": "orthobiologics",
+      "application_conditions": [
+        "تزریق مستقل، همراه trephination، همراه ترمیم و همراه بازسازی منیسک جدا دسته‌بندی شوند.",
+        "مسیر تزریق، مداخلهٔ همراه و گروه مقایسه از شرح مطالعه یا مدرک پزشک تعیین شود."
+      ],
+      "limitations": [
+        "این متن توصیف مرور کتاب ۲۰۲۲ است؛ مطالعات اولیه و شواهد جدیدتر مستقیماً ارزیابی نشده‌اند.",
+        "این ناهمسویی اثبات بی‌اثری نیست؛ همان صفحه متاآنالیزی با گزارش کاهش شکست ترمیم نیز نقل می‌کند.",
+        "عنوان PRP alone در جدول شامل یک مطالعهٔ trephination همراه PRP است و به‌تنهایی نشانهٔ تزریق خالص نیست.",
+        "مواضع راهنمای آرتروز به اندیکاسیون ترمیم منیسک تعمیم داده نشوند.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "historical_evidence_summary",
+      "related_facts": [
+        {
+          "fact_key": "KNEE.OA.PRP_AAOS",
+          "version": 1,
+          "content_sha256": "ef8febb67c1f9aaac62e26c255215e91a8867653991a6b89e866f0a2eeb0bc82"
+        },
+        {
+          "fact_key": "KNEE.OA.PRP_ACR",
+          "version": 1,
+          "content_sha256": "fd45e2e13383ba8c427e6328e62167911b7d99d5cf95daaef19b3d729d5b99f0"
+        }
+      ],
+      "source": {
+        "source_type": "textbook",
+        "title": "Orthobiologics: Injectable Therapies for the Musculoskeletal System",
+        "citation": "Zaffagnini S, Poggi A, Andriolo L, Boffa A, Filardo G. 23. Meniscal Lesions: Biologics — 23.6 Platelet-Rich Plasma Injections. In: Filardo G, Mandelbaum BR, Muschler GF, Rodeo SA, Nakamura N, editors. Orthobiologics: Injectable Therapies for the Musculoskeletal System. Springer; copyright ISAKOS 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 281; reported printed page 283, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Springer",
+        "url": "https://doi.org/10.1007/978-3-030-84744-9_23",
+        "doi": "10.1007/978-3-030-84744-9_23",
+        "publication_date": null,
+        "guideline_version": "First edition; copyright ISAKOS 2022",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "filename": "Orthobiologics.pdf",
+        "pages_artifact_sha256": "8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a",
+        "pages": [
+          {
+            "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+            "pdf_page_number": 281,
+            "text_sha256": "e0247dedadf012ec8dba7d6d552102d56f88410d95683c3a4940e7657fce93c3"
+          }
+        ],
+        "chapter": "23. Meniscal Lesions: Biologics — 23.6 Platelet-Rich Plasma Injections",
+        "reported_printed_pages": "283",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "extracted_header_and_adjacent_pages",
+      "therapy_type": "PRP",
+      "support_scope": null,
+      "draft_preview": {
+        "proposal": {
+          "title": "ناهمسویی مطالعات نقل‌شده دربارهٔ PRP همراه ترمیم منیسک",
+          "statement": "مطالعات بالینی نقل‌شده در فصل ۲۳ دربارهٔ PRP به‌عنوان کمک به ترمیم جراحی منیسک، نتایج همسویی نداشتند.\n\nBook authoring metadata v1:\n{\"action\":\"new_fact\",\"application_conditions\":[\"تزریق مستقل، همراه trephination، همراه ترمیم و همراه بازسازی منیسک جدا دسته‌بندی شوند.\",\"مسیر تزریق، مداخلهٔ همراه و گروه مقایسه از شرح مطالعه یا مدرک پزشک تعیین شود.\"],\"candidate_key\":\"BOOK.KNEE.007\",\"evidence_scope\":\"historical_evidence_summary\",\"indication\":\"نمایش محدودیت شواهد تاریخی فصل برای بازبینی پزشک\",\"limitations\":[\"این متن توصیف مرور کتاب ۲۰۲۲ است؛ مطالعات اولیه و شواهد جدیدتر مستقیماً ارزیابی نشده‌اند.\",\"این ناهمسویی اثبات بی‌اثری نیست؛ همان صفحه متاآنالیزی با گزارش کاهش شکست ترمیم نیز نقل می‌کند.\",\"عنوان PRP alone در جدول شامل یک مطالعهٔ trephination همراه PRP است و به‌تنهایی نشانهٔ تزریق خالص نیست.\",\"مواضع راهنمای آرتروز به اندیکاسیون ترمیم منیسک تعمیم داده نشوند.\",\"این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.\",\"شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند.\"],\"page_review_bundle_sha256\":\"98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca\",\"population\":\"بیماران دارای پارگی منیسک تحت ترمیم جراحی در مطالعات نقل‌شده\",\"printed_page_method\":\"extracted_header_and_adjacent_pages\",\"registry_fact_key\":\"KNEE.MENISCUS.PRP_REPAIR_EVIDENCE\",\"related_facts\":[{\"content_sha256\":\"ef8febb67c1f9aaac62e26c255215e91a8867653991a6b89e866f0a2eeb0bc82\",\"fact_key\":\"KNEE.OA.PRP_AAOS\",\"version\":1},{\"content_sha256\":\"fd45e2e13383ba8c427e6328e62167911b7d99d5cf95daaef19b3d729d5b99f0\",\"fact_key\":\"KNEE.OA.PRP_ACR\",\"version\":1}],\"summary\":\"مطالعات بالینی نقل‌شده در فصل ۲۳ دربارهٔ PRP به‌عنوان کمک به ترمیم جراحی منیسک، نتایج همسویی نداشتند.\",\"support_scope\":null,\"text_alignment_observation\":\"ai_assisted_selected_text_checked\",\"text_alignment_review_date\":\"2026-10-22\",\"therapy_type\":\"PRP\",\"title\":\"ناهمسویی مطالعات نقل‌شده دربارهٔ PRP همراه ترمیم منیسک\",\"topic\":\"orthobiologics\"}\n\nBook Draft provenance v1:\n{\"bibliographic_identity_review\":\"pending\",\"chapter\":\"23. Meniscal Lesions: Biologics — 23.6 Platelet-Rich Plasma Injections\",\"clinical_source_review\":\"pending\",\"extraction_manifest_sha256\":\"7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f\",\"filename\":\"Orthobiologics.pdf\",\"handoff_sha256\":\"467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb\",\"pages\":[{\"pdf_page_number\":281,\"source_file_sha256\":\"79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20\",\"text_sha256\":\"e0247dedadf012ec8dba7d6d552102d56f88410d95683c3a4940e7657fce93c3\"}],\"pages_artifact_sha256\":\"8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a\",\"printed_page_verification\":\"unverified\",\"proposal_origin\":\"ai_assisted_draft\",\"reported_printed_pages\":\"283\",\"requires_independent_review\":true,\"schema_id\":\"4b-mos.book-draft-provenance\",\"schema_version\":\"1.0.0\",\"source_entailment_review\":\"pending\",\"source_file_sha256\":\"79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20\",\"source_pdf_verification_scope\":\"technical_bytes_only\",\"verifier_artifact_sha256\":\"1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee\"}",
+          "clinical_domain": "orthopedics_knee",
+          "therapy_type": "PRP",
+          "population": "بیماران دارای پارگی منیسک تحت ترمیم جراحی در مطالعات نقل‌شده",
+          "indication": "نمایش محدودیت شواهد تاریخی فصل برای بازبینی پزشک",
+          "contraindications": [],
+          "evidence_grade": "ungraded",
+          "valid_from": null,
+          "valid_to": null,
+          "sources": [
+            {
+              "source_type": "textbook",
+              "title": "Orthobiologics: Injectable Therapies for the Musculoskeletal System",
+              "citation": "Zaffagnini S, Poggi A, Andriolo L, Boffa A, Filardo G. 23. Meniscal Lesions: Biologics — 23.6 Platelet-Rich Plasma Injections. In: Filardo G, Mandelbaum BR, Muschler GF, Rodeo SA, Nakamura N, editors. Orthobiologics: Injectable Therapies for the Musculoskeletal System. Springer; copyright ISAKOS 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 281; reported printed page 283, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+              "publisher": "Springer",
+              "url": "https://doi.org/10.1007/978-3-030-84744-9_23",
+              "doi": "10.1007/978-3-030-84744-9_23",
+              "publication_date": null,
+              "guideline_version": "First edition; copyright ISAKOS 2022",
+              "accessed_at": "2026-10-22"
+            }
+          ],
+          "fact_key": "KNEE.MENISCUS.PRP_REPAIR_EVIDENCE"
+        },
+        "provenance": {
+          "schema_id": "4b-mos.book-draft-provenance",
+          "schema_version": "1.0.0",
+          "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+          "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+          "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+          "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+          "filename": "Orthobiologics.pdf",
+          "pages_artifact_sha256": "8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a",
+          "pages": [
+            {
+              "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+              "pdf_page_number": 281,
+              "text_sha256": "e0247dedadf012ec8dba7d6d552102d56f88410d95683c3a4940e7657fce93c3"
+            }
+          ],
+          "chapter": "23. Meniscal Lesions: Biologics — 23.6 Platelet-Rich Plasma Injections",
+          "reported_printed_pages": "283",
+          "printed_page_verification": "unverified",
+          "proposal_origin": "ai_assisted_draft",
+          "source_pdf_verification_scope": "technical_bytes_only",
+          "bibliographic_identity_review": "pending",
+          "clinical_source_review": "pending",
+          "source_entailment_review": "pending",
+          "requires_independent_review": true
+        },
+        "version": 1,
+        "status": "draft",
+        "content_sha256": "9c6123890351a040817a7ffc2e97dfdda7f0cf7a0994b53fff85e0b7bee6ce72",
+        "proposal_origin": "ai_assisted_draft",
+        "clinical_source_review": "pending",
+        "requires_independent_review": true,
+        "registry_write_performed": false,
+        "is_clinically_validated": false
+      }
+    },
+    {
+      "candidate_key": "BOOK.KNEE.008",
+      "action": "new_fact",
+      "registry_fact_key": "KNEE.PRP.PROPOSED_HOMEOSTASIS",
+      "title": "هومئوستاز مفصل به‌عنوان سازوکار پیشنهادی PRP",
+      "summary": "تعدیل هومئوستاز مفصل یکی از سازوکارهای پیشنهادی PRP داخل‌مفصلی در آرتروز زانو است.",
+      "population": "مبتلایان به آرتروز یا ضایعات دژنراتیو غضروف زانو در زمینهٔ PRP داخل‌مفصلی",
+      "indication": "ثبت توضیح احتمالی سازوکار برای بازبینی پزشک",
+      "topic": "orthobiologics",
+      "application_conditions": [
+        "سازوکار پیشنهادی از نتیجهٔ بالینی، توصیهٔ راهنما و وضعیت مقرراتی جدا بماند.",
+        "درد، عملکرد و یافتهٔ ساختاری جداگانه ثبت شوند."
+      ],
+      "limitations": [
+        "این توضیح، فرضیهٔ سازوکار است و اثبات مکانیسم، اثربخشی یا بازسازی غضروف نیست.",
+        "بهبود علائم یا تغییر تصویر به بازسازی غضروف یا اثر علّی درمان تبدیل نشود.",
+        "به HA، ACS، PL، اگزوزوم، SVF یا MSC تعمیم داده نشود.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "proposed_mechanism",
+      "related_facts": [
+        {
+          "fact_key": "KNEE.OA.PRP_AAOS",
+          "version": 1,
+          "content_sha256": "ef8febb67c1f9aaac62e26c255215e91a8867653991a6b89e866f0a2eeb0bc82"
+        },
+        {
+          "fact_key": "KNEE.OA.PRP_ACR",
+          "version": 1,
+          "content_sha256": "fd45e2e13383ba8c427e6328e62167911b7d99d5cf95daaef19b3d729d5b99f0"
+        }
+      ],
+      "source": {
+        "source_type": "textbook",
+        "title": "Orthobiologics: Injectable Therapies for the Musculoskeletal System",
+        "citation": "Filardo G, Boffa A, Andriolo L, Poggi A, Di Martino A. 26. Cartilage Lesions and Osteoarthritis of the Knee: Biologics — 26.1 Introduction. In: Filardo G, Mandelbaum BR, Muschler GF, Rodeo SA, Nakamura N, editors. Orthobiologics: Injectable Therapies for the Musculoskeletal System. Springer; copyright ISAKOS 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 314; reported printed page 317, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Springer",
+        "url": "https://doi.org/10.1007/978-3-030-84744-9_26",
+        "doi": "10.1007/978-3-030-84744-9_26",
+        "publication_date": null,
+        "guideline_version": "First edition; copyright ISAKOS 2022",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+        "filename": "Orthobiologics.pdf",
+        "pages_artifact_sha256": "8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a",
+        "pages": [
+          {
+            "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+            "pdf_page_number": 314,
+            "text_sha256": "bc1b2a19218468f807acd71e297e499ac8fc21c3f2f45f3c3924847b3ea0954a"
+          }
+        ],
+        "chapter": "26. Cartilage Lesions and Osteoarthritis of the Knee: Biologics — 26.1 Introduction",
+        "reported_printed_pages": "317",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "extracted_header_and_adjacent_pages",
+      "therapy_type": "PRP",
+      "support_scope": null,
+      "draft_preview": {
+        "proposal": {
+          "title": "هومئوستاز مفصل به‌عنوان سازوکار پیشنهادی PRP",
+          "statement": "تعدیل هومئوستاز مفصل یکی از سازوکارهای پیشنهادی PRP داخل‌مفصلی در آرتروز زانو است.\n\nBook authoring metadata v1:\n{\"action\":\"new_fact\",\"application_conditions\":[\"سازوکار پیشنهادی از نتیجهٔ بالینی، توصیهٔ راهنما و وضعیت مقرراتی جدا بماند.\",\"درد، عملکرد و یافتهٔ ساختاری جداگانه ثبت شوند.\"],\"candidate_key\":\"BOOK.KNEE.008\",\"evidence_scope\":\"proposed_mechanism\",\"indication\":\"ثبت توضیح احتمالی سازوکار برای بازبینی پزشک\",\"limitations\":[\"این توضیح، فرضیهٔ سازوکار است و اثبات مکانیسم، اثربخشی یا بازسازی غضروف نیست.\",\"بهبود علائم یا تغییر تصویر به بازسازی غضروف یا اثر علّی درمان تبدیل نشود.\",\"به HA، ACS، PL، اگزوزوم، SVF یا MSC تعمیم داده نشود.\",\"این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.\",\"شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند.\"],\"page_review_bundle_sha256\":\"98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca\",\"population\":\"مبتلایان به آرتروز یا ضایعات دژنراتیو غضروف زانو در زمینهٔ PRP داخل‌مفصلی\",\"printed_page_method\":\"extracted_header_and_adjacent_pages\",\"registry_fact_key\":\"KNEE.PRP.PROPOSED_HOMEOSTASIS\",\"related_facts\":[{\"content_sha256\":\"ef8febb67c1f9aaac62e26c255215e91a8867653991a6b89e866f0a2eeb0bc82\",\"fact_key\":\"KNEE.OA.PRP_AAOS\",\"version\":1},{\"content_sha256\":\"fd45e2e13383ba8c427e6328e62167911b7d99d5cf95daaef19b3d729d5b99f0\",\"fact_key\":\"KNEE.OA.PRP_ACR\",\"version\":1}],\"summary\":\"تعدیل هومئوستاز مفصل یکی از سازوکارهای پیشنهادی PRP داخل‌مفصلی در آرتروز زانو است.\",\"support_scope\":null,\"text_alignment_observation\":\"ai_assisted_selected_text_checked\",\"text_alignment_review_date\":\"2026-10-22\",\"therapy_type\":\"PRP\",\"title\":\"هومئوستاز مفصل به‌عنوان سازوکار پیشنهادی PRP\",\"topic\":\"orthobiologics\"}\n\nBook Draft provenance v1:\n{\"bibliographic_identity_review\":\"pending\",\"chapter\":\"26. Cartilage Lesions and Osteoarthritis of the Knee: Biologics — 26.1 Introduction\",\"clinical_source_review\":\"pending\",\"extraction_manifest_sha256\":\"7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f\",\"filename\":\"Orthobiologics.pdf\",\"handoff_sha256\":\"467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb\",\"pages\":[{\"pdf_page_number\":314,\"source_file_sha256\":\"79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20\",\"text_sha256\":\"bc1b2a19218468f807acd71e297e499ac8fc21c3f2f45f3c3924847b3ea0954a\"}],\"pages_artifact_sha256\":\"8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a\",\"printed_page_verification\":\"unverified\",\"proposal_origin\":\"ai_assisted_draft\",\"reported_printed_pages\":\"317\",\"requires_independent_review\":true,\"schema_id\":\"4b-mos.book-draft-provenance\",\"schema_version\":\"1.0.0\",\"source_entailment_review\":\"pending\",\"source_file_sha256\":\"79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20\",\"source_pdf_verification_scope\":\"technical_bytes_only\",\"verifier_artifact_sha256\":\"1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee\"}",
+          "clinical_domain": "orthopedics_knee",
+          "therapy_type": "PRP",
+          "population": "مبتلایان به آرتروز یا ضایعات دژنراتیو غضروف زانو در زمینهٔ PRP داخل‌مفصلی",
+          "indication": "ثبت توضیح احتمالی سازوکار برای بازبینی پزشک",
+          "contraindications": [],
+          "evidence_grade": "ungraded",
+          "valid_from": null,
+          "valid_to": null,
+          "sources": [
+            {
+              "source_type": "textbook",
+              "title": "Orthobiologics: Injectable Therapies for the Musculoskeletal System",
+              "citation": "Filardo G, Boffa A, Andriolo L, Poggi A, Di Martino A. 26. Cartilage Lesions and Osteoarthritis of the Knee: Biologics — 26.1 Introduction. In: Filardo G, Mandelbaum BR, Muschler GF, Rodeo SA, Nakamura N, editors. Orthobiologics: Injectable Therapies for the Musculoskeletal System. Springer; copyright ISAKOS 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 314; reported printed page 317, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+              "publisher": "Springer",
+              "url": "https://doi.org/10.1007/978-3-030-84744-9_26",
+              "doi": "10.1007/978-3-030-84744-9_26",
+              "publication_date": null,
+              "guideline_version": "First edition; copyright ISAKOS 2022",
+              "accessed_at": "2026-10-22"
+            }
+          ],
+          "fact_key": "KNEE.PRP.PROPOSED_HOMEOSTASIS"
+        },
+        "provenance": {
+          "schema_id": "4b-mos.book-draft-provenance",
+          "schema_version": "1.0.0",
+          "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+          "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+          "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+          "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+          "filename": "Orthobiologics.pdf",
+          "pages_artifact_sha256": "8483b7ea5fc4970bcf0d1f32231b5849d480be3c7b7c393103b6b54e2c846e1a",
+          "pages": [
+            {
+              "source_file_sha256": "79523f2130ce7d615e2e7be8123f5e8e3f8db1b98e4746a59bfd82d9e94afe20",
+              "pdf_page_number": 314,
+              "text_sha256": "bc1b2a19218468f807acd71e297e499ac8fc21c3f2f45f3c3924847b3ea0954a"
+            }
+          ],
+          "chapter": "26. Cartilage Lesions and Osteoarthritis of the Knee: Biologics — 26.1 Introduction",
+          "reported_printed_pages": "317",
+          "printed_page_verification": "unverified",
+          "proposal_origin": "ai_assisted_draft",
+          "source_pdf_verification_scope": "technical_bytes_only",
+          "bibliographic_identity_review": "pending",
+          "clinical_source_review": "pending",
+          "source_entailment_review": "pending",
+          "requires_independent_review": true
+        },
+        "version": 1,
+        "status": "draft",
+        "content_sha256": "6f417434b32eece21b931249f80fd1819e5b1bf0f1cbe4b0658a7b1e43b3af86",
+        "proposal_origin": "ai_assisted_draft",
+        "clinical_source_review": "pending",
+        "requires_independent_review": true,
+        "registry_write_performed": false,
+        "is_clinically_validated": false
+      }
+    },
+    {
+      "candidate_key": "BOOK.KNEE.009",
+      "action": "new_fact",
+      "registry_fact_key": "KNEE.CARTILAGE.FOCAL_ARTHROPLASTY_CONTEXT",
+      "title": "زمینهٔ محدود ضایعهٔ موضعی غضروف و تعویض کامل زانو",
+      "summary": "در میانسالان فعال دارای نقص علامت‌دار، منفرد و موضعیِ تمام‌ضخامت غضروف فمور، وجود چنین ضایعه‌ای به‌تنهایی معمولاً اندیکاسیون تعویض کامل زانو محسوب نمی‌شود.",
+      "population": "میانسالان فعال دارای ضایعهٔ علامت‌دار، منفرد، موضعی و تمام‌ضخامت غضروف فمور",
+      "indication": "ارزیابی تخصصی ضایعهٔ موضعی غضروف در زمینهٔ آرتروپلاستی",
+      "topic": "cartilage_osteochondral",
+      "application_conditions": [
+        "دامنهٔ جمعیت و قید معمولاً حفظ شوند.",
+        "وجود ضایعه از یافتهٔ تخصصی تأییدشده گرفته شود."
+      ],
+      "limitations": [
+        "منع مطلق TKA یا توصیه و برتری resurfacing از این گزاره نتیجه نمی‌شود.",
+        "به همهٔ ضایعات غضروفی، تمام سنین یا آرتروز منتشر تعمیم داده نشود.",
+        "این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.",
+        "شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند."
+      ],
+      "evidence_scope": "clinical_assessment",
+      "related_facts": [
+        {
+          "fact_key": "KNEE.CARTILAGE.CLASSIFICATION",
+          "version": 1,
+          "content_sha256": "0bbe672276d73c23b64d946144d43a60d538c8faa84be9bdce7d4c33f8751172"
+        }
+      ],
+      "source": {
+        "source_type": "textbook",
+        "title": "Basics in Primary Knee Arthroplasty",
+        "citation": "Lind M. 9. Partial Resurfacing Implants — 9.1 Introduction. In: Becker R, Hirschmann MT, Kort NP, editors. Basics in Primary Knee Arthroplasty. Springer; copyright 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 125; reported printed page 115, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+        "publisher": "Springer",
+        "url": "https://doi.org/10.1007/978-3-030-58178-7_9",
+        "doi": "10.1007/978-3-030-58178-7_9",
+        "publication_date": null,
+        "guideline_version": "First edition; copyright 2022",
+        "accessed_at": "2026-10-22"
+      },
+      "provenance": {
+        "schema_id": "4b-mos.book-draft-provenance",
+        "schema_version": "1.0.0",
+        "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+        "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+        "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+        "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+        "filename": "Basics in Primary Knee Arthroplasty-Springer (2022).pdf",
+        "pages_artifact_sha256": "5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9",
+        "pages": [
+          {
+            "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+            "pdf_page_number": 125,
+            "text_sha256": "ff4edf5027cd5d45cef503266bca43abad0b6c6a2e7f0d6c731e596745b2ff8f"
+          }
+        ],
+        "chapter": "9. Partial Resurfacing Implants — 9.1 Introduction",
+        "reported_printed_pages": "115",
+        "printed_page_verification": "unverified",
+        "proposal_origin": "ai_assisted_draft",
+        "source_pdf_verification_scope": "technical_bytes_only",
+        "bibliographic_identity_review": "pending",
+        "clinical_source_review": "pending",
+        "source_entailment_review": "pending",
+        "requires_independent_review": true
+      },
+      "page_review_bundle_sha256": "98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca",
+      "text_alignment_review_date": "2026-10-22",
+      "text_alignment_observation": "ai_assisted_selected_text_checked",
+      "printed_page_method": "extracted_header_and_adjacent_pages",
+      "therapy_type": null,
+      "support_scope": null,
+      "draft_preview": {
+        "proposal": {
+          "title": "زمینهٔ محدود ضایعهٔ موضعی غضروف و تعویض کامل زانو",
+          "statement": "در میانسالان فعال دارای نقص علامت‌دار، منفرد و موضعیِ تمام‌ضخامت غضروف فمور، وجود چنین ضایعه‌ای به‌تنهایی معمولاً اندیکاسیون تعویض کامل زانو محسوب نمی‌شود.\n\nBook authoring metadata v1:\n{\"action\":\"new_fact\",\"application_conditions\":[\"دامنهٔ جمعیت و قید معمولاً حفظ شوند.\",\"وجود ضایعه از یافتهٔ تخصصی تأییدشده گرفته شود.\"],\"candidate_key\":\"BOOK.KNEE.009\",\"evidence_scope\":\"clinical_assessment\",\"indication\":\"ارزیابی تخصصی ضایعهٔ موضعی غضروف در زمینهٔ آرتروپلاستی\",\"limitations\":[\"منع مطلق TKA یا توصیه و برتری resurfacing از این گزاره نتیجه نمی‌شود.\",\"به همهٔ ضایعات غضروفی، تمام سنین یا آرتروز منتشر تعمیم داده نشود.\",\"این گزاره از متن صفحات منتخب بازنویسی شده و نیازمند بازبینی مستقل متخصص است.\",\"شمارهٔ چاپی و تصویر صفحه به‌طور بصری تأیید نشده‌اند.\"],\"page_review_bundle_sha256\":\"98c0c226621810fd0d1abf059365d67fbfbf54414d061e584de55730c8aaceca\",\"population\":\"میانسالان فعال دارای ضایعهٔ علامت‌دار، منفرد، موضعی و تمام‌ضخامت غضروف فمور\",\"printed_page_method\":\"extracted_header_and_adjacent_pages\",\"registry_fact_key\":\"KNEE.CARTILAGE.FOCAL_ARTHROPLASTY_CONTEXT\",\"related_facts\":[{\"content_sha256\":\"0bbe672276d73c23b64d946144d43a60d538c8faa84be9bdce7d4c33f8751172\",\"fact_key\":\"KNEE.CARTILAGE.CLASSIFICATION\",\"version\":1}],\"summary\":\"در میانسالان فعال دارای نقص علامت‌دار، منفرد و موضعیِ تمام‌ضخامت غضروف فمور، وجود چنین ضایعه‌ای به‌تنهایی معمولاً اندیکاسیون تعویض کامل زانو محسوب نمی‌شود.\",\"support_scope\":null,\"text_alignment_observation\":\"ai_assisted_selected_text_checked\",\"text_alignment_review_date\":\"2026-10-22\",\"therapy_type\":null,\"title\":\"زمینهٔ محدود ضایعهٔ موضعی غضروف و تعویض کامل زانو\",\"topic\":\"cartilage_osteochondral\"}\n\nBook Draft provenance v1:\n{\"bibliographic_identity_review\":\"pending\",\"chapter\":\"9. Partial Resurfacing Implants — 9.1 Introduction\",\"clinical_source_review\":\"pending\",\"extraction_manifest_sha256\":\"7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f\",\"filename\":\"Basics in Primary Knee Arthroplasty-Springer (2022).pdf\",\"handoff_sha256\":\"467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb\",\"pages\":[{\"pdf_page_number\":125,\"source_file_sha256\":\"7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0\",\"text_sha256\":\"ff4edf5027cd5d45cef503266bca43abad0b6c6a2e7f0d6c731e596745b2ff8f\"}],\"pages_artifact_sha256\":\"5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9\",\"printed_page_verification\":\"unverified\",\"proposal_origin\":\"ai_assisted_draft\",\"reported_printed_pages\":\"115\",\"requires_independent_review\":true,\"schema_id\":\"4b-mos.book-draft-provenance\",\"schema_version\":\"1.0.0\",\"source_entailment_review\":\"pending\",\"source_file_sha256\":\"7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0\",\"source_pdf_verification_scope\":\"technical_bytes_only\",\"verifier_artifact_sha256\":\"1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee\"}",
+          "clinical_domain": "orthopedics_knee",
+          "therapy_type": null,
+          "population": "میانسالان فعال دارای ضایعهٔ علامت‌دار، منفرد، موضعی و تمام‌ضخامت غضروف فمور",
+          "indication": "ارزیابی تخصصی ضایعهٔ موضعی غضروف در زمینهٔ آرتروپلاستی",
+          "contraindications": [],
+          "evidence_grade": "ungraded",
+          "valid_from": null,
+          "valid_to": null,
+          "sources": [
+            {
+              "source_type": "textbook",
+              "title": "Basics in Primary Knee Arthroplasty",
+              "citation": "Lind M. 9. Partial Resurfacing Implants — 9.1 Introduction. In: Becker R, Hirschmann MT, Kort NP, editors. Basics in Primary Knee Arthroplasty. Springer; copyright 2022. Bibliographic metadata reviewed 2026-10-20; local chapter identity and claim support require independent review. Selected extracted PDF page 125; reported printed page 115, text-based mapping only. AI-assisted selected-text review 2026-10-22; visual, bibliographic and independent clinical review remain pending.",
+              "publisher": "Springer",
+              "url": "https://doi.org/10.1007/978-3-030-58178-7_9",
+              "doi": "10.1007/978-3-030-58178-7_9",
+              "publication_date": null,
+              "guideline_version": "First edition; copyright 2022",
+              "accessed_at": "2026-10-22"
+            }
+          ],
+          "fact_key": "KNEE.CARTILAGE.FOCAL_ARTHROPLASTY_CONTEXT"
+        },
+        "provenance": {
+          "schema_id": "4b-mos.book-draft-provenance",
+          "schema_version": "1.0.0",
+          "extraction_manifest_sha256": "7d21acab65308868cf15280b82d50959c53e95e61a3dfcc398803b1d337b078f",
+          "verifier_artifact_sha256": "1d088e046b5905f2e8397008d6c8bc27acd740cc44d9237058175aada1f719ee",
+          "handoff_sha256": "467306f3cc934cbdd193c2c7a45e14ea1124fa42f69cc011dacea4714cd9c2eb",
+          "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+          "filename": "Basics in Primary Knee Arthroplasty-Springer (2022).pdf",
+          "pages_artifact_sha256": "5b4d27680dcd08d493907ca6b043577544dcc2bd447c1773d7f9618c55ec56a9",
+          "pages": [
+            {
+              "source_file_sha256": "7ba0dbe15bbc593ada4fc27ebbe6e7370f08bced839fe209047078869df1a3e0",
+              "pdf_page_number": 125,
+              "text_sha256": "ff4edf5027cd5d45cef503266bca43abad0b6c6a2e7f0d6c731e596745b2ff8f"
+            }
+          ],
+          "chapter": "9. Partial Resurfacing Implants — 9.1 Introduction",
+          "reported_printed_pages": "115",
+          "printed_page_verification": "unverified",
+          "proposal_origin": "ai_assisted_draft",
+          "source_pdf_verification_scope": "technical_bytes_only",
+          "bibliographic_identity_review": "pending",
+          "clinical_source_review": "pending",
+          "source_entailment_review": "pending",
+          "requires_independent_review": true
+        },
+        "version": 1,
+        "status": "draft",
+        "content_sha256": "43f4b86cc8cbfb512735bfc4817429768eb4c0cabb38f66d3dc599c93aee29a7",
+        "proposal_origin": "ai_assisted_draft",
+        "clinical_source_review": "pending",
+        "requires_independent_review": true,
+        "registry_write_performed": false,
+        "is_clinically_validated": false
+      }
+    }
+  ],
+  "manifest_sha256": "c12ddaed5f31b29078d0e156878fcfeaeabdf85ce20268317677826b132c543f",
+  "contains_book_text": false,
+  "registry_write_performed": false,
+  "is_clinically_validated": false,
+  "requires_independent_review": true,
+  "runtime_use": "authoring_only"
+}
