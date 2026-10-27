@@ -25,6 +25,19 @@ class DiscoveryResult:
     adapter_version: str = "explicit-download-links-v1"
 
 
+def is_portal_link(url):
+    """Route a patient portal to the browser before any cookie-free request.
+
+    This recognizes only a navigation shape, not a vendor or a working export.
+    Queries and credentials are never returned or logged.
+    """
+    try:
+        validate_https_url(url)
+        return urlsplit(url).path.lower() == "/patient"
+    except (ImportFailure, ValueError, TypeError):
+        return False
+
+
 def discover_downloads(page_url, anchors) -> DiscoveryResult:
     origin = validate_https_url(page_url)
     if type(anchors) is not list or len(anchors) > 200:

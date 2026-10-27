@@ -102,6 +102,16 @@ def check_ui(application, window, output):
     assert all(panel.canvas.image is None for panel in window.slices.values())
     assert not window.url.text() and not window.token.text()
     assert "private" not in window.status.text() and "never-log" not in window.status.text()
+    # Patient-portal links must go straight to the private browser: no
+    # unauthenticated probe that loses the portal session or download context.
+    from unittest.mock import patch
+    fixture_portal = "https://synthetic-center.example:5010/Patient?studyKey=synthetic-only"
+    window.url.setText(fixture_portal)
+    with patch.object(window, "show_portal") as show_portal, \
+         patch("backend.imaging_desktop.gui.download_bytes", side_effect=AssertionError("unexpected probe")):
+        QtTest.QTest.mouseClick(window.fetch_button, QtCore.Qt.LeftButton)
+        show_portal.assert_called_once_with(fixture_portal)
+        assert not window.url.text() and not window.token.text() and not window.jobs
     # Real private WebEngine page -> browser-generated ZIP download -> volume.
     # No patient or external portal request: the login form and bytes are fixtures.
     from .portal import PortalWindow
@@ -140,7 +150,6 @@ def check_ui(application, window, output):
     portal.close()
     # The auto-download driver reads the real DOM, using a fixture URL and a
     # recorded browser-download call. No real portal navigation/credential read.
-    from unittest.mock import patch
     portal.show()
     process_for(200)
     populated = []
@@ -228,5 +237,5 @@ def check_ui(application, window, output):
                   temporary_portal_file_removed=True, explicit_download_automation_checked=True,
                   browser_png_download_and_preview_checked=True, actual_qt_pdf_preview_checked=True)
     report.update(viewer_exe_guidance_checked=True, executable_zip_to_volume_checked=True,
-                  earlier_download_can_be_reopened=True)
+                  earlier_download_can_be_reopened=True, patient_portal_direct_browser_checked=True)
     (output/"ui-verification.json").write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")

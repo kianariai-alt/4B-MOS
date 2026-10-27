@@ -487,6 +487,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.active_job is not None:
             return
         self.clear()
+        from .discovery import is_portal_link
+        if is_portal_link(url):
+            self.show_portal(url)
+            return
         self.start_job(lambda cancel: receive(download_bytes(url, bearer_token=token, cancel=cancel), cancel=cancel), ready,
                        lambda code: self.show_portal(url) if code == "authentication_required" else None)
 
