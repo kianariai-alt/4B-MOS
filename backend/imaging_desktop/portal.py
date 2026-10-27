@@ -1,11 +1,12 @@
-"""User-operated portal login and download handoff; no scraping or stored login.
+"""Private portal login, explicit-link discovery and content-neutral downloads.
 
 The medical center serves its own page. The user enters credentials directly in
-that page. Only an explicit browser download is handed to the DICOM importer.
+that page. Only explicit download links are automated; no form submission.
 """
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import json
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWebEngineCore import QWebEngineDownloadRequest, QWebEnginePage, QWebEngineProfile, QWebEngineSettings
@@ -13,6 +14,7 @@ from PySide6.QtWebEngineCore import QWebEngineUrlRequestInterceptor
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from .sources import MAX_INPUT_BYTES, validate_https_url
+from .discovery import DISCOVERY_SCRIPT, discover_downloads
 
 
 class SecureRequests(QWebEngineUrlRequestInterceptor):
@@ -47,6 +49,11 @@ class PortalWindow(QtWidgets.QDialog):
         self.resize(1120, 820)
         self.active_downloads = {}
         self.disposing = False
+        self.attempted_urls = set()
+        self.inspecting = False
+        self.discovery_timer = QtCore.QTimer(self)
+        self.discovery_timer.setInterval(1500)
+        self.discovery_timer.timeout.connect(self.inspect_downloads)
         self.profile = QWebEngineProfile(self)  # unnamed => off-the-record
         assert self.profile.isOffTheRecord()
         self.profile.setHttpCacheType(QWebEngineProfile.MemoryHttpCache)
@@ -66,11 +73,14 @@ class PortalWindow(QtWidgets.QDialog):
         self.page.newWindowRequested.connect(lambda request: request.openIn(self.page))
         self.profile.downloadRequested.connect(self.accept_download)
         layout = QtWidgets.QVBoxLayout(self)
-        note = QtWidgets.QLabel("کد و رمز را فقط در صفحهٔ خودِ مرکز وارد کنید. سپس گزینهٔ دانلود DICOM/ZIP را انتخاب کنید. "
-                               "دریافت JPEG، فیلم یا صرفاً نمایش تصاویر برای ساخت حجم کافی نیست. "
+        note = QtWidgets.QLabel("کد و رمز را فقط در صفحهٔ خودِ مرکز وارد کنید. دریافت خودکار، لینک‌های مشخص دانلود را پس از ورود پیدا می‌کند. "
+                               "همهٔ قالب‌ها دریافت می‌شوند؛ عکس، گزارش و فیلم به پردازشگر مخصوص خود نیاز دارند. "
                                "دادهٔ دانلودی موقتاً روی همین رایانه نوشته و پس از خواندن حذف می‌شود.")
         note.setWordWrap(True)
         layout.addWidget(note)
+        self.automatic = QtWidgets.QCheckBox("دریافت خودکار لینک‌های دانلود همین مرکز (حداکثر ۸ فایل در این جلسه)")
+        self.automatic.setChecked(True)
+        layout.addWidget(self.automatic)
         layout.addWidget(self.web, 1)
         self.status = QtWidgets.QLabel("مرورگر خصوصی این جلسه؛ ورود یا تاریخچه برای جلسه بعد نگه داشته نمی‌شود.")
         self.status.setWordWrap(True)
@@ -78,9 +88,43 @@ class PortalWindow(QtWidgets.QDialog):
 
     def open_url(self, url):
         validate_https_url(url)
+        self.attempted_urls.clear()
         self.web.setUrl(QtCore.QUrl(url))
         self.show()
         self.raise_()
+        self.discovery_timer.start()
+
+    def inspect_downloads(self):
+        if (self.disposing or not self.isVisible() or not self.automatic.isChecked() or self.inspecting
+                or self.active_downloads or getattr(self.parent(), "active_job", None) is not None
+                or len(self.attempted_urls) >= 8):
+            return
+        page_url = self.page.url().toString()
+        try:
+            validate_https_url(page_url)
+        except ValueError:
+            return
+        self.inspecting = True
+        def inspected(serialized):
+            self.inspecting = False
+            if (self.disposing or not self.isVisible() or not self.automatic.isChecked()
+                    or self.active_downloads or self.page.url().toString() != page_url):
+                return
+            # PySide6 WebEngine does not reliably convert JS arrays/objects.
+            # A JSON string crosses that bridge on both supported OSes.
+            try:
+                anchors = json.loads(serialized) if type(serialized) is str and len(serialized) <= 2*1024*1024 else []
+            except (ValueError, TypeError):
+                anchors = []
+            result = discover_downloads(page_url, anchors)
+            candidate = next((url for url in result.urls if url not in self.attempted_urls), None)
+            if candidate is not None:
+                self.attempted_urls.add(candidate)
+                # Ephemeral browser cookies stay in the browser; no copying.
+                self.page.download(QtCore.QUrl(candidate), "medical-download.bin")
+            elif not self.attempted_urls:
+                self.status.setText("در انتظار ورود یا لینک دانلود مشخص؛ دکمهٔ اختصاصی دانلود را می‌توانید در همین صفحه انتخاب کنید.")
+        self.page.runJavaScript(DISCOVERY_SCRIPT, inspected)
 
     def accept_download(self, request):
         if self.active_downloads:
@@ -89,10 +133,10 @@ class PortalWindow(QtWidgets.QDialog):
             return
         if request.totalBytes() > MAX_INPUT_BYTES or request.isSavePageDownload():
             request.cancel()
-            self.status.setText("دانلود از سقف این نسخه بیشتر است یا خروجی DICOM/ZIP نیست.")
+            self.status.setText("دانلود از سقف این نسخه بیشتر است یا ذخیرهٔ صفحه است.")
             return
         temporary = TemporaryDirectory(prefix="4b-imaging-portal-")
-        path = Path(temporary.name)/"incoming.zip"  # never use a patient-containing filename
+        path = Path(temporary.name)/"incoming.bin"  # bytes determine the format
         request.setDownloadDirectory(temporary.name)
         request.setDownloadFileName(path.name)
         self.active_downloads[request.id()] = (request, temporary)
@@ -116,8 +160,8 @@ class PortalWindow(QtWidgets.QDialog):
             return
         _, temporary = pair
         if state == QWebEngineDownloadRequest.DownloadCompleted and not self.disposing:
-            self.status.setText("دانلود تمام شد؛ ورودی DICOM بررسی و فایل موقت پس از خواندن حذف می‌شود.")
-            self.downloaded.emit(Path(temporary.name)/"incoming.zip", temporary)
+            self.status.setText("دانلود تمام شد؛ قالب محتوا بررسی و فایل موقت پس از خواندن حذف می‌شود.")
+            self.downloaded.emit(Path(temporary.name)/"incoming.bin", temporary)
         else:
             temporary.cleanup()
             self.status.setText("دانلود متوقف شد؛ دادهٔ ناقص برای بازسازی استفاده نمی‌شود.")
@@ -138,6 +182,7 @@ class PortalWindow(QtWidgets.QDialog):
         self.deleteLater()
 
     def closeEvent(self, event):
+        self.discovery_timer.stop()
         for request, _ in list(self.active_downloads.values()):
             request.cancel()
         self.page.setUrl(QtCore.QUrl("about:blank"))

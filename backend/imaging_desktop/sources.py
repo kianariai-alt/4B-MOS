@@ -12,6 +12,8 @@ from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 import zipfile
 
+from backend.app.imaging_intelligence.intake import is_embedded_zip
+
 
 MAX_FILE_BYTES = 16 * 1024 * 1024
 MAX_INPUT_BYTES = 512 * 1024 * 1024
@@ -54,14 +56,14 @@ class _SameOriginRedirect(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _download_stream(response, *, cancel=None, progress=None):
+def _download_stream(response, *, cancel=None, progress=None, allow_any_format=False):
     """The response can be a real HTTPS stream or a byte stream in unit tests."""
     if getattr(response, "status", 200) != 200:
         raise ImportFailure("download_failed")
     if response.headers.get("Content-Encoding", "identity").lower() != "identity":
         raise ImportFailure("encoded_download_not_supported")
     kind = response.headers.get("Content-Type", "").split(";", 1)[0].lower()
-    if kind in {"text/html", "application/xhtml+xml", "application/json"}:
+    if not allow_any_format and kind in {"text/html", "application/xhtml+xml", "application/json"}:
         raise ImportFailure("portal_page_requires_dicom_download")
     try:
         length = int(response.headers.get("Content-Length", "0"))
@@ -88,21 +90,20 @@ def _download_stream(response, *, cancel=None, progress=None):
     return data.getvalue()
 
 
-def download(url, *, bearer_token="", cancel=None, progress=None):
+def download_bytes(url, *, bearer_token="", cancel=None, progress=None, allow_any_format=True):
     check_cancel(cancel)
     validate_https_url(url)
     if not isinstance(bearer_token, str) or len(bearer_token) > 4096 or "\r" in bearer_token or "\n" in bearer_token:
         raise ImportFailure("invalid_access_token")
-    headers = {"Accept": "application/zip, application/dicom, application/octet-stream", "Accept-Encoding": "identity",
-               "User-Agent": "4B-Imaging-Desktop/0.1"}
+    headers = {"Accept": "*/*", "Accept-Encoding": "identity", "User-Agent": "4B-Imaging-Desktop/0.2"}
     if bearer_token:
         headers["Authorization"] = "Bearer " + bearer_token
     # Fresh opener: no shared cookies, cache, browsing history or credentials.
     opener = build_opener(_SameOriginRedirect(), HTTPSHandler(context=ssl.create_default_context()))
     try:
         with opener.open(Request(url, headers=headers), timeout=15) as response:
-            raw = _download_stream(response, cancel=cancel, progress=progress)
-        return unpack(raw, cancel=cancel)
+            raw = _download_stream(response, cancel=cancel, progress=progress, allow_any_format=allow_any_format)
+        return raw
     except ImportFailure:
         raise
     except HTTPError as error:
@@ -111,10 +112,21 @@ def download(url, *, bearer_token="", cancel=None, progress=None):
         raise ImportFailure("https_connection_failed") from None
 
 
+def download(url, *, bearer_token="", cancel=None, progress=None):
+    """Compatibility entry point for existing DICOM callers."""
+    return unpack(download_bytes(url, bearer_token=bearer_token, cancel=cancel,
+                                 progress=progress, allow_any_format=False), cancel=cancel)
+
+
+def read_artifact(path):
+    """Receive any regular local file without assuming its extension or format."""
+    return _read_file(Path(path), limit=MAX_INPUT_BYTES)
+
+
 def unpack(raw, *, cancel=None):
     if not isinstance(raw, bytes) or not raw or len(raw) > MAX_INPUT_BYTES:
         raise ImportFailure("input_size_limit")
-    if raw[:4] != b"PK\x03\x04":
+    if raw[:4] != b"PK\x03\x04" and not is_embedded_zip(raw):
         if len(raw) <= MAX_FILE_BYTES and raw[128:132] == b"DICM":
             return SourceFiles((raw,))
         if raw.lstrip()[:1] == b"<":

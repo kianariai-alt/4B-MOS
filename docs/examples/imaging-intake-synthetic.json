@@ -1,0 +1,220 @@
+{
+  "synthetic_only": true,
+  "received": {
+    "inventory": {
+      "kind": "zip",
+      "byte_count": 17510,
+      "content_sha256": "86bb3cccffe8b89cb0eee5bb59f70d77c5bdf3c2dfc77029c1e2ed6a41872c29",
+      "member_kinds": [
+        [
+          "dicom",
+          32
+        ],
+        [
+          "pdf",
+          1
+        ]
+      ],
+      "issues": [],
+      "schema_version": "imaging-artifact-inventory-v1",
+      "detection_only": true,
+      "patient_identity_verified": false,
+      "clinically_validated": false
+    },
+    "processing_code": "volume_catalog_ready",
+    "technical_validations": [
+      {
+        "status": "needs_data",
+        "adapter_id": "4b.data-validation.rules",
+        "adapter_version": "1.0.0",
+        "policy_version": "desktop-received-series-v1",
+        "input_sha256": "dd5f3cea72b80270161854ea2cd9684cc67a3a72c538d7c92137415d766ea5c5",
+        "rules_sha256": "6aca4fe8fd3fd63e293472aced9c4b8410cc7636593a1eaf5cb6d1b7f5a3f53b",
+        "result_sha256": "0259b00f83997729b7c272db8f2f1a7a85d57fd96f5cc04bca75b4dc093a04aa",
+        "traces": [
+          {
+            "rule_id": "input_schema",
+            "rule_version": "1.0.0",
+            "outcome": "passed",
+            "codes": []
+          },
+          {
+            "rule_id": "clinical_completeness",
+            "rule_version": "1.0.0",
+            "outcome": "failed",
+            "codes": [
+              "missing_required_clinical_fields"
+            ]
+          },
+          {
+            "rule_id": "imaging_completeness",
+            "rule_version": "1.0.0",
+            "outcome": "failed",
+            "codes": [
+              "unresolved_imaging_metadata_issues"
+            ]
+          },
+          {
+            "rule_id": "context_consistency",
+            "rule_version": "1.0.0",
+            "outcome": "passed",
+            "codes": []
+          },
+          {
+            "rule_id": "finding_verification",
+            "rule_version": "1.0.0",
+            "outcome": "not_applicable",
+            "codes": []
+          },
+          {
+            "rule_id": "finding_provenance",
+            "rule_version": "1.0.0",
+            "outcome": "not_applicable",
+            "codes": []
+          },
+          {
+            "rule_id": "finding_completeness",
+            "rule_version": "1.0.0",
+            "outcome": "passed",
+            "codes": []
+          }
+        ],
+        "missing_clinical_fields": [
+          "assessment_context",
+          "clinical_review"
+        ],
+        "missing_imaging_fields": [],
+        "eligible_finding_references": [],
+        "blocked_finding_references": [],
+        "finding_checks": [],
+        "next_steps": [
+          "complete_required_clinical_data",
+          "resolve_required_imaging_metadata"
+        ],
+        "scope": "data_validation_only",
+        "is_diagnosis": false,
+        "is_treatment_recommendation": false
+      }
+    ],
+    "clinical_findings": [],
+    "is_diagnosis": false,
+    "report_scope": "intake_and_data_quality_only"
+  },
+  "volume": {
+    "profile": "desktop-classic-dicom-volume-v1",
+    "modality": "MR",
+    "shape_zyx": [
+      32,
+      32,
+      32
+    ],
+    "affine_lps": [
+      [
+        0.8,
+        0.0,
+        0.0,
+        -12.4
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        -15.5
+      ],
+      [
+        0.0,
+        0.0,
+        1.3999999999999986,
+        -21.7
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "source_sha256": "38d8396cde180e487d71c09598d4eeeab9a0f3ef6da27cca2defacb1fc411238",
+    "series_reference": "hmac-sha256:925b7952efde7260e95e7e072750ee40a324220d3102b5067afac71cd4b0bebc",
+    "completeness": "not_established",
+    "patient_identity_verified": false,
+    "segmentation_performed": false,
+    "is_clinically_validated": false
+  },
+  "other_formats": [
+    {
+      "inventory": {
+        "kind": "pdf",
+        "byte_count": 37,
+        "content_sha256": "8ef02aa137f4e3f1e0b46508b39cc7e134eff17bf449d4be170d36f6b31d1105",
+        "member_kinds": [],
+        "issues": [],
+        "schema_version": "imaging-artifact-inventory-v1",
+        "detection_only": true,
+        "patient_identity_verified": false,
+        "clinically_validated": false
+      },
+      "processing_code": "processor_required",
+      "technical_validations": [],
+      "clinical_findings": [],
+      "is_diagnosis": false,
+      "report_scope": "intake_and_data_quality_only"
+    },
+    {
+      "inventory": {
+        "kind": "jpeg",
+        "byte_count": 30,
+        "content_sha256": "fe3be8fe6daf29e2026babe4194aeda87a241333f7a979f65692833c439a0148",
+        "member_kinds": [],
+        "issues": [],
+        "schema_version": "imaging-artifact-inventory-v1",
+        "detection_only": true,
+        "patient_identity_verified": false,
+        "clinically_validated": false
+      },
+      "processing_code": "processor_required",
+      "technical_validations": [],
+      "clinical_findings": [],
+      "is_diagnosis": false,
+      "report_scope": "intake_and_data_quality_only"
+    },
+    {
+      "inventory": {
+        "kind": "iso_media",
+        "byte_count": 12,
+        "content_sha256": "c1fe15cedaa3ff8cfbeb2489b3682a00449d7790b17dd97ebc260865498efbe3",
+        "member_kinds": [],
+        "issues": [],
+        "schema_version": "imaging-artifact-inventory-v1",
+        "detection_only": true,
+        "patient_identity_verified": false,
+        "clinically_validated": false
+      },
+      "processing_code": "processor_required",
+      "technical_validations": [],
+      "clinical_findings": [],
+      "is_diagnosis": false,
+      "report_scope": "intake_and_data_quality_only"
+    },
+    {
+      "inventory": {
+        "kind": "unknown",
+        "byte_count": 17,
+        "content_sha256": "37076efad543bdd042557db091cad5fbcf5456a19ffe48aa0ccefc67076c4394",
+        "member_kinds": [],
+        "issues": [
+          "quarantined_no_processor"
+        ],
+        "schema_version": "imaging-artifact-inventory-v1",
+        "detection_only": true,
+        "patient_identity_verified": false,
+        "clinically_validated": false
+      },
+      "processing_code": "processor_required",
+      "technical_validations": [],
+      "clinical_findings": [],
+      "is_diagnosis": false,
+      "report_scope": "intake_and_data_quality_only"
+    }
+  ]
+}

@@ -7,14 +7,27 @@ import sys
 
 
 def core_self_test(destination):
+    from io import BytesIO
+    import zipfile
     import numpy as np
+    from .received import receive
     from .volume import demonstration, load_series
     catalog = demonstration()
     loaded = load_series(catalog.series[0])
     assert loaded.voxels.shape == (64, 64, 64)
     assert np.isfinite(loaded.voxels).all()
     assert loaded.completeness == "not_established"
+    archive = BytesIO()
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
+        for index, raw in enumerate(catalog.series[0].snapshots):
+            bundle.writestr(f"generated/{index}.dcm", raw)
+    wrapped = receive(b"MZsynthetic-non-runnable-wrapper\x00" + archive.getvalue())
+    assert wrapped.inventory.kind == "executable_zip"
+    np.testing.assert_array_equal(load_series(wrapped.catalog.series[0]).voxels, loaded.voxels)
+    viewer = receive(b"MZsynthetic-viewer-only")
+    assert viewer.processing_code == "executable_requires_image_export" and viewer.catalog is None
     report = {"core_self_test": "passed", "synthetic_only": True, "report": loaded.report()}
+    report.update(executable_zip_pixel_roundtrip="passed", viewer_only_exe_requires_export=True)
     Path(destination).write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")
 
 

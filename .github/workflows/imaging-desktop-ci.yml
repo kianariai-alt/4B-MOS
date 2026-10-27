@@ -1,7 +1,7 @@
 name: Windows Imaging Desktop
 on:
   pull_request:
-    branches: [main, feature/synthetic-knee-3d]
+    branches: [main, feature/synthetic-knee-3d, feature/windows-imaging-viewer]
   workflow_dispatch:
 permissions:
   contents: read
