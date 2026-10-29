@@ -1244,3 +1244,38 @@ def test_postgresql_audio_retries_serialize_without_duplicate_chunks(postgresql_
         assert bytes(Media.read_pcm(db,claim))==pcm
         Media.finish_job(db,visit,recording,claim,error_code='engine_failed')
         assert [r.action for r in db.scalars(select(RecordingTextEvent).order_by(RecordingTextEvent.version))]==['audio_received','queued','started','failed']
+
+
+def test_postgresql_visit_learning_retry_and_room_inboxes(postgresql_engine, monkeypatch):
+    import base64
+    from pydantic import SecretStr
+    from backend.tests.test_visit_learning import prepare, submission, grant
+    from backend.app.models.visit_learning import VisitLearningEvent
+    from backend.app.services.visit_learning import VisitLearningService
+    from backend.app.services.recording_inbox import list_recording_inbox
+    monkeypatch.setattr(settings, "AUDIO_PIPELINE_ENABLED", True)
+    monkeypatch.setattr(settings, "AUDIO_ENCRYPTION_KEY", SecretStr(base64.b64encode(b"p" * 32).decode()))
+    with Session(postgresql_engine) as db:
+        context = prepare(db, room="pg-room-1")
+        owner, visit_id = context["actor"].id, context["visit"].id
+        command = submission(context)
+    rendezvous = Barrier(2)
+    def write():
+        with Session(postgresql_engine) as db:
+            actor = db.get(User, owner)
+            rendezvous.wait(timeout=10)
+            return VisitLearningService.submit(db, visit_id, command, actor=actor).summary.event_sha256
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = [future.result(timeout=20) for future in (pool.submit(write), pool.submit(write))]
+    assert results[0] == results[1]
+    with Session(postgresql_engine) as db:
+        actor = db.get(User, owner)
+        assert len(list(db.scalars(select(VisitLearningEvent)))) == 1
+        learned = VisitLearningService.list_for_physician(db, actor=actor, room_code="pg-room-1")
+        recorded = list_recording_inbox(db, actor=actor, room_code="pg-room-1")
+        assert len(learned) == 1 and len(recorded.items) == 1
+        assert learned[0].visit_id == recorded.items[0].visit_id == visit_id
+        assert VisitLearningService.list_for_physician(db, actor=actor, room_code="other-room") == []
+        grant(db, visit_id, actor, "educational_use", state="withdrawn")
+        assert VisitLearningService.list_for_physician(db, actor=actor) == []
+        assert len(list_recording_inbox(db, actor=actor).items) == 1

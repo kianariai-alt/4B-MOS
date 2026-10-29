@@ -37,6 +37,7 @@ jobs:
           Copy-Item docs/WINDOWS_RECORDER_FA.md artifacts/4B-VisitRecorder/README_FA.md
           Copy-Item docs/SPEECH_EVALUATION_FA.md artifacts/4B-VisitRecorder/SPEECH_EVALUATION_FA.md
           Copy-Item docs/AUDIO_PIPELINE_FA.md artifacts/4B-VisitRecorder/AUDIO_PIPELINE_FA.md
+          Copy-Item docs/MULTIROOM_VISIT_LEARNING_FA.md artifacts/4B-VisitRecorder/MULTIROOM_VISIT_LEARNING_FA.md
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: 4B-VisitRecorder-Windows-x64

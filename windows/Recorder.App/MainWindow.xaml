@@ -1,6 +1,6 @@
 <Window x:Class="Mos.Recorder.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="4B — دستیار ویزیت" Width="800" Height="800" MinWidth="640" MinHeight="640" FlowDirection="RightToLeft" FontFamily="Segoe UI" FontSize="15" Background="#F4F6FA" Closing="WindowClosing">
 <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28">
-<Border Background="#112943" CornerRadius="12" Padding="20"><StackPanel><TextBlock Text="4B | دستیار ویزیت ویندوز" Foreground="White" FontSize="26" FontWeight="Bold"/><TextBlock Foreground="#E9CC85" Text="نسخه آزمایشی ۰٫۴ — ضبط امن، پخش صوت و مرور متن"/></StackPanel></Border>
+<Border Background="#112943" CornerRadius="12" Padding="20"><StackPanel><TextBlock Text="4B | دستیار ویزیت ویندوز" Foreground="White" FontSize="26" FontWeight="Bold"/><TextBlock Foreground="#E9CC85" Text="نسخه آزمایشی ۰٫۵ — ضبط چنداتاقی و انتقال متن مرورشده"/></StackPanel></Border>
 <StackPanel x:Name="LoginPanel" Margin="0,20,0,0">
 <TextBlock Text="آدرس سرور MOS"/><TextBox x:Name="ServerBox" Text="https://mos.example.com/" FlowDirection="LeftToRight"/>
 <TextBlock Text="نام کاربری پزشک"/><TextBox x:Name="UsernameBox" FlowDirection="LeftToRight"/>
@@ -12,6 +12,7 @@
 <TextBlock Text="شناسه ویزیت"/><TextBox x:Name="VisitBox" FlowDirection="LeftToRight"/>
 <Button x:Name="LoadButton" Content="بررسی ویزیت و رضایت ضبط" Click="LoadClick" HorizontalAlignment="Left"/>
 <TextBlock x:Name="VisitText" Margin="0,10"/>
+<TextBlock Text="کد اتاق؛ مانند ROOM-1 (بدون نام یا مشخصات بیمار)"/><TextBox x:Name="RoomCodeBox" MaxLength="80" FlowDirection="LeftToRight"/>
 <TextBlock Text="میکروفن"/><ComboBox x:Name="Microphones" Margin="0,6,0,10"/>
 <CheckBox x:Name="AcknowledgeBox" Content="بیمار و ویزیت صحیح را بررسی کرده‌ام و بیمار از شروع ضبط مطلع است." Margin="0,8"/>
 <WrapPanel><Button x:Name="StartButton" Content="شروع ضبط" Click="StartClick" IsEnabled="False"/><Button x:Name="StopButton" Content="توقف و نگهداری امن" Click="StopClick" IsEnabled="False"/></WrapPanel>
@@ -31,6 +32,11 @@
 <TextBox x:Name="ReviewBox" AcceptsReturn="True" Height="180" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
 <CheckBox x:Name="ReviewCheck" Content="متن را با گفتگوی ویزیت تطبیق داده‌ام و اصلاحات لازم را انجام داده‌ام." Margin="0,8"/>
 <Button x:Name="ReviewButton" Content="ثبت متن مرورشده در MOS" Click="ReviewClick" HorizontalAlignment="Left"/>
+<Separator Margin="0,12"/>
+<TextBlock Text="انتقال فایل متن به سامانهٔ مرکزی" FontWeight="Bold"/>
+<TextBlock Text="فایل JSON رمزگذاری نشده و ممکن است مشخصات بیمار داشته باشد. آن را در پوشهٔ حفاظت‌شده نگه دارید؛ برای یادگیری، حذف شناسه‌ها و بازبینی جداگانه در سامانهٔ مرکزی لازم است." TextWrapping="Wrap" Margin="0,6"/>
+<CheckBox x:Name="ExportAcknowledgeBox" Margin="0,8"><TextBlock Text="متن ذخیره‌شده و محل نگهداری فایل را بررسی کرده‌ام و مسئولیت انتقال مجاز آن را می‌پذیرم." TextWrapping="Wrap"/></CheckBox>
+<WrapPanel><Button x:Name="ExportButton" Content="ذخیرهٔ فایل متن مرورشده" Click="ExportClick" IsEnabled="False"/><Button x:Name="OpenCentralButton" Content="بازکردن سامانهٔ مرکزی" Click="OpenCentralClick"/></WrapPanel>
 <Button x:Name="MetricsButton" Content="نمایش گزارش اختلاف متن ثبت‌شده" Click="MetricsClick" HorizontalAlignment="Left" Margin="0,10" IsEnabled="False"/>
 <Border x:Name="MetricsPanel" Visibility="Collapsed" Background="#FFF8E9" CornerRadius="8" Padding="16" Margin="0,8">
 <StackPanel><TextBlock Text="گزارش آخرین متن ثبت‌شده پزشک و پیش‌نویس متناظر" FontWeight="Bold" TextWrapping="Wrap"/>

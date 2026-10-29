@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>مرور و یادگیری روش ویزیت | 4B-MOS</title>
+  <link rel="stylesheet" href="visit-learning.css">
+  <script src="visit-learning.js" defer></script>
+</head>
+<body>
+<header class="masthead"><div><span class="eyebrow">4B-MOS</span><h1>مرور و یادگیری روش ویزیت</h1><p>متن ویزیت را مرور کنید، پرسش‌های واقعی پزشک را مشخص کنید و یک پیش‌نویس قابل بررسی بسازید.</p></div><a href="/app/">سامانهٔ اصلی</a></header>
+<main>
+  <p id="vl-status" role="status" aria-live="polite"></p>
+  <section id="vl-login-panel" class="card compact">
+    <h2>ورود پزشک</h2><p>هر پزشک فقط ضبط‌ها و بسته‌های مجاز خود را می‌بیند. نشست و متن در حافظهٔ همین صفحه می‌مانند.</p>
+    <form id="vl-login-form"><label>نام کاربری<input id="vl-username" autocomplete="username" required maxlength="100"></label><label>رمز عبور<input id="vl-password" type="password" autocomplete="current-password" required></label><button id="vl-login" type="submit">ورود امن</button></form>
+  </section>
+  <div id="vl-workspace" hidden>
+    <div class="toolbar"><p id="vl-current-user"></p><button id="vl-logout" class="secondary" type="button">خروج و پاک‌کردن صفحه</button></div>
+    <section class="card">
+      <h2>صندوق مرکزی اتاق‌ها</h2><p>رایانه‌های اتاق‌ها با برنامهٔ ضبط ویندوز کار می‌کنند. از اینجا می‌توانید ضبط یا متن منتقل‌شده را در رایانهٔ دیگری مرور کنید.</p>
+      <div class="row"><label>کد اتاق برای فیلتر <small>اختیاری؛ مانند room-1</small><input id="vl-room-filter" maxlength="80" dir="ltr" autocomplete="off"></label><button id="vl-recordings-refresh" type="button">ضبط‌های من</button><button id="vl-queue-refresh" class="secondary" type="button">بسته‌های مرور من</button></div>
+      <div id="vl-recording-list" class="item-list" aria-live="polite"></div><div id="vl-queue-list" class="item-list" aria-live="polite"></div>
+    </section>
+    <section class="card">
+      <h2>۱. تطبیق ویزیت و رضایت‌ها</h2>
+      <form id="vl-visit-form" class="row"><label>شناسهٔ ویزیت<input id="vl-visit-id" dir="ltr" maxlength="36" autocomplete="off" required></label><button id="vl-load-visit" type="submit">بررسی ویزیت</button></form>
+      <p id="vl-consent-status" class="note">هنوز ویزیتی انتخاب نشده است.</p>
+      <div class="row"><label>شناسهٔ ضبط<input id="vl-recording-id" dir="ltr" maxlength="36" autocomplete="off"></label><button id="vl-load-server" type="button" disabled>دریافت متن موجود از سامانه</button><button id="vl-reset-source" class="secondary" type="button" disabled>پاک‌کردن فرم متن</button></div>
+      <button id="vl-load-style" class="secondary" type="button" disabled>نمایش الگوی پرسش تأییدشدهٔ پزشک</button><div id="vl-style-content"></div>
+    </section>
+    <section id="vl-server-panel" class="card" hidden>
+      <h2>۲. اصلاح متن گفتار</h2><p id="vl-server-state"></p>
+      <label>متن برای بازبینی پزشک<textarea id="vl-server-text" rows="8" maxlength="200000" autocomplete="off" spellcheck="false"></textarea></label>
+      <label>توضیح بازبینی <small>حداقل ۲۰ نویسه</small><textarea id="vl-server-statement" rows="2" maxlength="2000" autocomplete="off"></textarea></label>
+      <button id="vl-save-server-review" type="button" disabled>ثبت متن بازبینی‌شده</button>
+      <p class="note">پیش‌نویس تشخیص گوینده ندارد. متن خام تا بازبینی صریح پزشک وارد مسیر یادگیری پرسش‌ها نمی‌شود.</p>
+    </section>
+    <section id="vl-editor-panel" class="card">
+      <h2>۳. آماده‌سازی متن و پرسش‌ها</h2>
+      <p>فایل JSON متن بازبینی‌شدهٔ برنامهٔ ویندوز یا فایل متنی UTF-8 را انتخاب کنید. انتخاب فایل به‌تنهایی چیزی را بارگذاری نمی‌کند.</p>
+      <label>فایل متن <small>حداکثر یک مگابایت</small><input id="vl-file" type="file" accept=".json,.txt,application/json,text/plain" disabled></label>
+      <p id="vl-source-status" class="note">متنی بارگذاری نشده است.</p>
+      <div class="origin-grid"><label>کد اتاق<input id="vl-origin-room" dir="ltr" maxlength="80" autocomplete="off"></label><label>شناسهٔ دستگاه<input id="vl-origin-device" dir="ltr" maxlength="36" autocomplete="off"></label><label>شناسهٔ نشست ضبط<input id="vl-origin-session" dir="ltr" maxlength="36" autocomplete="off"></label></div>
+      <label>متن بازبینی‌شده برای حذف اطلاعات هویتی<textarea id="vl-transcript" rows="11" maxlength="100000" autocomplete="off" spellcheck="false" disabled></textarea></label>
+      <p class="note">نام، شماره تماس، کد ملی و جزئیات شناسایی‌کننده را پیش از ارسال بررسی و حذف کنید. تأیید شما جای تشخیص خودکار و تضمین بی‌هویت‌سازی نیست.</p>
+      <div class="row"><label>مرحلهٔ پرسش انتخاب‌شده<select id="vl-stage"><option value="reception">پذیرش</option><option value="initial_visit">ویزیت اولیه</option><option value="physician_visit">ویزیت پزشک</option></select></label><button id="vl-add-question" type="button" disabled>ثبت بخش انتخاب‌شده به‌عنوان سؤال پزشک</button></div>
+      <p>در متن بالا فقط عبارت دقیق سؤال پزشک را انتخاب کنید. ترتیب متن حفظ می‌شود؛ شرط یا پاسخ بیمار به‌صورت خودکار ساخته نمی‌شود.</p><ol id="vl-questions"></ol>
+      <label>ترجیح پزشک برای شکل خلاصهٔ ویزیت <small>اختیاری؛ بدون اطلاعات بیمار</small><textarea id="vl-summary-preferences" rows="3" maxlength="2000" autocomplete="off"></textarea></label>
+      <label class="check"><input id="vl-deidentified" type="checkbox">متن را از نظر اطلاعات هویتی بازبینی کرده‌ام.</label>
+      <label class="check"><input id="vl-speakers-reviewed" type="checkbox">انتساب سؤال‌های انتخاب‌شده به پزشک و ترتیب آن‌ها را بازبینی کرده‌ام.</label>
+      <button id="vl-submit" type="button" disabled>ارسال برای مرور در سامانهٔ مرکزی</button>
+      <p class="note">مقصد همین سامانهٔ MOS است. ایمیل یا وب‌سایت خارجی تنظیم نشده و ارسال خارجی انجام نمی‌شود.</p>
+    </section>
+    <section id="vl-review-panel" class="card" hidden>
+      <h2>۴. پیشنهاد بانک پرسش</h2><p id="vl-packet-status"></p>
+      <div class="row"><button id="vl-preview" type="button">نمایش پیشنهاد پرسش‌ها</button><button id="vl-download" class="secondary" type="button">دریافت فایل بستهٔ مرور</button></div>
+      <div id="vl-preview-content"></div>
+      <label>توضیح بررسی پیشنهاد <small>حداقل ۲۰ نویسه</small><textarea id="vl-promotion-statement" rows="3" maxlength="2000" autocomplete="off"></textarea></label>
+      <button id="vl-promote" type="button" disabled>ساخت پیش‌نویس در بانک پرسش من</button>
+      <p class="note">این عمل بانک فعال را تغییر نمی‌دهد. فعال‌سازی فقط پس از تأیید جداگانهٔ نسخه و هش در بانک پرسش پزشک انجام می‌شود. آموزش وزن‌های مدل، تأیید دانش پزشکی یا تغییر قواعد تشخیص انجام نمی‌شود.</p>
+    </section>
+  </div>
+</main>
+<footer>ضبط ← متن پیش‌نویس ← بازبینی پزشک ← بررسی رضایت و حذف هویت ← پیشنهاد پرسش ← تأیید جداگانه</footer>
+</body>
+</html>

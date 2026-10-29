@@ -64,6 +64,10 @@ def create_application() -> FastAPI:
 
         if "/recordings/" in request.url.path:
             response.headers["Cache-Control"] = "no-store"
+        if any(part in request.url.path for part in ("/visit-learning", "/recording-inbox", "/interview-style")):
+            response.headers["Cache-Control"] = "no-store"
+            response.headers["Referrer-Policy"] = "no-referrer"
+            response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 
     application.include_router(

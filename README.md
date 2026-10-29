@@ -178,3 +178,12 @@ post-pilot report remains an evidence summary, not a clinical conclusion.
 The [Persian engineering handoff](docs/FINAL_RELEASE_HANDOFF_FA.md) lists
 deployment prerequisites and explicitly distinguishes merged code from live
 clinical deployment.
+
+The [multi-room visit learning workflow](docs/MULTIROOM_VISIT_LEARNING_FA.md)
+extends the native Windows recorder with reported room/device/session identity,
+reviewed-text file export and an authenticated central review inbox at
+`/app/visit-learning.html`. Human-reviewed, deidentified question excerpts can
+become a draft in the existing physician question bank; activation still needs
+explicit approval. An additive Copilot adapter consumes approved interview
+preferences. No model weights, medical knowledge or safety rules are trained or
+automatically changed, and no external email destination is configured.

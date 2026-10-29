@@ -11,7 +11,7 @@ from backend.app.repositories.audit_log import AuditLogRepository
 from backend.app.services.audit_context import actor_data
 from backend.app.services.session_finalization import evidence_digest
 from backend.app.services.reception import ReceptionService
-from backend.app.schemas.recording import RecordingEventRead, RecordingAccess, RecordingCheck
+from backend.app.schemas.recording import RecordingEventRead, RecordingAccess, RecordingCheck, RecordingStart
 
 class RecordingNotFoundError(Exception): pass
 class RecordingAuthorizationError(Exception): pass
@@ -59,10 +59,21 @@ def _assigned(db,visit_id,actor):
     consent=next(c for c in workspace.consents if c.purpose=="audio_recording")
     return consent
 
+def normalized_command(payload):
+    """Keep legacy command bytes stable when the optional source is absent.
+
+    Only the new start field is omitted. Existing nullable finish fields remain
+    part of their immutable command, including encrypted_file_sha256=None.
+    """
+    command=payload.model_dump(mode="json")
+    if isinstance(payload,RecordingStart) and command.get("capture_origin") is None:
+        command.pop("capture_origin",None)
+    return command
+
 def _retry(rows,payload,actor,action):
     for row in rows:
         if row.request_key==payload.request_key:
-            if row.recorded_by!=actor.id or row.action!=action or row.payload["command"]!=payload.model_dump(mode="json"):
+            if row.recorded_by!=actor.id or row.action!=action or row.payload["command"]!=normalized_command(payload):
                 raise RecordingConflictError("Request key already used for another command.")
             return _read(row)
     if payload.expected_version!=len(rows): raise RecordingConflictError("Version changed; reload before submitting.")
@@ -70,7 +81,7 @@ def _retry(rows,payload,actor,action):
 
 def _append(db,visit_id,recording_id,rows,payload,actor,action,consent_id,consent_sha):
     now=datetime.now(timezone.utc)
-    body=dict(id=str(uuid.uuid4()),visit_id=visit_id,recording_id=recording_id,version=len(rows)+1,action=action,recorded_by=actor.id,created_at=now.isoformat(),request_key=payload.request_key,command=payload.model_dump(mode="json"),consent_event_id=consent_id,consent_sha256=consent_sha)
+    body=dict(id=str(uuid.uuid4()),visit_id=visit_id,recording_id=recording_id,version=len(rows)+1,action=action,recorded_by=actor.id,created_at=now.isoformat(),request_key=payload.request_key,command=normalized_command(payload),consent_event_id=consent_id,consent_sha256=consent_sha)
     row=VisitRecordingEvent(**{k:body[k] for k in ("id","visit_id","recording_id","version","action","recorded_by","request_key")},created_at=now,payload=body,sha256=evidence_digest(body))
     db.add(row);db.flush()
     AuditLogRepository.create(db,entity_type=row.__tablename__,entity_id=row.id,event_type=action,event_data={"visit_id":visit_id,"recording_id":recording_id,"version":row.version,"sha256":row.sha256},**actor_data(actor),commit=False)

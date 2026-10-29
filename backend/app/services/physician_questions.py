@@ -75,6 +75,11 @@ class PhysicianQuestionService:
     @staticmethod
     @atomic_account_write
     def save_draft(db, physician_id, payload, *, actor):
+        return PhysicianQuestionService._save_draft_in_transaction(db, physician_id, payload, actor=actor)
+
+    @staticmethod
+    def _save_draft_in_transaction(db, physician_id, payload, *, actor):
+        """Append inside a caller's account-locked transaction; never commit here."""
         _authorize(db, physician_id, actor, write=True)
         rows = _rows(db, physician_id)
         retry = _retry(rows, payload, actor, "draft")
