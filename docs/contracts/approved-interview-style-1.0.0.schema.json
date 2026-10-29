@@ -1,0 +1,240 @@
+{
+  "$defs": {
+    "BankContent": {
+      "additionalProperties": false,
+      "properties": {
+        "title_fa": {
+          "maxLength": 200,
+          "minLength": 3,
+          "title": "Title Fa",
+          "type": "string"
+        },
+        "scope_fa": {
+          "maxLength": 500,
+          "minLength": 3,
+          "title": "Scope Fa",
+          "type": "string"
+        },
+        "summary_preferences_fa": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary Preferences Fa"
+        },
+        "questions": {
+          "items": {
+            "$ref": "#/$defs/InterviewQuestion"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Questions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title_fa",
+        "scope_fa",
+        "questions"
+      ],
+      "title": "BankContent",
+      "type": "object"
+    },
+    "InterviewQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "text_fa": {
+          "maxLength": 1000,
+          "minLength": 3,
+          "title": "Text Fa",
+          "type": "string"
+        },
+        "purpose_fa": {
+          "maxLength": 1000,
+          "minLength": 3,
+          "title": "Purpose Fa",
+          "type": "string"
+        },
+        "answer_type": {
+          "default": "text",
+          "enum": [
+            "text",
+            "yes_no",
+            "single_choice"
+          ],
+          "title": "Answer Type",
+          "type": "string"
+        },
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Choices",
+          "type": "array"
+        },
+        "depends_on_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depends On Id"
+        },
+        "show_when_answer_in": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Show When Answer In",
+          "type": "array"
+        },
+        "allow_unknown": {
+          "const": true,
+          "default": true,
+          "title": "Allow Unknown",
+          "type": "boolean"
+        },
+        "allow_decline": {
+          "const": true,
+          "default": true,
+          "title": "Allow Decline",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "text_fa",
+        "purpose_fa"
+      ],
+      "title": "InterviewQuestion",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "visit_id": {
+      "title": "Visit Id",
+      "type": "string"
+    },
+    "physician_id": {
+      "title": "Physician Id",
+      "type": "string"
+    },
+    "has_approved_bank": {
+      "title": "Has Approved Bank",
+      "type": "boolean"
+    },
+    "bank_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Bank Id"
+    },
+    "bank_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Bank Sha256"
+    },
+    "bank_version": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Bank Version"
+    },
+    "bank": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BankContent"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "learning_source_packet_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Learning Source Packet Id"
+    },
+    "style_sha256": {
+      "title": "Style Sha256",
+      "type": "string"
+    },
+    "source_policy": {
+      "const": "explicitly_approved_physician_bank_only",
+      "default": "explicitly_approved_physician_bank_only",
+      "title": "Source Policy",
+      "type": "string"
+    },
+    "model_weights_trained": {
+      "const": false,
+      "default": false,
+      "title": "Model Weights Trained",
+      "type": "boolean"
+    },
+    "authorizes_diagnosis": {
+      "const": false,
+      "default": false,
+      "title": "Authorizes Diagnosis",
+      "type": "boolean"
+    },
+    "medical_knowledge_changed": {
+      "const": false,
+      "default": false,
+      "title": "Medical Knowledge Changed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "visit_id",
+    "physician_id",
+    "has_approved_bank",
+    "bank_id",
+    "bank_sha256",
+    "bank_version",
+    "bank",
+    "style_sha256"
+  ],
+  "title": "ApprovedInterviewStyle",
+  "type": "object"
+}

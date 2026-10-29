@@ -73,6 +73,7 @@ jobs:
           node --check backend/app/web/app.js
           node --check backend/app/web/clinical-intake.js
           node --check backend/app/web/portal-inbox.js
+          node --check backend/app/web/visit-learning.js
           node --check backend/app/patient_web/portal.js
           node --check backend/app/patient_web/solar-date.js
 
@@ -84,6 +85,7 @@ jobs:
           node backend/tests/reception_ui_qa.cjs
           node backend/tests/physician_question_ui_qa.cjs
           node backend/tests/clinical_intake_ui_qa.cjs
+          node backend/tests/visit_learning_ui_qa.cjs
           node backend/tests/patient_portal_ui_qa.cjs
           TZ=Asia/Tehran node backend/tests/solar_date_ui_qa.cjs
           TZ=America/Los_Angeles node backend/tests/solar_date_ui_qa.cjs

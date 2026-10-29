@@ -1,0 +1,188 @@
+{
+  "$defs": {
+    "CaptureOrigin": {
+      "additionalProperties": false,
+      "description": "Client-reported source labels, never permission to access a visit.",
+      "properties": {
+        "room_code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Room Code",
+          "type": "string"
+        },
+        "device_id": {
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+          "title": "Device Id",
+          "type": "string"
+        },
+        "client_session_id": {
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+          "title": "Client Session Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "room_code",
+        "device_id",
+        "client_session_id"
+      ],
+      "title": "CaptureOrigin",
+      "type": "object"
+    },
+    "LearningQuestionAnnotation": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "text_fa": {
+          "maxLength": 1000,
+          "minLength": 3,
+          "title": "Text Fa",
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "reception",
+            "initial_visit",
+            "physician_visit"
+          ],
+          "title": "Stage",
+          "type": "string"
+        },
+        "speaker": {
+          "const": "clinician",
+          "default": "clinician",
+          "title": "Speaker",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "text_fa",
+        "stage"
+      ],
+      "title": "LearningQuestionAnnotation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "packet_id": {
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+      "title": "Packet Id",
+      "type": "string"
+    },
+    "capture_origin": {
+      "$ref": "#/$defs/CaptureOrigin"
+    },
+    "recording_id": {
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+      "title": "Recording Id",
+      "type": "string"
+    },
+    "source_type": {
+      "enum": [
+        "local_transcript",
+        "server_reviewed_transcript"
+      ],
+      "title": "Source Type",
+      "type": "string"
+    },
+    "source_review_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Review Sha256"
+    },
+    "source_text_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Text Sha256",
+      "type": "string"
+    },
+    "deidentified_reviewed_text": {
+      "maxLength": 100000,
+      "minLength": 1,
+      "title": "Deidentified Reviewed Text",
+      "type": "string"
+    },
+    "question_annotations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/LearningQuestionAnnotation"
+      },
+      "maxItems": 100,
+      "title": "Question Annotations",
+      "type": "array"
+    },
+    "deidentification_reviewed": {
+      "const": true,
+      "title": "Deidentification Reviewed",
+      "type": "boolean"
+    },
+    "speaker_attribution_reviewed": {
+      "const": true,
+      "title": "Speaker Attribution Reviewed",
+      "type": "boolean"
+    },
+    "expected_audio_consent_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Expected Audio Consent Sha256",
+      "type": "string"
+    },
+    "expected_educational_consent_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Expected Educational Consent Sha256",
+      "type": "string"
+    },
+    "summary_preferences_fa": {
+      "anyOf": [
+        {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Summary Preferences Fa"
+    }
+  },
+  "required": [
+    "packet_id",
+    "capture_origin",
+    "recording_id",
+    "source_type",
+    "source_text_sha256",
+    "deidentified_reviewed_text",
+    "deidentification_reviewed",
+    "speaker_attribution_reviewed",
+    "expected_audio_consent_sha256",
+    "expected_educational_consent_sha256"
+  ],
+  "title": "VisitLearningPacket",
+  "type": "object"
+}

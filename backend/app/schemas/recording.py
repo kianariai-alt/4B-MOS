@@ -1,6 +1,7 @@
 """Recording metadata only: this phase never accepts audio or trains a model."""
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
+from backend.app.schemas.capture_origin import CaptureOrigin
 
 class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
@@ -12,6 +13,7 @@ class RecordingCommand(Strict):
 class RecordingStart(RecordingCommand):
     recording_id: str = Field(min_length=36, max_length=36, pattern=r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
     expected_consent_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    capture_origin: CaptureOrigin | None = None
 
 class RecordingFinish(RecordingCommand):
     recording_id: str = Field(min_length=36, max_length=36, pattern=r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")

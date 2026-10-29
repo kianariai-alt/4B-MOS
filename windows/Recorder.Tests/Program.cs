@@ -163,6 +163,95 @@ try{
         var metrics=RevisionMetrics.Parse(payload,context.RecordingId,draftHash,reviewHash,".","الف");
         Check(metrics.SummaryFa.Contains("قابل محاسبه نیست"),"Undefined rate shown as zero");
     });
+    var origin=new CaptureOrigin("ROOM-2",Guid.NewGuid().ToString("D"),Guid.NewGuid().ToString("D"));
+    var withOrigin=new PendingCapture(context,"source-start","source-finish",result.FilePath,result.PcmBytes,result.EncryptedFileSha256,"finished",1,origin);
+    Test("Legacy journal deserializes without changing the encrypted audio context",()=>{
+        string legacy=JsonSerializer.Serialize(new{Context=context,StartRequestKey="legacy-start",FinishRequestKey=(string?)null,FilePath=result.FilePath,PcmBytes=result.PcmBytes,EncryptedFileSha256=result.EncryptedFileSha256,Reason="finished",FinishVersion=(int?)null});
+        var pending=JsonSerializer.Deserialize<PendingCapture>(legacy)!;
+        Check(pending.CaptureOrigin is null && pending.Context==context,"Legacy capture changed");
+        var audioContext=JsonSerializer.SerializeToElement(pending.Context);
+        Check(audioContext.EnumerateObject().Count()==6 && !audioContext.TryGetProperty("CaptureOrigin",out _),"Audio container contract changed");
+        Check(EncryptedCapture.Verify(result.FilePath,protector).Context==pending.Context,"Legacy audio no longer verifies");
+    });
+    Test("Source metadata is stored in encrypted journal and survives receipts",()=>{
+        var journal=new Journal(Path.Combine(root,"origin-journal"),context.Server,context.PhysicianId,protector);
+        journal.Save(withOrigin);Check(journal.Load().Single()==withOrigin,"Source journal roundtrip failed");
+        journal.Acknowledge(context.RecordingId);Check(journal.Completed().Single().CaptureOrigin==origin,"Receipt lost origin");
+        var disk=File.ReadAllBytes(Directory.GetFiles(Path.Combine(root,"origin-journal"),"*.receipt",SearchOption.AllDirectories).Single());
+        Check(!Contains(disk,Encoding.UTF8.GetBytes(origin.DeviceId)),"Reported device metadata written plaintext in journal");
+    });
+    Test("Recording start preserves source identity and legacy omission for retries",()=>{
+        var first=JsonSerializer.SerializeToElement(CaptureCommands.Start(withOrigin,2),MosClient.Json);
+        var repeated=JsonSerializer.SerializeToElement(CaptureCommands.Start(withOrigin,2),MosClient.Json);
+        Check(first.GetRawText()==repeated.GetRawText(),"Retry changed payload");
+        var source=first.GetProperty("capture_origin");
+        Check(source.GetProperty("room_code").GetString()=="ROOM-2" && source.GetProperty("device_id").GetString()==origin.DeviceId,"Wrong origin serialized");
+        var legacy=JsonSerializer.SerializeToElement(CaptureCommands.Start(withOrigin with{CaptureOrigin=null},2),MosClient.Json);
+        Check(!legacy.TryGetProperty("capture_origin",out _),"Null origin breaks legacy request retries");
+        Check(first.GetProperty("expected_consent_sha256").GetString()==context.ConsentSha256,"Consent binding lost");
+        Throws(()=>CaptureCommands.Start(withOrigin,-1));
+    });
+    Test("Room and device identity enforce controlled source identifiers",()=>{
+        foreach(string room in new[]{"",new string('r',81),"Room 1","بیمار","room/person","room@example.com"})Throws(()=>new CaptureOrigin(room,origin.DeviceId,origin.ClientSessionId).Validate());
+        Check(new CaptureOrigin("ROOM_1.A-2",origin.DeviceId,origin.ClientSessionId).Validate().RoomCode=="ROOM_1.A-2","Valid room rejected");
+        Throws(()=>new CaptureOrigin("ROOM-1","not-a-uuid",origin.ClientSessionId).Validate());
+        Throws(()=>new CaptureOrigin("ROOM-1",origin.DeviceId,"NOT-A-UUID").Validate());
+        Throws(()=>new CaptureOrigin(null!,origin.DeviceId,origin.ClientSessionId).Validate());
+        Throws(()=>new CaptureOrigin("ROOM-1",null!,origin.ClientSessionId).Validate());
+        Throws(()=>new CaptureOrigin("ROOM-1",origin.DeviceId,null!).Validate());
+        Throws(()=>CaptureCommands.Start(withOrigin with{CaptureOrigin=origin with{RoomCode="bad room"}},2));
+    });
+    Test("Workstation identity persists without account or patient data and corrupt identity is not replaced",()=>{
+        string location=Path.Combine(root,"device-identity");
+        string id=RecorderDeviceIdentity.LoadOrCreate(location);
+        Check(CaptureOrigin.CanonicalUuid(id) && RecorderDeviceIdentity.LoadOrCreate(location)==id,"Workstation identity changed");
+        string identityFile=Path.Combine(location,"device-id.txt");
+        Check(File.ReadAllText(identityFile)==id && File.ReadAllBytes(identityFile).Length==36,"Unexpected identity content");
+        File.WriteAllText(identityFile,"invalid-device-identity");
+        Throws(()=>RecorderDeviceIdentity.LoadOrCreate(location));
+        Check(File.ReadAllText(identityFile)=="invalid-device-identity","Invalid device identity silently replaced");
+    });
+    const string reviewedText="بیمار: درد ندارد.\r\nپزشک: ۰ از ۱۰";
+    JsonElement ExportWorkspace(string? recordingId=null,string? draftSha=null,string? reviewSha=null,string? reviewDraftSha=null,string? text=null,int version=5,string state="reviewed",bool physicianReviewed=true,string? recordedBy=null)=>JsonSerializer.SerializeToElement(new{
+        recording_id=recordingId??context.RecordingId,state,version,
+        latest_draft=new{sha256=draftSha??draftHash},
+        latest_review=new{sha256=reviewSha??reviewHash,draft_sha256=reviewDraftSha??draftHash,
+            edited_text=text??reviewedText,reviewed_by_physician=physicianReviewed,recorded_by=recordedBy??context.PhysicianId},
+    });
+    Test("Reviewed transcript artifact uses exact saved UTF8 text and truthful source metadata",()=>{
+        var workspace=ExportWorkspace();var file=TranscriptHandoff.Create(withOrigin,context.Server,context.PhysicianId,workspace,workspace,reviewedText);
+        Check(file.ReviewedText==reviewedText && file.SourceReviewSha256==reviewHash && file.CaptureOrigin==origin,"Saved source metadata changed");
+        string expected=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(reviewedText))).ToLowerInvariant();
+        Check(file.TextSha256==expected,"Exact text hash mismatch");
+        byte[] encoded=file.ToUtf8Json();
+        Check(encoded[0]==(byte)'{' && !encoded.AsSpan().StartsWith(new byte[]{0xef,0xbb,0xbf}),"UTF8 BOM emitted");
+        using var json=JsonDocument.Parse(encoded);var artifact=json.RootElement;
+        Check(artifact.GetProperty("schema_id").GetString()=="4b-mos.reviewed-transcript-file" && artifact.GetProperty("source_type").GetString()=="server_reviewed_transcript","Wrong artifact type");
+        Check(artifact.GetProperty("reviewed_text").GetString()==reviewedText && artifact.GetProperty("text_sha256").GetString()==expected,"Export normalized the text");
+        Check(artifact.EnumerateObject().Count()==9 && !artifact.TryGetProperty("deidentified",out _) && !artifact.TryGetProperty("medical_approval",out _),"Untrue approval or deidentification flag");
+        Check(!artifact.TryGetProperty("server",out _) && !artifact.TryGetProperty("access_token",out _),"Credential or extra destination leaked");
+    });
+    Test("Legacy recording exports an explicit absent origin without inventing a room",()=>{
+        var workspace=ExportWorkspace();var file=TranscriptHandoff.Create(withOrigin with{CaptureOrigin=null},context.Server,context.PhysicianId,workspace,workspace,reviewedText);
+        using var json=JsonDocument.Parse(file.ToUtf8Json());
+        Check(file.CaptureOrigin is null && json.RootElement.GetProperty("capture_origin").ValueKind==JsonValueKind.Null,"A legacy room was fabricated");
+    });
+    Test("Export rejects changed source versions, text, draft and selected recording",()=>{
+        var shown=ExportWorkspace();
+        foreach(var fresh in new[]{ExportWorkspace(version:6),ExportWorkspace(reviewSha:new string('c',64)),ExportWorkspace(draftSha:new string('d',64)),ExportWorkspace(text:reviewedText+" changed"),ExportWorkspace(recordingId:Guid.NewGuid().ToString("D")),ExportWorkspace(state:"draft"),ExportWorkspace(physicianReviewed:false),ExportWorkspace(recordedBy:Guid.NewGuid().ToString("D"))})
+            Throws(()=>TranscriptHandoff.Create(withOrigin,context.Server,context.PhysicianId,shown,fresh,reviewedText));
+        Throws(()=>TranscriptHandoff.Create(withOrigin,context.Server,context.PhysicianId,shown,shown,"Unsaved editor change"));
+        Throws(()=>TranscriptHandoff.Create(withOrigin,context.Server,context.PhysicianId,shown,shown,reviewedText+" "));
+        Throws(()=>TranscriptHandoff.Create(withOrigin,context.Server,context.PhysicianId,shown,shown," "+reviewedText));
+        Throws(()=>TranscriptHandoff.Create(withOrigin,"https://another.example/",context.PhysicianId,shown,shown,reviewedText));
+        Throws(()=>TranscriptHandoff.Create(withOrigin,context.Server,Guid.NewGuid().ToString("D"),shown,shown,reviewedText));
+        Throws(()=>TranscriptHandoff.Create(withOrigin with{Reason="interrupted"},context.Server,context.PhysicianId,shown,shown,reviewedText));
+    });
+    Test("Export rejects malformed saved source and missing physician review",()=>{
+        var good=ExportWorkspace();
+        foreach(var bad in new[]{ExportWorkspace(reviewSha:"invalid"),ExportWorkspace(reviewDraftSha:new string('f',64)),ExportWorkspace(text:" "),ExportWorkspace(version:0),JsonSerializer.SerializeToElement(new{recording_id=context.RecordingId,state="reviewed",version=5,latest_draft=(object?)null,latest_review=(object?)null})})
+            Throws(()=>TranscriptHandoff.Create(withOrigin,context.Server,context.PhysicianId,good,bad,reviewedText));
+    });
     Console.WriteLine($"{passed} recorder core tests passed. DPAPI: {(OperatingSystem.IsWindows()?"real Windows CurrentUser":"test protector; Windows CI verifies DPAPI")}.");
 }finally{Directory.Delete(root,recursive:true);}
 
